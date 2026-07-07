@@ -73,6 +73,16 @@ export function processIcon(inputBuffer, opts = {}) {
     // Zero the alpha of everything we flagged as background.
     for (let c = 0; c < w * h; c++) if (transparent[c]) data[(c << 2) + 3] = 0;
 
+    // Global cleanup: also remove any remaining pixels close to the background
+    // colour. The edge flood-fill leaves background pockets the subject encloses
+    // (between an animal's legs, the cannon's wheels); a subject almost never
+    // contains the flat magenta key colour, so a plain colour-key is safe here.
+    for (let c = 0; c < w * h; c++) {
+      const p = c << 2;
+      if (data[p + 3] === 0) continue;
+      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= TOL2) data[p + 3] = 0;
+    }
+
     // Bounding box of the remaining (opaque) subject.
     minX = w; minY = h; maxX = -1; maxY = -1;
     for (let y = 0; y < h; y++) {
