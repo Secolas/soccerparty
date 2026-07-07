@@ -7,6 +7,6 @@
     "gen": "node gen-assets.mjs"
   },
   "dependencies": {
-    "@google/genai": "^0.3.0"
+    "@google/genai": "^1.0.0"
   }
 }

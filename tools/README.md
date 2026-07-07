@@ -25,8 +25,12 @@ the existing GitHub → Vercel auto-deploy publishes them.
    Vercel configuration needed.**
 
 ## Notes
-- Model is `gemini-2.5-flash-image-preview` in `gen-assets.mjs`; update it if the
-  API changes (see https://ai.google.dev/gemini-api/docs/image-generation).
+- The generator tries several image-model names (`MODEL_CANDIDATES` in
+  `gen-assets.mjs`) and uses the first that responds, since the "Nano Banana"
+  model gets renamed as it graduates from preview to GA. If they all 404, add
+  the current name from https://ai.google.dev/gemini-api/docs/image-generation.
+- The script exits non-zero when it produces zero images, so a broken run shows
+  a red ❌ in the Actions tab instead of a misleading green ✅.
 - AI pixel-art needs a curation/touch-up loop — expect to regenerate and pick.
 - Wiring PNGs into the game (loading them and drawing on the canvas) is a
   separate step; ability icons are the easiest to slot in first.

@@ -33,8 +33,14 @@ if (!KEY) {
   process.exit(1);
 }
 
-// Gemini image model ("Nano Banana"). Update if the API changes.
-const MODEL = "gemini-2.5-flash-image-preview";
+// Gemini image models ("Nano Banana"). Names change as models graduate from
+// preview to GA, so we try each in order and use the first that responds.
+// Update the list if the API changes: https://ai.google.dev/gemini-api/docs/image-generation
+const MODEL_CANDIDATES = [
+  "gemini-2.5-flash-image",
+  "gemini-2.5-flash-image-preview",
+  "gemini-2.0-flash-preview-image-generation",
+];
 
 // Shared style so every asset matches. Solid magenta background = easy to
 // key out to transparency in the post-process step.
@@ -57,21 +63,55 @@ const ai = new GoogleGenAI({ apiKey: KEY });
 const OUT = join(__dir, "..", "assets", "generated");
 mkdirSync(OUT, { recursive: true });
 
+// Ask a candidate model for one image. Returns the base64 data, or throws.
+async function tryGenerate(model, prompt) {
+  const res = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: { responseModalities: ["Text", "Image"] },
+  });
+  const parts = res?.candidates?.[0]?.content?.parts || [];
+  const img = parts.find((p) => p.inlineData?.data);
+  if (!img) throw new Error("no image in response");
+  return img.inlineData.data;
+}
+
+// Discover which candidate model this key/API version actually supports, so we
+// only pay the discovery cost once instead of on every asset.
+let MODEL = null;
+let ok = 0;
+
 for (const a of ASSETS) {
   process.stdout.write(`Generating ${a.file} ... `);
-  try {
-    const res = await ai.models.generateContent({ model: MODEL, contents: a.prompt });
-    const parts = res?.candidates?.[0]?.content?.parts || [];
-    const img = parts.find((p) => p.inlineData?.data);
-    if (!img) { console.log("no image in response"); continue; }
-    writeFileSync(join(OUT, a.file), Buffer.from(img.inlineData.data, "base64"));
-    console.log("ok");
-  } catch (e) {
-    console.log("FAILED:", e.message);
+  const models = MODEL ? [MODEL] : MODEL_CANDIDATES;
+  let done = false;
+  let lastErr = "";
+  for (const model of models) {
+    try {
+      const data = await tryGenerate(model, a.prompt);
+      writeFileSync(join(OUT, a.file), Buffer.from(data, "base64"));
+      MODEL = model; // lock in the working model for the rest
+      console.log(`ok (${model})`);
+      ok++;
+      done = true;
+      break;
+    } catch (e) {
+      lastErr = e.message;
+    }
   }
+  if (!done) console.log("FAILED:", lastErr);
+}
+
+if (ok === 0) {
+  console.error(
+    `\nNo assets were generated. Tried models: ${MODEL_CANDIDATES.join(", ")}. ` +
+    "Check the error above (usually a bad/expired GEMINI_API_KEY or a renamed " +
+    "model). Current model names: https://ai.google.dev/gemini-api/docs/image-generation"
+  );
+  process.exit(1); // fail the job so the run shows red, not a misleading green
 }
 
 console.log(
-  "\nDone -> assets/generated/. Next: clean them up (key out the magenta to " +
-  "transparency, downscale to ~24px), keep the good ones, then commit."
+  `\nDone -> assets/generated/ (${ok}/${ASSETS.length}). Next: clean them up ` +
+  "(key out the magenta to transparency, downscale to ~24px), keep the good ones."
 );
