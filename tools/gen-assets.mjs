@@ -89,6 +89,14 @@ const ASSETS = [
   { file: "tile-grass.png",  size: 128, keyOut: false, prompt: `A seamless top-down lush green grass texture tile, subtle blades, pixel art, edges tile seamlessly. ${SCENE}` },
   { file: "tile-wood.png",   size: 128, keyOut: false, prompt: `A seamless horizontal wooden plank bleacher texture tile, warm brown boards, pixel art, edges tile seamlessly. ${SCENE}` },
   { file: "ui-board.png",    size: 256, keyOut: false, prompt: `A horizontal scoreboard panel made of carved wooden planks with brass corner brackets, empty face with no text, clean front-on view. ${SCENE}` },
+
+  // Seamless top-down pitch surface textures (one per board), filled into the play area
+  { file: "board-wood.png",   size: 256, keyOut: false, prompt: `A seamless top-down polished wooden sports floor texture, warm brown planks, subtle grain, tiles seamlessly, no lines, no markings. ${SCENE}` },
+  { file: "board-grass.png",  size: 256, keyOut: false, prompt: `A seamless top-down mowed grass football pitch texture, rich green with faint mowing stripes, tiles seamlessly, no lines, no markings. ${SCENE}` },
+  { file: "board-street.png", size: 256, keyOut: false, prompt: `A seamless top-down grey asphalt street court texture, subtle cracks and speckle, tiles seamlessly, no lines, no markings. ${SCENE}` },
+  { file: "board-beach.png",  size: 256, keyOut: false, prompt: `A seamless top-down fine sandy beach texture, warm sand with gentle ripples, tiles seamlessly, no lines, no markings. ${SCENE}` },
+  { file: "board-neon.png",   size: 256, keyOut: false, prompt: `A seamless top-down dark arcade court texture, near-black surface with faint glowing cyan grid lines, tiles seamlessly, no text. ${SCENE}` },
+  { file: "board-ice.png",    size: 256, keyOut: false, prompt: `A seamless top-down pale blue ice rink texture, subtle cracks and glossy sheen, tiles seamlessly, no lines, no markings. ${SCENE}` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
