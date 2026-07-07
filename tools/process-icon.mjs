@@ -34,6 +34,11 @@ export function processIcon(inputBuffer, opts = {}) {
   if (typeof opts === "number") opts = { size: opts };
   const size = opts.size || ICON_SIZE;
   const keyOut = opts.keyOut !== false;
+  // solid: fill any transparent pixels by edge-clamp so a full-frame texture
+  // (a board surface / background tile) has no gaps. Some image-to-image
+  // outputs come back letterboxed with transparent strips; drawn stretched over
+  // the pitch those strips let the dark surround show through as black bands.
+  const solid = opts.solid === true;
 
   const src = PNG.sync.read(inputBuffer);
   const { width: w, height: h, data } = src;
@@ -123,7 +128,33 @@ export function processIcon(inputBuffer, opts = {}) {
       out.data[dp + 3] = data[sp + 3];
     }
   }
+  if (solid) fillTransparent(out.data, size, size);
   return PNG.sync.write(out);
+}
+
+// Fill fully-transparent pixels by clamping to the nearest opaque pixel
+// (vertical first, then horizontal), leaving every pixel fully opaque.
+function fillTransparent(data, w, h) {
+  const A = (x, y) => data[((y * w + x) << 2) + 3];
+  const copy = (dx, dy, sx, sy) => {
+    const d = (dy * w + dx) << 2, s = (sy * w + sx) << 2;
+    data[d] = data[s]; data[d + 1] = data[s + 1]; data[d + 2] = data[s + 2]; data[d + 3] = 255;
+  };
+  for (let x = 0; x < w; x++) {
+    let firstY = -1, lastY = -1;
+    for (let y = 0; y < h; y++) if (A(x, y) > 8) { if (firstY < 0) firstY = y; lastY = y; }
+    if (firstY < 0) continue;
+    for (let y = 0; y < firstY; y++) copy(x, y, x, firstY);
+    for (let y = lastY + 1; y < h; y++) copy(x, y, x, lastY);
+  }
+  for (let y = 0; y < h; y++) {
+    let firstX = -1, lastX = -1;
+    for (let x = 0; x < w; x++) if (A(x, y) > 8) { if (firstX < 0) firstX = x; lastX = x; }
+    if (firstX < 0) continue;
+    for (let x = 0; x < firstX; x++) copy(x, y, firstX, y);
+    for (let x = lastX + 1; x < w; x++) copy(x, y, lastX, y);
+  }
+  for (let i = 0; i < w * h; i++) if (data[(i << 2) + 3] < 255) data[(i << 2) + 3] = 255;
 }
 
 // Split a horizontal N-frame sprite sheet into N separate game-ready frames.

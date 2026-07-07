@@ -97,12 +97,12 @@ const ASSETS = [
   // Board surface textures — IMAGE-TO-IMAGE: the reference (refs/board-*.png) is
   // a swatch of the game's ORIGINAL surface, so Gemini keeps the same colours and
   // layout but adds richer detail (grain, cracks, wear). Filled into the play area.
-  { file: "board-wood.png",   ref: "refs/board-wood.png",   size: 256, keyOut: false, prompt: `${ENH} Keep the SAME warm wooden plank layout and colours as the reference, but make it a richly detailed seamless top-down wood floor: real wood grain, a few knots, subtle worn patches, crisp plank seams. Tile seamlessly. No lines or markings.` },
-  { file: "board-grass.png",  ref: "refs/board-grass.png",  size: 256, keyOut: false, prompt: `${ENH} Keep the SAME green mowing-stripe pattern and colours as the reference, but make it lush detailed grass: fine blades, subtle wear and faint mud patches. Tile seamlessly. No lines or markings.` },
-  { file: "board-street.png", ref: "refs/board-street.png", size: 256, keyOut: false, prompt: `${ENH} Keep the SAME grey asphalt tone as the reference, but make it a detailed street court: visible cracks, patched tar, small pebbles and scuff marks. Tile seamlessly. No lines or markings.` },
-  { file: "board-beach.png",  ref: "refs/board-beach.png",  size: 256, keyOut: false, prompt: `${ENH} Keep the SAME sandy tone as the reference, but make it detailed beach sand: rippled dunes, footprints, tiny shells and speckle. Tile seamlessly. No lines or markings.` },
-  { file: "board-neon.png",   ref: "refs/board-neon.png",   size: 256, keyOut: false, prompt: `${ENH} Keep the SAME dark neon look and colours as the reference, but make it a detailed glowing arcade court: crisp neon grid, soft glow gradients, subtle scanlines. Tile seamlessly. No text.` },
-  { file: "board-ice.png",    ref: "refs/board-ice.png",    size: 256, keyOut: false, prompt: `${ENH} Keep the SAME pale-blue icy tone as the reference, but make it detailed ice: fine cracks, frost patches and a glossy sheen. Tile seamlessly. No lines or markings.` },
+  { file: "board-wood.png",   ref: "refs/board-wood.png",   size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME warm wooden plank layout and colours as the reference, but make it a richly detailed seamless top-down wood floor: real wood grain, a few knots, subtle worn patches, crisp plank seams. Tile seamlessly. No lines or markings.` },
+  { file: "board-grass.png",  ref: "refs/board-grass.png",  size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME green mowing-stripe pattern and colours as the reference, but make it lush detailed grass: fine blades, subtle wear and faint mud patches. Tile seamlessly. No lines or markings.` },
+  { file: "board-street.png", ref: "refs/board-street.png", size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME grey asphalt tone as the reference, but make it a detailed street court: visible cracks, patched tar, small pebbles and scuff marks. Tile seamlessly. No lines or markings.` },
+  { file: "board-beach.png",  ref: "refs/board-beach.png",  size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME sandy tone as the reference, but make it detailed beach sand: rippled dunes, footprints, tiny shells and speckle. Tile seamlessly. No lines or markings.` },
+  { file: "board-neon.png",   ref: "refs/board-neon.png",   size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME dark neon look and colours as the reference, but make it a detailed glowing arcade court: crisp neon grid, soft glow gradients, subtle scanlines. Tile seamlessly. No text.` },
+  { file: "board-ice.png",    ref: "refs/board-ice.png",    size: 256, keyOut: false, solid: true, prompt: `${ENH} Keep the SAME pale-blue icy tone as the reference, but make it detailed ice: fine cracks, frost patches and a glossy sheen. Tile seamlessly. No lines or markings.` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
@@ -157,7 +157,7 @@ for (const a of ASSETS) {
       } else {
         let outBuf = raw;
         try {
-          outBuf = processIcon(raw, { size: a.size || ICON_SIZE, keyOut: a.keyOut !== false });
+          outBuf = processIcon(raw, { size: a.size || ICON_SIZE, keyOut: a.keyOut !== false, solid: a.solid === true });
         } catch (pe) {
           console.log(`(kept raw, post-process failed: ${pe.message}) `);
         }
