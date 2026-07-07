@@ -62,7 +62,7 @@ const ASSETS = [
   // Ability icons (small, transparent)
   { file: "icon-cannon.png",    size: 64,  prompt: `A classic black iron artillery cannon on wooden spoked wheels with a lit fuse, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
-  { file: "icon-glide.png",     size: 64,  prompt: `A shiny ice cube power-up icon (glide). ${ICON}` },
+  { file: "icon-glide.png",     size: 64,  prompt: `A winged running boot with small white feathered wings, side view, game power-up icon (speed and glide). ${ICON}` },
   { file: "icon-magnet.png",    size: 64,  prompt: `A red horseshoe magnet power-up icon. ${ICON}` },
   { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
   { file: "icon-sniper.png",    size: 64,  prompt: `A military sniper rifle with a large telescopic scope, side view, game power-up icon. ${ICON}` },
