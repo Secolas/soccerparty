@@ -25,59 +25,71 @@ function dist2(r1, g1, b1, r2, g2, b2) {
   return dr * dr + dg * dg + db * db;
 }
 
-// Decode -> remove background -> trim + scale -> encode. Returns a PNG Buffer.
-export function processIcon(inputBuffer, size = ICON_SIZE) {
+// Decode -> (optionally remove background + trim) -> scale -> encode.
+// opts: { size, keyOut } — keyOut:false keeps the whole frame (for scene assets
+// like crowd stands or a wooden board panel); default true keys out the flat
+// background and trims to the subject (for icons / sprites). A number is also
+// accepted as shorthand for { size }.
+export function processIcon(inputBuffer, opts = {}) {
+  if (typeof opts === "number") opts = { size: opts };
+  const size = opts.size || ICON_SIZE;
+  const keyOut = opts.keyOut !== false;
+
   const src = PNG.sync.read(inputBuffer);
   const { width: w, height: h, data } = src;
   const idx = (x, y) => (y * w + x) << 2;
 
-  // Sample the background colour from the four corners (average).
-  let br = 0, bg = 0, bb = 0;
-  const corners = [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]];
-  for (const [cx, cy] of corners) {
-    const p = idx(cx, cy);
-    br += data[p]; bg += data[p + 1]; bb += data[p + 2];
-  }
-  br /= 4; bg /= 4; bb /= 4;
+  let minX = 0, minY = 0, maxX = w - 1, maxY = h - 1;
 
-  // Flood-fill the connected background region from every border pixel.
-  const transparent = new Uint8Array(w * h); // 1 = background
-  const stack = [];
-  const pushIfBg = (x, y) => {
-    if (x < 0 || y < 0 || x >= w || y >= h) return;
-    const c = y * w + x;
-    if (transparent[c]) return;
-    const p = c << 2;
-    if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= TOL2) {
-      transparent[c] = 1;
-      stack.push(x, y);
+  if (keyOut) {
+    // Sample the background colour from the four corners (average).
+    let br = 0, bg = 0, bb = 0;
+    const corners = [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]];
+    for (const [cx, cy] of corners) {
+      const p = idx(cx, cy);
+      br += data[p]; bg += data[p + 1]; bb += data[p + 2];
     }
-  };
-  for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
-  for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }
-  while (stack.length) {
-    const y = stack.pop(), x = stack.pop();
-    pushIfBg(x + 1, y); pushIfBg(x - 1, y); pushIfBg(x, y + 1); pushIfBg(x, y - 1);
-  }
-  // Zero the alpha of everything we flagged as background.
-  for (let c = 0; c < w * h; c++) if (transparent[c]) data[(c << 2) + 3] = 0;
+    br /= 4; bg /= 4; bb /= 4;
 
-  // Bounding box of the remaining (opaque) subject.
-  let minX = w, minY = h, maxX = -1, maxY = -1;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (data[idx(x, y) + 3] > 0) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+    // Flood-fill the connected background region from every border pixel.
+    const transparent = new Uint8Array(w * h); // 1 = background
+    const stack = [];
+    const pushIfBg = (x, y) => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const c = y * w + x;
+      if (transparent[c]) return;
+      const p = c << 2;
+      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= TOL2) {
+        transparent[c] = 1;
+        stack.push(x, y);
+      }
+    };
+    for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
+    for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }
+    while (stack.length) {
+      const y = stack.pop(), x = stack.pop();
+      pushIfBg(x + 1, y); pushIfBg(x - 1, y); pushIfBg(x, y + 1); pushIfBg(x, y - 1);
+    }
+    // Zero the alpha of everything we flagged as background.
+    for (let c = 0; c < w * h; c++) if (transparent[c]) data[(c << 2) + 3] = 0;
+
+    // Bounding box of the remaining (opaque) subject.
+    minX = w; minY = h; maxX = -1; maxY = -1;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (data[idx(x, y) + 3] > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
       }
     }
+    if (maxX < 0) throw new Error("nothing left after background removal");
   }
-  if (maxX < 0) throw new Error("nothing left after background removal");
 
   const bw = maxX - minX + 1, bh = maxY - minY + 1;
-  const pad = Math.round(size * 0.06);
+  const pad = keyOut ? Math.round(size * 0.06) : 0;
   const target = size - pad * 2;
   const scale = target / Math.max(bw, bh);
   const drawW = Math.max(1, Math.round(bw * scale));

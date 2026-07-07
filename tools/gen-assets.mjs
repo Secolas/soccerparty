@@ -43,21 +43,38 @@ const MODEL_CANDIDATES = [
   "gemini-2.0-flash-preview-image-generation",
 ];
 
-// Shared style so every asset matches. Solid magenta background = easy to
-// key out to transparency in the post-process step.
-const STYLE =
-  "16-bit SNES pixel art, chunky visible pixels, clean bold silhouette, " +
+// Style for small ability icons / single sprites: solid magenta background so the
+// post-processor can flood-fill it out to transparency.
+const ICON = "16-bit SNES pixel art, chunky visible pixels, clean bold silhouette, " +
   "vibrant retro palette, centered subject, flat solid #FF00FF magenta background, " +
   "no text, no lettering, no drop shadow, no gradient background";
 
-// One entry per asset. Start with the ability icons; add crowd/board later.
+// Style for larger scene assets (crowd, wooden board) kept as-is (no keying),
+// matching the detailed, lush pixel-art look of the reference art.
+const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere, " +
+  "cohesive retro palette, no text, no lettering, no watermark";
+
+// One entry per asset.
+//   keyOut (default true) -> flood-fill background to transparency + trim + downscale
+//   keyOut:false          -> keep the whole frame, just downscale (scene backgrounds)
+//   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
-  { file: "icon-cannon.png",    prompt: `A glowing lightning-bolt cannon power-up icon. ${STYLE}` },
-  { file: "icon-curveball.png", prompt: `A ripe banana power-up icon (curveball). ${STYLE}` },
-  { file: "icon-glide.png",     prompt: `A shiny ice cube power-up icon (glide). ${STYLE}` },
-  { file: "icon-magnet.png",    prompt: `A red horseshoe magnet power-up icon. ${STYLE}` },
-  { file: "icon-sticky.png",    prompt: `A golden honey pot power-up icon (sticky). ${STYLE}` },
-  { file: "icon-laser.png",     prompt: `A laser-sight scope power-up icon. ${STYLE}` },
+  // Ability icons (small, transparent)
+  { file: "icon-cannon.png",    size: 64,  prompt: `A classic black iron artillery cannon on wooden spoked wheels with a lit fuse, side view, game power-up icon. ${ICON}` },
+  { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
+  { file: "icon-glide.png",     size: 64,  prompt: `A shiny ice cube power-up icon (glide). ${ICON}` },
+  { file: "icon-magnet.png",    size: 64,  prompt: `A red horseshoe magnet power-up icon. ${ICON}` },
+  { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
+  { file: "icon-sniper.png",    size: 64,  prompt: `A military sniper rifle with a large telescopic scope, side view, game power-up icon. ${ICON}` },
+
+  // Decor sprites (medium, transparent) — overlaid on the pitch/sidelines
+  { file: "sprite-tree.png",    size: 128, keyOut: true, prompt: `A single lush round green tree with a brown trunk, side view. ${ICON}` },
+  { file: "sprite-dog.png",     size: 128, keyOut: true, prompt: `A small happy brown dog standing, side view, cartoon mascot. ${ICON}` },
+  { file: "sprite-goat.png",    size: 128, keyOut: true, prompt: `A small grey goat standing, side view, cartoon mascot. ${ICON}` },
+
+  // Scene assets (large, opaque) — kept full-frame for backgrounds / UI skins
+  { file: "scene-crowd.png",    size: 256, keyOut: false, prompt: `A packed wooden grandstand section crammed with tiny cheering diverse soccer fans waving their arms, colourful confetti raining down, a few green trees peeking behind, grassy strip at the base. ${SCENE}` },
+  { file: "ui-board.png",       size: 256, keyOut: false, prompt: `A horizontal scoreboard panel made of carved wooden planks with brass corner brackets, empty face with no text, clean front-on view. ${SCENE}` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
@@ -91,18 +108,18 @@ for (const a of ASSETS) {
     try {
       const data = await tryGenerate(model, a.prompt);
       const raw = Buffer.from(data, "base64");
-      // Always ship a game-ready icon: background keyed out + downscaled.
+      // Always ship a game-ready asset: (optionally) keyed out + downscaled.
       // If post-processing ever fails, fall back to the raw PNG so we still
       // produce something rather than dropping the asset.
       let outBuf = raw;
       try {
-        outBuf = processIcon(raw, ICON_SIZE);
+        outBuf = processIcon(raw, { size: a.size || ICON_SIZE, keyOut: a.keyOut !== false });
       } catch (pe) {
         console.log(`(kept raw, post-process failed: ${pe.message}) `);
       }
       writeFileSync(join(OUT, a.file), outBuf);
       MODEL = model; // lock in the working model for the rest
-      console.log(`ok (${model}, ${ICON_SIZE}px)`);
+      console.log(`ok (${model}, ${a.size || ICON_SIZE}px)`);
       ok++;
       done = true;
       break;
