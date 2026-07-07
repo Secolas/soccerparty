@@ -115,3 +115,30 @@ export function processIcon(inputBuffer, opts = {}) {
   }
   return PNG.sync.write(out);
 }
+
+// Split a horizontal N-frame sprite sheet into N separate game-ready frames.
+// The whole animation is generated as ONE image (same character in each pose,
+// side by side), which is the only reliable way to keep the character coherent
+// across frames. Each frame is then keyed + trimmed + centred independently, so
+// swapping between them animates cleanly. Returns an array of PNG Buffers.
+export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2 } = {}) {
+  const src = PNG.sync.read(inputBuffer);
+  const { width: w, height: h, data } = src;
+  const fw = Math.floor(w / frames);
+  const out = [];
+  for (let k = 0; k < frames; k++) {
+    const sub = new PNG({ width: fw, height: h });
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < fw; x++) {
+        const sp = ((y * w) + (k * fw + x)) << 2;
+        const dp = ((y * fw) + x) << 2;
+        sub.data[dp] = data[sp];
+        sub.data[dp + 1] = data[sp + 1];
+        sub.data[dp + 2] = data[sp + 2];
+        sub.data[dp + 3] = data[sp + 3];
+      }
+    }
+    out.push(processIcon(PNG.sync.write(sub), { size, keyOut: true }));
+  }
+  return out;
+}
