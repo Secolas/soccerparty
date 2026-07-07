@@ -1,0 +1,12 @@
+{
+  "name": "soccerparty-asset-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local build-time asset generator (Gemini). Not part of the deployed game.",
+  "scripts": {
+    "gen": "node gen-assets.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^0.3.0"
+  }
+}
