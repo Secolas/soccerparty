@@ -18,11 +18,13 @@ the existing GitHub → Vercel auto-deploy publishes them.
    npm install
    npm run gen
    ```
-   PNGs land in `../assets/generated/`.
-4. **Clean up:** key out the magenta background to transparency and downscale
-   (any image editor, or a `sharp` script). Keep the good ones.
-5. **Commit** the keepers. Merging to `main` deploys them via Vercel — **no
-   Vercel configuration needed.**
+   Game-ready PNGs land in `../assets/generated/` — the generator **auto-processes
+   each one** (keys out the flat background to transparency and downscales to a
+   crisp 64px, via `process-icon.mjs`). No manual clean-up needed.
+4. **Commit** the ones you like. Merging to `main` deploys them via Vercel — **no
+   Vercel configuration needed.** The ability icons are already wired into the
+   scoreboard slots (`ICON_SRC`/`slotFace` in the game), with the emoji as a
+   fallback if a PNG is missing.
 
 ## Notes
 - The generator tries several image-model names (`MODEL_CANDIDATES` in
@@ -31,6 +33,9 @@ the existing GitHub → Vercel auto-deploy publishes them.
   the current name from https://ai.google.dev/gemini-api/docs/image-generation.
 - The script exits non-zero when it produces zero images, so a broken run shows
   a red ❌ in the Actions tab instead of a misleading green ✅.
-- AI pixel-art needs a curation/touch-up loop — expect to regenerate and pick.
-- Wiring PNGs into the game (loading them and drawing on the canvas) is a
-  separate step; ability icons are the easiest to slot in first.
+- AI pixel-art needs a curation loop — expect to regenerate and pick favourites.
+- Icon size is `ICON_SIZE` in `process-icon.mjs` (64px, a clean ÷16 downscale
+  from the 1024px source that fits the 26px scoreboard slots). Change it there.
+- Background removal is a flood-fill from the image edges, so it only clears the
+  background actually connected to the border — a coloured pixel *inside* the
+  subject is never punched out.

@@ -16,6 +16,7 @@ import { GoogleGenAI } from "@google/genai";
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { processIcon, ICON_SIZE } from "./process-icon.mjs";
 
 // ---- load key from tools/.env (or the environment) ----
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -89,9 +90,19 @@ for (const a of ASSETS) {
   for (const model of models) {
     try {
       const data = await tryGenerate(model, a.prompt);
-      writeFileSync(join(OUT, a.file), Buffer.from(data, "base64"));
+      const raw = Buffer.from(data, "base64");
+      // Always ship a game-ready icon: background keyed out + downscaled.
+      // If post-processing ever fails, fall back to the raw PNG so we still
+      // produce something rather than dropping the asset.
+      let outBuf = raw;
+      try {
+        outBuf = processIcon(raw, ICON_SIZE);
+      } catch (pe) {
+        console.log(`(kept raw, post-process failed: ${pe.message}) `);
+      }
+      writeFileSync(join(OUT, a.file), outBuf);
       MODEL = model; // lock in the working model for the rest
-      console.log(`ok (${model})`);
+      console.log(`ok (${model}, ${ICON_SIZE}px)`);
       ok++;
       done = true;
       break;
