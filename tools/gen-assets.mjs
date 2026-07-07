@@ -54,6 +54,10 @@ const ICON = "16-bit SNES pixel art, chunky visible pixels, clean bold silhouett
 const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere, " +
   "cohesive retro palette, no text, no lettering, no watermark";
 
+// Prefix for image-to-image board prompts (the reference image conditions it).
+const ENH = "Redraw and upgrade this reference texture in chunky 16-bit pixel art, " +
+  "matching its palette and top-down style, no text, no watermark.";
+
 // One entry per asset.
 //   keyOut (default true) -> flood-fill background to transparency + trim + downscale
 //   keyOut:false          -> keep the whole frame, just downscale (scene backgrounds)
@@ -90,13 +94,15 @@ const ASSETS = [
   { file: "tile-wood.png",   size: 128, keyOut: false, prompt: `A seamless horizontal wooden plank bleacher texture tile, warm brown boards, pixel art, edges tile seamlessly. ${SCENE}` },
   { file: "ui-board.png",    size: 256, keyOut: false, prompt: `A horizontal scoreboard panel made of carved wooden planks with brass corner brackets, empty face with no text, clean front-on view. ${SCENE}` },
 
-  // Seamless top-down pitch surface textures (one per board), filled into the play area
-  { file: "board-wood.png",   size: 256, keyOut: false, prompt: `A seamless top-down polished wooden sports floor texture, warm brown planks, subtle grain, tiles seamlessly, no lines, no markings. ${SCENE}` },
-  { file: "board-grass.png",  size: 256, keyOut: false, prompt: `A seamless top-down mowed grass football pitch texture, rich green with faint mowing stripes, tiles seamlessly, no lines, no markings. ${SCENE}` },
-  { file: "board-street.png", size: 256, keyOut: false, prompt: `A seamless top-down grey asphalt street court texture, subtle cracks and speckle, tiles seamlessly, no lines, no markings. ${SCENE}` },
-  { file: "board-beach.png",  size: 256, keyOut: false, prompt: `A seamless top-down fine sandy beach texture, warm sand with gentle ripples, tiles seamlessly, no lines, no markings. ${SCENE}` },
-  { file: "board-neon.png",   size: 256, keyOut: false, prompt: `A seamless top-down dark arcade court texture, near-black surface with faint glowing cyan grid lines, tiles seamlessly, no text. ${SCENE}` },
-  { file: "board-ice.png",    size: 256, keyOut: false, prompt: `A seamless top-down pale blue ice rink texture, subtle cracks and glossy sheen, tiles seamlessly, no lines, no markings. ${SCENE}` },
+  // Board surface textures — IMAGE-TO-IMAGE: the reference (refs/board-*.png) is
+  // a swatch of the game's ORIGINAL surface, so Gemini keeps the same colours and
+  // layout but adds richer detail (grain, cracks, wear). Filled into the play area.
+  { file: "board-wood.png",   ref: "refs/board-wood.png",   size: 256, keyOut: false, prompt: `${ENH} Keep the SAME warm wooden plank layout and colours as the reference, but make it a richly detailed seamless top-down wood floor: real wood grain, a few knots, subtle worn patches, crisp plank seams. Tile seamlessly. No lines or markings.` },
+  { file: "board-grass.png",  ref: "refs/board-grass.png",  size: 256, keyOut: false, prompt: `${ENH} Keep the SAME green mowing-stripe pattern and colours as the reference, but make it lush detailed grass: fine blades, subtle wear and faint mud patches. Tile seamlessly. No lines or markings.` },
+  { file: "board-street.png", ref: "refs/board-street.png", size: 256, keyOut: false, prompt: `${ENH} Keep the SAME grey asphalt tone as the reference, but make it a detailed street court: visible cracks, patched tar, small pebbles and scuff marks. Tile seamlessly. No lines or markings.` },
+  { file: "board-beach.png",  ref: "refs/board-beach.png",  size: 256, keyOut: false, prompt: `${ENH} Keep the SAME sandy tone as the reference, but make it detailed beach sand: rippled dunes, footprints, tiny shells and speckle. Tile seamlessly. No lines or markings.` },
+  { file: "board-neon.png",   ref: "refs/board-neon.png",   size: 256, keyOut: false, prompt: `${ENH} Keep the SAME dark neon look and colours as the reference, but make it a detailed glowing arcade court: crisp neon grid, soft glow gradients, subtle scanlines. Tile seamlessly. No text.` },
+  { file: "board-ice.png",    ref: "refs/board-ice.png",    size: 256, keyOut: false, prompt: `${ENH} Keep the SAME pale-blue icy tone as the reference, but make it detailed ice: fine cracks, frost patches and a glossy sheen. Tile seamlessly. No lines or markings.` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
@@ -104,10 +110,14 @@ const OUT = join(__dir, "..", "assets", "generated");
 mkdirSync(OUT, { recursive: true });
 
 // Ask a candidate model for one image. Returns the base64 data, or throws.
-async function tryGenerate(model, prompt) {
+// If refB64 is given, run image-to-image (the reference conditions the output).
+async function tryGenerate(model, prompt, refB64) {
+  const contents = refB64
+    ? [{ text: prompt }, { inlineData: { mimeType: "image/png", data: refB64 } }]
+    : prompt;
   const res = await ai.models.generateContent({
     model,
-    contents: prompt,
+    contents,
     config: { responseModalities: ["Text", "Image"] },
   });
   const parts = res?.candidates?.[0]?.content?.parts || [];
@@ -126,9 +136,10 @@ for (const a of ASSETS) {
   const models = MODEL ? [MODEL] : MODEL_CANDIDATES;
   let done = false;
   let lastErr = "";
+  const refB64 = a.ref ? readFileSync(join(__dir, a.ref)).toString("base64") : null;
   for (const model of models) {
     try {
-      const data = await tryGenerate(model, a.prompt);
+      const data = await tryGenerate(model, a.prompt, refB64);
       const raw = Buffer.from(data, "base64");
       // Always ship game-ready assets. Multi-frame assets are split into N
       // separate frame PNGs (base-1.png..base-N.png); everything else is a
