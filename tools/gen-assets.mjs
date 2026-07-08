@@ -78,6 +78,8 @@ const ASSETS = [
   { file: "icon-reflex.png",   size: 64,  prompt: `A single bright blue goalkeeper glove with bold yellow speed motion lines behind it, dynamic, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-striker.png",  size: 64,  prompt: `A single dynamic red football player figure kicking a ball, running pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-anchor.png",   size: 64,  prompt: `A single heavy grey iron ship anchor, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-reflex-2.png", size: 64,  prompt: `A single dynamic goalkeeper in a blue jersey diving sideways to catch a ball, full-body action save pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-striker-2.png",size: 64,  prompt: `A single golden soccer cleat boot kicking a white ball, with bold motion speed lines, side view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
