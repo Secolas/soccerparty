@@ -73,6 +73,7 @@ const ASSETS = [
   { file: "icon-wall.png",      size: 64,  prompt: `A short sturdy grey stone brick wall barrier, front view, bold thick chunky blocks, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-hammer.png",    size: 64,  prompt: `A single chunky hammer with a grey metal head and brown wooden handle, diagonal, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-slowmo.png",    size: 64,  prompt: `A single chunky hourglass with glowing pale-cyan sand, bold thick outline, symmetrical, big and simple, centered, game power-up icon for slow motion. ${ICON}` },
+  { file: "icon-ghost.png",     size: 64,  prompt: `A single cute white cartoon ghost with a wavy bottom and two dark eyes, glowing pale outline, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
