@@ -60,6 +60,7 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
+  { file: "icon-swap.png",     size: 64,  prompt: `Two bold curved arrows forming a circular two-way swap or exchange symbol, one arrow bright blue and the other bright orange chasing each other in a ring, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-trap.png",     size: 64,  prompt: `A round dark navy disc with a bold white spider web spun across it and a chunky black cartoon spider with a round body and thick legs sitting in the middle, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-shield.png",   size: 64,  prompt: `A classic heraldic knight shield, glossy steel-blue with a bright white highlight and a bold dark outline, big and simple, front view, game power-up icon. ${ICON}` },
   { file: "icon-bumper.png",   size: 64,  prompt: `A glowing round pinball bumper mushroom cap, concentric orange and yellow rings with a bright glowing center and small white spark marks around the rim, bold thick shapes, top-down view, game power-up icon. ${ICON}` },
