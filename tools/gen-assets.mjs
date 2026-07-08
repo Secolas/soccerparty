@@ -60,12 +60,13 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
-  { file: "icon-cannon.png",    size: 64,  prompt: `A classic black iron artillery cannon on wooden spoked wheels with a lit fuse, side view, game power-up icon. ${ICON}` },
+  { file: "icon-cannon.png",    size: 64,  prompt: `A stubby black iron cannon barrel with NO wheels and no carriage, angled up to the right, a lit fuse and a small puff of white smoke, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
   { file: "icon-glide.png",     size: 64,  prompt: `A shiny pale-blue ice cube power-up icon (glide). ${ICON}` },
   { file: "icon-magnet.png",    size: 64,  prompt: `A red horseshoe magnet power-up icon. ${ICON}` },
   { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
-  { file: "icon-sniper.png",    size: 64,  prompt: `A military sniper rifle with a large telescopic scope, side view, game power-up icon. ${ICON}` },
+  { file: "icon-sniper.png",    size: 64,  prompt: `Just a single black telescopic rifle scope by itself (no gun), side view — a short chunky cylinder with a glinting glass lens at each end and adjustment rings, one clean simple bold object, centered, game power-up icon. ${ICON}` },
+  { file: "icon-trophy.png",    size: 96,  prompt: `A shiny golden winner's trophy cup with two side handles on a stepped base, bright gold with highlights, bold simple chunky pixel art, centered, front view. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
@@ -89,6 +90,9 @@ const ASSETS = [
   { file: "tile-grass.png",  size: 128, keyOut: false, prompt: `A seamless top-down lush green grass texture tile, subtle blades, pixel art, edges tile seamlessly. ${SCENE}` },
   { file: "tile-wood.png",   size: 128, keyOut: false, prompt: `A seamless horizontal wooden plank bleacher texture tile, warm brown boards, pixel art, edges tile seamlessly. ${SCENE}` },
   { file: "ui-board.png",    size: 256, keyOut: false, prompt: `A horizontal scoreboard panel made of carved wooden planks with brass corner brackets, empty face with no text, clean front-on view. ${SCENE}` },
+
+  // Home-screen backdrop: dark and atmospheric so menu text stays readable on top.
+  { file: "menu-bg.png",     size: 320, keyOut: false, prompt: `A moody night football stadium backdrop, portrait framing: very dark navy-to-black vertical gradient, two soft floodlight glows in the top corners, faint blurred crowd silhouettes across the upper stands, a dim empty pitch fading into darkness at the bottom, lots of dark negative space, subtle, atmospheric, no text, no players, no scoreboard. ${SCENE}` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
@@ -113,7 +117,12 @@ async function tryGenerate(model, prompt) {
 let MODEL = null;
 let ok = 0;
 
+// Optional: pass asset filenames as CLI args to regenerate only those
+// (e.g. `node gen-assets.mjs icon-cannon.png icon-sniper.png`).
+const ONLY = process.argv.slice(2);
+
 for (const a of ASSETS) {
+  if (ONLY.length && !ONLY.includes(a.file)) continue;
   process.stdout.write(`Generating ${a.file} ... `);
   const models = MODEL ? [MODEL] : MODEL_CANDIDATES;
   let done = false;
