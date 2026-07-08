@@ -75,6 +75,12 @@ const ASSETS = [
   { file: "icon-hammer.png",    size: 64,  prompt: `A single chunky hammer with a grey metal head and brown wooden handle, diagonal, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-slowmo.png",    size: 64,  prompt: `A single chunky hourglass with glowing pale-cyan sand, bold thick outline, symmetrical, big and simple, centered, game power-up icon for slow motion. ${ICON}` },
   { file: "icon-ghost.png",     size: 64,  prompt: `A single cute white cartoon ghost with a wavy bottom and two dark eyes, glowing pale outline, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-reflex.png",   size: 64,  prompt: `A single bright blue goalkeeper glove with bold yellow speed motion lines behind it, dynamic, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-striker.png",  size: 64,  prompt: `Two overlapping round soccer player tokens like subbuteo counters, each a glossy circular disc with a bold horizontal green-and-yellow jersey stripe across the middle, one disc in front and an identical one offset behind it to show a duplicate extra player, top-down view, thick dark outline, bright high-contrast colors, bold simple chunky pixel art, big and easy to read, centered, game power-up icon. ${ICON}` },
+  { file: "icon-anchor.png",   size: 64,  prompt: `A single heavy grey iron ship anchor, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-reflex-2.png", size: 64,  prompt: `A single dynamic goalkeeper in a blue jersey diving sideways to catch a ball, full-body action save pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-striker-2.png",size: 64,  prompt: `A single golden soccer cleat boot kicking a white ball, with bold motion speed lines, side view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-portal.png",   size: 64,  prompt: `A glowing swirling portal vortex, concentric rings of bright cyan and purple energy spiraling into a glowing white center, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
