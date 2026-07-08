@@ -70,6 +70,7 @@ const ASSETS = [
   { file: "icon-bigkeeper.png", size: 64,  prompt: `A single goalkeeper glove, palm facing forward, blue and white, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-freeze.png",    size: 64,  prompt: `A single crisp pale-blue and white snowflake, symmetrical, bold thick chunky arms, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-guided.png",    size: 64,  prompt: `A single bright cyan spiral swirl with an arrowhead, glowing, bold thick chunky, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-joystick.png",  size: 64,  prompt: `A single arcade joystick with a big bright RED glossy ball knob on top of a short black stick and a black base, vivid red sphere, front view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-wall.png",      size: 64,  prompt: `A short sturdy grey stone brick wall barrier, front view, bold thick chunky blocks, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-hammer.png",    size: 64,  prompt: `A single chunky hammer with a grey metal head and brown wooden handle, diagonal, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-slowmo.png",    size: 64,  prompt: `A single chunky hourglass with glowing pale-cyan sand, bold thick outline, symmetrical, big and simple, centered, game power-up icon for slow motion. ${ICON}` },
