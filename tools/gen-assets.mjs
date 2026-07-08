@@ -45,9 +45,8 @@ const MODEL_CANDIDATES = [
 
 // Style for small ability icons / single sprites: solid magenta background so the
 // post-processor can flood-fill it out to transparency.
-const ICON = "16-bit SNES pixel art, ONE single subject drawn as BIG as possible filling almost the entire square frame edge to edge, " +
-  "extremely bold thick chunky forms, heavy dark outline, high contrast, simple and easy to read at tiny size, no thin lines, minimal fine detail, " +
-  "chunky visible pixels, vibrant retro palette, centered subject, flat solid #FF00FF magenta background, " +
+const ICON = "16-bit SNES pixel art, chunky visible pixels, clean bold silhouette, " +
+  "vibrant retro palette, centered subject, flat solid #FF00FF magenta background, " +
   "no text, no lettering, no drop shadow, no gradient background";
 
 // Style for larger scene assets (crowd, wooden board) kept as-is (no keying),
@@ -77,7 +76,7 @@ const ASSETS = [
   { file: "icon-slowmo.png",    size: 64,  prompt: `A single chunky hourglass with glowing pale-cyan sand, bold thick outline, symmetrical, big and simple, centered, game power-up icon for slow motion. ${ICON}` },
   { file: "icon-ghost.png",     size: 64,  prompt: `A single cute white cartoon ghost with a wavy bottom and two dark eyes, glowing pale outline, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-reflex.png",   size: 64,  prompt: `A single bright blue goalkeeper glove with bold yellow speed motion lines behind it, dynamic, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
-  { file: "icon-striker.png",  size: 64,  prompt: `A single dynamic red football player figure kicking a ball, running pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-striker.png",  size: 64,  prompt: `A single bold soccer striker player in a bright red jersey and white shorts, mid-kick pose striking a white ball, clean simple chunky silhouette, bright colors, big and easy to read, side view, game power-up icon. ${ICON}` },
   { file: "icon-anchor.png",   size: 64,  prompt: `A single heavy grey iron ship anchor, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-reflex-2.png", size: 64,  prompt: `A single dynamic goalkeeper in a blue jersey diving sideways to catch a ball, full-body action save pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-striker-2.png",size: 64,  prompt: `A single golden soccer cleat boot kicking a white ball, with bold motion speed lines, side view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
