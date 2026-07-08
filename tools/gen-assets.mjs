@@ -60,6 +60,14 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
+  { file: "icon-swap.png",     size: 64,  prompt: `Two bold curved arrows forming a circular two-way swap or exchange symbol, one arrow bright blue and the other bright orange chasing each other in a ring, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
+  { file: "icon-trap.png",     size: 64,  prompt: `A round dark navy disc with a bold white spider web spun across it and a chunky black cartoon spider with a round body and thick legs sitting in the middle, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
+  { file: "icon-shield.png",   size: 64,  prompt: `A classic heraldic knight shield, glossy steel-blue with a bright white highlight and a bold dark outline, big and simple, front view, game power-up icon. ${ICON}` },
+  { file: "icon-bumper.png",   size: 64,  prompt: `A glowing round pinball bumper mushroom cap, concentric orange and yellow rings with a bright glowing center and small white spark marks around the rim, bold thick shapes, top-down view, game power-up icon. ${ICON}` },
+  { file: "icon-ricochet.png", size: 64,  prompt: `One bold bright yellow arrow ricocheting off a short thick grey wall bar in a clean V-shaped bounce, a small white impact spark where it hits, nothing else, bold thick shapes, big and simple, game power-up icon. ${ICON}` },
+  { file: "icon-fog.png",      size: 64,  prompt: `A puffy grey storm fog cloud made of layered rounded puffs with a few short mist streak lines below it, bold thick shapes, big and simple, game power-up icon. ${ICON}` },
+  { file: "icon-drunk.png",   size: 64,  prompt: `A frothy beer mug tankard full of amber beer with thick white foam overflowing the top, a chunky handle on the right side, one or two small curved wobble marks near the rim to suggest dizziness, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
+  { file: "icon-serpent.png", size: 64,  prompt: `A bright green snake curled into a bold capital letter S shape, small head at the top with a round eye and a thin red forked tongue, simple round scales, bold thick shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-cannon.png",    size: 64,  prompt: `A stubby black iron cannon barrel with NO wheels and no carriage, angled up to the right, a lit fuse and a small puff of white smoke, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
   { file: "icon-glide.png",     size: 64,  prompt: `A shiny pale-blue ice cube power-up icon (glide). ${ICON}` },
