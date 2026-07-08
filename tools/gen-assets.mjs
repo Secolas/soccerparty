@@ -45,8 +45,9 @@ const MODEL_CANDIDATES = [
 
 // Style for small ability icons / single sprites: solid magenta background so the
 // post-processor can flood-fill it out to transparency.
-const ICON = "16-bit SNES pixel art, chunky visible pixels, clean bold silhouette, " +
-  "vibrant retro palette, centered subject, flat solid #FF00FF magenta background, " +
+const ICON = "16-bit SNES pixel art, ONE single subject drawn as BIG as possible filling almost the entire square frame edge to edge, " +
+  "extremely bold thick chunky forms, heavy dark outline, high contrast, simple and easy to read at tiny size, no thin lines, minimal fine detail, " +
+  "chunky visible pixels, vibrant retro palette, centered subject, flat solid #FF00FF magenta background, " +
   "no text, no lettering, no drop shadow, no gradient background";
 
 // Style for larger scene assets (crowd, wooden board) kept as-is (no keying),
