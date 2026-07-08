@@ -67,6 +67,14 @@ const ASSETS = [
   { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
   { file: "icon-sniper.png",    size: 64,  prompt: `Just a single black telescopic rifle scope by itself (no gun), side view — a short chunky cylinder with a glinting glass lens at each end and adjustment rings, one clean simple bold object, centered, game power-up icon. ${ICON}` },
   { file: "icon-trophy.png",    size: 96,  prompt: `A shiny golden winner's trophy cup with two side handles on a stepped base, bright gold with highlights, bold simple chunky pixel art, centered, front view. ${ICON}` },
+  { file: "icon-bigkeeper.png", size: 64,  prompt: `A single goalkeeper glove, palm facing forward, blue and white, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-freeze.png",    size: 64,  prompt: `A single crisp pale-blue and white snowflake, symmetrical, bold thick chunky arms, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-guided.png",    size: 64,  prompt: `A single bright cyan spiral swirl with an arrowhead, glowing, bold thick chunky, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-joystick.png",  size: 64,  prompt: `A single arcade joystick with a big bright RED glossy ball knob on top of a short black stick and a black base, vivid red sphere, front view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-wall.png",      size: 64,  prompt: `A short sturdy grey stone brick wall barrier, front view, bold thick chunky blocks, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-hammer.png",    size: 64,  prompt: `A single chunky hammer with a grey metal head and brown wooden handle, diagonal, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-slowmo.png",    size: 64,  prompt: `A single chunky hourglass with glowing pale-cyan sand, bold thick outline, symmetrical, big and simple, centered, game power-up icon for slow motion. ${ICON}` },
+  { file: "icon-ghost.png",     size: 64,  prompt: `A single cute white cartoon ghost with a wavy bottom and two dark eyes, glowing pale outline, bold thick chunky shape, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
