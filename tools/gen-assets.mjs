@@ -60,6 +60,8 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
+  { file: "icon-drunk.png",   size: 64,  prompt: `A frothy beer mug tankard full of amber beer with thick white foam overflowing the top, a chunky handle on the right side, one or two small curved wobble marks near the rim to suggest dizziness, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
+  { file: "icon-serpent.png", size: 64,  prompt: `A bright green snake curled into a bold capital letter S shape, small head at the top with a round eye and a thin red forked tongue, simple round scales, bold thick shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-cannon.png",    size: 64,  prompt: `A stubby black iron cannon barrel with NO wheels and no carriage, angled up to the right, a lit fuse and a small puff of white smoke, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
   { file: "icon-glide.png",     size: 64,  prompt: `A shiny pale-blue ice cube power-up icon (glide). ${ICON}` },
