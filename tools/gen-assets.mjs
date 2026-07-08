@@ -60,12 +60,12 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
-  { file: "icon-cannon.png",    size: 64,  prompt: `A classic black iron artillery cannon on wooden spoked wheels with a lit fuse, side view, game power-up icon. ${ICON}` },
+  { file: "icon-cannon.png",    size: 64,  prompt: `A stubby black iron cannon barrel with NO wheels and no carriage, angled up to the right, a lit fuse and a small puff of white smoke, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
   { file: "icon-glide.png",     size: 64,  prompt: `A shiny pale-blue ice cube power-up icon (glide). ${ICON}` },
   { file: "icon-magnet.png",    size: 64,  prompt: `A red horseshoe magnet power-up icon. ${ICON}` },
   { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
-  { file: "icon-sniper.png",    size: 64,  prompt: `A military sniper rifle with a large telescopic scope, side view, game power-up icon. ${ICON}` },
+  { file: "icon-sniper.png",    size: 64,  prompt: `Just a single black telescopic rifle scope by itself (no gun), side view — a short chunky cylinder with a glinting glass lens at each end and adjustment rings, one clean simple bold object, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
@@ -113,7 +113,12 @@ async function tryGenerate(model, prompt) {
 let MODEL = null;
 let ok = 0;
 
+// Optional: pass asset filenames as CLI args to regenerate only those
+// (e.g. `node gen-assets.mjs icon-cannon.png icon-sniper.png`).
+const ONLY = process.argv.slice(2);
+
 for (const a of ASSETS) {
+  if (ONLY.length && !ONLY.includes(a.file)) continue;
   process.stdout.write(`Generating ${a.file} ... `);
   const models = MODEL ? [MODEL] : MODEL_CANDIDATES;
   let done = false;
