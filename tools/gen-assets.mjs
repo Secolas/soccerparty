@@ -60,8 +60,7 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
-  { file: "icon-tremor.png",   size: 64,  prompt: `A bold jagged lightning-bolt style crack splitting brown ground down the middle, a few short straight motion/shake lines on the left and right sides, high contrast, very bold thick simple shapes, big and clear, game power-up icon. ${ICON}` },
-  { file: "icon-mirror.png",   size: 64,  prompt: `A hand mirror, oval reflective glass with a light-blue shine streak and a chunky gold handle and frame, bold thick shapes, big and simple, game power-up icon. ${ICON}` },
+  { file: "icon-tilt.png",     size: 64,  prompt: `A wooden seesaw plank tilted at an angle balanced on a triangular pivot, a round ball rolling down the low end with a couple of short motion lines, high contrast, very bold thick simple shapes, big and clear, game power-up icon. ${ICON}` },
   { file: "icon-flick.png",    size: 64,  prompt: `A single chunky soccer cleat boot in side view, no ball, just the boot, in bright cream white and gold colours, very bold thick simple silhouette, dark outline, minimal detail, fills most of the frame, game icon. ${ICON}` },
   { file: "icon-wild.png",     size: 64,  prompt: `A playing card joker wild card, a single card tilted slightly with a bold star or question mark on its face and a colorful border, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-swap.png",     size: 64,  prompt: `Two bold curved arrows forming a circular two-way swap or exchange symbol, one arrow bright blue and the other bright orange chasing each other in a ring, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
