@@ -60,7 +60,7 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
   // Ability icons (small, transparent)
-  { file: "icon-flick.png",    size: 64,  prompt: `A single soccer cleat boot kicking, side view, with a couple of small motion swoosh lines behind it, bold thick shapes, big and simple, game icon. ${ICON}` },
+  { file: "icon-flick.png",    size: 64,  prompt: `A single chunky soccer cleat boot in side view kicking a small ball, very bold thick simple silhouette, minimal detail, high contrast, fills most of the frame, game icon. ${ICON}` },
   { file: "icon-wild.png",     size: 64,  prompt: `A playing card joker wild card, a single card tilted slightly with a bold star or question mark on its face and a colorful border, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-swap.png",     size: 64,  prompt: `Two bold curved arrows forming a circular two-way swap or exchange symbol, one arrow bright blue and the other bright orange chasing each other in a ring, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
   { file: "icon-trap.png",     size: 64,  prompt: `A round dark navy disc with a bold white spider web spun across it and a chunky black cartoon spider with a round body and thick legs sitting in the middle, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
