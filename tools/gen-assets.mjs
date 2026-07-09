@@ -134,6 +134,8 @@ const ASSETS = [
   { file: "vsbg-japan.png",        size: 320, keyOut: false, prompt: `Portrait framing, Japan at dusk: dark silhouette of Mount Fuji and a torii gate with cherry-blossom branches, a soft pink-and-gold sky, a few glowing paper lanterns, lots of dark negative space, no text, no people. ${SCENE}` },
   { file: "vsbg-usa.png",          size: 320, keyOut: false, prompt: `Portrait framing, New York at night: dark city skyline silhouette with the Statue of Liberty, warm window lights, a deep blue sky, lots of dark negative space, no text, no people. ${SCENE}` },
   { file: "vsbg-mexico.png",       size: 320, keyOut: false, prompt: `Portrait framing, a Mexican Day of the Dead night: dark silhouette of an Aztec step-pyramid, a glowing marigold-orange light, papel picado banners and candle glow, lots of dark negative space, no text, no people. ${SCENE}` },
+  { file: "vsbg-iceland.png",      size: 320, keyOut: false, prompt: `Portrait framing, Iceland at night: dark silhouette of a snowy volcanic mountain and a lone turf-roof house, swirling green aurora borealis overhead, a frozen waterfall catching faint light, deep blue sky, lots of dark negative space, no text, no people. ${SCENE}` },
+  { file: "vsbg-senegal.png",      size: 320, keyOut: false, prompt: `Portrait framing, the Senegal savanna at dusk: dark silhouettes of flat-topped acacia trees and a lone baobab on the open plains, a giraffe silhouette, a big warm orange sunset, lots of dark negative space, no text, no people. ${SCENE}` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
