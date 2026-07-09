@@ -117,6 +117,15 @@ const ASSETS = [
 
   // Home-screen backdrop: dark and atmospheric so menu text stays readable on top.
   { file: "menu-bg.png",     size: 320, keyOut: false, prompt: `A moody night football stadium backdrop, portrait framing: very dark navy-to-black vertical gradient, two soft floodlight glows in the top corners, faint blurred crowd silhouettes across the upper stands, a dim empty pitch fading into darkness at the bottom, lots of dark negative space, subtle, atmospheric, no text, no players, no scoreboard. ${SCENE}` },
+
+  // Versus-clash backdrops, one per pitch theme. Dark base with glowing light
+  // shapes so they read through a screen-blend overlay behind the clash halves.
+  { file: "vsbg-beach.png",  size: 320, keyOut: false, prompt: `Portrait framing, mostly dark teal-to-black vertical gradient, a warm glowing sunset band near the top, tall dark palm tree silhouettes along both edges, a faint soft beach horizon line, lots of dark negative space, atmospheric, no text, no players. ${SCENE}` },
+  { file: "vsbg-street.png", size: 320, keyOut: false, prompt: `Portrait framing, dark night city vertical gradient, a couple of glowing amber street-lamp halos, chain-link fence and brick wall silhouettes, faint cool graffiti glow low down, urban street football court mood, lots of dark negative space, no text, no players. ${SCENE}` },
+  { file: "vsbg-grass.png",  size: 320, keyOut: false, prompt: `Portrait framing, dark stadium vertical gradient, two bright floodlight glows near the top, faint blurred crowd silhouettes, an empty green pitch strip fading into darkness, lots of dark negative space, no text, no players. ${SCENE}` },
+  { file: "vsbg-wood.png",   size: 320, keyOut: false, prompt: `Portrait framing, dark indoor sports hall, warm wooden roof beams overhead, a couple of hanging lamp glows, a dim polished court fading to dark, lots of dark negative space, no text, no players. ${SCENE}` },
+  { file: "vsbg-neon.png",   size: 320, keyOut: false, prompt: `Portrait framing, near-black background, glowing cyan and magenta neon grid lines converging into depth, a few bright light streaks, futuristic arena mood, lots of dark negative space, no text, no players. ${SCENE}` },
+  { file: "vsbg-ice.png",    size: 320, keyOut: false, prompt: `Portrait framing, dark cold arena vertical gradient, a pale glowing blue ice-rink glare across the middle, cool light beams from above, faint dark rink boards, lots of dark negative space, no text, no players. ${SCENE}` },
 ];
 
 const ai = new GoogleGenAI({ apiKey: KEY });
