@@ -103,6 +103,15 @@ const ASSETS = [
   { file: "fan-5", frames: 2, size: 48, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small soccer fan side by side, identical character. LEFT: standing holding a scarf low. RIGHT: holding the scarf stretched overhead. White jersey, light skin, front view, full body. Clear gap between frames. ${ICON}` },
   { file: "fan-6", frames: 2, size: 48, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small soccer fan side by side, identical character. LEFT: standing on the ground. RIGHT: jumping with joy, arms up. Orange jersey, brown skin, front view, full body. Clear gap between frames. ${ICON}` },
 
+  // Ability FX — multi-frame animation sheets played over the ball when the
+  // ability fires. Generated as ONE horizontal strip so the blast stays
+  // coherent frame-to-frame; processSheet() splits it into fx-cannon-1.png ..
+  // fx-cannon-N.png. The game auto-loads these and plays them oriented along
+  // the shot; if they are missing it falls back to a procedural muzzle flash,
+  // so the effect works before this art exists. Point the blast to the RIGHT
+  // (+x) — the game rotates the strip to the shot direction.
+  { file: "fx-cannon", frames: 6, size: 96, prompt: `A 6-frame horizontal pixel-art sprite sheet of a cannon MUZZLE BLAST firing to the RIGHT, frames left-to-right showing the blast over time. Frame 1: tiny bright spark. Frame 2: small white-hot flash. Frame 3: big billowing orange-and-yellow fireball with a forward spike of white flame. Frame 4: the fireball wider with grey smoke puffs and flying embers. Frame 5: smoke dispersing, dimmer orange glow. Frame 6: faint fading grey smoke wisps. Each frame the same size and vertically centered, clear vertical gaps between frames, blast always pointing right. No cannon barrel, no text. ${ICON}` },
+
   // Animal mascots — 2-frame animation sheets (rest | active)
   { file: "sprite-dog",  frames: 2, size: 72, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small brown dog side by side, identical character. LEFT: standing calm. RIGHT: front paws up leaping happily, tail wagging. Side view, cartoon mascot. Clear gap between frames. ${ICON}` },
   { file: "sprite-goat", frames: 2, size: 72, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small grey goat side by side, identical character. LEFT: standing calm. RIGHT: rearing up on hind legs. Side view, cartoon mascot. Clear gap between frames. ${ICON}` },
