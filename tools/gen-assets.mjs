@@ -95,6 +95,8 @@ const ASSETS = [
   { file: "icon-strategist.png",size: 64, prompt: `A single tactics clipboard board, dark green with a white soccer pitch diagram and one bold bright yellow arrow drawn across it, held upright, front view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-volley.png",   size: 64,  prompt: `A single golden soccer cleat boot striking a white soccer ball, with bold curved motion swoosh lines and a small white impact spark, ABSOLUTELY NO person, no player, no leg, no body — ONLY the boot and the ball, side view, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-medic.png",    size: 64,  prompt: `A single bold red medical cross (plus symbol) on a white rounded first-aid badge, clean symmetrical shape, thick dark outline, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-flex.png",     size: 64,  prompt: `A bold flexed bicep ARM in the style of the 💪 emoji: one SOLID FILLED shape completely coloured in flat skin tone with a big rounded muscle bulge, simple flat shading, ONE thick dark outline on the outer edge ONLY, absolutely NO inner line-art, NO hollow areas, NO see-through gaps, filled like a sticker, chunky bold pixel art, big and simple, centered, game icon. ${ICON}` },
+  { file: "icon-fire.png",     size: 64,  prompt: `A single bold campfire flame, bright orange yellow and red tongues of fire, clean bold chunky rounded shapes, thick dark outline, big and simple, centered, game icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
