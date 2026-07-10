@@ -26,6 +26,18 @@ the existing GitHub → Vercel auto-deploy publishes them.
    scoreboard slots (`ICON_SRC`/`slotFace` in the game), with the emoji as a
    fallback if a PNG is missing.
 
+## Ability FX (animated sprite sheets)
+
+The `fx-cannon` entry generates a 6-frame muzzle-blast **sprite sheet** — one
+horizontal strip so the blast stays coherent — which `processSheet` splits into
+`fx-cannon-1.png … fx-cannon-6.png`. The game auto-loads these and plays them
+over the ball, rotated to the shot direction, whenever a **cannon** flick fires.
+Until the PNGs exist the game draws a **procedural muzzle flash** instead, so the
+effect works before any art is generated (regenerate with
+`npm run gen fx-cannon` and commit the frames you like). This is the template
+for animating other abilities: add an `{ file, frames, size, prompt }` entry and
+reuse the in-game `drawAnimSprite` playback helper.
+
 ## Notes
 - The generator tries several image-model names (`MODEL_CANDIDATES` in
   `gen-assets.mjs`) and uses the first that responds, since the "Nano Banana"
