@@ -91,6 +91,10 @@ const ASSETS = [
   { file: "icon-reflex-2.png", size: 64,  prompt: `A single dynamic goalkeeper in a blue jersey diving sideways to catch a ball, full-body action save pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-striker-2.png",size: 64,  prompt: `A single golden soccer cleat boot kicking a white ball, with bold motion speed lines, side view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-portal.png",   size: 64,  prompt: `A glowing swirling portal vortex, concentric rings of bright cyan and purple energy spiraling into a glowing white center, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-sweeper.png",  size: 64,  prompt: `A single goalkeeper in a bright green jersey charging forward with both arms stretched out to rush the ball, dynamic running-out lunge pose, bold thick chunky pixel silhouette, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-playmaker.png",size: 64,  prompt: `A single tactics clipboard board, dark green with a white soccer pitch diagram and one bold bright yellow arrow drawn across it, held upright, front view, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-bicycle.png",  size: 64,  prompt: `A single soccer player performing an acrobatic bicycle overhead kick, body upside down in mid-air with legs scissoring to strike a white ball above, dynamic action silhouette, bold thick chunky pixel shapes, big and simple, centered, game power-up icon. ${ICON}` },
+  { file: "icon-physio.png",   size: 64,  prompt: `A single bold red medical cross (plus symbol) on a white rounded first-aid badge, clean symmetrical shape, thick dark outline, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
