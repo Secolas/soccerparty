@@ -1,63 +1,55 @@
 # Soccer Party — Art Style Guide (PixelLab)
 
-The one job of this file: **every asset looks like it belongs in the same game.**
-Always start a PixelLab prompt with the STYLE PREFIX below, use the recommended
-parameters, and lock new work against a reference sprite you already like.
+**Direction: Dave the Diver.** Detailed, warm, expressive pixel art — soft
+painterly shading, rich saturated palette, rounded friendly characters, subtle
+rim light, cozy vibrant mood. Every asset should feel like it came from one
+warm, hand-crafted set.
 
-## Direction
-
-Bold, characterful pixel art. Read-at-a-glance silhouettes (Balatro) with a warm,
-saturated, richly-lit palette (Dave the Diver). Playful, punchy, a little juicy.
-
-- **Small sprites (≤48px: birds, fans, coin, ball, players):** bold silhouette
-  first, LOW detail. If it isn't readable as a black shape, it's wrong.
-- **Large assets (backgrounds, UI panels, trophy):** allow rich detail, layered
-  shading, atmosphere.
+The old Gemini "SNES" assets (goat, blue bird, chunky icons) are **retired** — we
+are regenerating the visible set in this style. Do not mix the two looks.
 
 ## STYLE PREFIX (paste at the start of every prompt)
 
-> vibrant characterful pixel art, bold clean silhouette, single dark outline,
-> saturated palette with warm highlights and cool shadows, chunky readable shapes,
-> juicy and playful, high contrast against background, no text, no watermark,
-> no drop shadow
+> detailed expressive pixel art in the style of Dave the Diver, warm rich
+> saturated palette, soft painterly shading with smooth gradients, subtle rim
+> light, rounded friendly proportions, clean readable forms, cozy vibrant mood,
+> no text, no watermark, no drop shadow
+
+## The size rule (READ THIS)
+
+Dave-the-Diver detail needs pixels. Match detail to how big the asset renders:
+
+| Asset renders...        | size    | shading          | detail          | outline           |
+|-------------------------|---------|------------------|-----------------|-------------------|
+| Large (bg, menu, mascot)| 128+    | highly detailed  | highly detailed | selective outline |
+| Medium (trophy, panels) | 64–96   | detailed shading | medium detail   | selective outline |
+| Small (gameplay sprites)| 32–48   | basic shading    | low detail      | single color      |
+
+For the small tier, keep the Dave-the-Diver *palette and warmth* but simplify —
+a bold, readable silhouette beats detail that turns to mush at 32px.
 
 ## Palette
 
-- Grass/brand green: `#2f8f3e` / accent lime `#c6e84a`
-- Netherlands accent (Oranje): warm orange `#ff8c1a`
-- Keep 8–16 colors per sprite. Saturated mids, punchy highlights, cool dark shadows.
-
-## Recommended PixelLab parameters
-
-| Parameter   | Small sprites        | Large assets            |
-|-------------|----------------------|-------------------------|
-| size        | 32 or 48             | 128+                    |
-| outline     | single color black   | single color / selective|
-| shading     | basic shading        | medium/detailed shading |
-| detail      | low detail           | medium/highly detailed  |
-| view        | side                 | side / high top-down    |
-| proportions | default (chibi ok)   | default                 |
+- Grass green `#2f8f3e`, accent lime `#c6e84a`, Oranje `#ff8c1a`
+- Warm saturated mid-tones, soft highlights, gentle cool shadows (not pure black)
+- Soft selective outlines on big assets; a single darker outline on tiny sprites
 
 ## Consistency workflow
 
-1. Generate the **first** sprite (the bird) with the prefix + params above.
-2. Curate: regenerate until you love ONE result. That becomes the **reference**.
-3. For every later sprite, tell PixelLab to **match the style of** that reference
-   image (PixelLab supports style-reference / same-character generation). This is
-   what keeps 30 assets looking like one set instead of thirty guesses.
+1. Generate ONE hero asset you love in this style → it becomes the **reference**.
+2. For everything after, tell PixelLab to **match the style of** that reference
+   image. This is what makes 30 assets look like one set.
+3. Curate hard: regenerate until on-model before saving.
 
-## Note on existing assets
+## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
-Current art (`assets/generated/*.png`) was made with Gemini in a "16-bit SNES"
-look. Once this PixelLab style is dialed in, plan to **regenerate the visible set**
-(fans, coin, ball, backgrounds, UI) so nothing clashes. Don't mix half-and-half.
+> A plump friendly bird, side view, mid-flight with wings raised, bright warm
+> orange plumage, cheerful expressive face. 4-frame flapping animation. detailed
+> expressive pixel art in the style of Dave the Diver, warm rich saturated
+> palette, soft painterly shading with smooth gradients, subtle rim light, rounded
+> friendly proportions, cozy vibrant mood, no text, no watermark, no drop shadow.
+> size 128, side view, selective outline, highly detailed shading, highly
+> detailed. Save frames to assets/generated/.
 
-## First test prompt — the bird
-
-> A small plump bird, side view, mid-flight with wings up, cheerful, bright
-> plumage. 4-frame flapping animation. vibrant characterful pixel art, bold clean
-> silhouette, single dark outline, saturated palette with warm highlights and cool
-> shadows, chunky readable shapes, juicy and playful, high contrast against
-> background, no text, no watermark, no drop shadow.
-> size 48, side view, single color outline, basic shading, low detail.
-> Save frames to assets/generated/.
+Generate at 128px so the Dave-the-Diver look is visible; the game can downscale
+per-use. Don't judge the style on a 32px render.
