@@ -95,7 +95,12 @@ direction). Sheets in `assets/generated/`:
   (south) view since the horse skeleton short-necks the side view.
 - Trees (static 48x48 props, `create_map_object` side view): `prop-savanna-tree-{acacia,baobab}.png`.
 Wired via `NS_SAVANNA` + the `sanim` ambient kind (vx!=0 walker w/ direction flip, vx=0 idle/prop).
-Trees pushed before animals so they render behind. Sizes ~13-17 (animals) / 26-30 (trees).
+Trees pushed before animals so they render behind. Sizes ~13-17 (animals) / 26-30 (trees). Later reworked: all savanna decor is drawn in a `drawSavannaTop(now)` pass
+(mirrors `drawBeachTop`, runs after the field via `over:true` flags) so nothing hides behind the
+pitch. Layout: forest of trees lining the left & right margins, a giraffe on each side, gazelle/zebra
+walking the top & bottom touchlines with lion/elephant idling there, seagulls (`kind:'bird'`,
+`shadow:true`) gliding diagonally over the pitch, and drifting `kind:'swind'` particles for wind.
+The procedural `drawSun`/`drawGiraffe`/`drawElephant`/`drawAcacia` calls for `safari` were removed.
 
 ## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
