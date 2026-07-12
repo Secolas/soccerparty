@@ -41,6 +41,43 @@ a bold, readable silhouette beats detail that turns to mush at 32px.
    image. This is what makes 30 assets look like one set.
 3. Curate hard: regenerate until on-model before saving.
 
+## Animated actors (fans, spectators, mascots) — spritesheet spec
+
+Every animated **person/creature the game tints and loops** uses ONE format so it
+drops into the existing slicer/tint code with zero changes:
+
+- **Sheet:** one horizontal strip, **432×48 px**, RGBA, **transparent background**.
+- **Frames:** **9 frames of 48×48** (the slicer assumes 9). Read left→right as a loop.
+- **Framing:** **front-facing**, full body, **feet on the bottom edge** of each 48px
+  cell. The game plants feet at a y-position and lets the pitch frame clip the body,
+  exactly like the grass stands.
+- **Tintable clothing = neutral mid-grey.** The recolor pass (`_fanFrame`) repaints
+  only *near-grey* pixels (low saturation, mid luminance) with the team / skin color.
+  So anything you want recolored **must be grey**; keep skin, hair, and fixed-color
+  details in their real colors so they survive.
+- Keep the Dave-the-Diver palette/warmth but **simplify at this size** — bold readable
+  silhouette, a single darker outline (small tier, per the size rule above).
+
+### Naming
+- Match/menu fans: `fan-<pose>-<n>-sheet.png` — poses in use: `standing`, `seated`,
+  `scarf`, `flag`.
+- Themed scenery actors & props: `prop-<theme>-<name>[-<n>]-sheet.png` (animated) or
+  `prop-<theme>-<name>.png` (static 48×48). Examples: `prop-beach-seagull-1-sheet.png`,
+  `prop-beach-umbrella-red.png`, `prop-street-fan-1-sheet.png`.
+
+### Reusable actor prompt
+> [STYLE PREFIX] + `<who / wardrobe>`, front view, full body, feet at the bottom of
+> the frame. `<idle / celebrating / seated>` animation, **9 frames**. Clothing a
+> **neutral mid-grey** so the game recolors it; natural skin and hair. size 48, front
+> view, single-color outline, basic shading. Export as **one horizontal spritesheet
+> 432×48 (9 × 48px frames), transparent background.** Save to
+> `assets/generated/<name>-sheet.png`.
+
+### Current task — street pitch spectators
+`prop-street-fan-{1,2,3}-sheet.png` — idle urban onlookers (hoodie+cap / jacket+beanie /
+different build), grey clothing, subtle idle bob (no jumping). Match the style of the
+`fan-standing-*` sheets.
+
 ## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
 > A plump friendly bird, side view, mid-flight with wings raised, bright warm
