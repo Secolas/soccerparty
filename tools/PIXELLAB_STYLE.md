@@ -102,6 +102,26 @@ walking the top & bottom touchlines with lion/elephant idling there, seagulls (`
 `shadow:true`) gliding diagonally over the pitch, and drifting `kind:'swind'` particles for wind.
 The procedural `drawSun`/`drawGiraffe`/`drawElephant`/`drawAcacia` calls for `safari` were removed.
 
+### World scale (human vs animal) — reuse across all pitches
+Baseline: a **human sprite draws at ~17px** (beach/street/grass fans). Keep living things in a
+believable size hierarchy relative to that:
+
+| Thing            | draw sz | vs human |
+|------------------|---------|----------|
+| gazelle          | ~15     | ~0.9×    |
+| human fan        | 17      | 1×       |
+| lion             | ~18     | ~1.05×   |
+| zebra            | ~19     | ~1.1×    |
+| elephant         | ~28     | ~1.6×    |
+| giraffe          | ~30     | ~1.8×    |
+| trees (acacia/baobab) | ~30–36 | tower over all |
+
+**Constraint:** the surround bands are thin (top/bottom `CROWD_TB`=10px, sides `CROWD_LR`=12px),
+so realistically-sized big animals/trees **cannot sit fully inside them** — they're placed at the
+touchlines/corners and deliberately overlap the pitch edge as *foreground framing* (drawn `over:true`).
+Strict "zero overlap" would require a wider decorative border (bigger layout change). Runners
+(gazelle/zebra) are kept nearer human size so they read as running along the land line.
+
 ## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
 > A plump friendly bird, side view, mid-flight with wings raised, bright warm
