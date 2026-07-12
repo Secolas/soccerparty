@@ -85,6 +85,18 @@ each sidewalk. Built from PixelLab `walking-8-frames` on the same v2 chibi chara
 per-fan uniform scale so a fan doesn't resize when it turns. Frame count is read from
 sheet width (`_fanFrame` slices by width/48), so walk (8f) and idle (9f) coexist fine.
 
+### Savanna pitch animals + trees
+Pitch `savanna` -> ambience `safari` (country Senegal). Replaced the procedural `drawAntelope`
+critters with PixelLab side-view sprites, seagull-style (`drawProp` slices by width/48, `flip` for
+direction). Sheets in `assets/generated/`:
+- Animals (Nx48 square cells): `prop-savanna-{gazelle,zebra,lion,elephant,giraffe}-sheet.png`.
+  Gazelle/zebra walk (cross the plain, v3 walk); lion/elephant/giraffe idle (stand). Quadruped
+  bases: horse skeleton (gazelle/zebra/giraffe), lion, bear (elephant). Giraffe uses its front
+  (south) view since the horse skeleton short-necks the side view.
+- Trees (static 48x48 props, `create_map_object` side view): `prop-savanna-tree-{acacia,baobab}.png`.
+Wired via `NS_SAVANNA` + the `sanim` ambient kind (vx!=0 walker w/ direction flip, vx=0 idle/prop).
+Trees pushed before animals so they render behind. Sizes ~13-17 (animals) / 26-30 (trees).
+
 ## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
 > A plump friendly bird, side view, mid-flight with wings raised, bright warm
