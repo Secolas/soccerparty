@@ -75,8 +75,15 @@ drops into the existing slicer/tint code with zero changes:
 
 ### Current task — street pitch spectators
 `prop-street-fan-{1,2,3}-sheet.png` — idle urban onlookers (hoodie+cap / jacket+beanie /
-different build), grey clothing, subtle idle bob (no jumping). Match the style of the
-`fan-standing-*` sheets.
+tee+curly hair), grey clothing, subtle idle bob (no jumping). Match the style of the
+`fan-standing-*` sheets — chibi proportions (big head), eye-level front view.
+
+**Walk cycles (4-direction):** `prop-street-fan-{n}-walk-{south,north,east,west}-sheet.png`
+— 8×48 frames (384×48), one sheet per facing. In the street scene these drive the `sfan`
+ambient actor: it paces up (north), turns (east/west), and walks back down (south) along
+each sidewalk. Built from PixelLab `walking-8-frames` on the same v2 chibi characters, at a
+per-fan uniform scale so a fan doesn't resize when it turns. Frame count is read from
+sheet width (`_fanFrame` slices by width/48), so walk (8f) and idle (9f) coexist fine.
 
 ## Test prompt — Dave-the-Diver bird (generate BIG so detail shows)
 
