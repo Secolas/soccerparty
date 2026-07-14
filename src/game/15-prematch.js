@@ -181,15 +181,17 @@
       var stage=el('ns_stage'); if(!stage) return; penHideDive();
       var ex=el('ns_pen_over'); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
       var vs=pen?pen.vsCpu:false, rs=pen?pen.scored.red:0, bs=pen?pen.scored.blue:0;
-      var ov=mk('div','position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(6,5,12,0.86);z-index:9;'); ov.id='ns_pen_over';
-      ov.appendChild(mk('div',FS(13,'#c6e84a')+'text-shadow:0 3px 0 #1c1330;','SHOOTOUT'));
-      ov.appendChild(mk('div',FS(19,'#f4e9c8')+'text-shadow:0 3px 0 #1c1330;',(dec&&dec!=='draw')?(teamKits[dec].abbr+' WIN!'):'DRAW'));
+      var win=(dec&&dec!=='draw');
+      var ov=mk('div','position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;background:rgba(6,5,12,0.9);z-index:9;'); ov.id='ns_pen_over';
+      ov.appendChild(mk('div',FS(12,'#c6e84a')+'text-shadow:0 3px 0 #1c1330;','SHOOTOUT'));
+      if(win){ var fc=document.createElement('canvas'); fc.width=34; fc.height=22; fc.style.cssText='width:46px;height:30px;image-rendering:pixelated;'; try{ var fg=fc.getContext('2d'); fg.imageSmoothingEnabled=false; paintPattern(fg,0,0,34,22,teamKits[dec].kit); fg.strokeStyle='rgba(0,0,0,0.5)'; fg.strokeRect(0.5,0.5,33,21); }catch(e){} ov.appendChild(fc); var ti=document.createElement('img'); ti.src='assets/generated/icon-trophy.png'; ti.alt='trophy'; ti.style.cssText='width:44px;height:44px;image-rendering:pixelated;display:block;'; ov.appendChild(ti); }
+      ov.appendChild(mk('div',FS(18,'#f4e9c8')+'text-shadow:0 3px 0 #1c1330;',win?(teamKits[dec].abbr+' WIN!'):'DRAW'));
       ov.appendChild(mk('div',FS(14,'#f4e9c8'),rs+' - '+bs));
       var brow=mk('div','display:flex;gap:10px;margin-top:8px;');
       var again=mk('button',SQBTN+'font-size:9px;padding:10px 12px;','REMATCH');
       again.onclick=function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); startPenalty(vs, aiLevel, penBest); };
-      var menu=mk('button',SQBTN+'font-size:9px;padding:10px 12px;','MENU');
-      menu.onclick=function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); pen=null; winner=null; mode='practice'; buildPre(); };
+      var menu=mk('button',SQBTN+'font-size:9px;padding:10px 12px;','HOME');
+      menu.onclick=function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); pen=null; winner=null; mode='exhibition'; buildPre(); };
       brow.appendChild(again); brow.appendChild(menu); ov.appendChild(brow); stage.appendChild(ov);
     }
     function drawPenaltyHUD(){
