@@ -97,6 +97,7 @@ const ASSETS = [
   { file: "icon-medic.png",    size: 64,  prompt: `A single bold red medical cross (plus symbol) on a white rounded first-aid badge, clean symmetrical shape, thick dark outline, big and simple, centered, game power-up icon. ${ICON}` },
   { file: "icon-flex.png",     size: 64,  prompt: `A bold flexed bicep ARM in the style of the 💪 emoji: one SOLID FILLED shape completely coloured in flat skin tone with a big rounded muscle bulge, simple flat shading, ONE thick dark outline on the outer edge ONLY, absolutely NO inner line-art, NO hollow areas, NO see-through gaps, filled like a sticker, chunky bold pixel art, big and simple, centered, game icon. ${ICON}` },
   { file: "icon-fire.png",     size: 64,  prompt: `A single bold campfire flame, bright orange yellow and red tongues of fire, clean bold chunky rounded shapes, thick dark outline, big and simple, centered, game icon. ${ICON}` },
+  { file: "icon-lastchance.png", size: 64,  prompt: `A white and black soccer ball with a single bold bright red exclamation mark rising just above and beside it, an urgent do-or-die last-chance vibe, a couple of short motion spark lines, ABSOLUTELY NO person and no text letters, ONLY the ball and the exclamation mark, thick dark outline, bold thick chunky shapes, big and simple, centered, game power-up icon. ${ICON}` },
 
   // Crowd fans — 2-frame animation sheets (rest pose | cheer pose). Both poses
   // of the SAME character in one image so they stay coherent; the processor
