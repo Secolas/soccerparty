@@ -1,4 +1,3 @@
-
     // resize
     window.addEventListener('resize',()=>{ fit(); sizeSB(); drawScoreboard(); });
     window.addEventListener('orientationchange',()=>{ setTimeout(()=>{ fit(); sizeSB(); drawScoreboard(); },150); });
