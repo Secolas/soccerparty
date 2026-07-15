@@ -34,11 +34,14 @@ Game code map (`src/game/`):
 - `14-scoreboard.js` — scorebug canvas
 - `15-prematch.js` — menu / pre-match overlay
 - `16-howto.js` — HOW TO PLAY screen
-- `17-boot.js` — resize hooks, pause menu, boot sequence
+- `18-economy.js` — token/coin economy (exhibition test feature)
+- `19-boot.js` — resize hooks, pause menu, boot sequence
 
 All files run inside one `componentDidMount()` scope, so code in any file can
 call functions and read variables defined in any other file. New sections can
-be added as new numbered files.
+be added as new numbered files — but they must sort BEFORE `19-boot.js`,
+because that file contains the closing braces of `componentDidMount()`; a file
+sorting after it lands outside the shared scope and silently breaks.
 
 ## Workflow
 
