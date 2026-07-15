@@ -13,14 +13,16 @@
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
       var ang2=ang;
       if(TAC.curve && speed>=1.9){ var _bestA=ang,_bestD=1e9; for(var _ci=-9;_ci<=9;_ci++){ var _ca=ang+_ci*0.055; var _svx=Math.cos(_ca)*speed,_svy=Math.sin(_ca)*speed; var _shx=-_svx,_sd2=(_shx>0.05)?1:((_shx<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); var _ss=_sd2*((_svy<0)?1:-1)*1.2; var _sx=coin.x,_sy=coin.y,_md=1e9; for(var _st=0;_st<150;_st++){ var _ssp=Math.hypot(_svx,_svy); if(_ssp<0.4) break; var _px=-_svy/_ssp,_py=_svx/_ssp; _svx+=_px*_ss*_ssp*0.05; _svy+=_py*_ss*_ssp*0.05; _ss*=0.984; _svx*=FRICTION; _svy*=FRICTION; _sx+=_svx; _sy+=_svy; if(_sx<WALL+COIN_R){_sx=WALL+COIN_R;_svx=-_svx*RESTITUTION;_ss*=0.35;} else if(_sx>W-WALL-COIN_R){_sx=W-WALL-COIN_R;_svx=-_svx*RESTITUTION;_ss*=0.35;} var _d=Math.hypot(_sx-goalX,_sy-goalY); if(_d<_md) _md=_d; if((t==='red'&&_sy<=goalY)||(t==='blue'&&_sy>=goalY)) break; } if(_md<_bestD){ _bestD=_md; _bestA=_ca; } } ang2=_bestA; }
-      coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
+      _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
       if(TAC.curve && speed>=1.9){ var _hx2=-coin.vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hd2*((coin.vy<0)?1:-1)*1.2; try{sfxCurl();}catch(e){} }
       if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc; coin.vx=_djx; coin.vy=_djy; } flickCount++; _achBounces=0;
-      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} turnFlash=Math.max(turnFlash,10);
+      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} try{ trioReset(); }catch(e){} turnFlash=Math.max(turnFlash,10);
       
     }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
     function aiUtility(){ var t=current; if(!(aiEnabled&&aiEnabled[t])) return; var ab=sideAb[t]||[];
+      // REWIND: undo the CPU's own last flick if it clearly worsened the ball's position
+      if(ab.indexOf('rewind')>=0 && !rewindUsed[t] && _rwSnap && _rwSnap.team===t && !moving && !scoring && !winner){ var _rgy=(t==='red')?(NET_DEPTH+COIN_R+1):(H-NET_DEPTH-COIN_R-1); var _d0=Math.hypot(_rwSnap.x-W/2,_rwSnap.y-_rgy), _d1=Math.hypot(coin.x-W/2,coin.y-_rgy); if(_d1>_d0+55){ try{ useRewind(t); }catch(e){} return; } }
       if(ab.indexOf('medic')>=0 && !medicUsed[t] && (debuffActive(t,'freeze')||debuffActive(t,'drunk')||debuffActive(t,'fog'))){ try{ useMedic(t); }catch(e){} }
       if(ab.indexOf('strategist')>=0 && !strategistUsed[t]){
         var gy=(t==='red')?(H-NET_DEPTH):NET_DEPTH, inDef=(t==='red')?(coin.y>H*0.62):(coin.y<H*0.38);
