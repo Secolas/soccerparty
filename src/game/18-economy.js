@@ -3,10 +3,12 @@
     // Whoever scores claims the pot (x2 if the scoring shot itself collected a token).
     // Coins buy abilities in the post-goal draft (priced by rarity) and rerolls.
     var ecoTokens=[], ecoPot=0, ecoWallet={red:0,blue:0}, ecoShotPickups=0, ecoFx=[];
-    var ECO_TOKEN_R=4, ECO_MAX_TOKENS=5, ECO_REROLL_COST=2, ECO_TOKEN_VALUE=2;
-    function ecoEnabled(){ return (typeof mode!=='undefined') && mode==='exhibition'; }
+    var ECO_TOKEN_R=4, ECO_MAX_TOKENS=5, ECO_REROLL_COST=2, ECO_TOKEN_VALUE=2, ECO_WIN_BONUS=5;
+    function ecoEnabled(){ return (typeof mode!=='undefined') && (mode==='tournament' || (mode==='exhibition' && _ecoOn)); }
+    function ecoTournament(){ return (typeof mode!=='undefined') && mode==='tournament'; }
     function abPrice(id){ var w=abWeight(id); return w<=1?14:(w<=2?9:(w<=3?6:(w<=4?4:3))); }
-    function ecoReset(){ ecoPot=0; ecoWallet={red:0,blue:0}; ecoTokens=[]; ecoShotPickups=0; ecoFx=[]; if(ecoEnabled()) ecoSpawnTokens(); }
+    function ecoReset(){ ecoPot=0; ecoTokens=[]; ecoShotPickups=0; ecoFx=[]; if(!ecoTournament()) ecoWallet={red:0,blue:0}; if(ecoEnabled()) ecoSpawnTokens(); }
+    function ecoRunReset(){ ecoWallet={red:0,blue:0}; ecoPot=0; ecoShotPickups=0; }
     function ecoSpawnTokens(){ if(!ecoEnabled()) return; var y0=NET_DEPTH+GOAL_AREA_D+16, y1=H-NET_DEPTH-GOAL_AREA_D-16, tries=0;
       while(ecoTokens.length<ECO_MAX_TOKENS && tries<140){ tries++;
         var px=WALL+16+Math.random()*(W-2*WALL-32), py=y0+Math.random()*(y1-y0), ok=true;
