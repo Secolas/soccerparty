@@ -22,7 +22,7 @@
     function ecoOnGoal(scorer){ if(!ecoEnabled()) return;
       if(ecoPot>0){ var mult=(ecoShotPickups>0)?2:1, take=ecoPot*mult; ecoWallet[scorer]=(ecoWallet[scorer]||0)+take;
         try{ if(window.__nsCenterMsg) window.__nsCenterMsg(teamKits[scorer].abbr+' CLAIMS '+take+' COINS'+(mult>1?' - TOKEN SHOT x2!':'!')); }catch(e){}
-        ecoPot=0; }
+        ecoPot=0; try{ updateScoreboards(); }catch(e){} }
       ecoShotPickups=0; }
     function ecoCpuGrant(side,onDone){ onDone=onDone||function(){}; var arr=sideAb[side]; if(!arr||arr.length>=3){ onDone(); return; }
       var pool=abPool(side,arr).filter(function(c){ return (ecoWallet[side]||0)>=abPrice(c.id); });
@@ -37,9 +37,4 @@
     function drawEco(now){ if(!ecoEnabled()) return;
       for(var i=0;i<ecoTokens.length;i++){ var t=ecoTokens[i], bob=Math.sin((now||0)*0.004+t.ph)*1.2; drawEcoCoin(ctx,t.x,t.y+bob,ECO_TOKEN_R); }
       for(var k=ecoFx.length-1;k>=0;k--){ var f=ecoFx[k]; ctx.save(); ctx.globalAlpha=Math.max(0,f.life/26); ctx.font="7px 'Press Start 2P', monospace"; ctx.textAlign='center'; ctx.fillStyle='#ffd84a'; ctx.fillText('+'+ECO_TOKEN_VALUE, f.x, f.y-(26-f.life)*0.5); ctx.restore(); f.life--; if(f.life<=0) ecoFx.splice(k,1); }
-      ctx.save(); ctx.font="7px 'Press Start 2P', monospace"; ctx.textBaseline='middle';
-      if(ecoPot>0){ drawEcoCoin(ctx,W-13,H/2,4); ctx.textAlign='right'; ctx.fillStyle='#ffd84a'; ctx.strokeStyle='rgba(0,0,0,0.7)'; ctx.lineWidth=2; ctx.strokeText(''+ecoPot, W-19, H/2+0.5); ctx.fillText(''+ecoPot, W-19, H/2+0.5); }
-      ctx.textAlign='left'; ctx.fillStyle='#ffd84a'; ctx.strokeStyle='rgba(0,0,0,0.7)'; ctx.lineWidth=2;
-      drawEcoCoin(ctx,12,H-NET_DEPTH-9,3.4); ctx.strokeText(''+(ecoWallet.red||0), 18, H-NET_DEPTH-8.5); ctx.fillText(''+(ecoWallet.red||0), 18, H-NET_DEPTH-8.5);
-      drawEcoCoin(ctx,12,NET_DEPTH+9,3.4); ctx.strokeText(''+(ecoWallet.blue||0), 18, NET_DEPTH+9.5); ctx.fillText(''+(ecoWallet.blue||0), 18, NET_DEPTH+9.5);
-      ctx.restore(); }
+      if(ecoPot>0){ ctx.save(); ctx.font="7px 'Press Start 2P', monospace"; ctx.textBaseline='middle'; drawEcoCoin(ctx,W-13,H/2,4); ctx.textAlign='right'; ctx.fillStyle='#ffd84a'; ctx.strokeStyle='rgba(0,0,0,0.7)'; ctx.lineWidth=2; ctx.strokeText(''+ecoPot, W-19, H/2+0.5); ctx.fillText(''+ecoPot, W-19, H/2+0.5); ctx.font="5px 'Press Start 2P', monospace"; ctx.textAlign='center'; ctx.strokeText('POT', W-16, H/2+9); ctx.fillText('POT', W-16, H/2+9); ctx.restore(); } }
