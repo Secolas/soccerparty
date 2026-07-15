@@ -13,6 +13,14 @@ Wild Card, Serpent, Drunk Shot, Fog, Reflexes, Sweeper.
 Rarity scale: COMMON · UNCOMMON · RARE · EPIC · LEGENDARY
 (weights 5–7 · 4 · 3 · 2 · 1 in `AB_WEIGHT` terms)
 
+## Shipped
+
+- **TIKI-TAKA** (RARE) — bounce a single shot off 3 of your own players and it
+  re-launches at full speed off the third. (This doc's "Trio" idea.)
+- **VAR CHECK** (RARE) — once per match your first own goal is ruled out; the
+  ball resets and play continues (opponent kicks off if it was your last flick).
+  (Shipped from the "Referee's Friend" parking-lot idea.)
+
 ---
 
 ## 1. Shot modifiers

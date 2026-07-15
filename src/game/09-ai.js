@@ -16,7 +16,7 @@
       coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
       if(TAC.curve && speed>=1.9){ var _hx2=-coin.vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hd2*((coin.vy<0)?1:-1)*1.2; try{sfxCurl();}catch(e){} }
       if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc; coin.vx=_djx; coin.vy=_djy; } flickCount++; _achBounces=0;
-      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} turnFlash=Math.max(turnFlash,10);
+      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} try{ trioReset(); }catch(e){} turnFlash=Math.max(turnFlash,10);
       
     }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
