@@ -6,8 +6,11 @@
       // Magnus effect: a spinning ball curves perpendicular to its travel
       if(coin.spin&&speed>0.4&&!scoring){ const px=-coin.vy/speed, py=coin.vx/speed; coin.vx+=px*coin.spin*speed*0.05; coin.vy+=py*coin.spin*speed*0.05; coin.spin*=0.984; if(Math.abs(coin.spin)<0.003) coin.spin=0; }
       if(speed>0.35){ shotTrail.push({x:coin.x,y:coin.y,life:18,max:18,curl:!!coin.spin}); if(shotTrail.length>18) shotTrail.shift(); }
-      const subs=Math.max(1,Math.ceil(speed/MAX_STEP)), fvx=coin.vx/subs,fvy=coin.vy/subs;
-      for(let i=0;i<subs&&moving;i++){ coin.x+=fvx; coin.y+=fvy; collideStep(); if(!scoring) royPortalStep(); if(!scoring){ try{ ecoStep(); }catch(e){} } if(!scoring&&trapHit()) break; }
+      const subs=Math.max(1,Math.ceil(speed/MAX_STEP));
+      // advance each sub-step by the CURRENT velocity, so a mid-frame wall/player
+      // bounce immediately redirects the remaining sub-steps away instead of
+      // re-hitting the wall (which used to drain sideways speed and glue the ball to it)
+      for(let i=0;i<subs&&moving;i++){ coin.x+=coin.vx/subs; coin.y+=coin.vy/subs; collideStep(); if(!scoring) royPortalStep(); if(!scoring){ try{ ecoStep(); }catch(e){} } if(!scoring&&trapHit()) break; }
       if(rportCD>0) rportCD--; if(royaleArena && royaleArena.cust==='wind' && moving && !scoring){ royWindT--; if(royWindT<=0){ royWindAng=Math.random()*6.2832; royWindMag=(Math.random()<0.35)?0:(0.14+Math.random()*0.22); royWindT=30+Math.floor(Math.random()*55); } if(royWindMag>0){ coin.vx+=Math.cos(royWindAng)*royWindMag; coin.vy+=Math.sin(royWindAng)*royWindMag; } } const f=scoring?NET_FRICTION:(FRICTION+TAC.glide); coin.vx*=f; coin.vy*=f; if(bumpPending){ coin.vx*=1.5; coin.vy*=1.5; bumpPending=false; } var _tv=Math.hypot(coin.vx,coin.vy); if(_tv>26){ var _tk=26/_tv; coin.vx*=_tk; coin.vy*=_tk; } if(TAC.serpent&&moving&&!scoring){ var _ss=Math.hypot(coin.vx,coin.vy); if(_ss>0.5){ var _sda=Math.cos(serpentPhase)*SERPENT_TURN,_sc=Math.cos(_sda),_ssn=Math.sin(_sda),_snx=coin.vx*_sc-coin.vy*_ssn,_sny=coin.vx*_ssn+coin.vy*_sc; coin.vx=_snx; coin.vy=_sny; serpentPhase+=SERPENT_FREQ; } } if(TAC.magnet&&moving&&!scoring){ var inPen=(current==='red')?(coin.y<H*0.34):(coin.y>H*0.66); if(inPen && Math.abs(coin.x-W/2)<GOAL_W){ const tgy=current==='red'?(NET_DEPTH+2):(H-NET_DEPTH-2), dxg=W/2-coin.x, dyg=tgy-coin.y, dg=Math.hypot(dxg,dyg)||1; if(Math.hypot(coin.vx,coin.vy)>0.5){ coin.vx+=(dxg/dg)*0.11; coin.vy+=(dyg/dg)*0.11; } } } if(TAC.guided&&moving&&!scoring&&steerHold!=null&&steerBudget>0){ var _sd=steerHold-coin.x; coin.vx+=Math.max(-0.18,Math.min(0.18,_sd*0.02)); steerBudget--; }
       if(scoring){
         scoreFrames++;
