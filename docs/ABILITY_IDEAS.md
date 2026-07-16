@@ -20,6 +20,30 @@ Rarity scale: COMMON · UNCOMMON · RARE · EPIC · LEGENDARY
 - **VAR CHECK** (RARE) — once per match your first own goal is ruled out; the
   ball resets and play continues (opponent kicks off if it was your last flick).
   (Shipped from the "Referee's Friend" parking-lot idea.)
+- **REWIND** (EPIC) — on your turn, take back your last flick (recharges each kickoff).
+- **DEFENDER** (RARE) — an extra player guards deep in front of your own goal (Striker's mirror).
+- **BOOMERANG** (EPIC) — a missed shot that rolls back over halfway curves back at goal.
+- **HIGH PRESS** (UNCOMMON) — on the opponent's turn your nearest player closes down the
+  ball (leaves your shape open). First interactive-defense ability.
+- **WET SHOT** (RARE) — a slick/wet ball skids off players, keeper and walls keeping its
+  pace; obstacles nudge it off line but can't slow it (friction still stops it over distance).
+- **MAGNET** reworked into a gentle keeper-attraction field; **MEDIC** cures one curse (picker
+  when 2+), once per match, disables the opponent debuff it cleanses.
+
+## Fresh ideas (2026 brainstorm — not yet built)
+
+| Name | Icon | Rarity | Effect | Notes |
+|---|---|---|---|---|
+| **Nutmeg** | 🧦 | RARE | Thread a shot cleanly through the gap between two opponent players → +40% speed + taunt spark. | New "gap detection" hook; rewards precision |
+| **Panenka** | 🥄 | RARE | Penalty-mode only: a soft chip option that beats a keeper who dives early. | Deepens the shootout minigame |
+| **Screamer** | 💥 | EPIC | Hold past full power ~0.5s to overcharge one shot/turn to 130%; release late and it fizzles to 50%. | Risk/reward power |
+| **Poacher** | 🦊 | RARE | When your shot is saved/blocked, the rebound drops to your nearest attacker (keep possession). | vs Counter-Attack which fires at their goal |
+| **Juggernaut** | 🐂 | EPIC | One flick/turn ignores Anchor, Spider Trap and Magnet — barrels through. | Explicit anti-fortress counter |
+| **Clean Sheet Bonus** | 🧼 | RARE | Every turn the opponent fails to score, +8% power next shot (cap ~+40%, resets on concede). | Defensive scaling engine |
+| **The Gaffer** | 🎩 | EPIC | Once per match, reposition ALL your outfield players at once (mega-Strategist). | Whole-shape reset |
+| **Overload** | ⚽⚽ | LEGENDARY | Once per match your flick launches two balls; either scoring counts. | Needs a parallel two-ball sim — its own focused build |
+| **Lob Shot / Chip** | 🪂 | RARE | Flick then tap to hop the ball over the next player it would hit (faked height + shadow). | Top-down height fake; keeper can still claim on landing |
+| **Market** | 🛒 | UNCOMMON | Economy mode only: currency you claim is doubled. | Filter out of the draft pool unless Coin Rush is on |
 
 ---
 
