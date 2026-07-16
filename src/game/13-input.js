@@ -16,7 +16,7 @@
       if(!aiming) return;
       const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,power=Math.min(Math.hypot(dx,dy),(pen&&pen.active)?32:(TAC.frozen?FLICK_POWER*0.5:FLICK_POWER));
       aiming=false; if(power<4){ aimStart=aimNow=null; return; }
-      const ang=Math.atan2(dy,dx),speed=power*(FLICK_MAX/FLICK_POWER)*TAC.power; _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang)*speed; coin.vy=Math.sin(ang)*speed; if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc; coin.vx=_djx; coin.vy=_djy; } flickCount++; _achBounces=0;
+      const ang=Math.atan2(dy,dx),speed=power*(FLICK_MAX/FLICK_POWER)*TAC.power; _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang)*speed; coin.vy=Math.sin(ang)*speed; if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc; coin.vx=_djx; coin.vy=_djy; } if(TAC.wet){ var _wf=(Math.random()-0.5)*0.16,_wfc=Math.cos(_wf),_wfs=Math.sin(_wf),_wfx=coin.vx*_wfc-coin.vy*_wfs,_wfy=coin.vx*_wfs+coin.vy*_wfc; coin.vx=_wfx; coin.vy=_wfy; } flickCount++; _achBounces=0;
       // spin (and its Magnus curve) comes only from the CURVEBALL ability on a firm strike
       coin.spin=0;
       if(TAC.curve && power>=12){ var _hx=-coin.vx, _hdir=(_hx>0.05)?1:((_hx<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hdir*((coin.vy<0)?1:-1)*1.2; }
