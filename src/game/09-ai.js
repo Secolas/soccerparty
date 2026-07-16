@@ -28,7 +28,7 @@
     function aiUtility(){ var t=current; if(!(aiEnabled&&aiEnabled[t])) return; var ab=sideAb[t]||[];
       // REWIND: undo the CPU's own last flick if it clearly worsened the ball's position
       if(ab.indexOf('rewind')>=0 && !rewindUsed[t] && _rwSnap && _rwSnap.team===t && !moving && !scoring && !winner){ var _rgy=(t==='red')?(NET_DEPTH+COIN_R+1):(H-NET_DEPTH-COIN_R-1); var _d0=Math.hypot(_rwSnap.x-W/2,_rwSnap.y-_rgy), _d1=Math.hypot(coin.x-W/2,coin.y-_rgy); if(_d1>_d0+55){ try{ useRewind(t); }catch(e){} return; } }
-      if(ab.indexOf('medic')>=0 && !medicUsed[t] && (debuffActive(t,'freeze')||debuffActive(t,'drunk')||debuffActive(t,'fog'))){ try{ useMedic(t); }catch(e){} }
+      if(ab.indexOf('medic')>=0 && !medicUsed[t] && (debuffActive(t,'freeze')||debuffActive(t,'drunk')||debuffActive(t,'fog')||debuffActive(t,'injury'))){ try{ useMedic(t); }catch(e){} }
       if(ab.indexOf('strategist')>=0 && !strategistUsed[t]){
         var gy=(t==='red')?(H-NET_DEPTH):NET_DEPTH, inDef=(t==='red')?(coin.y>H*0.62):(coin.y<H*0.38);
         if(inDef){ var own=nails.filter(function(n){ return n.team===t&&!n.goalie&&!n.striker; });
