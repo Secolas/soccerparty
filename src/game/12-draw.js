@@ -150,6 +150,7 @@
         if(n.team===current&&!winner&&phase==='play'){ const pulse=0.5+Math.sin(frameTick*0.13)*0.5; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+4+pulse,0,Math.PI*2); ctx.fillStyle=n.team==='red'?'rgba(224,91,72,0.16)':'rgba(91,143,232,0.16)'; ctx.fill(); }
         paintNail(ctx,n.x,n.y,(n.goalie&&((sideAb[n.team]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,teamKits[n.team].kit, n.team===current&&!winner&&phase==='play', resolveKit(teamKits[n.team].kit, effStyle(n.team)));
         if(n.goalie){ ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+1.5,0,Math.PI*2); ctx.strokeStyle='#f4e9c8'; ctx.lineWidth=1.5; ctx.stroke(); } if(n.damp){ ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+2.5,0,Math.PI*2); ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=2; ctx.stroke(); }
+        if(typeof _clrSt!=='undefined' && _clrSt && ((_clrSt.red&&_clrSt.red.n===n)||(_clrSt.blue&&_clrSt.blue.n===n))){ ctx.save(); ctx.globalAlpha=0.20; ctx.fillStyle='#7ab8ff'; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+4,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=0.75; ctx.strokeStyle='#a9d4ff'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+4,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
         if(phase==='setup'){ const r=goalAreaRect(n.team); const bad=(n===dragNail)&&inRect(n.x,n.y,r)&&countInGoalArea(n.team,n)>=1; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+2,0,Math.PI*2); ctx.strokeStyle=bad?'rgba(214,75,58,0.9)':'rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
       }
 
