@@ -223,6 +223,7 @@
     function updateFX(){
       frameTick++;
       if(turnFlash>0) turnFlash--;
+      if(_drillDisp&&_drillDisp.length&&!moving){ for(var _di=_drillDisp.length-1;_di>=0;_di--){ var _dn=_drillDisp[_di]; if(!_dn||!_dn._drillHome){ _drillDisp.splice(_di,1); continue; } _dn.x+=(_dn._drillHome.x-_dn.x)*0.25; _dn.y+=(_dn._drillHome.y-_dn.y)*0.25; if(Math.hypot(_dn._drillHome.x-_dn.x,_dn._drillHome.y-_dn.y)<0.5){ _dn.x=_dn._drillHome.x; _dn.y=_dn._drillHome.y; _dn._drillHome=null; _drillDisp.splice(_di,1); } } }
       if(shake>0){ shake*=0.86; if(shake<0.3) shake=0; }
       if(banner>0) banner--;
       if(netHold>0){ netHold--; } else if(netBulge>0){ netVel+=(0-netBulge)*0.25; netVel*=0.6; netBulge+=netVel; if(netBulge<0.15&&Math.abs(netVel)<0.15){ netBulge=0; netVel=0; } }
