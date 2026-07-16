@@ -179,7 +179,7 @@
       // aim — pull-back guide + predicted bounce path + power meter
       if(pen&&pen.active) drawPenaltyHUD();
       if(aiming&&aimStart&&aimNow&&debuffActive(current,'fog')){ ctx.save(); for(var _fp=0;_fp<7;_fp++){ var _fa=_fp*(Math.PI*2/7); ctx.globalAlpha=0.16; ctx.fillStyle='#c9d0d8'; ctx.beginPath(); ctx.arc(coin.x+Math.cos(_fa)*7,coin.y+Math.sin(_fa)*7,8+(_fp%3)*3,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=0.55; ctx.fillStyle='#e8edf2'; ctx.beginPath(); ctx.arc(coin.x,coin.y,9,0,Math.PI*2); ctx.fill(); ctx.restore(); } if(aiming&&aimStart&&aimNow&&!debuffActive(current,'fog')){
-        const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,rawP=Math.hypot(dx,dy),power=Math.min(rawP,(pen&&pen.active)?32:(TAC.frozen?35:70)),ang=Math.atan2(dy,dx); var _dw=((sideAb[(current==='red')?'blue':'red']||[]).indexOf('drunk')>=0)?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
+        const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,rawP=Math.hypot(dx,dy),power=Math.min(rawP,(pen&&pen.active)?32:(TAC.frozen?35:70)),ang=Math.atan2(dy,dx); var _dw=(debuffActive(current,'drunk'))?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
         // pull-back dashed guide behind the ball + short aim line in the flick direction
         const pull=Math.min(rawP,TAC.frozen?21:42); var bx=coin.x-Math.cos(angD)*pull, by=coin.y-Math.sin(angD)*pull;
         ctx.strokeStyle='rgba(255,250,235,0.85)'; ctx.lineWidth=1.6; ctx.setLineDash([2,2]); ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(coin.x,coin.y); ctx.stroke(); ctx.setLineDash([]);
