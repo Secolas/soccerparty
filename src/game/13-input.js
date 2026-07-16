@@ -3,6 +3,7 @@
     function clampToPitch(px,py){ const lo=WALL+NAIL_R,hix=W-WALL-NAIL_R,hiy=H-WALL-NAIL_R; return { x:Math.max(lo,Math.min(hix,px)), y:Math.max(lo,Math.min(hiy,py)) }; }
     function onDown(e){ if(pen&&pen.active&&pen.step!=='aim') return;
       const p=pos(e);
+      if(moving&&phase==='play'&&!aiming&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)&&Math.hypot(coin.vx,coin.vy)>0.6){ chipUsed=true; coin.air=22; coin.air0=22; try{sfxGuided();}catch(e){} try{ if(typeof haptic==='function') haptic(12); }catch(e){} setStatus('CHIP!'); e.preventDefault(); return; }
       if(moving&&phase==='play'&&!aiming&&TAC.guided&&steerBudget>0){ steerHold=p.x; e.preventDefault(); return; } if(strategistArm===current && phase==='play' && !moving && !aiming && !winner){ let _best=null,_bd=1e9; for(const n of nails){ if(n.goalie) continue; if(n.team!==current) continue; const _d=Math.hypot(p.x-n.x,p.y-n.y); if(_d<NAIL_R+8&&_d<_bd){_bd=_d;_best=n;} } if(_best){ dragNail=_best; dragNail._px=_best.x; dragNail._py=_best.y; pmDrag=true; try{sfxPickup();}catch(e){} e.preventDefault(); return; } setStatus('TAP ONE OF YOUR PLAYERS'); e.preventDefault(); return; }
       if(phase==='setup'){ let best=null,bd=1e9; for(const n of nails){ if(n.goalie) continue; if(aiEnabled&&aiEnabled[n.team]) continue; const d=Math.hypot(p.x-n.x,p.y-n.y); if(d<NAIL_R+8&&d<bd){bd=d;best=n;} } if(best){ dragNail=best; dragNail._px=best.x; dragNail._py=best.y; try{sfxPickup();}catch(e){} e.preventDefault(); } return; }
       if(moving||winner) return;

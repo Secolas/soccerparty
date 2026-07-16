@@ -23,10 +23,15 @@ Rarity scale: COMMON · UNCOMMON · RARE · EPIC · LEGENDARY
 - **REWIND** (EPIC) — on your turn, take back your last flick (recharges each kickoff).
 - **DEFENDER** (RARE) — an extra player guards deep in front of your own goal (Striker's mirror).
 - **BOOMERANG** (EPIC) — a missed shot that rolls back over halfway curves back at goal.
-- **HIGH PRESS** (UNCOMMON) — on the opponent's turn your nearest player closes down the
-  ball (leaves your shape open). First interactive-defense ability.
+- **CLEARANCE** (RARE) — once each turn, when a dangerous shot bears down on your goal your
+  nearest defender lunges to block it, then jogs back to its spot. First interactive-defense
+  ability (replaced the earlier "High Press" creep, which felt wrong).
 - **WET SHOT** (RARE) — a slick/wet ball skids off players, keeper and walls keeping its
   pace; obstacles nudge it off line but can't slow it (friction still stops it over distance).
+- **CHIP SHOT** (RARE) — after you flick, tap to lob the ball over players and the keeper for
+  a moment (faked height + shadow), then it drops. From the doc's Chip Shot idea.
+- **MARKET** (UNCOMMON) — Coin Rush only: coins you bank on a goal are doubled; filtered out
+  of the draft unless economy is on.
 - **MAGNET** reworked into a gentle keeper-attraction field; **MEDIC** cures one curse (picker
   when 2+), once per match, disables the opponent debuff it cleanses.
 
