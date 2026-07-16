@@ -22,7 +22,7 @@
       for(var i=ecoTokens.length-1;i>=0;i--){ var t=ecoTokens[i];
         if(Math.hypot(coin.x-t.x,coin.y-t.y)<COIN_R+ECO_TOKEN_R){ ecoTokens.splice(i,1); ecoPot+=ECO_TOKEN_VALUE; ecoShotPickups++; ecoFx.push({x:t.x,y:t.y,life:26}); try{ spawnSparks(t.x,t.y,current,8); }catch(e){} try{ if(!muted) tone(1180,0.06,'square',0.06); }catch(e){} } } }
     function ecoOnGoal(scorer){ if(!ecoEnabled()) return;
-      if(ecoPot>0){ var mult=(ecoShotPickups>0)?2:1, take=ecoPot*mult, before=(ecoWallet[scorer]||0); ecoWallet[scorer]=before+take;
+      if(ecoPot>0){ var mult=((ecoShotPickups>0)?2:1)*(((sideAb[scorer]||[]).indexOf('market')>=0)?2:1), take=ecoPot*mult, before=(ecoWallet[scorer]||0); ecoWallet[scorer]=before+take;
         try{ if(window.__nsCenterMsg) window.__nsCenterMsg(teamKits[scorer].abbr+' CLAIMS '+take+' COINS'+(mult>1?' - TOKEN SHOT x2!':'!')); }catch(e){}
         ecoPot=0; try{ ecoFlyReward(scorer, before, ecoWallet[scorer]); }catch(e){ try{ updateScoreboards(); }catch(e2){} } }
       ecoShotPickups=0; }
