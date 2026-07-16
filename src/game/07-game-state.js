@@ -1,14 +1,14 @@
     // ================= GAME STATE =================
     let coin,nails,current,score,aiming,aimStart,aimNow,moving,winner,hitOwn;
     let scoring=false,scoringTeam=null,netBulge=0,netBulgeX=0,netHold=0,netVel=0,scoreFrames=0,parkedTeam=null,celebrated=false;
-    let phase='setup',dragNail=null; let steerHold=null,steerBudget=0,slowPhase=0; let wallHP={red:null,blue:null},WALL_MAX=3,wallCD=0,ghostUsed=false,ghosting=false,portalUsed=false,PORTAL_R=COIN_R,trapUsed={red:false,blue:false},trapPos={red:null,blue:null},TRAP_R=COIN_R,trapFx=null,TRAP_FX_DUR=42,shieldUsed={red:false,blue:false},shieldFx=null,SHIELD_FX_DUR=34,ricochetUsed=false,serpentPhase=0,SERPENT_TURN=0.16,SERPENT_FREQ=0.42,DRUNK_SPREAD=0.5,swapStolen={red:null,blue:null},swapSpent={red:{},blue:{}},flickCount=0,bumpPending=false,FLICK_CAP=3; let bikeUsed=false,strategistUsed={red:false,blue:false},strategistArm=null,pmDrag=false,medicUsed={red:false,blue:false},cleansed={red:[],blue:[]},comebackDone={red:false,blue:false},varUsed={red:false,blue:false},_trioN=0,_trioDone=false,rewindUsed={red:false,blue:false},_rwSnap=null,_boomFwd=false,_boomUsed=false;
+    let phase='setup',dragNail=null; let steerHold=null,steerBudget=0,slowPhase=0; let wallHP={red:null,blue:null},WALL_MAX=3,wallCD=0,ghostUsed=false,ghosting=false,portalUsed=false,PORTAL_R=COIN_R,trapUsed={red:false,blue:false},trapPos={red:null,blue:null},TRAP_R=COIN_R,trapFx=null,TRAP_FX_DUR=42,shieldUsed={red:false,blue:false},shieldFx=null,SHIELD_FX_DUR=34,ricochetUsed=false,serpentPhase=0,serpentBase=0,serpentDir=1,SERPENT_SWING=0.55,SERPENT_FREQ=0.22,wetBase=0,wetPhase=0,WET_WOBBLE=0.16,WET_WFREQ=0.17,DRUNK_SPREAD=0.5,swapStolen={red:null,blue:null},swapSpent={red:{},blue:{}},flickCount=0,bumpPending=false,FLICK_CAP=3; let bikeUsed=false,strategistUsed={red:false,blue:false},strategistArm=null,pmDrag=false,medicUsed={red:false,blue:false},cleansed={red:[],blue:[]},comebackDone={red:false,blue:false},varUsed={red:false,blue:false},_trioN=0,_trioDone=false,rewindUsed={red:false,blue:false},_rwSnap=null,_boomFwd=false,_boomUsed=false,clearUsed={red:false,blue:false},_clrSt={red:null,blue:null},chipUsed=false,_clrBlocked=false,abOff={red:[],blue:[]},drillUsed=false,_drillDisp=[],backspinFx=0,backspinFy=0,backspinPhase=0;
     const GOAL_AREA_D=34;
     let useBall=false;
     // AI + modes
     let aiEnabled={red:false,blue:false}, aiLevel='med';
     const AI_NOISE={easy:0.62,med:0.30,hard:0.14}, AI_ACC={easy:0.55,med:0.80,hard:0.96};
     // Shared flick tuning: full-power ball speed for BOTH player and CPU. Cannon x2, Freeze x0.5 derive from it.
-    const FLICK_MAX=11.2, FLICK_POWER=70;
+    const FLICK_MAX=10, FLICK_POWER=70;
     let aiPending=false, aiDelay=0;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='med';
     let exhWin=5, exhTimer=0; let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null; let pen=null, penBest=5, pracType='normal'; var _lkOn=true,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null; var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
