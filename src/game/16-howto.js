@@ -5,9 +5,10 @@
       const pad=mk('div','padding:16px 14px 18px;');
       pad.appendChild(mk('div',FS(12,'#c6e84a')+'text-align:center;margin-bottom:14px;letter-spacing:1px;','HOW TO PLAY'));
       const rows=[
-        ['✦ FLICK','Drag back from the ball and release — like a slingshot. Longer drag = harder shot (watch the power bar).'],
+        ['✦ FLICK','Drag back from the ball and release — like a slingshot. The longer you drag, the longer the aim arrow and the harder the shot.'],
         ['✦ SCORE','Knock the ball into the FAR goal. First to your target score — or the leader when the timer ends — wins.'],
         ['✦ POSSESSION','Hit one of YOUR OWN players and you keep the turn — up to 3 flicks per turn. Miss (or after the 3rd flick), the turn passes to your opponent.'],
+        ['✦ STAMINA','Your legs tire through the turn: the 1st flick is full power, each one after is weaker — 100% → 75% → 50%. The aim arrow shows it: green (fresh) fading to red (tired), and it gets shorter too. Fresh legs every new turn. (No stamina in Practice.)'],
         ['✦ GOALIE','Each side has a keeper that auto-tracks the ball across its goal. Aim for the corners.'],
         ['✦ SETUP','Before kickoff, drag your outfield players to position them how you like. Your goalkeeper isn’t one of them — it stays on its line and moves on its own to block shots, so you don’t set it up. Pick your team, kit, pitch and formation on the setup screen before you play.'],
         ['✦ ABILITIES','Special powers — like a harder shot, a bigger keeper, or a ball that curves. You gain one when you score: EXHIBITION lets you pick one of three, free. TOURNAMENT and the COIN RUSH toggle run on coins — hit gold tokens to fill a shared pot, score to bank it, then spend in the ability shop. Each one, and how rare it is, is listed below.'],
