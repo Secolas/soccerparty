@@ -12,12 +12,12 @@
     // Blizzard (hard ice): a crosswind that pulses calm->gust->calm; you time your flick for the calm window.
     function royBlizzard(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.floor==='ice'&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'); }
     // Foreground blizzard snow drawn ON TOP of the pitch so the sideways gust is clearly visible.
-    // shaped gust: 0 for most of the cycle (idle), a brief eased pulse during a gust.
-    function royGust(){ if(!royBlizzard()) return 0; var _r=Math.sin(royGustPhase); return _r>0.7?Math.pow((_r-0.7)/0.3,1.4):0; }
-    // foreground snow — same square-particle look as the ambient winter snow, but ONLY
-    // visible during a gust: it sweeps in from a random direction, then fades to nothing
-    // while the arena is idle (no plain falling snow between gusts).
-    function drawBlizzard(now){ if(!royBlizzard()) return; var _g=royGust(); if(_g<=0.002) return; var wx=Math.cos(royGustDir), wy=Math.sin(royGustDir); if(!roySnow.length){ for(var _i=0;_i<80;_i++) roySnow.push({x:Math.random()*W,y:Math.random()*H,z:0.7+Math.random()*1.2,drift:Math.random()*6.28,sz:Math.random()<0.3?2:1}); } ctx.save(); ctx.globalAlpha=Math.min(0.9,_g*1.2); ctx.fillStyle='rgba(240,248,255,0.9)'; for(var _i=0;_i<roySnow.length;_i++){ var p=roySnow[_i]; p.x+=wx*_g*5.5*p.z+Math.sin(now*0.003+p.drift)*0.2; p.y+=wy*_g*5.5*p.z+_g*0.7*p.z; if(p.x<-4)p.x=W+4; else if(p.x>W+4)p.x=-4; if(p.y>H+4){p.y=-4;p.x=Math.random()*W;} else if(p.y<-4)p.y=H+4; ctx.fillRect(Math.round(p.x),Math.round(p.y),p.sz,p.sz); } ctx.restore(); }
+    // shaped gust: 0 for most of the cycle (rare), a brief eased pulse when it kicks up.
+    function royGust(){ if(!royBlizzard()) return 0; var _r=Math.sin(royGustPhase); return _r>0.82?Math.pow((_r-0.82)/0.18,1.3):0; }
+    // foreground snow — the original visible look: soft round flakes with a dark navy
+    // halo so they read against the ice. Snow drifts down gently at all times and only
+    // streaks sideways when a (rare) gust blows. No indicator/arrow.
+    function drawBlizzard(now){ if(!royBlizzard()) return; var _s=royGust(), wx=Math.cos(royGustDir), wy=Math.sin(royGustDir); if(!roySnow.length){ for(var _i=0;_i<70;_i++) roySnow.push({x:Math.random()*W,y:Math.random()*H,z:0.7+Math.random()*1.2}); } ctx.save(); for(var _i=0;_i<roySnow.length;_i++){ var p=roySnow[_i]; var gspd=_s*6*p.z; p.x+=wx*gspd+Math.sin(now*0.003+p.z*3)*0.15; p.y+=wy*gspd+0.5*p.z; if(p.x<-4)p.x=W+4; else if(p.x>W+4)p.x=-4; if(p.y<-4)p.y=H+4; else if(p.y>H+4)p.y=-4; var r=p.z*(1.0+_s*0.4); ctx.globalAlpha=0.3+_s*0.35; ctx.fillStyle='#3f5a74'; ctx.beginPath(); ctx.arc(p.x,p.y,r+1,0,6.283); ctx.fill(); ctx.globalAlpha=0.7+_s*0.3; ctx.fillStyle='#f2f8ff'; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,6.283); ctx.fill(); } ctx.restore(); }
     function stepPhysics(){
       if(!moving) return; if(coin&&coin.air>0) coin.air--; if(wallCD>0) wallCD--; if(nails){for(var _bi=0;_bi<nails.length;_bi++){ if(nails[_bi]._bcd>0) nails[_bi]._bcd--; if(nails[_bi]._acd>0) nails[_bi]._acd--; }} if(TAC.slowmo&&!scoring){ slowPhase^=1; if(slowPhase) return; } if(TAC.portal && !portalUsed && !scoring){ var _pp=portalPts(current); if(Math.hypot(coin.x-_pp.ex,coin.y-_pp.ey)<PORTAL_R+COIN_R){ portalUsed=true; var _sp=Math.hypot(coin.vx,coin.vy)||1; coin.x=_pp.xx+(coin.vx/_sp)*(PORTAL_R+COIN_R+1); coin.y=_pp.xy+(coin.vy/_sp)*(PORTAL_R+COIN_R+1); spawnSparks(_pp.ex,_pp.ey,null,14); spawnSparks(_pp.xx,_pp.xy,null,14); try{sfxPortal();}catch(e){} } }
       const speed=Math.hypot(coin.vx,coin.vy);
