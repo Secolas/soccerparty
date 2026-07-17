@@ -130,6 +130,9 @@ const ASSETS = [
   { file: "sprite-cat",  frames: 2, size: 64, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small orange tabby cat side by side, identical character. LEFT: sitting. RIGHT: stretching with tail up. Side view, cartoon mascot. Clear gap between frames. ${ICON}` },
   { file: "sprite-bird", frames: 2, size: 56, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME small blue bird side by side, identical character. LEFT: wings folded. RIGHT: wings spread up. Side view, cartoon mascot. Clear gap between frames. ${ICON}` },
 
+  // Savanna bush — 4-frame gentle wind-sway sprite sheet for THE THICKET hazard.
+  { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view, a few dry twigs poking out at the base. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. Clear vertical gap between each of the four frames. ${ICON}` },
+
   // Static decor + ground tiles + scoreboard skin
   { file: "sprite-tree.png", size: 96,  keyOut: true,  prompt: `A single lush round green tree with a brown trunk, side view. ${ICON}` },
   { file: "tile-grass.png",  size: 128, keyOut: false, prompt: `A seamless top-down lush green grass texture tile, subtle blades, pixel art, edges tile seamlessly. ${SCENE}` },
