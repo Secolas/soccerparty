@@ -4,7 +4,7 @@
       if(!moving) return; if(coin&&coin.air>0) coin.air--; if(wallCD>0) wallCD--; if(nails){for(var _bi=0;_bi<nails.length;_bi++){ if(nails[_bi]._bcd>0) nails[_bi]._bcd--; if(nails[_bi]._acd>0) nails[_bi]._acd--; }} if(TAC.slowmo&&!scoring){ slowPhase^=1; if(slowPhase) return; } if(TAC.portal && !portalUsed && !scoring){ var _pp=portalPts(current); if(Math.hypot(coin.x-_pp.ex,coin.y-_pp.ey)<PORTAL_R+COIN_R){ portalUsed=true; var _sp=Math.hypot(coin.vx,coin.vy)||1; coin.x=_pp.xx+(coin.vx/_sp)*(PORTAL_R+COIN_R+1); coin.y=_pp.xy+(coin.vy/_sp)*(PORTAL_R+COIN_R+1); spawnSparks(_pp.ex,_pp.ey,null,14); spawnSparks(_pp.xx,_pp.xy,null,14); try{sfxPortal();}catch(e){} } }
       const speed=Math.hypot(coin.vx,coin.vy);
       // Magnus effect: a spinning ball curves perpendicular to its travel
-      if(coin.spin&&speed>0.4&&!scoring){ const px=-coin.vy/speed, py=coin.vx/speed; coin.vx+=px*coin.spin*speed*0.05; coin.vy+=py*coin.spin*speed*0.05; coin.spin*=0.984; if(Math.abs(coin.spin)<0.003) coin.spin=0; }
+      if(coin.spin&&speed>0.4&&!scoring){ const px=-coin.vy/speed, py=coin.vx/speed; coin.vx+=px*coin.spin*speed*0.05; coin.vy+=py*coin.spin*speed*0.05; var _cm=Math.hypot(coin.vx,coin.vy)||1; coin.vx=coin.vx/_cm*speed; coin.vy=coin.vy/_cm*speed; coin.spin*=0.984; if(Math.abs(coin.spin)<0.003) coin.spin=0; }
       if(speed>0.35){ shotTrail.push({x:coin.x,y:coin.y,life:18,max:18,curl:!!coin.spin,wet:!!TAC.wet}); if(shotTrail.length>18) shotTrail.shift(); }
       const subs=Math.max(1,Math.ceil(speed/MAX_STEP));
       // advance each sub-step by the CURRENT velocity, so a mid-frame wall/player
