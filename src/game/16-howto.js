@@ -6,7 +6,7 @@
       pad.appendChild(mk('div',FS(12,'#c6e84a')+'text-align:center;margin-bottom:14px;letter-spacing:1px;','HOW TO PLAY'));
       const rows=[
         ['✦ FLICK','Drag back from the ball and release — like a slingshot. The longer you drag, the longer the aim arrow and the harder the shot.'],
-        ['✦ SCORE','Knock the ball into the FAR goal. First to your target score — or the leader when the timer ends — wins.'],
+        ['✦ SCORE','Flick the ball into your opponent’s goal — the net at the other end of the pitch. First team to hit the target number of goals wins the match.'],
         ['✦ POSSESSION','Hit one of YOUR OWN players and you keep the turn — up to 3 flicks per turn. Miss (or after the 3rd flick), the turn passes to your opponent.'],
         ['✦ STAMINA','Your legs tire through the turn: the 1st flick is full power, each one after is weaker — 100% → 75% → 50%. The aim arrow shows it: green (fresh) fading to red (tired), and it gets shorter too. Fresh legs every new turn. (No stamina in Practice.)'],
         ['✦ GOALIE','Each side has a keeper that auto-tracks the ball across its goal. Aim for the corners.'],
