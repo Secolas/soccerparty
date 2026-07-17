@@ -73,6 +73,8 @@ const ASSETS = [
   { file: "icon-cannon.png",    size: 64,  prompt: `A stubby black iron cannon barrel with NO wheels and no carriage, angled up to the right, a lit fuse and a small puff of white smoke, bold thick shapes, big and simple, side view, game power-up icon. ${ICON}` },
   { file: "icon-curveball.png", size: 64,  prompt: `A ripe banana power-up icon (curveball). ${ICON}` },
   { file: "icon-glide.png",     size: 64,  prompt: `A shiny pale-blue ice cube power-up icon (glide). ${ICON}` },
+  { file: "icon-blizzard.png",  size: 64,  prompt: `A white six-point snowflake with curved wind-gust streaks swirling around it, icy blue and white, bold simple shapes, blizzard power-up icon. ${ICON}` },
+  { file: "icon-puddle.png",    size: 64,  prompt: `A glossy pale-blue oval water puddle with a small splash droplet above it, slippery wet patch power-up icon. ${ICON}` },
   { file: "icon-magnet.png",    size: 64,  prompt: `A red horseshoe magnet power-up icon. ${ICON}` },
   { file: "icon-sticky.png",    size: 64,  prompt: `A golden honey pot power-up icon (sticky). ${ICON}` },
   { file: "icon-sniper.png",    size: 64,  prompt: `Just a single black telescopic rifle scope by itself (no gun), side view — a short chunky cylinder with a glinting glass lens at each end and adjustment rings, one clean simple bold object, centered, game power-up icon. ${ICON}` },
