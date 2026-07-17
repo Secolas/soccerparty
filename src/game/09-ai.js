@@ -14,7 +14,7 @@
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
       const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.5:1);
-      let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1); if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5); if(pen&&pen.active) speed=Math.min(speed,5.1);
+      let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul(); if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5); if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
       var ang2=ang;
       if(TAC.curve && speed>=1.9){ var _bestA=ang,_bestD=1e9; for(var _ci=-9;_ci<=9;_ci++){ var _ca=ang+_ci*0.055; var _svx=Math.cos(_ca)*speed,_svy=Math.sin(_ca)*speed; var _shx=-_svx,_sd2=(_shx>0.05)?1:((_shx<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); var _ss=_sd2*((_svy<0)?1:-1)*1.9; var _sx=coin.x,_sy=coin.y,_md=1e9; for(var _st=0;_st<150;_st++){ var _ssp=Math.hypot(_svx,_svy); if(_ssp<0.4) break; var _px=-_svy/_ssp,_py=_svx/_ssp; _svx+=_px*_ss*_ssp*0.05; _svy+=_py*_ss*_ssp*0.05; var _acm=Math.hypot(_svx,_svy)||1; _svx=_svx/_acm*_ssp; _svy=_svy/_acm*_ssp; _ss*=0.984; _svx*=FRICTION; _svy*=FRICTION; _sx+=_svx; _sy+=_svy; if(_sx<WALL+COIN_R){_sx=WALL+COIN_R;_svx=-_svx*RESTITUTION;_ss*=0.35;} else if(_sx>W-WALL-COIN_R){_sx=W-WALL-COIN_R;_svx=-_svx*RESTITUTION;_ss*=0.35;} var _d=Math.hypot(_sx-goalX,_sy-goalY); if(_d<_md) _md=_d; if((t==='red'&&_sy<=goalY)||(t==='blue'&&_sy>=goalY)) break; } if(_md<_bestD){ _bestD=_md; _bestA=_ca; } } ang2=_bestA; }
