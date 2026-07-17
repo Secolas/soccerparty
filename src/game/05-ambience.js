@@ -153,7 +153,7 @@
       for(const a of ambient){
         if(a.kind==='bird'){ a.x+=a.vx; if(a.x>CW+3) a.x=-3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now); }
         else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
-        else if(a.kind==='snow'){ a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2; if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;} ctx.fillStyle='rgba(240,248,255,0.9)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),a.sz,a.sz); }
+        else if(a.kind==='snow'){ if(typeof royBlizzard==='function'&&royBlizzard()){ var _gs=Math.max(0,Math.sin(royGustPhase)), _wx=Math.cos(royGustDir), _wy=Math.sin(royGustDir); a.x+=_wx*(0.4+_gs*3.8); a.y+=a.vy+_wy*_gs*2.4; } else { a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2; } if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;} else if(a.y<-2){a.y=CH+2;a.x=Math.random()*CW;} if(a.x>CW+2)a.x=-2; else if(a.x<-2)a.x=CW+2; ctx.fillStyle='rgba(240,248,255,0.9)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),a.sz,a.sz); }
         else if(a.kind==='drone'){ a.x+=a.vx; if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4; drawDrone(Math.round(a.x),Math.round(a.y),a.phase,now); }
         else if(a.kind==='ship'){ a.x+=a.vx; if(a.x>CW+6)a.x=-6; if(a.x<-6)a.x=CW+6; drawShip(Math.round(a.x),a.y,a.small); }
         else if(a.kind==='car'){ a.x+=a.vx*a.dir; if(a.dir>0&&a.x>CW+6)a.x=-6; if(a.dir<0&&a.x<-6)a.x=CW+6; const y=a.top? OY*0.52 : CH-OY*0.5; drawCar(Math.round(a.x),Math.round(y),a.dir,a.col); }
