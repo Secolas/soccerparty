@@ -241,7 +241,7 @@
       if(timerRunning&&phase==='play'&&!winner){ matchMs+=delta; if(matchLen>0&&!timeUp){ var _sl=Math.ceil((matchLen*1000-matchMs)/1000); if(_sl<=10&&_sl>0&&_sl!==_lastTick){ _lastTick=_sl; try{ sfxTick(_sl<=3); }catch(e){} } } if(matchLen>0&&!timeUp&&matchMs>=matchLen*1000){ matchMs=matchLen*1000; timeUp=true; onTimeUp(); } }
       accumulator+=delta*((typeof nsCamS!=='undefined'&&nsCamS.on&&!scoring)?0.4:1);
       while(accumulator>=FRAME_MS){ stepPhysics(); updateGoalies(); updateFX(); accumulator-=FRAME_MS; }
-      maybeAI(delta); if(pen&&pen.active) penTick(); if(royBlizzard()){ var _ps=Math.sin(royGustPhase); royGustPhase+=ROY_GUST_FREQ; if(_ps<=0 && Math.sin(royGustPhase)>0) royGustDir=(Math.random()<0.5?0:Math.PI)+(Math.random()-0.5)*0.5; } try{ nsCam(delta); }catch(e){}
+      maybeAI(delta); if(pen&&pen.active) penTick(); if(royBlizzard()){ var _ps=Math.sin(royGustPhase); royGustPhase+=ROY_GUST_FREQ; if(_ps<=0 && Math.sin(royGustPhase)>0) royGustDir=Math.random()*6.2832; } try{ nsCam(delta); }catch(e){}
       draw(ts);
       requestAnimationFrame(loop);
     }
