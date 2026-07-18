@@ -160,10 +160,11 @@
         ctx.save(); if(ghosting) ctx.globalAlpha=0.4; if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6); ctx.save(); ctx.globalAlpha=0.26; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(coin.x,coin.y,COIN_R*0.85,COIN_R*0.45,0,0,Math.PI*2); ctx.fill(); ctx.restore(); drawBall(coin.x,coin.y-_hh); } else { drawBall(coin.x,coin.y); } ctx.restore();
       }
 
-      // bushes drawn over the ball so it visibly disappears INTO the foliage,
-      // then the hidden ambush serpents rear up OVER the bushes to strike
-      try{drawBushes(now);}catch(e){}
+      // ambush serpents drawn UNDER the bushes (they stay hidden beneath the foliage and
+      // only the lunging head pokes out), then bushes over the ball + serpent so a captured
+      // ball and the coiled snake both disappear INTO the foliage
       try{drawSerp(now);}catch(e){}
+      try{drawBushes(now);}catch(e){}
       // front net overlay (bulge)
       const netTeam=scoringTeam||parkedTeam;
       const ballInGoal=(scoring||banner>0||parkedTeam)&&netTeam;
