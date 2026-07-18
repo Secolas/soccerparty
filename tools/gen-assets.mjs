@@ -133,10 +133,9 @@ const ASSETS = [
   // Savanna bush — 4-frame gentle wind-sway sprite sheet for THE THICKET hazard.
   { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view. Solid rounded bushy silhouette of chunky leaves, ONE thick dark outline on the outer edge only, filled solid like a sticker. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. ABSOLUTELY NO twigs, NO branches, NO thin stem lines, NO ground line, NO dividing lines or frame borders — each bush floats alone surrounded by wide empty magenta space. ${ICON}` },
 
-  // Corner serpent — 2-frame animation (coiled/watching | reared up to strike) for
-  // THE THICKET hard layer. Keyed + trimmed + de-fringed like the bush.
-  { file: "sprite-serpent", frames: 4, size: 64, deFringe: true, prompt: `A 4-frame pixel-art sprite sheet in ONE single horizontal row, four frames side by side left to right (NOT stacked, NOT a 2x2 grid), showing the SAME top-down green snake performing a strike in sequence, identical snake at the same size in every frame. Frame 1: coiled in a spiral resting, head low, calm. Frame 2: head raised, starting to rear up. Frame 3: reared back high with mouth beginning to open, wound up ready. Frame 4: lunging forward with mouth wide open showing fangs and a red forked tongue, striking. Dark green and bright lime scales, bold chunky 16-bit pixel art, clean bold silhouette, NO outline border, NO frame. Clear vertical gaps between the four frames, all in one horizontal line. ${ICON}` },
 
+  // (serpent frames are hand-drawn, not generated: tools/serpent-slither-source.png
+  //  sliced into assets/generated/serpslith-1..50.png by `node tools/slice-serpent.cjs`)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
