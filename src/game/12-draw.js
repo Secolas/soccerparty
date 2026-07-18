@@ -154,6 +154,9 @@
         if(phase==='setup'){ const r=goalAreaRect(n.team); const bad=(n===dragNail)&&inRect(n.x,n.y,r)&&countInGoalArea(n.team,n)>=1; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+2,0,Math.PI*2); ctx.strokeStyle=bad?'rgba(214,75,58,0.9)':'rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
       }
 
+      // pinball bumpers sit on the pitch under the ball (the ball bounces off their edge)
+      try{drawBumpers(now);}catch(e){}
+
       // ball (with shot trail)
       if(phase==='play'){
         for(const t of shotTrail){ const a=Math.max(0,t.life/t.max)*((t.curl||t.wet)?0.32:0.22); ctx.beginPath(); ctx.arc(t.x,t.y,COIN_R,0,Math.PI*2); ctx.fillStyle=t.wet?'rgba(64,150,255,'+a+')':(t.curl?'rgba(120,220,255,'+a+')':'rgba(244,233,200,'+a+')'); ctx.fill(); if(t.wet){ ctx.fillStyle='rgba(170,215,255,'+Math.min(1,a*1.4)+')'; ctx.beginPath(); ctx.arc(t.x-2,t.y-1.5,1.4,0,Math.PI*2); ctx.arc(t.x+2.3,t.y+1.6,1.1,0,Math.PI*2); ctx.fill(); } }
