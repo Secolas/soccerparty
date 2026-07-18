@@ -134,8 +134,10 @@ const ASSETS = [
   { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view. Solid rounded bushy silhouette of chunky leaves, ONE thick dark outline on the outer edge only, filled solid like a sticker. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. ABSOLUTELY NO twigs, NO branches, NO thin stem lines, NO ground line, NO dividing lines or frame borders — each bush floats alone surrounded by wide empty magenta space. ${ICON}` },
 
 
-  // (serpent frames are hand-drawn, not generated: tools/serpent-corner-source.png
-  //  sliced/keyed into assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`)
+  // Roaming snake WALK cycle — top-down snake slithering right (rotated in-game to face travel).
+  { file: "serp-walk", frames: 4, size: 64, deFringe: true, prompt: `A horizontal sprite sheet, ONE single row of 4 equal frames side by side (NOT stacked, NOT a grid), each the SAME green snake seen from directly above (strict top-down) slithering FORWARD toward the RIGHT: a long snake with a small head at the RIGHT end (tiny red forked tongue) and its body trailing to the LEFT in an S-wave that shifts across the 4 frames so it looks like it slithers along. Dark green body with bright lime-green scale highlights, chunky 16-bit pixel art, clean silhouette, NO dark outline border. Clear even gaps between the 4 frames, one horizontal row. ${ICON}` },
+  // (rear-up serpent frames are hand-drawn: tools/serpent-corner-source.png sliced/keyed into
+  //  assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
