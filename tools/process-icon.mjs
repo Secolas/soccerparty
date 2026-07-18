@@ -34,6 +34,10 @@ export function processIcon(inputBuffer, opts = {}) {
   if (typeof opts === "number") opts = { size: opts };
   const size = opts.size || ICON_SIZE;
   const keyOut = opts.keyOut !== false;
+  // Per-asset key tolerance: some generations use a dull pink instead of pure
+  // magenta, which sits close to warm subjects (brown mud) and the default
+  // tolerance bleeds into them. A tighter keyTol keeps the subject intact.
+  const KT2 = (opts.keyTol ? opts.keyTol * opts.keyTol : TOL2);
 
   const src = PNG.sync.read(inputBuffer);
   const { width: w, height: h, data } = src;
@@ -59,7 +63,7 @@ export function processIcon(inputBuffer, opts = {}) {
       const c = y * w + x;
       if (transparent[c]) return;
       const p = c << 2;
-      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= TOL2) {
+      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= KT2) {
         transparent[c] = 1;
         stack.push(x, y);
       }
@@ -80,7 +84,24 @@ export function processIcon(inputBuffer, opts = {}) {
     for (let c = 0; c < w * h; c++) {
       const p = c << 2;
       if (data[p + 3] === 0) continue;
-      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= TOL2) data[p + 3] = 0;
+      if (dist2(data[p], data[p + 1], data[p + 2], br, bg, bb) <= KT2) data[p + 3] = 0;
+    }
+
+    // Optional de-fringe: drop the faint anti-aliased halo, then erode one pixel
+    // ring so no dark keyed edge survives (crisp cut for flat-colour sprites).
+    if (opts.deFringe) {
+      for (let c = 0; c < w * h; c++) { const a = data[(c << 2) + 3]; if (a > 0 && a < 110) data[(c << 2) + 3] = 0; }
+      const rm = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const c = y * w + x; if (data[(c << 2) + 3] === 0) continue;
+        let edge = false;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h || data[(((ny * w + nx)) << 2) + 3] === 0) { edge = true; break; }
+        }
+        if (edge) rm.push(c);
+      }
+      for (const c of rm) data[(c << 2) + 3] = 0;
     }
 
     // Bounding box of the remaining (opaque) subject.
@@ -131,7 +152,7 @@ export function processIcon(inputBuffer, opts = {}) {
 // side by side), which is the only reliable way to keep the character coherent
 // across frames. Each frame is then keyed + trimmed + centred independently, so
 // swapping between them animates cleanly. Returns an array of PNG Buffers.
-export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2, keyOut = true } = {}) {
+export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2, keyOut = true, deFringe = false, keyTol = 0 } = {}) {
   const src = PNG.sync.read(inputBuffer);
   const { width: w, height: h, data } = src;
   const fw = Math.floor(w / frames);
@@ -153,7 +174,7 @@ export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2, keyOut
         sub.data[dp + 3] = data[sp + 3];
       }
     }
-    out.push(processIcon(PNG.sync.write(sub), { size, keyOut }));
+    out.push(processIcon(PNG.sync.write(sub), { size, keyOut, deFringe, keyTol }));
   }
   return out;
 }
