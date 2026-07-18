@@ -138,6 +138,13 @@ const ASSETS = [
   // at the ball, so one pose set covers every direction. 4-frame coil->full-thrust lunge.
   { file: "serp-lunge", frames: 4, size: 48, deFringe: true, prompt: `A 4-frame pixel-art sprite sheet of the SAME green snake seen from DIRECTLY ABOVE (top-down bird's-eye view), four frames in a horizontal row. In EVERY frame the snake's coiled tail sits at the BOTTOM and its head points straight UP toward the top edge. It lunges upward across the frames: frame 1 fully coiled and compact with the head tucked low, frame 2 uncoiling and the neck rising, frame 3 body stretched upward with the head lifted high, frame 4 full forward strike with the head thrust far up, mouth open showing fangs and a small red forked tongue. Bright green scaly body with darker green banding down the back and ONE thick dark outline, filled solid like a sticker. Every frame the same size and centered, snake always pointing UP. Strictly top-down, NO side view, NO horizon, NO ground shadow, NO dividing lines or frame borders, wide empty magenta space around each frame. ${ICON}` },
 
+  // Stadium condition chip icons (shown on the royale stadium preview). Single centered
+  // subjects, keyed to transparency like the ability icons.
+  { file: "icon-bush.png",  size: 64, prompt: `A single small round leafy green savanna bush, one chunky rounded bushy silhouette of thick leaves with a bold dark outline, filled solid like a sticker, centered. NO twigs, NO stem, NO ground line, NO shadow. ${ICON}` },
+  { file: "icon-mud.png",   size: 64, prompt: `A single oval puddle of glossy brown mud seen from above, wet chocolate-brown surface with a couple of small lighter mud bubbles and a soft highlight, bold dark outline, centered. NO ground, NO grass, NO shadow. ${ICON}` },
+  { file: "icon-snake.png", size: 64, prompt: `A single bright green snake coiled with its head reared up ready to strike, front view, mouth slightly open with tiny fangs and a small red forked tongue, darker green banding and a bold dark outline, filled solid like a sticker, centered. NO ground, NO shadow. ${ICON}` },
+  { file: "icon-wind.png",  size: 64, prompt: `A gust of wind as three curling swept white and pale-blue swirl lines blowing to the right, a simple bold wind icon with a dark outline, centered. NO clouds, NO landscape, NO text. ${ICON}` },
+
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
   //  each bush and lunges (frames 0->3 = coil->full thrust) at a ball that passes near, shoving
