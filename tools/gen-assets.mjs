@@ -145,6 +145,8 @@ const ASSETS = [
   { file: "icon-snake.png", size: 64, prompt: `A single bright green snake coiled with its head reared up ready to strike, front view, mouth slightly open with tiny fangs and a small red forked tongue, darker green banding and a bold dark outline, filled solid like a sticker, centered. NO ground, NO shadow. ${ICON}` },
   { file: "icon-wind.png",  size: 64, prompt: `A gust of wind as three curling swept white and pale-blue swirl lines blowing to the right, a simple bold wind icon with a dark outline, centered. NO clouds, NO landscape, NO text. ${ICON}` },
   { file: "icon-bumper.png", size: 64, prompt: `A single round pinball bumper seen from above, a glossy red mushroom bumper cap with a white ring and a glowing bright yellow center, chunky and bold with a thick dark outline, filled solid like a sticker, centered. NO pinball table, NO background details, NO shadow. ${ICON}` },
+  { file: "icon-orbit.png", size: 64, prompt: `Two curved glowing cyan-and-white arrows chasing each other around a circular loop, a bold pinball orbit / fast-lane arrow icon with a dark outline, centered. NO table, NO background, NO text. ${ICON}` },
+  { file: "icon-flipper.png", size: 64, prompt: `A single pinball flipper paddle, a chunky glossy red angled bat with a round pivot bolt at its base, bold dark outline, filled solid like a sticker, centered. NO table, NO ball, NO background, NO shadow. ${ICON}` },
 
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
