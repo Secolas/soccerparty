@@ -133,12 +133,18 @@ const ASSETS = [
   // Savanna bush — 4-frame gentle wind-sway sprite sheet for THE THICKET hazard.
   { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view. Solid rounded bushy silhouette of chunky leaves, ONE thick dark outline on the outer edge only, filled solid like a sticker. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. ABSOLUTELY NO twigs, NO branches, NO thin stem lines, NO ground line, NO dividing lines or frame borders — each bush floats alone surrounded by wide empty magenta space. ${ICON}` },
 
+  // Top-down lunging snake for THE THICKET hard hazard. A snake hidden in a bush
+  // lunges out at the ball; drawn from directly above and rotated in-engine to aim
+  // at the ball, so one pose set covers every direction. 4-frame coil->full-thrust lunge.
+  { file: "serp-lunge", frames: 4, size: 48, deFringe: true, prompt: `A 4-frame pixel-art sprite sheet of the SAME green snake seen from DIRECTLY ABOVE (top-down bird's-eye view), four frames in a horizontal row. In EVERY frame the snake's coiled tail sits at the BOTTOM and its head points straight UP toward the top edge. It lunges upward across the frames: frame 1 fully coiled and compact with the head tucked low, frame 2 uncoiling and the neck rising, frame 3 body stretched upward with the head lifted high, frame 4 full forward strike with the head thrust far up, mouth open showing fangs and a small red forked tongue. Bright green scaly body with darker green banding down the back and ONE thick dark outline, filled solid like a sticker. Every frame the same size and centered, snake always pointing UP. Strictly top-down, NO side view, NO horizon, NO ground shadow, NO dividing lines or frame borders, wide empty magenta space around each frame. ${ICON}` },
 
-  // (rear-up serpent frames are hand-drawn: tools/serpent-corner-source.png sliced/keyed into
-  //  assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`. These are the
-  //  first-generation serpent used by the savanna-hard bush ambush: one hides in each bush and
-  //  rears up (frames 0->3 = alert->strike) toward a ball that passes near, shoving it away.)
-  // (serp-walk-1..8.png and serp-coil.png are earlier roaming/coiled-snake art, no longer used.)
+
+  // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
+  //  each bush and lunges (frames 0->3 = coil->full thrust) at a ball that passes near, shoving
+  //  it away. Drawn from directly above and rotated in-engine to the ball, so it aims in every
+  //  direction. The whole-sheet magenta is colour-keyed (border flood-fill leaves the enclosed
+  //  gaps between the coils) and the 4 frames share one union bbox so the coil stays anchored.)
+  // (serp-corner-1..4.png rear-up frames and serp-walk/serp-coil are earlier snake art, unused.)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
