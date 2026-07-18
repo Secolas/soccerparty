@@ -133,8 +133,8 @@ const ASSETS = [
   // Savanna bush — 4-frame gentle wind-sway sprite sheet for THE THICKET hazard.
   { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view. Solid rounded bushy silhouette of chunky leaves, ONE thick dark outline on the outer edge only, filled solid like a sticker. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. ABSOLUTELY NO twigs, NO branches, NO thin stem lines, NO ground line, NO dividing lines or frame borders — each bush floats alone surrounded by wide empty magenta space. ${ICON}` },
 
-  // Savanna river water — seamless top-down water fill for THE THICKET S-river.
-  { file: "tile-water.png", size: 64, keyOut: false, prompt: `A seamless top-down river water texture tile, gentle turquoise and deep-blue flowing water with soft rounded ripples and subtle lighter current highlights, chunky 16-bit pixel art, tiles seamlessly on all edges, NO shoreline, NO banks, NO rocks, no text. ${SCENE}` },
+  // Animated water — 8-frame loop of the same top-down water surface rippling.
+  { file: "sprite-water", frames: 8, size: 64, keyOut: false, prompt: `A horizontal sprite sheet of EXACTLY 8 equal frames in a single row, side by side, showing the SAME square patch of top-down turquoise-and-blue river water rippling through ONE smooth seamless loop. From frame 1 to frame 8 the soft ripples and lighter light-glints drift and shift a little so playing them in order looks like gently flowing water, and frame 8 flows back into frame 1. Each frame is full-bleed water filling the whole square, seamless, chunky 16-bit pixel art, NO borders or gaps or lines between frames, NO shoreline, NO banks, no text. ${SCENE}` },
 
   // Static decor + ground tiles + scoreboard skin
   { file: "sprite-tree.png", size: 96,  keyOut: true,  prompt: `A single lush round green tree with a brown trunk, side view. ${ICON}` },
@@ -213,7 +213,7 @@ for (const a of ASSETS) {
         const base = a.file.replace(/\.png$/, "");
         let frames;
         try {
-          frames = processSheet(raw, { size: a.size || ICON_SIZE, frames: a.frames });
+          frames = processSheet(raw, { size: a.size || ICON_SIZE, frames: a.frames, keyOut: a.keyOut !== false });
         } catch (pe) {
           console.log(`(kept raw sheet, split failed: ${pe.message}) `);
           frames = [raw];
