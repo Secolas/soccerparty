@@ -133,6 +133,9 @@ const ASSETS = [
   // Savanna bush — 4-frame gentle wind-sway sprite sheet for THE THICKET hazard.
   { file: "sprite-bush", frames: 4, size: 64, prompt: `A 4-frame pixel-art sprite sheet: FOUR copies of the SAME small round leafy green savanna bush in a row, identical bush at the same size and position, front view. Solid rounded bushy silhouette of chunky leaves, ONE thick dark outline on the outer edge only, filled solid like a sticker. The bush sways gently in the wind across the frames: frame 1 leaning slightly LEFT, frame 2 UPRIGHT, frame 3 leaning slightly RIGHT, frame 4 UPRIGHT. ABSOLUTELY NO twigs, NO branches, NO thin stem lines, NO ground line, NO dividing lines or frame borders — each bush floats alone surrounded by wide empty magenta space. ${ICON}` },
 
+  // Savanna river water — seamless top-down water fill for THE THICKET S-river.
+  { file: "tile-water.png", size: 64, keyOut: false, prompt: `A seamless top-down river water texture tile, gentle turquoise and deep-blue flowing water with soft rounded ripples and subtle lighter current highlights, chunky 16-bit pixel art, tiles seamlessly on all edges, NO shoreline, NO banks, NO rocks, no text. ${SCENE}` },
+
   // Static decor + ground tiles + scoreboard skin
   { file: "sprite-tree.png", size: 96,  keyOut: true,  prompt: `A single lush round green tree with a brown trunk, side view. ${ICON}` },
   { file: "tile-grass.png",  size: 128, keyOut: false, prompt: `A seamless top-down lush green grass texture tile, subtle blades, pixel art, edges tile seamlessly. ${SCENE}` },
