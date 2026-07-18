@@ -135,7 +135,7 @@ const ASSETS = [
 
 
   // (serpent frames are hand-drawn, not generated: tools/serpent-corner-source.png
-  //  sliced/keyed into assets/generated/serp-corner-1..6.png by `node tools/slice-serpent.cjs`)
+  //  sliced/keyed into assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
