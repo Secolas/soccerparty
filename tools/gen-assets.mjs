@@ -139,6 +139,9 @@ const ASSETS = [
   // (roaming-snake walk cycle: 8 user-supplied PixelLab side-view frames, already transparent —
   //  cropped to a shared union bbox (so scale stays constant and the walk wobble is preserved)
   //  into assets/generated/serp-walk-1..8.png. Head faces +x; the draw code rotates to heading.)
+  // (roaming-snake coiled pose: the 9th PixelLab frame, a front-view rearing coil (head up),
+  //  trimmed to assets/generated/serp-coil.png — drawn peeking from the bush while hidden and
+  //  reared up toward the ball on a strike.)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
