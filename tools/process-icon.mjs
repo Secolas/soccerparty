@@ -131,24 +131,29 @@ export function processIcon(inputBuffer, opts = {}) {
 // side by side), which is the only reliable way to keep the character coherent
 // across frames. Each frame is then keyed + trimmed + centred independently, so
 // swapping between them animates cleanly. Returns an array of PNG Buffers.
-export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2 } = {}) {
+export function processSheet(inputBuffer, { size = ICON_SIZE, frames = 2, keyOut = true } = {}) {
   const src = PNG.sync.read(inputBuffer);
   const { width: w, height: h, data } = src;
   const fw = Math.floor(w / frames);
   const out = [];
   for (let k = 0; k < frames; k++) {
-    const sub = new PNG({ width: fw, height: h });
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < fw; x++) {
-        const sp = ((y * w) + (k * fw + x)) << 2;
-        const dp = ((y * fw) + x) << 2;
+    // For keyed sprites keep the whole frame (trim happens in processIcon). For
+    // full-bleed textures (keyOut:false) centre-crop the frame to a square so a
+    // tall/thin slice isn't squished when downscaled.
+    let cw = fw, ch = h, ox0 = 0, oy0 = 0;
+    if (!keyOut) { const s = Math.min(fw, h); ox0 = Math.floor((fw - s) / 2); oy0 = Math.floor((h - s) / 2); cw = s; ch = s; }
+    const sub = new PNG({ width: cw, height: ch });
+    for (let y = 0; y < ch; y++) {
+      for (let x = 0; x < cw; x++) {
+        const sp = (((y + oy0) * w) + (k * fw + x + ox0)) << 2;
+        const dp = ((y * cw) + x) << 2;
         sub.data[dp] = data[sp];
         sub.data[dp + 1] = data[sp + 1];
         sub.data[dp + 2] = data[sp + 2];
         sub.data[dp + 3] = data[sp + 3];
       }
     }
-    out.push(processIcon(PNG.sync.write(sub), { size, keyOut: true }));
+    out.push(processIcon(PNG.sync.write(sub), { size, keyOut }));
   }
   return out;
 }
