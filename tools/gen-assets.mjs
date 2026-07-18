@@ -135,7 +135,7 @@ const ASSETS = [
 
   // Corner serpent — 2-frame animation (coiled/watching | reared up to strike) for
   // THE THICKET hard layer. Keyed + trimmed + de-fringed like the bush.
-  { file: "sprite-serpent", frames: 2, size: 64, deFringe: true, prompt: `A 2-frame pixel-art sprite sheet: TWO copies of the SAME top-down coiled green snake, identical snake at the same size, side by side. LEFT frame: the snake coiled in a spiral resting with its head low, calm and watching. RIGHT frame: the SAME snake reared up with its head raised high and mouth open wide showing fangs and a red forked tongue, ready to strike. Dark green and bright lime scales, bold chunky 16-bit pixel art, clean bold silhouette, NO outline border, NO frame. Clear vertical gap between the two frames. ${ICON}` },
+  { file: "sprite-serpent", frames: 4, size: 64, deFringe: true, prompt: `A 4-frame pixel-art sprite sheet in ONE single horizontal row, four frames side by side left to right (NOT stacked, NOT a 2x2 grid), showing the SAME top-down green snake performing a strike in sequence, identical snake at the same size in every frame. Frame 1: coiled in a spiral resting, head low, calm. Frame 2: head raised, starting to rear up. Frame 3: reared back high with mouth beginning to open, wound up ready. Frame 4: lunging forward with mouth wide open showing fangs and a red forked tongue, striking. Dark green and bright lime scales, bold chunky 16-bit pixel art, clean bold silhouette, NO outline border, NO frame. Clear vertical gaps between the four frames, all in one horizontal line. ${ICON}` },
 
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
