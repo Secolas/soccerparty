@@ -135,13 +135,10 @@ const ASSETS = [
 
 
   // (rear-up serpent frames are hand-drawn: tools/serpent-corner-source.png sliced/keyed into
-  //  assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`)
-  // (roaming-snake walk cycle: 8 user-supplied PixelLab side-view frames, already transparent —
-  //  cropped to a shared union bbox (so scale stays constant and the walk wobble is preserved)
-  //  into assets/generated/serp-walk-1..8.png. Head faces +x; the draw code rotates to heading.)
-  // (roaming-snake coiled pose: the 9th PixelLab frame, a front-view rearing coil (head up),
-  //  trimmed to assets/generated/serp-coil.png — drawn peeking from the bush while hidden and
-  //  reared up toward the ball on a strike.)
+  //  assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`. These are the
+  //  first-generation serpent used by the savanna-hard bush ambush: one hides in each bush and
+  //  rears up (frames 0->3 = alert->strike) toward a ball that passes near, shoving it away.)
+  // (serp-walk-1..8.png and serp-coil.png are earlier roaming/coiled-snake art, no longer used.)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
