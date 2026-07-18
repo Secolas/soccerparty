@@ -136,9 +136,9 @@ const ASSETS = [
 
   // (rear-up serpent frames are hand-drawn: tools/serpent-corner-source.png sliced/keyed into
   //  assets/generated/serp-corner-1..4.png by `node tools/slice-serpent.cjs`)
-  // (roaming-snake walk cycle: a user-supplied 8-frame side-view walk sheet, sliced from its
-  //  4x2 magenta grid — key by colour distance, keep the largest connected component per cell,
-  //  erode 1px, trim + scale to 64px — into assets/generated/serp-walk-1..8.png)
+  // (roaming-snake walk cycle: 8 user-supplied PixelLab side-view frames, already transparent —
+  //  cropped to a shared union bbox (so scale stays constant and the walk wobble is preserved)
+  //  into assets/generated/serp-walk-1..8.png. Head faces +x; the draw code rotates to heading.)
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
