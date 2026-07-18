@@ -136,7 +136,7 @@ const ASSETS = [
   // (removed sprite-water — the savanna hazard is a mud lake, not a river)
   // Mud puddle — 8-frame animated sprite (a single oval mud pool, keyed + trimmed like
   // the bush) so it draws as one clean cut shape, not a tiled texture.
-  { file: "sprite-mud", frames: 8, size: 64, prompt: `A horizontal sprite sheet of EXACTLY 8 equal frames in a single row, side by side, each frame showing the SAME single top-down oval puddle of thick wet brown MUD, centered at the same size and position in every frame. Across the 8 frames a few small mud bubbles rise and pop and the wet glistening highlights shift a little, so playing them in order looks like slowly churning sticky mud in a loop (frame 8 flows back into frame 1). One irregular soft-edged oval mud puddle per frame with a slightly darker rim, dark brown and muddy ochre tones, chunky 16-bit pixel art, thick clean silhouette. Clear gap between each of the 8 frames. ${ICON}` },
+  { file: "sprite-mud.png", size: 64, deFringe: true, keyTol: 95, prompt: `A single big bold top-down oval puddle of thick wet brown MUD filling most of the frame, one solid puddle centered, filled evenly and completely in dark brown and muddy ochre with a few lighter wet glisten spots, chunky 16-bit pixel art. ABSOLUTELY NO dark outline, NO black rim, NO border, NO ring around it — the mud edge is the same brown as the middle and simply ends. ${ICON}` },
 
   // Static decor + ground tiles + scoreboard skin
   { file: "sprite-tree.png", size: 96,  keyOut: true,  prompt: `A single lush round green tree with a brown trunk, side view. ${ICON}` },
@@ -215,7 +215,7 @@ for (const a of ASSETS) {
         const base = a.file.replace(/\.png$/, "");
         let frames;
         try {
-          frames = processSheet(raw, { size: a.size || ICON_SIZE, frames: a.frames, keyOut: a.keyOut !== false });
+          frames = processSheet(raw, { size: a.size || ICON_SIZE, frames: a.frames, keyOut: a.keyOut !== false, deFringe: !!a.deFringe, keyTol: a.keyTol || 0 });
         } catch (pe) {
           console.log(`(kept raw sheet, split failed: ${pe.message}) `);
           frames = [raw];
