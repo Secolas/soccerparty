@@ -57,7 +57,7 @@
     function formation(team){
       const isRed=team==='red';
       if(!FORMATIONS[teamSize][formationName[team]]) formationName[team]=defaultFormation(teamSize);
-      const _cpu=(typeof aiEnabled!=='undefined')&&aiEnabled&&aiEnabled[team]&&mode==='tournament';
+      const _cpu=(typeof aiEnabled!=='undefined')&&aiEnabled&&aiEnabled[team]&&(mode==='tournament'||mode==='royale');
       const _st=_cpu&&teamKits[team]&&COUNTRY_STYLE[teamKits[team].name];
       let _fname=formationName[team];
       if(_st){ _fname=(teamSize===7?_st.f7:_st.f5); if(!FORMATIONS[teamSize][_fname]) _fname=defaultFormation(teamSize); }
