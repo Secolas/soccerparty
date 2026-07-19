@@ -147,6 +147,8 @@ const ASSETS = [
   { file: "icon-bumper.png", size: 64, prompt: `A single round pinball bumper seen from above, a glossy red mushroom bumper cap with a white ring and a glowing bright yellow center, chunky and bold with a thick dark outline, filled solid like a sticker, centered. NO pinball table, NO background details, NO shadow. ${ICON}` },
   { file: "icon-orbit.png", size: 64, prompt: `Two curved glowing cyan-and-white arrows chasing each other around a circular loop, a bold pinball orbit / fast-lane arrow icon with a dark outline, centered. NO table, NO background, NO text. ${ICON}` },
   { file: "icon-flipper.png", size: 64, prompt: `A single pinball flipper paddle, a chunky glossy red angled bat with a round pivot bolt at its base, bold dark outline, filled solid like a sticker, centered. NO table, NO ball, NO background, NO shadow. ${ICON}` },
+  { file: "icon-quicksand.png", size: 64, prompt: `A swirling quicksand pit seen from directly above, concentric tan and brown sandy rings spiralling inward to a darker sinking centre, bold dark outline, filled solid like a sticker, centered. NO landscape, NO background, NO shadow. ${ICON}` },
+  { file: "icon-devil.png", size: 64, prompt: `A small desert dust-devil tornado, a swirling funnel of tan and pale-yellow sand spiralling upward, wider at the top and narrow at the base, with motion swirl lines and a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
 
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
