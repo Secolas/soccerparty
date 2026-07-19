@@ -6,7 +6,7 @@
     // Greasy walls/players: ice arena on a medium/hard run makes every bounce slip a random amount.
     function royGreasy(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.floor==='ice'&&typeof royaleLevel!=='undefined'&&(royaleLevel==='med'||royaleLevel==='hard')); }
     // Ice puddles: greasy patches on the rink (medium/hard). Roll over one and the ball skids off a random amount.
-    function rollPuddles(){ if(royGreasy()){ if(!royPuddles.length && !moving){ for(var _pp=0;_pp<3;_pp++){ var px,py,ok,tries=0; do{ ok=true; px=WALL+20+Math.random()*(W-2*WALL-40); py=NET_DEPTH+GOAL_AREA_D+16+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-32); for(var _pq=0;_pq<royPuddles.length;_pq++){ if(Math.hypot(px-royPuddles[_pq].x,py-royPuddles[_pq].y)<PUDDLE_R*3){ ok=false; break; } } if(coin&&Math.hypot(px-coin.x,py-coin.y)<PUDDLE_R+COIN_R+14) ok=false; tries++; }while(!ok&&tries<50); royPuddles.push({x:px,y:py}); } } } else if(royPuddles.length){ royPuddles=[]; _puddleIn=-1; } }
+    function rollPuddles(){ if(typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.floor==='ice'&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'){ if(!royPuddles.length && !moving){ for(var _pp=0;_pp<3;_pp++){ var px,py,ok,tries=0; do{ ok=true; px=WALL+20+Math.random()*(W-2*WALL-40); py=NET_DEPTH+GOAL_AREA_D+16+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-32); for(var _pq=0;_pq<royPuddles.length;_pq++){ if(Math.hypot(px-royPuddles[_pq].x,py-royPuddles[_pq].y)<PUDDLE_R*3){ ok=false; break; } } if(coin&&Math.hypot(px-coin.x,py-coin.y)<PUDDLE_R+COIN_R+14) ok=false; tries++; }while(!ok&&tries<50); royPuddles.push({x:px,y:py}); } } } else if(royPuddles.length){ royPuddles=[]; _puddleIn=-1; } }
     function royPuddleStep(){ if(!royPuddles.length||!moving||scoring) return; var _in=-1; for(var _pp=0;_pp<royPuddles.length;_pp++){ if(Math.hypot(coin.x-royPuddles[_pp].x,coin.y-royPuddles[_pp].y)<PUDDLE_R+COIN_R){ _in=_pp; break; } } if(_in>=0 && _in!==_puddleIn){ var _sp=Math.hypot(coin.vx,coin.vy); if(_sp>0.5){ var _sl=(Math.random()-0.5)*1.7,_c=Math.cos(_sl),_s=Math.sin(_sl),_nx=coin.vx*_c-coin.vy*_s,_ny=coin.vx*_s+coin.vy*_c; coin.vx=_nx; coin.vy=_ny; try{ spawnSparks(royPuddles[_in].x,royPuddles[_in].y,null,5); }catch(e){} } } _puddleIn=_in; }
     function drawPuddles(now){ if(!royPuddles.length) return; for(var _pp=0;_pp<royPuddles.length;_pp++){ var p=royPuddles[_pp]; ctx.save(); ctx.globalAlpha=0.42; ctx.fillStyle='#8fd0ff'; ctx.beginPath(); ctx.ellipse(p.x,p.y,PUDDLE_R,PUDDLE_R*0.68,0,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=0.7; ctx.strokeStyle='#dff2ff'; ctx.lineWidth=1; ctx.stroke(); ctx.restore(); } }
     // Bushes (savanna): shrubs scattered on the pitch. A ball rolling through one is grabbed
@@ -108,8 +108,8 @@
     // HARD adds a BOULDER: a heavy stone that rolls back and forth across midfield, bouncing off the
     // side walls and shoving the ball. Both let ghost phase through.
     function royFortArena(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.cust==='fortress'); }
-    function royPortcArena(){ return royFortArena()&&typeof royaleLevel!=='undefined'&&(royaleLevel==='med'||royaleLevel==='hard'); }
-    function royBoulderArena(){ return royFortArena()&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'; }
+    function royPortcArena(){ return royFortArena()&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'; }
+    function royBoulderArena(){ return royFortArena()&&typeof royaleLevel!=='undefined'&&(royaleLevel==='med'||royaleLevel==='hard'); }
     function _portcOpen(){ return 0.5-0.5*Math.cos(royPortcT*0.028); } // 0 = fully closed, 1 = fully open
     function _portcLen(){ return (1-_portcOpen())*30; }
     function royPortcTick(dt){ if(!royPortcArena()) return; var _st=dt/16.67; if(_st>3)_st=3; royPortcT+=_st; }
