@@ -149,6 +149,9 @@ const ASSETS = [
   { file: "icon-flipper.png", size: 64, prompt: `A single pinball flipper paddle, a chunky glossy red angled bat with a round pivot bolt at its base, bold dark outline, filled solid like a sticker, centered. NO table, NO ball, NO background, NO shadow. ${ICON}` },
   { file: "icon-quicksand.png", size: 64, prompt: `A swirling quicksand pit seen from directly above, concentric tan and brown sandy rings spiralling inward to a darker sinking centre, bold dark outline, filled solid like a sticker, centered. NO landscape, NO background, NO shadow. ${ICON}` },
   { file: "icon-devil.png", size: 64, prompt: `A small desert dust-devil tornado, a swirling funnel of tan and pale-yellow sand spiralling upward, wider at the top and narrow at the base, with motion swirl lines and a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
+  { file: "icon-cactus.png", size: 64, prompt: `A single green saguaro cactus with two upraised arms and rows of little white spikes, chunky and bold with a thick dark outline, filled solid like a sticker, centered. NO pot, NO ground, NO background, NO shadow. ${ICON}` },
+  { file: "icon-geyser.png", size: 64, prompt: `A sand geyser erupting, a tall spout of tan and pale-yellow sand and dust blasting straight upward out of a small vent, with a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
+  { file: "sprite-cactus.png", size: 64, prompt: `A single green saguaro cactus standing upright, front view, thick rounded trunk with two upraised arms and rows of tiny white spikes and a couple of small red flowers on top, ONE thick dark outline on the outer edge, filled solid like a sticker. NO pot, NO ground line, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
 
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
