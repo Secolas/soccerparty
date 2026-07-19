@@ -9,11 +9,11 @@
       coin.spin=0; // clear residual curve from a previous curveball shot, same as a human flick does
       if(pen&&pen.active){ var _Z=['L','C','R']; var _kp=pen.dive; var _sp=aiLevel==='hard'?0.9:(aiLevel==='med'?0.6:0.3); var _pick; if(Math.random()<_sp){ var _aw=[]; for(var _i=0;_i<3;_i++){ if(_Z[_i]!==_kp) _aw.push(_Z[_i]); } _pick=_aw[Math.floor(Math.random()*_aw.length)]; } else { _pick=_Z[Math.floor(Math.random()*3)]; } var _off=GOAL_W/3; var _bx=W/2+(_pick==='L'?-_off:(_pick==='R'?_off:0)); var _err=aiLevel==='hard'?4:(aiLevel==='med'?9:16); var _gx=_bx+(Math.random()*2-1)*_err; var _gy=t==='red'?NET_DEPTH+COIN_R+1:H-NET_DEPTH-COIN_R-1; var _dx=_gx-coin.x,_dy=_gy-coin.y,_di=Math.hypot(_dx,_dy),_ang=Math.atan2(_dy,_dx); var _spd=Math.min(5.1,Math.max(4.2,_di*0.05+3.0)); coin.vx=Math.cos(_ang)*_spd; coin.vy=Math.sin(_ang)*_spd; flickCount++; _achBounces=0; hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; turnFlash=Math.max(turnFlash,10); return; }
       const goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
-      const spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.45:1);
+      const spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
       const goalX=W/2+(Math.random()*2-1)*spread;
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
-      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.5:1);
+      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1);
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul(); if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5); if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
       var ang2=ang;
@@ -21,7 +21,7 @@
       _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
       if(TAC.curve && speed>=1.9){ var _hx2=-coin.vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hd2*((coin.vy<0)?1:-1)*1.9; try{sfxCurl();}catch(e){} }
       if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc; coin.vx=_djx; coin.vy=_djy; } flickCount++; _achBounces=0;
-      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; serpentPhase=0; serpentBase=Math.atan2(coin.vy,coin.vx); serpentDir=1; wetBase=Math.atan2(coin.vy,coin.vx); wetPhase=0; drillUsed=false; (function(){ var _bsp=Math.hypot(coin.vx,coin.vy)||1; backspinFx=coin.vx/_bsp; backspinFy=coin.vy/_bsp; backspinPhase=0; })(); steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} try{ trioReset(); }catch(e){} turnFlash=Math.max(turnFlash,10);
+      hitOwn=false; moving=true; ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false; _aiChipRoll=0; serpentPhase=0; serpentBase=Math.atan2(coin.vy,coin.vx); serpentDir=1; wetBase=Math.atan2(coin.vy,coin.vx); wetPhase=0; drillUsed=false; (function(){ var _bsp=Math.hypot(coin.vx,coin.vy)||1; backspinFx=coin.vx/_bsp; backspinFy=coin.vy/_bsp; backspinPhase=0; })(); steerBudget=(TAC.guided?40:0); steerHold=null; try{ ecoFlickStart(); }catch(e){} try{ trioReset(); }catch(e){} turnFlash=Math.max(turnFlash,10);
       
     }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
@@ -41,8 +41,14 @@
               try{sfxAbility('strategist');}catch(e){} try{spawnSparks(mv.x,mv.y,t,10);}catch(e){}
             } } } }
     }
+    // JOYSTICK: steer toward the open side of the goal (away from the keeper), not just dead-centre.
+    var _aiChipRoll=0;
+    function aiSteerTarget(){ var gx=W/2; if(aiLevel==='easy') return gx; var gk=null; for(var i=0;i<nails.length;i++){ if(nails[i].team!==current && nails[i].goalie){ gk=nails[i]; break; } } if(gk){ var off=GOAL_W*0.30; gx=(gk.x<=W/2)?(W/2+off):(W/2-off); gx=Math.max(W/2-GOAL_W/2+COIN_R, Math.min(W/2+GOAL_W/2-COIN_R, gx)); } return gx; }
+    // CHIP: loft the shot over a defender/keeper sitting in the lane just ahead of the ball.
+    function aiMaybeChip(){ if(Math.hypot(coin.vx,coin.vy)<1.2) return; if(_aiChipRoll<0) return; var goalY=(current==='red')?NET_DEPTH:(H-NET_DEPTH); var toGoal=(current==='red')?(coin.vy<-0.3):(coin.vy>0.3); if(!toGoal) return; var dg=Math.abs(coin.y-goalY); if(dg>95||dg<32) return; var blocked=false; for(var i=0;i<nails.length;i++){ var n=nails[i]; if(n.team===current) continue; var ahead=(current==='red')?(n.y<coin.y):(n.y>coin.y); if(ahead && Math.abs(n.y-coin.y)<72 && Math.abs(n.x-coin.x)<NAIL_R+COIN_R+11){ blocked=true; break; } } if(!blocked) return; if(_aiChipRoll===0){ var pr=(aiLevel==='hard')?0.95:(aiLevel==='med'?0.75:0.45); _aiChipRoll=(Math.random()<pr)?1:-1; } if(_aiChipRoll===1){ chipUsed=true; coin.air=22; coin.air0=22; try{sfxGuided();}catch(e){} try{ setStatus(((teamKits[current]&&teamKits[current].abbr)||'CPU')+' CHIP!'); }catch(e){} } }
     function maybeAI(delta){ if(pen&&pen.active&&pen.step!=='aim'){ aiPending=false; return; }
-      if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.guided&&steerBudget>0){ steerHold=W/2; }
+      if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.guided&&steerBudget>0){ steerHold=aiSteerTarget(); }
+      if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
       if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; return; }
       if(!aiEnabled[current]) return;
       if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; try{ aiUtility(); }catch(e){} return; }
