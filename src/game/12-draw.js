@@ -169,6 +169,9 @@
       if(phase==='play'){
         for(const t of shotTrail){ const a=Math.max(0,t.life/t.max)*((t.curl||t.wet)?0.32:0.22); ctx.beginPath(); ctx.arc(t.x,t.y,COIN_R,0,Math.PI*2); ctx.fillStyle=t.wet?'rgba(64,150,255,'+a+')':(t.curl?'rgba(120,220,255,'+a+')':'rgba(244,233,200,'+a+')'); ctx.fill(); if(t.wet){ ctx.fillStyle='rgba(170,215,255,'+Math.min(1,a*1.4)+')'; ctx.beginPath(); ctx.arc(t.x-2,t.y-1.5,1.4,0,Math.PI*2); ctx.arc(t.x+2.3,t.y+1.6,1.1,0,Math.PI*2); ctx.fill(); } }
         ctx.save(); if(ghosting) ctx.globalAlpha=0.4; if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6); ctx.save(); ctx.globalAlpha=0.26; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(coin.x,coin.y,COIN_R*0.85,COIN_R*0.45,0,0,Math.PI*2); ctx.fill(); ctx.restore(); drawBall(coin.x,coin.y-_hh); } else { drawBall(coin.x,coin.y); } ctx.restore();
+        // once the ball is inside a fortress goal box (past the gate line), redraw the portcullis
+        // over it so it reads as being behind the bars, like the keeper
+        try{ if(typeof royPortcArena==='function' && royPortcArena()){ var _gr=goalAreaRect('blue'); if(coin.x>_gr.x && coin.x<_gr.x+_gr.w && (coin.y<NET_DEPTH+_gr.h || coin.y>H-NET_DEPTH-_gr.h)) drawPortcullis(now); } }catch(e){}
       }
 
       // ambush serpents drawn UNDER the bushes (they stay hidden beneath the foliage and
