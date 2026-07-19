@@ -2,8 +2,8 @@
     // Gold tokens spawn on the pitch; any shot that touches one adds it to a shared pot.
     // Whoever scores claims the pot (x2 if the scoring shot itself collected a token).
     // Coins buy abilities in the post-goal draft (priced by rarity) and rerolls.
-    var ecoTokens=[], ecoPot=0, ecoWallet={red:0,blue:0}, ecoShotPickups=0, ecoFx=[], ecoWalletShown={red:0,blue:0}, ecoClaimAnim=null;
-    var ECO_TOKEN_R=4, ECO_MAX_TOKENS=5, ECO_REROLL_COST=2, ECO_TOKEN_VALUE=2, ECO_WIN_BONUS=5;
+    var ecoTokens=[], ecoPot=0, ecoWallet={red:0,blue:0}, ecoShotPickups=0, ecoAssist=false, ecoFx=[], ecoWalletShown={red:0,blue:0}, ecoClaimAnim=null;
+    var ECO_TOKEN_R=4, ECO_MAX_TOKENS=5, ECO_REROLL_COST=2, ECO_TOKEN_VALUE=1, ECO_WIN_BONUS=5;
     function ecoEnabled(){ return (typeof mode!=='undefined') && (mode==='tournament' || (mode==='exhibition' && _ecoOn)); }
     function ecoTournament(){ return (typeof mode!=='undefined') && mode==='tournament'; }
     function abPrice(id){ var w=abWeight(id); return w<=1?14:(w<=2?9:(w<=3?6:(w<=4?4:3))); }
@@ -17,15 +17,15 @@
         if(ok){ for(var j=0;j<ecoTokens.length;j++){ if(Math.hypot(px-ecoTokens[j].x,py-ecoTokens[j].y)<20){ ok=false; break; } } }
         if(ok) ecoTokens.push({x:px,y:py,ph:Math.random()*6.28});
       } }
-    function ecoFlickStart(){ ecoShotPickups=0; }
+    function ecoFlickStart(){ ecoShotPickups=0; ecoAssist=false; }
     function ecoStep(){ if(!ecoEnabled()||!ecoTokens.length||!coin) return;
       for(var i=ecoTokens.length-1;i>=0;i--){ var t=ecoTokens[i];
         if(Math.hypot(coin.x-t.x,coin.y-t.y)<COIN_R+ECO_TOKEN_R){ ecoTokens.splice(i,1); ecoPot+=ECO_TOKEN_VALUE; ecoShotPickups++; ecoFx.push({x:t.x,y:t.y,life:26}); try{ spawnSparks(t.x,t.y,current,8); }catch(e){} try{ if(!muted) tone(1180,0.06,'square',0.06); }catch(e){} } } }
     function ecoOnGoal(scorer){ if(!ecoEnabled()) return;
-      if(ecoPot>0){ var mult=((ecoShotPickups>0)?2:1)*(((sideAb[scorer]||[]).indexOf('market')>=0)?2:1), take=ecoPot*mult, before=(ecoWallet[scorer]||0); ecoWallet[scorer]=before+take;
-        try{ if(window.__nsCenterMsg) window.__nsCenterMsg(teamKits[scorer].abbr+' CLAIMS '+take+' COINS'+(mult>1?' - TOKEN SHOT x2!':'!')); }catch(e){}
+      if(ecoPot>0){ var mult=(ecoAssist?2:1)*(((sideAb[scorer]||[]).indexOf('market')>=0)?2:1), take=ecoPot*mult, before=(ecoWallet[scorer]||0); ecoWallet[scorer]=before+take;
+        try{ if(window.__nsCenterMsg) window.__nsCenterMsg(teamKits[scorer].abbr+' CLAIMS '+take+' COINS'+(mult>1?' - ASSIST x2!':'!')); }catch(e){}
         ecoPot=0; try{ ecoFlyReward(scorer, before, ecoWallet[scorer]); }catch(e){ try{ updateScoreboards(); }catch(e2){} } }
-      ecoShotPickups=0; }
+      ecoShotPickups=0; ecoAssist=false; }
     function ecoChing(k){ try{ if(muted) return; var f=784*Math.pow(1.0595,Math.min(k,14)); tone(f,0.055,'square',0.05); setTimeout(function(){ try{ tone(f*1.5,0.06,'square',0.042); }catch(e){} },42); }catch(e){} }
     function ecoFlyReward(side, from, to){ var wl=el('ns_wallet_'+side), wn=el('ns_walletnum_'+side);
       if(!wl || wl.style.display==='none' || to<=from){ ecoWalletShown[side]=to; ecoClaimAnim=null; try{ updateScoreboards(); }catch(e){} return; }
