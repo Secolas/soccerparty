@@ -145,7 +145,7 @@
       ctx.beginPath(); ctx.arc(WALL,H-WALL,cr,-Math.PI/2,0); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,H-WALL,cr,Math.PI,Math.PI*1.5); ctx.stroke();
 
-      try{drawEco(now);}catch(e){} try{drawWalls();}catch(e){} try{drawMud(now);}catch(e){} try{drawPortals(now);}catch(e){} try{drawLasers(now);}catch(e){} try{drawWall(now);}catch(e){} try{drawDrains(now);}catch(e){} try{drawPortcullis(now);}catch(e){} try{drawBoulder(now);}catch(e){} try{drawPuddles(now);}catch(e){} try{drawTraps(now);}catch(e){} try{drawBlizzard(now);}catch(e){} try{drawTrapFx(now);}catch(e){} try{drawShield(now);}catch(e){} try{drawMagnetPull(now);}catch(e){} // nails
+      try{drawEco(now);}catch(e){} try{drawWalls();}catch(e){} try{drawMud(now);}catch(e){} try{drawPortals(now);}catch(e){} try{drawLasers(now);}catch(e){} try{drawWall(now);}catch(e){} try{drawDrains(now);}catch(e){} try{drawBoulder(now);}catch(e){} try{drawPuddles(now);}catch(e){} try{drawTraps(now);}catch(e){} try{drawBlizzard(now);}catch(e){} try{drawTrapFx(now);}catch(e){} try{drawShield(now);}catch(e){} try{drawMagnetPull(now);}catch(e){} // nails
       for(const n of nails){
         if(n.team===current&&!winner&&phase==='play'){ const pulse=0.5+Math.sin(frameTick*0.13)*0.5; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+4+pulse,0,Math.PI*2); ctx.fillStyle=n.team==='red'?'rgba(224,91,72,0.16)':'rgba(91,143,232,0.16)'; ctx.fill(); }
         paintNail(ctx,n.x,n.y,(n.goalie&&((sideAb[n.team]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,teamKits[n.team].kit, n.team===current&&!winner&&phase==='play', resolveKit(teamKits[n.team].kit, effStyle(n.team)));
@@ -153,6 +153,9 @@
         if(n.clearer && typeof clearUsed!=='undefined' && clearUsed && !clearUsed[n.team]){ var _cpl=0.5+Math.sin(frameTick*0.11)*0.5, _cR=NAIL_R+5.5; ctx.save(); ctx.globalAlpha=0.16+_cpl*0.10; ctx.fillStyle='#5aa0ff'; ctx.beginPath(); ctx.arc(n.x,n.y,_cR,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=0.7+_cpl*0.25; ctx.strokeStyle='#bfe0ff'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.arc(n.x,n.y,_cR,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
         if(phase==='setup'){ const r=goalAreaRect(n.team); const bad=(n===dragNail)&&inRect(n.x,n.y,r)&&countInGoalArea(n.team,n)>=1; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+2,0,Math.PI*2); ctx.strokeStyle=bad?'rgba(214,75,58,0.9)':'rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
       }
+
+      // fortress portcullis draws OVER the goalie (keeper sits behind the bars) but under the ball
+      try{drawPortcullis(now);}catch(e){}
 
       // sand geyser vents sit on the sand under the ball (erupting spout draws upward)
       try{drawGeysers(now);}catch(e){}
