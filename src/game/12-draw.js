@@ -154,6 +154,8 @@
         if(phase==='setup'){ const r=goalAreaRect(n.team); const bad=(n===dragNail)&&inRect(n.x,n.y,r)&&countInGoalArea(n.team,n)>=1; ctx.beginPath(); ctx.arc(n.x,n.y,NAIL_R+2,0,Math.PI*2); ctx.strokeStyle=bad?'rgba(214,75,58,0.9)':'rgba(255,255,255,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
       }
 
+      // quicksand pits sit on the sand under the ball (the ball sinks into them)
+      try{drawQuick(now);}catch(e){}
       // pinball table pieces sit on the pitch under the ball: orbit lanes lowest, then bumpers
       // and flippers (the ball bounces off their edges)
       try{drawOrbits(now);}catch(e){}
@@ -171,6 +173,8 @@
       // ball and the coiled snake both disappear INTO the foliage
       try{drawSerp(now);}catch(e){}
       try{drawBushes(now);}catch(e){}
+      // the dust-devil funnel towers over everything
+      try{drawDevil(now);}catch(e){}
       // front net overlay (bulge)
       const netTeam=scoringTeam||parkedTeam;
       const ballInGoal=(scoring||banner>0||parkedTeam)&&netTeam;
@@ -252,7 +256,7 @@
       if(timerRunning&&phase==='play'&&!winner){ matchMs+=delta; if(matchLen>0&&!timeUp){ var _sl=Math.ceil((matchLen*1000-matchMs)/1000); if(_sl<=10&&_sl>0&&_sl!==_lastTick){ _lastTick=_sl; try{ sfxTick(_sl<=3); }catch(e){} } } if(matchLen>0&&!timeUp&&matchMs>=matchLen*1000){ matchMs=matchLen*1000; timeUp=true; onTimeUp(); } }
       accumulator+=delta*((typeof nsCamS!=='undefined'&&nsCamS.on&&!scoring)?0.4:1);
       while(accumulator>=FRAME_MS){ stepPhysics(); updateGoalies(); updateFX(); accumulator-=FRAME_MS; }
-      maybeAI(delta); if(pen&&pen.active) penTick(); try{ royFlipperTick(delta); }catch(e){} if(royBlizzard()){ var _ps=Math.sin(royGustPhase); royGustPhase+=ROY_GUST_FREQ; if(_ps<=0 && Math.sin(royGustPhase)>0) royGustDir=Math.random()*6.2832; } try{ nsCam(delta); }catch(e){}
+      maybeAI(delta); if(pen&&pen.active) penTick(); try{ royFlipperTick(delta); }catch(e){} try{ royDevilTick(delta); }catch(e){} if(royBlizzard()){ var _ps=Math.sin(royGustPhase); royGustPhase+=ROY_GUST_FREQ; if(_ps<=0 && Math.sin(royGustPhase)>0) royGustDir=Math.random()*6.2832; } try{ nsCam(delta); }catch(e){}
       draw(ts);
       requestAnimationFrame(loop);
     }
