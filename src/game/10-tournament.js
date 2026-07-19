@@ -18,7 +18,7 @@
       if(ar.floor==='ice'){ c.push([G+'icon-glide.png','🧊','SLIPPERY']); if(lvl==='med'||lvl==='hard'){ c.push([G+'icon-wet.png','💦','GREASY']); c.push([G+'icon-puddle.png','🌀','PUDDLES']); } if(lvl==='hard'){ c.push([G+'icon-blizzard.png','❄️','BLIZZARD']); } }
       if(ar.hazard==='bush'){ c.push([G+'icon-bush.png','🌳','BUSHES']); if(lvl==='med'||lvl==='hard') c.push([G+'icon-mud.png','🟤','MUD LAKE']); if(lvl==='hard') c.push([G+'icon-snake.png','🐍','HIDDEN SNAKES']); }
       if(ar.hazard==='bumper'){ c.push([G+'icon-bumper.png','⚪','BUMPERS']); if(lvl==='med'||lvl==='hard') c.push([G+'icon-orbit.png','🔄','ORBIT LANES']); if(lvl==='hard') c.push([G+'icon-flipper.png','🏓','FLIPPERS']); }
-      if(ar.hazard==='sand'){ c.push([G+'icon-cactus.png','🌵','CACTI']); if(lvl==='med'||lvl==='hard') c.push([G+'icon-geyser.png','⛲','GEYSERS']); if(lvl==='hard') c.push([G+'icon-devil.png','🌪️','DUST DEVIL']); }
+      if(ar.hazard==='sand'){ c.push([G+'icon-cactus.png','🌵','CACTI']); if(lvl==='med'||lvl==='hard') c.push([G+'icon-geyser.png','⛲','GEYSERS']); if(lvl==='hard') c.push([G+'sprite-devil-4.png','🌪️','DUST DEVIL']); }
       if(ar.cust==='portals') c.push([G+'icon-portal.png','🌀','PORTALS']);
       if(ar.cust==='traps') c.push([G+'icon-trap.png','🕸️','WEBS']);
       if(ar.cust==='fortress') c.push([G+'icon-wall.png','🧱','WALLS']);
