@@ -225,11 +225,9 @@
     function bracketFlag(g,fx,fy,fr,idx,hl){
       if(idx==null){ g.beginPath(); g.arc(fx,fy,fr,0,Math.PI*2); g.fillStyle='#181322'; g.fill(); g.lineWidth=1.4; g.strokeStyle='#37304c'; g.stroke(); return; }
       const p=PRESETS[idx];
-      // render the team as its in-match coin token (kit disc + SNES gloss + rim + emblem)
-      try{ paintNail(g,fx,fy,fr,p.kit,false); }
-      catch(e){ g.save(); g.beginPath(); g.arc(fx,fy,fr,0,Math.PI*2); g.clip(); paintPattern(g,fx-fr,fy-fr,fr*2,fr*2,p.kit); g.restore(); }
-      // gold ring marks the team up next; otherwise a crisp dark edge on the dark bg
-      g.beginPath(); g.arc(fx,fy,fr+(hl?1.5:0),0,Math.PI*2); g.lineWidth=hl?2.6:1.2; g.strokeStyle=hl?'#ffd84a':'#0c0a12'; g.stroke();
+      // the real flag design with the coin token's glossy polish (gold ring = up next)
+      try{ flagCoin(g,fx,fy,fr,p.kit,hl); }
+      catch(e){ g.save(); g.beginPath(); g.arc(fx,fy,fr,0,Math.PI*2); g.clip(); paintPattern(g,fx-fr,fy-fr,fr*2,fr*2,p.kit); g.restore(); g.beginPath(); g.arc(fx,fy,fr,0,Math.PI*2); g.lineWidth=hl?2.6:1.4; g.strokeStyle=hl?'#ffd84a':'#0c0a12'; g.stroke(); }
     }
     function showBracket(advanced){ try{spSaveRun();}catch(e){}
       pre.innerHTML=''; pre.style.display='block'; pre.scrollTop=0;
