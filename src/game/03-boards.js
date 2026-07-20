@@ -61,10 +61,41 @@
 
       stone:{ name:'STONE', surround:'#24231c', stand:'#363023', tier:'rgba(255,255,255,0.05)', frame:'#c9b89a',frameHi:'#e6d8bd',frameLo:'#9a8768',post:'#fff8ec', line:'rgba(70,60,50,0.55)',line2:'rgba(70,60,50,0.42)', netRecess:'#6a5a44',netBack:'rgba(0,0,0,0.3)',netMesh:'rgba(245,240,228,0.3)',netMouth:'rgba(255,255,255,0.22)',netStrand:'rgba(245,240,228,0.6)',netOverlay:'rgba(30,26,20,0.45)', surface(g){ g.fillStyle='#d8cdb4'; g.fillRect(0,0,W,H); g.strokeStyle='rgba(120,105,80,0.5)'; g.lineWidth=1; var rows2=10,rh=(H-WALL*2)/rows2; for(var r=0;r<rows2;r++){ var y0=WALL+r*rh,off=(r%2)*9; g.beginPath(); g.moveTo(WALL,Math.round(y0)+0.5); g.lineTo(W-WALL,Math.round(y0)+0.5); g.stroke(); for(var sx=WALL+off;sx<W-WALL;sx+=18){ g.beginPath(); g.moveTo(Math.round(sx)+0.5,y0); g.lineTo(Math.round(sx)+0.5,y0+rh); g.stroke(); } } for(var n=0;n<800;n++){ g.fillStyle=Math.random()>0.5?'rgba(255,250,235,0.22)':'rgba(150,135,105,0.28)'; g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1);} var by=Math.round(H/2)-3; for(var cxk=WALL;cxk<W-WALL;cxk+=6){ g.fillStyle=((((cxk-WALL)/6)|0)%2)?'rgba(200,40,50,0.20)':'rgba(255,255,255,0.18)'; g.fillRect(cxk,by,6,6);} }, preview(g,w,h){ g.fillStyle='#d8cdb4'; g.fillRect(0,0,w,h); g.strokeStyle='rgba(120,105,80,0.6)'; for(var y=0;y<h;y+=5){ g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); } for(var cxk=0;cxk<w;cxk+=5){ g.fillStyle=(((cxk/5)|0)%2)?'rgba(200,40,50,0.5)':'rgba(255,255,255,0.5)'; g.fillRect(cxk,h/2-2,5,4);} g.strokeStyle='rgba(70,60,50,0.6)'; g.strokeRect(2,2,w-4,h-4); } },
 
-      savanna:{ name:'SAVANNA', surround:'#2e1b0d', stand:'#422a16', tier:'rgba(255,220,180,0.05)', frame:'#8a5a2c',frameHi:'#b07a3c',frameLo:'#5a3818',post:'#fff0d8', line:'rgba(255,245,225,0.75)',line2:'rgba(255,245,225,0.6)', netRecess:'#5a3820',netBack:'rgba(0,0,0,0.3)',netMesh:'rgba(255,245,225,0.32)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,245,225,0.6)',netOverlay:'rgba(50,28,12,0.42)', surface(g){ g.fillStyle='#b5673a'; g.fillRect(0,0,W,H); for(var n=0;n<1500;n++){ var v=Math.random(); g.fillStyle=v>0.6?'rgba(210,140,80,0.4)':v>0.3?'rgba(120,64,30,0.32)':'rgba(180,100,55,0.4)'; g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1);} g.strokeStyle='rgba(90,50,24,0.26)'; g.lineWidth=1; for(var m=0;m<9;m++){ var cx=WALL+Math.random()*(W-WALL*2),cy=WALL+Math.random()*(H-WALL*2); g.beginPath(); g.moveTo(cx,cy); for(var st=0;st<4;st++){ cx+=(Math.random()-0.5)*20;cy+=(Math.random()-0.5)*20;g.lineTo(cx,cy);} g.stroke(); } g.fillStyle='rgba(150,135,60,0.45)'; for(var t2=0;t2<80;t2++){ var gx=WALL+Math.random()*(W-WALL*2)|0, gy=WALL+Math.random()*(H-WALL*2)|0; g.fillRect(gx,gy-2,1,2); } }, preview(g,w,h){ g.fillStyle='#b5673a'; g.fillRect(0,0,w,h); g.strokeStyle='rgba(90,50,24,0.4)'; for(var i=0;i<4;i++){ g.beginPath(); g.moveTo(Math.random()*w,Math.random()*h); g.lineTo(Math.random()*w,Math.random()*h); g.stroke(); } g.strokeStyle='rgba(255,245,225,0.7)'; g.strokeRect(2,2,w-4,h-4); } }
+      savanna:{ name:'SAVANNA', surround:'#2e1b0d', stand:'#422a16', tier:'rgba(255,220,180,0.05)', frame:'#8a5a2c',frameHi:'#b07a3c',frameLo:'#5a3818',post:'#fff0d8', line:'rgba(255,245,225,0.75)',line2:'rgba(255,245,225,0.6)', netRecess:'#5a3820',netBack:'rgba(0,0,0,0.3)',netMesh:'rgba(255,245,225,0.32)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,245,225,0.6)',netOverlay:'rgba(50,28,12,0.42)', surface(g){ g.fillStyle='#b5673a'; g.fillRect(0,0,W,H); for(var n=0;n<1500;n++){ var v=Math.random(); g.fillStyle=v>0.6?'rgba(210,140,80,0.4)':v>0.3?'rgba(120,64,30,0.32)':'rgba(180,100,55,0.4)'; g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1);} g.strokeStyle='rgba(90,50,24,0.26)'; g.lineWidth=1; for(var m=0;m<9;m++){ var cx=WALL+Math.random()*(W-WALL*2),cy=WALL+Math.random()*(H-WALL*2); g.beginPath(); g.moveTo(cx,cy); for(var st=0;st<4;st++){ cx+=(Math.random()-0.5)*20;cy+=(Math.random()-0.5)*20;g.lineTo(cx,cy);} g.stroke(); } g.fillStyle='rgba(150,135,60,0.45)'; for(var t2=0;t2<80;t2++){ var gx=WALL+Math.random()*(W-WALL*2)|0, gy=WALL+Math.random()*(H-WALL*2)|0; g.fillRect(gx,gy-2,1,2); } }, preview(g,w,h){ g.fillStyle='#b5673a'; g.fillRect(0,0,w,h); g.strokeStyle='rgba(90,50,24,0.4)'; for(var i=0;i<4;i++){ g.beginPath(); g.moveTo(Math.random()*w,Math.random()*h); g.lineTo(Math.random()*w,Math.random()*h); g.stroke(); } g.strokeStyle='rgba(255,245,225,0.7)'; g.strokeRect(2,2,w-4,h-4); } },
+
+      aquarium:{ name:'AQUARIUM', surround:'#03111e', stand:'#082033', tier:'rgba(120,220,255,0.06)',
+        frame:'#0e4a63',frameHi:'#2aa8c8',frameLo:'#052430',post:'#e2fbff',
+        line:'rgba(226,251,255,0.7)',line2:'rgba(226,251,255,0.5)',
+        netRecess:'#052430',netBack:'rgba(0,0,0,0.4)',netMesh:'rgba(170,238,255,0.32)',netMouth:'rgba(215,255,255,0.28)',
+        netStrand:'rgba(195,244,255,0.6)',netOverlay:'rgba(3,20,30,0.5)',
+        surface(g){
+          // deep-sea seen straight down through the crystal pitch
+          var sg=g.createLinearGradient(0,WALL,0,H-WALL);
+          sg.addColorStop(0,'#0c4864'); sg.addColorStop(0.5,'#0a5273'); sg.addColorStop(1,'#062c40');
+          g.fillStyle=sg; g.fillRect(0,0,W,H);
+          // brighter column of surface light down the pitch centre
+          var cg=g.createLinearGradient(W*0.32,0,W*0.68,0);
+          cg.addColorStop(0,'rgba(120,220,255,0)'); cg.addColorStop(0.5,'rgba(140,235,255,0.12)'); cg.addColorStop(1,'rgba(120,220,255,0)');
+          g.fillStyle=cg; g.fillRect(WALL,WALL,W-WALL*2,H-WALL*2);
+          // sea-floor sand glow behind each goal
+          for(var s=0;s<2;s++){ var gy=s?H-WALL:WALL, dir=s?-1:1; var fg=g.createLinearGradient(0,gy,0,gy+dir*46); fg.addColorStop(0,'rgba(214,196,140,0.30)'); fg.addColorStop(1,'rgba(214,196,140,0)'); g.fillStyle=fg; g.fillRect(WALL,s?H-WALL-46:WALL,W-WALL*2,46); }
+          // scattered sea-floor pebbles / sand fleck
+          for(var n=0;n<520;n++){ var v=Math.random(); g.fillStyle=v>0.55?'rgba(180,235,255,0.10)':v>0.3?'rgba(6,34,50,0.35)':'rgba(90,190,220,0.12)'; g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+          // coral / rock clusters silhouetted in the corners
+          function coral(cx,cy,c1,c2){ for(var b=0;b<26;b++){ var a=Math.random()*6.283,rr=Math.random()*7; g.fillStyle=Math.random()>0.5?c1:c2; g.fillRect((cx+Math.cos(a)*rr)|0,(cy+Math.sin(a)*rr)|0,2,2); } }
+          coral(WALL+14,H*0.5-24,'rgba(224,110,150,0.5)','rgba(180,70,120,0.45)');
+          coral(W-WALL-14,H*0.5+24,'rgba(120,200,170,0.5)','rgba(80,160,140,0.45)');
+          coral(WALL+18,H-WALL-30,'rgba(230,160,90,0.5)','rgba(190,120,60,0.45)');
+          coral(W-WALL-16,WALL+30,'rgba(160,140,220,0.5)','rgba(120,100,190,0.45)');
+          // faint crystal panel grid — the glass tiles of the pitch
+          g.strokeStyle='rgba(200,245,255,0.10)'; g.lineWidth=1;
+          for(var gx=WALL;gx<=W-WALL;gx+=Math.round((W-WALL*2)/6)){ g.beginPath(); g.moveTo(gx+0.5,WALL); g.lineTo(gx+0.5,H-WALL); g.stroke(); }
+          for(var gyy=WALL;gyy<=H-WALL;gyy+=Math.round((H-WALL*2)/9)){ g.beginPath(); g.moveTo(WALL,gyy+0.5); g.lineTo(W-WALL,gyy+0.5); g.stroke(); }
+        },
+        preview(g,w,h){ var sg=g.createLinearGradient(0,0,0,h); sg.addColorStop(0,'#0c4864'); sg.addColorStop(1,'#062c40'); g.fillStyle=sg; g.fillRect(0,0,w,h); g.fillStyle='#e0a85a'; g.fillRect(w*0.55,h*0.4,3,2); g.fillStyle='#ff7a3a'; g.fillRect(w*0.55+3,h*0.4,1,2); g.fillStyle='#4ac8ff'; g.fillRect(w*0.25,h*0.62,3,2); g.strokeStyle='rgba(226,251,255,0.7)'; g.strokeRect(2,2,w-4,h-4); } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
