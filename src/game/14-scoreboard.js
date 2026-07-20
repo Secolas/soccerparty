@@ -23,7 +23,7 @@
       sctx.fillStyle=activeR?'#e05a4a':'#9a8478'; sctx.fillText(teamKits.red.abbr,21,42);
       sctx.fillStyle=activeB?'#5a8de0':'#7a889a'; sctx.fillText(teamKits.blue.abbr,SB_W-21,42);
       // score digits
-      const on='#c6e84a',off='rgba(120,140,60,0.10)';
+      const on='#a9c94b',off='rgba(120,140,60,0.10)';
       drawDigit(sctx,SB_W/2-24,26,Math.min(9,score.red),on,off);
       drawDigit(sctx,SB_W/2+14,26,Math.min(9,score.blue),on,off);
       sctx.fillStyle='#caa23c'; sctx.fillRect(SB_W/2-1,30,2,2); sctx.fillRect(SB_W/2-1,38,2,2);
