@@ -20,7 +20,7 @@
       function done(){ try{ localStorage.setItem('ns_onboard_seen','1'); localStorage.setItem('ns_howto_seen','1'); }catch(e){} if(ov.parentNode) ov.parentNode.removeChild(ov); }
       var skip=mk('div',FS(8,'#f3e4c4')+'position:absolute;top:8px;right:10px;padding:5px 9px;border-radius:7px;background:rgba(0,0,0,0.3);cursor:pointer;letter-spacing:1px;','SKIP');
       skip.onclick=done; card.appendChild(skip);
-      var emo=mk('div','width:72px;height:72px;margin:6px auto 12px;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;','');
+      var emo=mk('div','width:72px;height:72px;margin:6px auto 12px;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;border-radius:16px;overflow:hidden;','');
       var ttl=mk('div',FS(13,'#a9c94b')+'text-align:center;letter-spacing:1px;margin-bottom:12px;text-shadow:0 3px 0 #12210a;padding:0 26px;','');
       var body=mk('div',FS(9,'#f3e4c4')+'text-align:center;line-height:1.9;min-height:96px;padding:0 4px;','');
       var dots=mk('div','display:flex;gap:6px;justify-content:center;margin:14px 0 12px;');
