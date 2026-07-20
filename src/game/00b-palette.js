@@ -7,6 +7,11 @@
     // still surfaces normally.
     try{ window.addEventListener('error', function(_e){ try{ var _m=(_e&&_e.error&&_e.error.message)||(_e&&_e.message)||''; if(/removeChild/.test(_m) && /not a child/.test(_m)){ if(_e.preventDefault) _e.preventDefault(); if(_e.stopImmediatePropagation) _e.stopImmediatePropagation(); return false; } }catch(_x){} }, true); }catch(_e){}
 
+    // When true, the royale scorebug writes (immunity badge, ability slots) are
+    // held back so they don't run during the runtime's kickoff render commit —
+    // startRoyaleArena sets it, then clears it one frame later and re-renders.
+    var _royScoreDefer=false;
+
     // ================= UI COLOR TOKENS =================
     // Single source of truth for the game's menu/overlay palette. Every panel
     // (onboarding, HOW TO PLAY, ability draft, results, achievements, shop)
