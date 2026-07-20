@@ -92,7 +92,7 @@
       penStartKick();
     }
     function penPlaceKick(){
-      scoring=false; celebrated=false; moving=false; aiming=false; aimStart=null; aimNow=null; netBulge=0; banner=0; shotTrail=[]; hitSparks=[]; coin.spin=0; coin.vx=0; coin.vy=0; flickCount=0;
+      scoring=false; celebrated=false; moving=false; aiming=false; aimStart=null; aimNow=null; netBulge=0; banner=0; hitStop=0; shotTrail=[]; hitSparks=[]; coin.spin=0; coin.vx=0; coin.vy=0; flickCount=0;
       var def=pen.defender, topGoal=(def==='blue');
       var gy = topGoal ? (NET_DEPTH+NAIL_R+2) : (H-NET_DEPTH-NAIL_R-2);
       nails=[{x:W/2, y:gy, team:def, goalie:true}];
