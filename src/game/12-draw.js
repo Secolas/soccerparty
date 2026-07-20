@@ -217,7 +217,7 @@
         // power meter bar
         const meterW=44,meterH=4,mx=W/2-meterW/2,my=H/2+32,pf=power/70;
         ctx.fillStyle='rgba(20,12,6,0.68)'; ctx.fillRect(mx,my,meterW,meterH);
-        ctx.fillStyle=pf<0.5?'#c6e84a':pf<0.82?'#ffcf3a':'#ff5a3a'; ctx.fillRect(mx,my,meterW*pf,meterH);
+        ctx.fillStyle=pf<0.5?'#a9c94b':pf<0.82?'#ffcf3a':'#ff5a3a'; ctx.fillRect(mx,my,meterW*pf,meterH);
         ctx.strokeStyle='rgba(244,233,200,0.55)'; ctx.strokeRect(mx+0.5,my+0.5,meterW-1,meterH-1);
       }
       ctx.restore();
