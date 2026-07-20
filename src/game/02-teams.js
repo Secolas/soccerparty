@@ -117,8 +117,16 @@
       g.fillStyle='rgba(0,0,0,0.35)'; g.beginPath(); g.arc(cx+1,cy+1.5,r,0,Math.PI*2); g.fill();
       g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.clip();
       paintPattern(g,cx-r,cy-r,r*2,r*2,resolved||kitPattern(kit));
+      // SNES sprite shading (clipped to the disc): dark lens lower-right, light lens upper-left
+      var _P2=Math.PI*2;
+      g.fillStyle='rgba(6,3,14,0.32)'; g.beginPath(); g.arc(cx+r*0.55,cy+r*0.72,r*1.15,0,_P2); g.fill();
+      g.fillStyle='rgba(255,252,235,0.32)'; g.beginPath(); g.arc(cx-r*0.5,cy-r*0.62,r*0.82,0,_P2); g.fill();
       g.restore();
-      g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.lineWidth=1; g.strokeStyle='rgba(0,0,0,0.45)'; g.stroke(); var _rez=resolved||kitPattern(kit); if(_rez&&_rez.emblem) drawEmblem(g,cx,cy,r,_rez.emblem);
+      g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.lineWidth=1; g.strokeStyle='rgba(0,0,0,0.55)'; g.stroke();
+      // bright top-inner rim + specular dab
+      g.strokeStyle='rgba(255,252,235,0.5)'; g.lineWidth=1; g.beginPath(); g.arc(cx,cy,Math.max(1,r-1),Math.PI*1.05,Math.PI*1.72); g.stroke();
+      g.fillStyle='rgba(255,255,250,0.85)'; g.beginPath(); g.arc(cx-r*0.38,cy-r*0.42,Math.max(0.8,r*0.18),0,Math.PI*2); g.fill();
+      var _rez=resolved||kitPattern(kit); if(_rez&&_rez.emblem) drawEmblem(g,cx,cy,r,_rez.emblem);
       if(active){ g.beginPath(); g.arc(cx,cy,r+2,0,Math.PI*2); g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1; g.stroke(); }
     }
     function resolveKit(baseKit,style){ if(style==='flag') return baseKit; if(baseKit&&baseKit.alt){ if(style==='jersey') return baseKit.alt[0]; if(style==='away') return baseKit.alt[1]; } if(style==='away'){ var c=(baseKit&&baseKit.colors)?baseKit.colors.slice():['#dddddd']; if(c.length<2) c=[c[0]||'#dddddd','#f4f4f4']; return {type:'vstripes',colors:[c[0],c[1]]}; } return kitPattern(baseKit); } function domBucket(kit){ var col=(kit&&kit.colors&&kit.colors[0])||'#888888'; var h=col.replace('#',''); if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; var r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255; var mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,l=(mx+mn)/2; if(d<0.12) return l>0.6?'white':(l<0.28?'black':'gray'); var hue; if(mx===r)hue=((g-b)/d)%6; else if(mx===g)hue=(b-r)/d+2; else hue=(r-g)/d+4; hue*=60; if(hue<0)hue+=360; if(hue<20||hue>=345)return 'red'; if(hue<45)return 'orange'; if(hue<70)return 'yellow'; if(hue<160)return 'green'; if(hue<200)return 'cyan'; if(hue<255)return 'blue'; if(hue<290)return 'purple'; return 'red'; }
