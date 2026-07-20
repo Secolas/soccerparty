@@ -5,7 +5,7 @@
     // match still loads and plays; this only swallows that one exact, harmless
     // signature so it doesn't spam the on-screen error overlay. Everything else
     // still surfaces normally.
-    try{ window.addEventListener('error', function(_e){ try{ var _m=(_e&&_e.error&&_e.error.message)||(_e&&_e.message)||''; if(false /* DIAGNOSTIC: suppressor OFF so the error surfaces during the immunity/preload test */ && /removeChild/.test(_m) && /not a child/.test(_m)){ if(_e.preventDefault) _e.preventDefault(); if(_e.stopImmediatePropagation) _e.stopImmediatePropagation(); return false; } }catch(_x){} }, true); }catch(_e){}
+    try{ window.addEventListener('error', function(_e){ try{ var _m=(_e&&_e.error&&_e.error.message)||(_e&&_e.message)||''; if(/removeChild/.test(_m) && /not a child/.test(_m)){ if(_e.preventDefault) _e.preventDefault(); if(_e.stopImmediatePropagation) _e.stopImmediatePropagation(); return false; } }catch(_x){} }, true); }catch(_e){}
 
     // ================= UI COLOR TOKENS =================
     // Single source of truth for the game's menu/overlay palette. Every panel
