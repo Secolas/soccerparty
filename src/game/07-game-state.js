@@ -11,7 +11,7 @@
     const FLICK_MAX=10, FLICK_POWER=70;
     let aiPending=false, aiDelay=0;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='med';
-    let exhWin=5, exhTimer=0; let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null; let pen=null, penBest=5, pracType='normal'; var _lkOn=true,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null; var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
+    let exhWin=5, exhTimer=0; let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null; let pen=null, penBest=5, pracType='normal'; var _lkOn=false,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null; var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
     // squad presets
     let teamSize=5, formationName={red:'1-2-1', blue:'1-2-1'}, kitStyle={red:'flag', blue:'flag'};
     const FORMATIONS={
