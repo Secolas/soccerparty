@@ -1,12 +1,3 @@
-    // Benign-error guard. The bundled runtime's reconciler occasionally throws
-    // "removeChild ... not a child of this node" when it re-renders around the
-    // game's imperative DOM (e.g. the royale kickoff writes the opponent's
-    // preloaded ability slots + immunity badge into the scorebug at once). The
-    // match still loads and plays; this only swallows that one exact, harmless
-    // signature so it doesn't spam the on-screen error overlay. Everything else
-    // still surfaces normally.
-    try{ window.addEventListener('error', function(_e){ try{ var _m=(_e&&_e.error&&_e.error.message)||(_e&&_e.message)||''; if(/removeChild/.test(_m) && /not a child/.test(_m)){ if(_e.preventDefault) _e.preventDefault(); if(_e.stopImmediatePropagation) _e.stopImmediatePropagation(); return false; } }catch(_x){} }, true); }catch(_e){}
-
     // When true, the royale scorebug writes (immunity badge, ability slots) are
     // held back so they don't run during the runtime's kickoff render commit —
     // startRoyaleArena sets it, then clears it one frame later and re-renders.
