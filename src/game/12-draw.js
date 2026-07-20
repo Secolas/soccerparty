@@ -269,7 +269,7 @@
       let delta=Math.min(50, ts-lastT); lastT=ts; if(paused){ draw(ts); requestAnimationFrame(loop); return; }
       if(timerRunning&&phase==='play'&&!winner){ matchMs+=delta; if(matchLen>0&&!timeUp){ var _sl=Math.ceil((matchLen*1000-matchMs)/1000); if(_sl<=10&&_sl>0&&_sl!==_lastTick){ _lastTick=_sl; try{ sfxTick(_sl<=3); }catch(e){} } } if(matchLen>0&&!timeUp&&matchMs>=matchLen*1000){ matchMs=matchLen*1000; timeUp=true; onTimeUp(); } }
       accumulator+=delta*((typeof nsCamS!=='undefined'&&nsCamS.on&&!scoring)?0.4:1);
-      while(accumulator>=FRAME_MS){ stepPhysics(); updateGoalies(); updateFX(); accumulator-=FRAME_MS; }
+      while(accumulator>=FRAME_MS){ if(hitStop>0){ hitStop--; } else { stepPhysics(); updateGoalies(); } updateFX(); accumulator-=FRAME_MS; }
       maybeAI(delta); if(pen&&pen.active) penTick(); try{ royFlipperTick(delta); }catch(e){} try{ royGeyserTick(delta); }catch(e){} try{ royDevilTick(delta); }catch(e){} try{ royLaserTick(delta); }catch(e){} try{ royWallTick(delta); }catch(e){} try{ roySpiderTick(delta); }catch(e){} try{ royCrateTick(delta); }catch(e){} try{ royPortcTick(delta); }catch(e){} try{ royBoulderTick(delta); }catch(e){} if(royBlizzard()){ var _ps=Math.sin(royGustPhase); royGustPhase+=ROY_GUST_FREQ; if(_ps<=0 && Math.sin(royGustPhase)>0) royGustDir=Math.random()*6.2832; } try{ nsCam(delta); }catch(e){}
       draw(ts);
       requestAnimationFrame(loop);
