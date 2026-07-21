@@ -43,7 +43,10 @@
       aquarium:{tempo:76,  wave:'sine',     vol:0.040, bed:false, notes:[[7,1.5],[12,1.5],[9,1],[7,1],[4,1.5],[7,1.5],[0,2]]},           // dreamy underwater
       storm:   {tempo:118, wave:'sawtooth', vol:0.040, bed:true,  notes:[[0,1],[3,0.5],[7,0.5],[3,1],[0,0.5],[-2,0.5],[-5,2]]},          // tense, ominous minor
       candy:   {tempo:150, wave:'square',   vol:0.042, bed:true,  notes:[[0,0.5],[4,0.5],[7,0.5],[12,0.5],[9,0.5],[7,0.5],[4,0.5],[7,0.5]]}, // bubbly, playful major
-      casino:  {tempo:124, wave:'triangle', vol:0.042, bed:true,  notes:[[0,0.5],[4,0.5],[7,0.5],[9,0.5],[10,1],[9,0.5],[7,1]]}          // jazzy swing / lounge
+      casino:  {tempo:124, wave:'triangle', vol:0.042, bed:true,  notes:[[0,0.5],[4,0.5],[7,0.5],[9,0.5],[10,1],[9,0.5],[7,1]]},         // jazzy swing / lounge
+      space:   {tempo:90,  wave:'sine',     vol:0.040, bed:false, notes:[[0,2],[7,1],[11,1],[12,2],[9,1],[7,2]]},                        // ambient, floaty
+      skate:   {tempo:162, wave:'square',   vol:0.040, bed:true,  notes:[[0,0.5],[0,0.5],[7,0.5],[5,0.5],[3,0.5],[5,0.5],[0,1]]},        // punk / skate energy
+      jungle:  {tempo:112, wave:'triangle', vol:0.042, bed:true,  notes:[[0,0.5],[3,0.5],[5,0.5],[7,1],[10,0.5],[7,0.5],[5,1]]}          // mystic tribal
     };
     var _stadTimer=null, _stadStop=true;
     function stopStadiumMusic(){ _stadStop=true; if(_stadTimer){ clearTimeout(_stadTimer); _stadTimer=null; } }

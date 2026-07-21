@@ -89,18 +89,21 @@ pitches), with the Royale hazards layered on later.
 - **Airlock vents** — periodic suction pulling the ball toward a wall
 - **Rotating ring** — a slowly spinning corridor of walls
 - *New mechanic:* polarity-flipping magnetic zones (spatial, not the one-shot Magnet ability)
+- *Prototype:* visual + music ✅
 
 ### 🛹 SKATEPARK — "THE HALF-PIPE" (medium)
 - **Tilting pitch** — the whole floor tips side to side; the ball rolls toward the low edge
 - **Quarter-pipe rails** — curved edges that ramp the ball back in
 - **Grind bars** — lanes that speed the ball up along them
 - *New mechanic:* a tilting-gravity floor — the biggest new "ball-feel" moment after Moon
+- *Prototype:* visual + music ✅ (tilt shown via a shifting light sheen; real tilt-gravity is the hazard)
 
 ### 🌿 JUNGLE TEMPLE — "VINE RUINS" (medium–hard)
 - **Swinging vines** — catch the ball and sling it out on a pendulum arc
 - **Collapsing tiles** — floor that drops away, opening no-go gaps mid-rally
 - **Blow-dart statues** — periodic darts that knock the ball off-line
 - *New mechanic:* pendulum grab-and-release (catch → arc → fling)
+- *Prototype:* visual + music ✅ (decorative swinging vines; the grab-and-fling is the hazard)
 
 ## Other parking-lot notes
 - Draft polish: coin rerolls / an extra draft slot; possibly weight the player
