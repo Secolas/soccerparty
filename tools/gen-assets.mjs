@@ -59,6 +59,12 @@ const SCENE = "detailed 16-bit pixel art, rich shading, warm stadium atmosphere,
 //   keyOut:false          -> keep the whole frame, just downscale (scene backgrounds)
 //   size                  -> final square px (icons small, sprites medium, scenes large)
 const ASSETS = [
+  // Menu tab icons (small, transparent) — one per home-menu tab
+  { file: "icon-tab-ball.png",    size: 64, prompt: `A single classic soccer ball, white with black pentagon patches, bold round silhouette with a dark outline and a small white highlight, fills most of the frame, front view, game menu icon. ${ICON}` },
+  { file: "icon-tab-stadium.png", size: 64, prompt: `A grand oval sports stadium arena seen at a slight three-quarter angle: tiered seating stands wrapping a small green pitch, two tall floodlight towers, bold chunky simple shapes with a dark outline, fills the frame, game menu icon. ${ICON}` },
+  { file: "icon-tab-whistle.png", size: 64, prompt: `A single chunky coach's referee whistle, solid glossy chrome silver with a small hanging loop and a round pea chamber, a couple of tiny sound lines, one bold solid object completely filled in with a thick dark outline and no hollow or see-through areas, three-quarter view, game menu icon. ${ICON}` },
+  { file: "icon-tab-howto.png",   size: 64, prompt: `A single big bold rounded question-mark symbol in bright cream and gold with a thick dark outline, centered, a friendly help symbol, no other objects, game menu icon. ${ICON}` },
+  { file: "icon-tab-stars.png",   size: 64, prompt: `Three shiny golden five-point stars clustered together, one large in front and two smaller behind, bright yellow-gold with lighter highlights and a dark outline, a small sparkle, achievements symbol, bold simple shapes, game menu icon. ${ICON}` },
   // Ability icons (small, transparent)
   { file: "icon-flick.png",    size: 64,  prompt: `A single chunky soccer cleat boot in side view, no ball, just the boot, in bright cream white and gold colours, very bold thick simple silhouette, dark outline, minimal detail, fills most of the frame, game icon. ${ICON}` },
   { file: "icon-wild.png",     size: 64,  prompt: `A playing card joker wild card, a single card tilted slightly with a bold star or question mark on its face and a colorful border, clean bold shapes, big and simple, game power-up icon. ${ICON}` },
