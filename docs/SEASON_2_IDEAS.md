@@ -69,8 +69,10 @@ pitches), with the Royale hazards layered on later.
 - **Lightning** — telegraphed strikes that scatter the ball from the impact point
 - *New mechanic:* a dynamic, changing wind force (vs. underwater's static current lanes)
 - *Prototype:* visual + music ✅
-- *Hazard built:* shifting wind ✅ — a slowly-rotating, gusting wind vector curves the ball in
-  flight (only above ~0.8 speed, so it still settles). Puddles + lightning-scatter still to do.
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) shifting wind: a slowly-rotating,
+  gusting vector curves the ball in flight (only above ~0.8 speed, so it still settles);
+  (2) puddles: drag pools that slow the ball — 2/3/5 by easy/med/hard; (3) lightning: telegraphed
+  strikes that scatter the ball from the impact point — off on easy, med/hard by frequency+radius.
 
 ### 🎰 CASINO — "HIGH ROLLER" (medium)
 - **Roulette turntable** — a spinning centre disc that imparts spin/curve when crossed
@@ -85,8 +87,10 @@ pitches), with the Royale hazards layered on later.
 - **Rolling gumballs** — big candy marbles drifting across as soft obstacles
 - *New mechanic:* super-bounce pads (amplify along the normal, unlike deflecting bumpers)
 - *Prototype:* visual + music ✅
-- *Hazard built:* jelly trampolines ✅ — rolling over a pad launches the ball airborne (reuses
-  chip physics), so it hops over players and lands. Caramel sticky-floor + gumballs still to do.
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) jelly trampolines: rolling over a pad
+  launches the ball airborne (reuses chip physics) so it hops over players; (2) caramel patches:
+  sticky floor that bogs the ball down — 1/3/5 by easy/med/hard; (3) rolling gumballs: drifting
+  candy marbles the ball bounces off — 2/3/5 by easy/med/hard.
 
 ### 🛰️ SPACE STATION — "ORBIT LAB" (hard)
 - **Magnet plates** — floor tiles that attract or repel, flipping polarity on a timer

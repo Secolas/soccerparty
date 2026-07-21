@@ -174,6 +174,7 @@
     function buildBoard(){
       board=BOARDS[boardKey];
       try{ if(typeof _ballTracks!=='undefined'&&_ballTracks) _ballTracks.length=0; }catch(e){}
+      try{ if(typeof gumballs!=='undefined'&&gumballs) gumballs.length=0; }catch(e){}
       try{ buildAmbient(); }catch(e){}
       bc.clearRect(0,0,W,H);
       board.surface(bc);
