@@ -80,6 +80,13 @@ pitches), with the Royale hazards layered on later.
 - **Card-shuffle walls** — side walls that periodically slide / reshuffle
 - *New mechanic:* a rotational field that adds angular momentum
 - *Prototype:* visual + music ✅
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) roulette: ball rolling into the spinning
+  centre wheel is captured, spun ~1s, lands on a number N, then launched out. Easy = random
+  direction; med/hard = if a die shows N it rockets toward the opponent goal, else random (ball is
+  ejected outside the wheel + short cooldown so it can't re-capture in a loop). (2) dice (med+):
+  two 6-sided box objects drift around; the ball bounces off their faces and each hit tumbles the
+  die to the next face (+1), so you can knock a die toward the number you want. (3) shuffle walls
+  (hard): sliding wall blocks on the side rails that move and reshuffle; the ball bounces off them.
 
 ### 🍬 CANDY — "SUGAR RUSH" (easy–medium)
 - **Jelly pads** — trampoline zones that amplify the bounce (restitution > 1)
