@@ -188,8 +188,11 @@
         seg(function(a,b,lf){ ctx.strokeStyle='rgba('+rim[0]+','+rim[1]+','+rim[2]+','+(rim[3]*lf).toFixed(3)+')'; ctx.lineWidth=COIN_R*rim[4]; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); });
         seg(function(a,b,lf){ ctx.strokeStyle='rgba('+rut[0]+','+rut[1]+','+rut[2]+','+(rut[3]*lf).toFixed(3)+')'; ctx.lineWidth=COIN_R*rut[4]; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); });
       } else if(st.kind==='ice'){
-        ctx.lineWidth=1;
-        for(var o=-1;o<=1;o+=2){ (function(off){ seg(function(a,b,lf){ var dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,px=-dy/d*1.6*off,py=dx/d*1.6*off; ctx.strokeStyle='rgba(214,236,255,'+(0.55*lf).toFixed(3)+')'; ctx.beginPath(); ctx.moveTo(a.x+px,a.y+py); ctx.lineTo(b.x+px,b.y+py); ctx.stroke(); }); })(o); }
+        // two carved blade grooves: a darker cut with a bright shaved-ice highlight beside it (reads on white ice)
+        for(var o=-1;o<=1;o+=2){ (function(off){
+          seg(function(a,b,lf){ var dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,px=-dy/d*1.7*off,py=dx/d*1.7*off; ctx.strokeStyle='rgba(96,128,168,'+(0.6*lf).toFixed(3)+')'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(a.x+px,a.y+py); ctx.lineTo(b.x+px,b.y+py); ctx.stroke(); });
+          seg(function(a,b,lf){ var dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,px=-dy/d*(1.7*off-0.9),py=dx/d*(1.7*off-0.9); ctx.strokeStyle='rgba(255,255,255,'+(0.5*lf).toFixed(3)+')'; ctx.lineWidth=0.7; ctx.beginPath(); ctx.moveTo(a.x+px,a.y+py); ctx.lineTo(b.x+px,b.y+py); ctx.stroke(); });
+        })(o); }
       } else if(st.kind==='neon'){
         ctx.globalCompositeOperation='lighter';
         seg(function(a,b,lf){ ctx.strokeStyle='rgba(90,240,255,'+(0.18*lf).toFixed(3)+')'; ctx.lineWidth=COIN_R*2.0; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); });
