@@ -1,0 +1,14 @@
+{
+  "name": "Soccer Party",
+  "short_name": "Soccer Party",
+  "description": "A mobile-first pixel-art flick-football party game.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0910",
+  "theme_color": "#a9c94b",
+  "icons": [
+    { "src": "assets/generated/icon-app.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}

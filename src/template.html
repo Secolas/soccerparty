@@ -5,7 +5,13 @@
 <link rel="icon" type="image/png" href="assets/generated/icon-app.png">
 <link rel="apple-touch-icon" href="assets/generated/icon-app.png">
 <meta name="theme-color" content="#a9c94b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Soccer Party">
+<link rel="manifest" href="manifest.json">
 <script src="f9c39793-ee19-45d5-81af-3d260a49fea6"></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </head>
 <body>
 <x-dc>
@@ -59,25 +65,25 @@
 </style>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;background:#0b0910;color:#e8ddca;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:none;}
+  html,body{height:100%;background:#0b0910;color:#f4e9c8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:none;}
   a{color:#c6e84a;text-decoration:none;} a:hover{color:#e6ff7a;}
 </style>
 </helmet>
-<div id="ns_wrap" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:8px;">
+<div id="ns_wrap" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:8px;visibility:hidden;">
   <canvas id="ns_scorebug" style="image-rendering:pixelated;border-radius:2px;box-shadow:0 4px 14px rgba(0,0,0,0.5);"></canvas>
-  <div id="ns_status" style="font-size:11px;color:#c9b48a;min-height:14px;text-align:center;font-family:'Press Start 2P',monospace;line-height:1.6;">Choose teams &amp; board</div>
+  <div id="ns_status" style="font-size:11px;color:#9a8fb0;min-height:14px;text-align:center;font-family:'Press Start 2P',monospace;line-height:1.6;">Choose teams &amp; board</div>
   <div id="ns_stage" style="position:relative;display:inline-block;overflow:hidden;">
     <canvas id="ns_game" style="border-radius:2px;box-shadow:0 8px 30px rgba(0,0,0,0.6);image-rendering:pixelated;touch-action:none;display:block;transition:transform 0.24s cubic-bezier(.2,.75,.25,1);transform-origin:50% 50%;will-change:transform;"></canvas>
     <div id="ns_pre" style="position:absolute;inset:0;display:none;overflow-y:auto;background:linear-gradient(180deg,rgba(10,8,20,0.68),rgba(6,5,12,0.92)),url(assets/generated/menu-bg.png) center bottom/cover no-repeat;background-color:#08060f;border-radius:2px;z-index:9;"></div>
     <div id="ns_howto" style="position:absolute;inset:0;display:none;overflow-y:auto;background:rgba(7,6,12,0.96);border-radius:2px;z-index:9;"></div>
   </div>
   <div id="ns_controls" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;touch-action:manipulation;">
-    <button id="ns_teams" style="background:#241a2e;color:#e8ddca;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">HOME</button>
-    <button id="ns_start" style="background:#2a1b10;color:#cdeacb;border:2px solid #6b4a28;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">START</button>
-    <button id="ns_reset" style="background:#241a2e;color:#e8ddca;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">RESTART</button>
-    <button id="ns_ball" style="background:#241a2e;color:#e8ddca;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">PIECE: COIN</button>
-    <button id="ns_sound" style="background:#241a2e;color:#e8ddca;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">SOUND: ON</button>
-    <button id="ns_help" style="background:#241a2e;color:#e8ddca;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">HOW TO PLAY</button>
+    <button id="ns_teams" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">HOME</button>
+    <button id="ns_start" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">START</button>
+    <button id="ns_reset" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">RESTART</button>
+    <button id="ns_ball" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">PIECE: COIN</button>
+    <button id="ns_sound" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">SOUND: ON</button>
+    <button id="ns_help" style="background:#241a2e;color:#f4e9c8;border:2px solid #4a3a5e;padding:8px 11px;font-size:8px;cursor:pointer;font-family:'Press Start 2P',monospace;">HOW TO PLAY</button>
   </div>
   <div id="ns_hint" style="font-size:11px;color:#7a6b52;text-align:center;max-width:440px;line-height:1.6;"></div>
 </div>
