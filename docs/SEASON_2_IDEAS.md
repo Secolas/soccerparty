@@ -56,6 +56,52 @@ conditions (our per-stadium pattern).
 Leaning: **Underwater** or **Moon** — both change how the *ball itself* feels,
 which reads as a bigger "new stadium" moment than another obstacle course.
 
+## Royale Map 2 — candidate arenas (Season 2)
+
+A second 9-arena Royale ladder. These extend the brainstorm above; each still
+needs a genuinely new physics/hazard idea + 3 signature conditions. Visual +
+music + ambience prototypes are being built first (as selectable exhibition
+pitches), with the Royale hazards layered on later.
+
+### 🌪️ STORM — "THUNDERDOME" (medium)
+- **Shifting wind** — a global wind vector that slowly rotates, curving every flight
+- **Puddles** — rain pools that drag / slow the ball
+- **Lightning** — telegraphed strikes that scatter the ball from the impact point
+- *New mechanic:* a dynamic, changing wind force (vs. underwater's static current lanes)
+- *Prototype:* visual + music ✅
+
+### 🎰 CASINO — "HIGH ROLLER" (medium)
+- **Roulette turntable** — a spinning centre disc that imparts spin/curve when crossed
+- **Dice bumpers** — bounce the ball off at a random face-value angle
+- **Card-shuffle walls** — side walls that periodically slide / reshuffle
+- *New mechanic:* a rotational field that adds angular momentum
+- *Prototype:* visual + music ✅
+
+### 🍬 CANDY — "SUGAR RUSH" (easy–medium)
+- **Jelly pads** — trampoline zones that amplify the bounce (restitution > 1)
+- **Caramel patches** — sticky floor that bogs the ball down
+- **Rolling gumballs** — big candy marbles drifting across as soft obstacles
+- *New mechanic:* super-bounce pads (amplify along the normal, unlike deflecting bumpers)
+- *Prototype:* visual + music ✅
+
+### 🛰️ SPACE STATION — "ORBIT LAB" (hard)
+- **Magnet plates** — floor tiles that attract or repel, flipping polarity on a timer
+- **Airlock vents** — periodic suction pulling the ball toward a wall
+- **Rotating ring** — a slowly spinning corridor of walls
+- *New mechanic:* polarity-flipping magnetic zones (spatial, not the one-shot Magnet ability)
+
+### 🛹 SKATEPARK — "THE HALF-PIPE" (medium)
+- **Tilting pitch** — the whole floor tips side to side; the ball rolls toward the low edge
+- **Quarter-pipe rails** — curved edges that ramp the ball back in
+- **Grind bars** — lanes that speed the ball up along them
+- *New mechanic:* a tilting-gravity floor — the biggest new "ball-feel" moment after Moon
+
+### 🌿 JUNGLE TEMPLE — "VINE RUINS" (medium–hard)
+- **Swinging vines** — catch the ball and sling it out on a pendulum arc
+- **Collapsing tiles** — floor that drops away, opening no-go gaps mid-rally
+- **Blow-dart statues** — periodic darts that knock the ball off-line
+- *New mechanic:* pendulum grab-and-release (catch → arc → fling)
+
 ## Other parking-lot notes
 - Draft polish: coin rerolls / an extra draft slot; possibly weight the player
   draft by rarity.

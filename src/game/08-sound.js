@@ -40,7 +40,10 @@
       stone:   {tempo:100, wave:'triangle', vol:0.042, bed:false, notes:[[7,1],[9,1],[7,1],[4,1],[2,1],[4,2]]},                          // mediterranean
       savanna: {tempo:128, wave:'square',   vol:0.042, bed:true,  notes:[[0,0.5],[0,0.5],[3,0.5],[5,0.5],[7,1],[5,0.5],[3,0.5],[0,1]]},  // tribal pentatonic
       wood:    {tempo:92,  wave:'triangle', vol:0.040, bed:false, notes:[[0,1],[4,1],[7,1],[4,1],[9,1],[7,2]]},                          // cozy nature
-      aquarium:{tempo:76,  wave:'sine',     vol:0.040, bed:false, notes:[[7,1.5],[12,1.5],[9,1],[7,1],[4,1.5],[7,1.5],[0,2]]}            // dreamy underwater
+      aquarium:{tempo:76,  wave:'sine',     vol:0.040, bed:false, notes:[[7,1.5],[12,1.5],[9,1],[7,1],[4,1.5],[7,1.5],[0,2]]},           // dreamy underwater
+      storm:   {tempo:118, wave:'sawtooth', vol:0.040, bed:true,  notes:[[0,1],[3,0.5],[7,0.5],[3,1],[0,0.5],[-2,0.5],[-5,2]]},          // tense, ominous minor
+      candy:   {tempo:150, wave:'square',   vol:0.042, bed:true,  notes:[[0,0.5],[4,0.5],[7,0.5],[12,0.5],[9,0.5],[7,0.5],[4,0.5],[7,0.5]]}, // bubbly, playful major
+      casino:  {tempo:124, wave:'triangle', vol:0.042, bed:true,  notes:[[0,0.5],[4,0.5],[7,0.5],[9,0.5],[10,1],[9,0.5],[7,1]]}          // jazzy swing / lounge
     };
     var _stadTimer=null, _stadStop=true;
     function stopStadiumMusic(){ _stadStop=true; if(_stadTimer){ clearTimeout(_stadTimer); _stadTimer=null; } }
