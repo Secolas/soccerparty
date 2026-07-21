@@ -58,12 +58,24 @@
       ctx.fillStyle='rgba(255,232,150,0.35)'; ctx.beginPath(); ctx.arc(x,y,6,0,6.283); ctx.fill();
       ctx.fillStyle='rgba(255,214,110,0.95)'; ctx.beginPath(); ctx.arc(x,y,3.2,0,6.283); ctx.fill();
     }
+    // bird plumage per biome — seagulls only where the sea is; black birds of prey on the
+    // savanna, grey pigeons in the city square, dark songbirds over the meadow, white doves at the fiesta
+    // [wing, body, halo?] — dark-plumage birds get a soft light halo so the silhouette reads
+    // against the dark stands. Seagulls only where the sea is (beach/coast).
+    function birdStyle(){ var t=ambType();
+      if(t==='safari') return ['rgba(26,24,28,0.96)','rgba(12,10,14,0.96)','rgba(224,214,198,0.4)'];  // black vulture/kite
+      if(t==='desk')   return ['rgba(52,38,28,0.94)','rgba(32,22,16,0.96)','rgba(212,226,198,0.34)']; // dark brown songbird
+      if(t==='lisbon') return ['rgba(160,162,170,0.92)','rgba(92,94,104,0.95)'];                      // grey pigeon
+      if(t==='fiesta') return ['rgba(246,246,250,0.95)','rgba(120,120,132,0.9)'];                     // white dove
+      return ['rgba(250,250,255,0.95)','rgba(70,70,78,0.9)'];                                         // seagull (beach/coast)
+    }
     function drawBird(x,y,phase,now){
-      // the beach gull: two curved wings that flap, with a small dark body (shared by every pitch's birds)
-      const flap=2.0+Math.sin(now*0.02+phase)*2.6, sc=5;
-      ctx.strokeStyle='rgba(250,250,255,0.95)'; ctx.lineWidth=1.4;
-      ctx.beginPath(); ctx.moveTo(x-sc,y); ctx.quadraticCurveTo(x-sc*0.4,y-flap,x,y); ctx.quadraticCurveTo(x+sc*0.4,y-flap,x+sc,y); ctx.stroke();
-      ctx.fillStyle='rgba(70,70,78,0.9)'; ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);
+      // two curved wings that flap, with a small body; colour set by biome (see birdStyle)
+      const st=birdStyle(), flap=2.0+Math.sin(now*0.02+phase)*2.6, sc=5;
+      function wings(w){ ctx.strokeStyle=w; ctx.beginPath(); ctx.moveTo(x-sc,y); ctx.quadraticCurveTo(x-sc*0.4,y-flap,x,y); ctx.quadraticCurveTo(x+sc*0.4,y-flap,x+sc,y); ctx.stroke(); }
+      if(st[2]){ ctx.lineWidth=2.8; wings(st[2]); }   // halo behind dark birds
+      ctx.lineWidth=1.4; wings(st[0]);
+      ctx.fillStyle=st[1]; ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);
     }
     function drawDogWalker(x,y,now){
       ctx.fillStyle='#d8663f'; ctx.fillRect(x-1,y-4,2,3);
