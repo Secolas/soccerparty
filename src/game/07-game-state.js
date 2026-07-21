@@ -5,13 +5,13 @@
     const GOAL_AREA_D=34;
     let useBall=false;
     // AI + modes
-    let aiEnabled={red:false,blue:false}, aiLevel='med';
+    let aiEnabled={red:false,blue:false}, aiLevel='easy';
     const AI_NOISE={easy:0.62,med:0.30,hard:0.14}, AI_ACC={easy:0.55,med:0.80,hard:0.96};
     // Shared flick tuning: full-power ball speed for BOTH player and CPU. Cannon x2, Freeze x0.5 derive from it.
     const FLICK_MAX=10, FLICK_POWER=70;
     let aiPending=false, aiDelay=0;
-    let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='med';
-    let exhWin=5, exhTimer=0; let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null; let pen=null, penBest=5, pracType='normal'; var _lkOn=false,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null; var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
+    let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='easy';
+    let exhWin=5, exhTimer=0; let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null; let pen=null, penBest=5, pracType='normal'; var _lkOn=true,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null; var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
     // squad presets
     let teamSize=5, formationName={red:'1-2-1', blue:'1-2-1'}, kitStyle={red:'flag', blue:'flag'};
     const FORMATIONS={
