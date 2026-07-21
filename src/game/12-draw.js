@@ -152,7 +152,7 @@
       ctx.drawImage(boardCanvas,0,0);
 
       // radial stadium lighting over the pitch
-      const lg=ctx.createRadialGradient(W/2,H*0.42,10,W/2,H*0.42,H*0.62);
+      const lg=ctx.createRadialGradient(W/2,H*0.5,10,W/2,H*0.5,H*0.62);
       lg.addColorStop(0,'rgba(255,255,255,0.10)'); lg.addColorStop(0.55,'rgba(255,255,255,0.02)'); lg.addColorStop(1,'rgba(0,0,0,0.22)');
       ctx.fillStyle=lg; ctx.fillRect(0,0,W,H); try{ drawBoardFXGround(ctx,now); }catch(e){}
       try{ drawTurnBoards(now); }catch(e){}
