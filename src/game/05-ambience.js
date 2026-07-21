@@ -1,5 +1,10 @@
     // ================= AMBIENCE (per-pitch scenery: beach umbrellas, snow, drones...) =================
     let ambient=[];
+    // when the ball slams a pitch wall, nearby wildlife bolts. Physics reports the impact here
+    // (in canvas coords); each hit lives a few frames and startles only critters close to it.
+    var _wallHits=[];
+    function nsWallHit(px,py){ try{ _wallHits.push({x:OX+px,y:OY+py,life:12}); if(_wallHits.length>10) _wallHits.shift(); }catch(e){} }
+    function _fleeFrom(a,R){ var best=null,bd=1e9; for(var i=0;i<_wallHits.length;i++){ var wh=_wallHits[i]; if(wh.life<=0) continue; var d=Math.hypot(a.x-wh.x,a.y-wh.y); if(d<R&&d<bd){ bd=d; best=wh; } } if(best){ var dx=a.x-best.x,dy=a.y-best.y,dd=Math.hypot(dx,dy)||1; a.spook=Math.min(1,Math.max(a.spook||0,1-bd/R)); a.sx=dx/dd; a.sy=dy/dd; } a.spook=(a.spook||0)*0.93; return a.spook; }
     function buildAmbient(){
       ambient=[];
       const t=ambType();
@@ -25,7 +30,10 @@
         ambient.push({kind:'rabbit', x:OX+20, y:OY*0.55, vx:0.14, hopP:0});
         ambient.push({kind:'rabbit', x:CW-40, y:CH-OY*0.5, vx:-0.12, hopP:2.1});
         ambient.push({kind:'deer', x:CW*0.5, y:CH-OY*0.42});
-      } else if(t==='lisbon'){ for(var i=0;i<3;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28}); ambient.push({kind:'tram', x:Math.random()*CW, dir:1, vx:0.22}); } else if(t==='fiesta'){ var fcol=['#e0433a','#f2c23a','#3aa050','#e0559a']; for(var i=0;i<4;i++) ambient.push({kind:'dancer', x:(i<2? OX*0.5 : CW-OX*0.5), y:OY+18+ (i%2)*30, phase:Math.random()*6.28, col:fcol[i%4]}); for(var j=0;j<3;j++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.14+Math.random()*0.16, phase:Math.random()*6.28}); } else if(t==='arena'){ for(var i=0;i<14;i++) ambient.push({kind:'flash', x:OX+Math.random()*W, y:(Math.random()<0.5? OY*0.5 : CH-OY*0.5), t0:Math.random()*6.28}); } else if(t==='coast'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.18, phase:Math.random()*6.28}); ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.05}); ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.045, small:true}); } else if(t==='safari'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28}); ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16}); ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14}); }
+      } else if(t==='lisbon'){ for(var i=0;i<3;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28}); ambient.push({kind:'tram', x:Math.random()*CW, dir:1, vx:0.22}); } else if(t==='fiesta'){ var fcol=['#e0433a','#f2c23a','#3aa050','#e0559a']; for(var i=0;i<4;i++) ambient.push({kind:'dancer', x:(i<2? OX*0.5 : CW-OX*0.5), y:OY+18+ (i%2)*30, phase:Math.random()*6.28, col:fcol[i%4]}); for(var j=0;j<3;j++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.14+Math.random()*0.16, phase:Math.random()*6.28}); } else if(t==='arena'){ for(var i=0;i<14;i++) ambient.push({kind:'flash', x:OX+Math.random()*W, y:(Math.random()<0.5? OY*0.5 : CH-OY*0.5), t0:Math.random()*6.28}); } else if(t==='coast'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.18, phase:Math.random()*6.28}); ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.05}); ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.045, small:true}); } else if(t==='safari'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28}); ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16}); ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14}); } else if(t==='aquarium'){
+        // the sea life lives only UNDER the crystal pitch; the surround is just tank water with rising bubbles
+        for(var i=0;i<10;i++) ambient.push({kind:'tankbub', x:Math.random()*CW, y:Math.random()*CH, vy:0.1+Math.random()*0.22, sz:Math.random()<0.4?2:1, drift:Math.random()*6.28});
+      }
     }
     buildAmbient();
 
@@ -47,11 +55,24 @@
       ctx.fillStyle='rgba(255,232,150,0.35)'; ctx.beginPath(); ctx.arc(x,y,6,0,6.283); ctx.fill();
       ctx.fillStyle='rgba(255,214,110,0.95)'; ctx.beginPath(); ctx.arc(x,y,3.2,0,6.283); ctx.fill();
     }
+    // bird plumage per biome — seagulls only where the sea is; black birds of prey on the
+    // savanna, grey pigeons in the city square, dark songbirds over the meadow, white doves at the fiesta
+    // [wing, body, halo?] — dark-plumage birds get a soft light halo so the silhouette reads
+    // against the dark stands. Seagulls only where the sea is (beach/coast).
+    function birdStyle(){ var t=ambType();
+      if(t==='safari') return ['rgba(26,24,28,0.96)','rgba(12,10,14,0.96)','rgba(224,214,198,0.4)'];  // black vulture/kite
+      if(t==='desk')   return ['rgba(52,38,28,0.94)','rgba(32,22,16,0.96)','rgba(212,226,198,0.34)']; // dark brown songbird
+      if(t==='lisbon') return ['rgba(160,162,170,0.92)','rgba(92,94,104,0.95)'];                      // grey pigeon
+      if(t==='fiesta') return ['rgba(246,246,250,0.95)','rgba(120,120,132,0.9)'];                     // white dove
+      return ['rgba(250,250,255,0.95)','rgba(70,70,78,0.9)'];                                         // seagull (beach/coast)
+    }
     function drawBird(x,y,phase,now){
-      const f=Math.sin(now*0.02+phase)>0?0:1;
-      ctx.fillStyle='rgba(238,240,246,0.92)';
-      ctx.fillRect(x-2,y+f,1,1); ctx.fillRect(x-1,y-1+f,1,1); ctx.fillRect(x,y,1,1);
-      ctx.fillRect(x+1,y-1+f,1,1); ctx.fillRect(x+2,y+f,1,1);
+      // two curved wings that flap, with a small body; colour set by biome (see birdStyle)
+      const st=birdStyle(), flap=2.0+Math.sin(now*0.02+phase)*2.6, sc=5;
+      function wings(w){ ctx.strokeStyle=w; ctx.beginPath(); ctx.moveTo(x-sc,y); ctx.quadraticCurveTo(x-sc*0.4,y-flap,x,y); ctx.quadraticCurveTo(x+sc*0.4,y-flap,x+sc,y); ctx.stroke(); }
+      if(st[2]){ ctx.lineWidth=2.8; wings(st[2]); }   // halo behind dark birds
+      ctx.lineWidth=1.4; wings(st[0]);
+      ctx.fillStyle=st[1]; ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);
     }
     function drawDogWalker(x,y,now){
       ctx.fillStyle='#d8663f'; ctx.fillRect(x-1,y-4,2,3);
@@ -149,17 +170,22 @@
     function drawAntelope(x,y,flip,now){ var s=Math.sin(now*0.03)>0?0:1; ctx.fillStyle='#c88a4a'; ctx.fillRect(x-2,y-3,5,2); ctx.fillRect(flip?x-3:x+2,y-4,2,2); ctx.fillStyle='#6b4020'; ctx.fillRect(flip?x-3:x+3,y-6,1,2); ctx.fillStyle='#a06a34'; ctx.fillRect(x-2,y-1,1,1+s); ctx.fillRect(x+1,y-1,1,2-s); }
     function _fanFrame(img,frame,tint,flip){ if(!img||!img.complete||!img.naturalWidth) return null; var fw=48, nf=Math.max(1,Math.floor(img.naturalWidth/fw)), f=((frame%nf)+nf)%nf; if(!window._fanCache) window._fanCache={}; var isFlag=(tint&&typeof tint==='object'&&!Array.isArray(tint)&&tint.flag); var isBody=(tint&&typeof tint==='object'&&!Array.isArray(tint)&&tint.c&&!tint.flag); var arr=(isFlag||isBody)?null:(Array.isArray(tint)?tint:(tint?[tint]:null)); var key=isFlag?((img.src||'')+'|'+f+'|F'+tint.dir+tint.flag.join(',')+'|'+(tint.shirt||'')+'|'+(flip?1:0)):(isBody?((img.src||'')+'|'+f+'|B'+tint.c+'|'+(tint.hairTop||0)):((img.src||'')+'|'+f+'|'+(arr?arr.join(','):''))); var cv=window._fanCache[key]; if(cv) return cv; cv=document.createElement('canvas'); cv.width=48; cv.height=48; var c=cv.getContext('2d'); c.imageSmoothingEnabled=false; c.drawImage(img,f*fw,0,fw,48,0,0,48,48); function _hx(h){ h=(''+h).replace('#',''); if(h.length===3) h=h.charAt(0)+h.charAt(0)+h.charAt(1)+h.charAt(1)+h.charAt(2)+h.charAt(2); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; } if(isFlag){ try{ var id=c.getImageData(0,0,48,48), d=id.data; var fcols=tint.flag.map(_hx), scol=_hx(tint.shirt||tint.flag[0]), FY=20, n=fcols.length; var minx=48,maxx=0,miny=48,maxy=0,any=false; for(var i=0;i<d.length;i+=4){ if(d[i+3]<8) continue; var r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx===0?0:(mx-mn)/mx,lum=(r+g+b)/3; if(sat<0.22&&lum>60&&lum<236){ var q=i/4, px=q%48, py=(q-px)/48; if(py<FY){ if(px<minx)minx=px; if(px>maxx)maxx=px; if(py<miny)miny=py; if(py>maxy)maxy=py; any=true; } } } var bw=Math.max(1,maxx-minx+1), bh=Math.max(1,maxy-miny+1); for(var j2=0;j2<d.length;j2+=4){ if(d[j2+3]<8) continue; var r2=d[j2],g2=d[j2+1],b2=d[j2+2],mx2=Math.max(r2,g2,b2),mn2=Math.min(r2,g2,b2),sat2=mx2===0?0:(mx2-mn2)/mx2,lum2=(r2+g2+b2)/3; if(!(sat2<0.22&&lum2>60&&lum2<236)) continue; var q2=j2/4, px2=q2%48, py2=(q2-px2)/48, col; if(py2<FY&&any){ var bi; if(tint.dir==='h'){ bi=Math.floor((py2-miny)/bh*n); } else { bi=Math.floor((px2-minx)/bw*n); if(flip) bi=n-1-bi; } if(bi<0)bi=0; if(bi>n-1)bi=n-1; col=fcols[bi]; } else { col=scol; } var k=Math.min(1.2,lum2/255+0.5); d[j2]=Math.min(255,Math.round(col[0]*k)); d[j2+1]=Math.min(255,Math.round(col[1]*k)); d[j2+2]=Math.min(255,Math.round(col[2]*k)); } c.putImageData(id,0,0); }catch(e){} } else if(isBody){ try{ var idb=c.getImageData(0,0,48,48), db=idb.data, bc=_hx(tint.c), ht=tint.hairTop||0; for(var ib=0;ib<db.length;ib+=4){ if(db[ib+3]<8) continue; var rb=db[ib],gb=db[ib+1],bb=db[ib+2],mxb=Math.max(rb,gb,bb),mnb=Math.min(rb,gb,bb),satb=mxb===0?0:(mxb-mnb)/mxb,lumb=(rb+gb+bb)/3; if(!(satb<0.22&&lumb>60&&lumb<236)) continue; var qb=ib/4, pxb=qb%48, pyb=(qb-pxb)/48; if(pyb<ht) continue; var kb=Math.min(1.25,lumb/255+0.42); db[ib]=Math.min(255,Math.round(bc[0]*kb)); db[ib+1]=Math.min(255,Math.round(bc[1]*kb)); db[ib+2]=Math.min(255,Math.round(bc[2]*kb)); } c.putImageData(idb,0,0); }catch(e){} } else if(arr){ try{ var cols=arr.map(_hx), n2=cols.length, sw=48/n2, id2=c.getImageData(0,0,48,48), dd=id2.data; for(var i3=0;i3<dd.length;i3+=4){ if(dd[i3+3]<8) continue; var r3=dd[i3],g3=dd[i3+1],b3=dd[i3+2], mx3=Math.max(r3,g3,b3), mn3=Math.min(r3,g3,b3), sat3=mx3===0?0:(mx3-mn3)/mx3, lum3=(r3+g3+b3)/3; if(sat3<0.22&&lum3>60&&lum3<236){ var px3=(i3/4)%48; var col2=cols[Math.min(n2-1,Math.floor(px3/sw))]; var k3=Math.min(1.25,lum3/255+0.42); dd[i3]=Math.min(255,Math.round(col2[0]*k3)); dd[i3+1]=Math.min(255,Math.round(col2[1]*k3)); dd[i3+2]=Math.min(255,Math.round(col2[2]*k3)); } } c.putImageData(id2,0,0); }catch(e){} } window._fanCache[key]=cv; return cv; } function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip); if(!cv) return; var dx=Math.round(x-sz/2), dy=Math.round(y-sz); if(flip){ ctx.save(); ctx.translate(dx+sz,dy); ctx.scale(-1,1); ctx.drawImage(cv,0,0,48,48,0,0,sz,sz); ctx.restore(); } else { ctx.drawImage(cv,0,0,48,48,dx,dy,sz,sz); } } function drawAmbient(now){
       const t=ambType();
+      // age the wall-impact scares (the ball hitting a wall spooks only the wildlife right there)
+      for(var _wi=0;_wi<_wallHits.length;_wi++) _wallHits[_wi].life--;
+      while(_wallHits.length && _wallHits[0].life<=0) _wallHits.shift();
       // animated layer
       for(const a of ambient){
-        if(a.kind==='bird'){ a.x+=a.vx; if(a.x>CW+3) a.x=-3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now); }
+        if(a.kind==='bird'){ var _sp=_fleeFrom(a,66); a.x+=a.vx*(1+_sp*3)+(a.sx||0)*_sp*1.3; if(_sp>0.03){ a.y+=(a.sy||0)*_sp*1.1-_sp*0.5; if(a.y<2) a.y=2; } if(a.x>CW+3) a.x=-3; if(a.x<-3) a.x=CW+3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now); }
         else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
         else if(a.kind==='snow'){ if(typeof royBlizzard==='function'&&royBlizzard()) continue; a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2; if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;} ctx.fillStyle='rgba(240,248,255,0.9)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),a.sz,a.sz); }
         else if(a.kind==='drone'){ a.x+=a.vx; if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4; drawDrone(Math.round(a.x),Math.round(a.y),a.phase,now); }
         else if(a.kind==='ship'){ a.x+=a.vx; if(a.x>CW+6)a.x=-6; if(a.x<-6)a.x=CW+6; drawShip(Math.round(a.x),a.y,a.small); }
         else if(a.kind==='car'){ a.x+=a.vx*a.dir; if(a.dir>0&&a.x>CW+6)a.x=-6; if(a.dir<0&&a.x<-6)a.x=CW+6; const y=a.top? OY*0.52 : CH-OY*0.5; drawCar(Math.round(a.x),Math.round(y),a.dir,a.col); }
         else if(a.kind==='skater'){ a.x+=a.vx; if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4; drawSkater(Math.round(a.x),Math.round(a.y),a.phase,a.col,now); }
-        else if(a.kind==='rabbit'){ a.hopP+=0.08; const hop=Math.sin(a.hopP)>0.6; if(hop) a.x+=a.vx; if(a.x>CW-6)a.vx=-Math.abs(a.vx); if(a.x<6)a.vx=Math.abs(a.vx); drawRabbit(Math.round(a.x),Math.round(a.y),hop); }
-        else if(a.kind==='beam'){ const bx=(a.x+Math.sin(now*0.001*a.sp+a.phase)*CW*0.4); ctx.save(); ctx.globalAlpha=0.14+0.06*Math.sin(now*0.004+a.phase); ctx.fillStyle=a.hue; ctx.beginPath(); ctx.moveTo(bx,0); ctx.lineTo(bx-14,CH); ctx.lineTo(bx+14,CH); ctx.closePath(); ctx.fill(); ctx.restore(); } else if(a.kind==='tram'){ a.x+=a.vx*a.dir; if(a.dir>0&&a.x>CW+8)a.x=-8; if(a.dir<0&&a.x<-8)a.x=CW+8; drawTram(Math.round(a.x), Math.round(OY*0.5), a.dir); } else if(a.kind==='dancer'){ drawDancer(Math.round(a.x),Math.round(a.y),a.phase,a.col,now); } else if(a.kind==='flash'){ if(Math.sin(now*0.02+a.t0)>0.95){ ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),1,1); } } else if(a.kind==='antelope'){ a.x+=a.vx; if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4; drawAntelope(Math.round(a.x),Math.round(a.y),a.vx<0,now); }
+        else if(a.kind==='rabbit'){ var _sp=_fleeFrom(a,60); a.hopP+=(_sp>0.05?0.24:0.08); const hop=Math.sin(a.hopP)>(_sp>0.05?0.1:0.6); if(hop) a.x+=a.vx*(1+_sp*3); a.x+=(a.sx||0)*_sp*1.2; if(a.x>CW-6)a.vx=-Math.abs(a.vx); if(a.x<6)a.vx=Math.abs(a.vx); drawRabbit(Math.round(a.x),Math.round(a.y),hop); }
+        else if(a.kind==='beam'){ const bx=(a.x+Math.sin(now*0.001*a.sp+a.phase)*CW*0.4); ctx.save(); ctx.globalAlpha=0.14+0.06*Math.sin(now*0.004+a.phase); ctx.fillStyle=a.hue; ctx.beginPath(); ctx.moveTo(bx,0); ctx.lineTo(bx-14,CH); ctx.lineTo(bx+14,CH); ctx.closePath(); ctx.fill(); ctx.restore(); } else if(a.kind==='tram'){ a.x+=a.vx*a.dir; if(a.dir>0&&a.x>CW+8)a.x=-8; if(a.dir<0&&a.x<-8)a.x=CW+8; drawTram(Math.round(a.x), Math.round(OY*0.5), a.dir); } else if(a.kind==='dancer'){ drawDancer(Math.round(a.x),Math.round(a.y),a.phase,a.col,now); } else if(a.kind==='flash'){ if(Math.sin(now*0.02+a.t0)>0.95){ ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),1,1); } } else if(a.kind==='antelope'){ var _sp=_fleeFrom(a,66); a.x+=a.vx*(1+_sp*3)+(a.sx||0)*_sp*1.2; if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4; drawAntelope(Math.round(a.x),Math.round(a.y),a.vx<0,now); }
+        else if(a.kind==='bgfish'){ a.x+=a.vx; a.y+=Math.sin(now*0.002+a.phase)*0.12; if(a.x>CW+a.sz*2)a.x=-a.sz*2; if(a.x<-a.sz*2)a.x=CW+a.sz*2; drawBgFish(Math.round(a.x),Math.round(a.y),a.sz,a.col,a.vx<0,a.phase,now); }
+        else if(a.kind==='tankbub'){ a.y-=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.14; if(a.y<-2){a.y=CH+2;a.x=Math.random()*CW;} ctx.fillStyle='rgba(190,238,255,0.5)'; ctx.fillRect(Math.round(a.x),Math.round(a.y),a.sz,a.sz); }
       }
       // static scenery per pitch
       if(t==='beach'){
