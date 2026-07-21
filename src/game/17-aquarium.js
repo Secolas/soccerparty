@@ -55,7 +55,7 @@
     function _aqEnsure(){
       if(_aqInit) return; _aqInit=true;
       const IN=WALL+3, w=W-WALL*2-6, h=H-WALL*2-6;
-      for(let i=0;i<9;i++){ const sp=AQ_SPECIES[i%AQ_SPECIES.length], d=0.55+Math.random()*0.6;
+      for(let i=0;i<13;i++){ const sp=AQ_SPECIES[i%AQ_SPECIES.length], d=0.55+Math.random()*0.6;
         _aqReef.push({sp, x:IN+Math.random()*w, y:IN+Math.random()*h, vx:(Math.random()<0.5?-1:1)*(0.16+Math.random()*0.34)*d, vy:(Math.random()-0.5)*0.12, ph:Math.random()*6.28, d}); }
       const jc=['rgba(255,178,220,0.42)','rgba(180,212,255,0.42)','rgba(205,182,255,0.42)'];
       for(let i=0;i<3;i++) _aqJelly.push({x:IN+Math.random()*w, y:IN+Math.random()*h, sz:5+Math.random()*4, vy:-(0.05+Math.random()*0.08), col:jc[i%3], ph:Math.random()*6.28});
@@ -70,7 +70,7 @@
       // We spook the water only around that launch spot, not along the whole flight path.
       let bx=-999,by=-999,bsp=0;
       try{ if(typeof coin!=='undefined'&&coin&&(typeof phase==='undefined'||phase==='play')){ bx=coin.x; by=coin.y; bsp=Math.hypot(coin.vx||0,coin.vy||0); } }catch(e){}
-      if(bsp>1.6 && _aqPrevBsp<0.8){ _aqPulse={x:bx,y:by,life:8,life0:8}; }   // launch detected → ripple at the flick spot
+      if(bsp>1.6 && _aqPrevBsp<0.8){ _aqPulse={x:bx,y:by,life:16,life0:16}; }   // launch detected → ripple at the flick spot
       _aqPrevBsp=bsp;
       const pulse=(_aqPulse&&_aqPulse.life>0)?_aqPulse:null;
       if(_aqPulse){ _aqPulse.life--; if(_aqPulse.life<=0) _aqPulse=null; }
@@ -82,8 +82,10 @@
         const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.08)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
       ctx.restore();
 
-      // small startle zone around the spot the ball was flicked from
-      const startleR = 30, pStr = pulse ? (pulse.life/pulse.life0) : 0, px = pulse?pulse.x:0, py = pulse?pulse.y:0;
+      // startle zone around the spot the ball was flicked from — localized, but wide enough to see
+      const startleR = 72, pStr = pulse ? (pulse.life/pulse.life0) : 0, px = pulse?pulse.x:0, py = pulse?pulse.y:0;
+      // a visible shock ripple expanding from the flick spot
+      if(pulse){ const rr=(1-pStr)*startleR+5; ctx.save(); ctx.globalAlpha=pStr*0.55; ctx.strokeStyle='rgba(205,246,255,0.95)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,rr,0,6.283); ctx.stroke(); ctx.globalAlpha=pStr*0.3; ctx.beginPath(); ctx.arc(px,py,rr*0.6,0,6.283); ctx.stroke(); ctx.restore(); }
 
       // jellyfish (deep, drifting up) — gently shoved aside if the flick happened close
       for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(pulse){ const dx=J.x-px,dy=J.y-py,dd=Math.hypot(dx,dy)||0.001; if(dd<startleR){ const k=(1-dd/startleR)*0.5*pStr; J.x+=dx/dd*k; J.y+=dy/dd*k; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
