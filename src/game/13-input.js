@@ -1,7 +1,7 @@
     // ================= INPUT =================
     function pos(e){ const r=canvas.getBoundingClientRect(); const p=e.touches?e.touches[0]:e; return { x:(p.clientX-r.left)/SCALE-OX, y:(p.clientY-r.top)/SCALE-OY }; }
     function clampToPitch(px,py){ const lo=WALL+NAIL_R,hix=W-WALL-NAIL_R,hiy=H-WALL-NAIL_R; return { x:Math.max(lo,Math.min(hix,px)), y:Math.max(lo,Math.min(hiy,py)) }; }
-    function onDown(e){ if(pen&&pen.active&&pen.step!=='aim') return;
+    function onDown(e){ if(typeof rouletteCap!=='undefined'&&rouletteCap){ if(e&&e.preventDefault) e.preventDefault(); return; } if(pen&&pen.active&&pen.step!=='aim') return;
       const p=pos(e);
       if(moving&&phase==='play'&&!aiming&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)&&Math.hypot(coin.vx,coin.vy)>0.6){ chipUsed=true; coin.air=22; coin.air0=22; try{sfxGuided();}catch(e){} try{ if(typeof haptic==='function') haptic(12); }catch(e){} setStatus('CHIP!'); e.preventDefault(); return; }
       if(moving&&phase==='play'&&!aiming&&TAC.guided&&steerBudget>0){ steerHold=p.x; e.preventDefault(); return; } if(strategistArm===current && phase==='play' && !moving && !aiming && !winner){ let _best=null,_bd=1e9; for(const n of nails){ if(n.goalie) continue; if(n.team!==current) continue; const _d=Math.hypot(p.x-n.x,p.y-n.y); if(_d<NAIL_R+8&&_d<_bd){_bd=_d;_best=n;} } if(_best){ dragNail=_best; dragNail._px=_best.x; dragNail._py=_best.y; pmDrag=true; try{sfxPickup();}catch(e){} e.preventDefault(); return; } setStatus('TAP ONE OF YOUR PLAYERS'); e.preventDefault(); return; }
