@@ -37,8 +37,6 @@
         for(var i=0;i<4;i++) ambient.push({kind:'bgfish', x:(Math.random()<0.5? 3+Math.random()*(OX-6) : OX+W+3+Math.random()*(CW-OX-W-6)), y:Math.random()*CH, vx:(Math.random()<0.5?-1:1)*(0.05+Math.random()*0.1), sz:4+Math.random()*4|0, col:_aqs[i%3], phase:Math.random()*6.28});
         for(var i=0;i<10;i++) ambient.push({kind:'tankbub', x:Math.random()*CW, y:Math.random()*CH, vy:0.1+Math.random()*0.22, sz:Math.random()<0.4?2:1, drift:Math.random()*6.28});
       }
-      // a few birds share the sky on pitches that otherwise have none (reuses the beach bird)
-      if(t==='stadium'||t==='arena'||t==='urban'){ for(var _bi=0;_bi<3;_bi++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:(Math.random()<0.5?-1:1)*(0.12+Math.random()*0.16), phase:Math.random()*6.28}); }
     }
     buildAmbient();
 
@@ -61,10 +59,11 @@
       ctx.fillStyle='rgba(255,214,110,0.95)'; ctx.beginPath(); ctx.arc(x,y,3.2,0,6.283); ctx.fill();
     }
     function drawBird(x,y,phase,now){
-      const f=Math.sin(now*0.02+phase)>0?0:1;
-      ctx.fillStyle='rgba(238,240,246,0.92)';
-      ctx.fillRect(x-2,y+f,1,1); ctx.fillRect(x-1,y-1+f,1,1); ctx.fillRect(x,y,1,1);
-      ctx.fillRect(x+1,y-1+f,1,1); ctx.fillRect(x+2,y+f,1,1);
+      // the beach gull: two curved wings that flap, with a small dark body (shared by every pitch's birds)
+      const flap=2.0+Math.sin(now*0.02+phase)*2.6, sc=5;
+      ctx.strokeStyle='rgba(250,250,255,0.95)'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(x-sc,y); ctx.quadraticCurveTo(x-sc*0.4,y-flap,x,y); ctx.quadraticCurveTo(x+sc*0.4,y-flap,x+sc,y); ctx.stroke();
+      ctx.fillStyle='rgba(70,70,78,0.9)'; ctx.fillRect(Math.round(x),Math.round(y)-1,1,2);
     }
     function drawDogWalker(x,y,now){
       ctx.fillStyle='#d8663f'; ctx.fillRect(x-1,y-4,2,3);
