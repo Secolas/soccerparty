@@ -51,7 +51,7 @@
       {len:15,ht:7,body:'#e0596a',belly:'#ffb8c0',fin:'#a03040',stripe:null},      // snapper
       {len:9, ht:9,body:'#7ad0a0',belly:'#c8f2d8',fin:'#3a9060',stripe:null}       // puffer
     ];
-    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[], _aqFryOff={x:0,y:0}, _aqPrevBsp=0, _aqPulse=null;
+    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[], _aqFryOff={x:0,y:0};
     function _aqEnsure(){
       if(_aqInit) return; _aqInit=true;
       const IN=WALL+3, w=W-WALL*2-6, h=H-WALL*2-6;
@@ -66,14 +66,9 @@
     function drawAquariumFX(ctx,now){
       _aqEnsure();
       const IN=WALL, w=W-WALL*2, h=H-WALL*2;
-      // the disturbance is the FLICK itself — the moment the ball is struck away from (near) rest.
-      // We spook the water only around that launch spot, not along the whole flight path.
-      let bx=-999,by=-999,bsp=0;
-      try{ if(typeof coin!=='undefined'&&coin&&(typeof phase==='undefined'||phase==='play')){ bx=coin.x; by=coin.y; bsp=Math.hypot(coin.vx||0,coin.vy||0); } }catch(e){}
-      if(bsp>1.6 && _aqPrevBsp<0.8){ _aqPulse={x:bx,y:by,life:16,life0:16}; }   // launch detected → ripple at the flick spot
-      _aqPrevBsp=bsp;
-      const pulse=(_aqPulse&&_aqPulse.life>0)?_aqPulse:null;
-      if(_aqPulse){ _aqPulse.life--; if(_aqPulse.life<=0) _aqPulse=null; }
+      // the disturbance is the FLICK itself — a short-lived pulse at the spot the ball was struck
+      // from (shared across all pitches). We spook the water only around that launch spot.
+      const pulse=(typeof _flickPulse!=='undefined'&&_flickPulse&&_flickPulse.life>0)?_flickPulse:null;
       ctx.save(); ctx.beginPath(); ctx.rect(IN,IN,w,h); ctx.clip();
 
       // shafts of sunlight / caustics rippling across the sea floor
