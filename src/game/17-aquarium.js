@@ -51,7 +51,7 @@
       {len:15,ht:7,body:'#e0596a',belly:'#ffb8c0',fin:'#a03040',stripe:null},      // snapper
       {len:9, ht:9,body:'#7ad0a0',belly:'#c8f2d8',fin:'#3a9060',stripe:null}       // puffer
     ];
-    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[];
+    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[], _aqFryOff={x:0,y:0};
     function _aqEnsure(){
       if(_aqInit) return; _aqInit=true;
       const IN=WALL+3, w=W-WALL*2-6, h=H-WALL*2-6;
@@ -66,32 +66,49 @@
     function drawAquariumFX(ctx,now){
       _aqEnsure();
       const IN=WALL, w=W-WALL*2, h=H-WALL*2;
+      // the flicked ball spooks the sea life: a fast-moving coin nearby sends fish darting away
+      let bx=-999,by=-999,bsp=0,flick=false;
+      try{ if(typeof coin!=='undefined'&&coin&&(typeof phase==='undefined'||phase==='play')){ bx=coin.x; by=coin.y; bsp=Math.hypot(coin.vx||0,coin.vy||0); flick=bsp>1.4; } }catch(e){}
       ctx.save(); ctx.beginPath(); ctx.rect(IN,IN,w,h); ctx.clip();
 
       // shafts of sunlight / caustics rippling across the sea floor
       ctx.save(); ctx.globalCompositeOperation='lighter';
       for(let c=0;c<5;c++){ const cx=IN+(((now*0.012*(c*0.5+1))+c*0.23*w)%(w+50))-25, cy=IN+h*(0.12+0.18*c)+Math.sin(now*0.001+c)*10, rad=24+c*6;
-        const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.11)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
+        const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.08)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
       ctx.restore();
 
-      // jellyfish (deep, drifting up)
-      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
+      // jellyfish (deep, drifting up) — also nudged aside by a nearby flick
+      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(flick){ const dx=J.x-bx,dy=J.y-by,dd=Math.hypot(dx,dy)||0.001; if(dd<56){ J.x+=dx/dd*0.8; J.y+=dy/dd*0.8; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
 
-      // schooling fry — tiny darting dots following a slow lissajous centre
-      const fcx=IN+w*0.5+Math.sin(now*0.0006)*w*0.32, fcy=IN+h*0.5+Math.cos(now*0.0009)*h*0.3;
-      ctx.fillStyle='rgba(255,236,170,0.85)';
-      for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2, fy=fcy+Math.sin(now*0.005+p.off)*p.r+Math.sin(now*0.02+p.ph)*1.2; ctx.fillRect(Math.round(fx),Math.round(fy),1,1); ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1); }
+      // schooling fry — tiny darting dots that scatter away from the flicked ball
+      let fcx=IN+w*0.5+Math.sin(now*0.0006)*w*0.32, fcy=IN+h*0.5+Math.cos(now*0.0009)*h*0.3;
+      if(flick){ const dx=fcx-bx,dy=fcy-by,dc=Math.hypot(dx,dy)||0.001; if(dc<58){ _aqFryOff.x+=dx/dc*4.5; _aqFryOff.y+=dy/dc*4.5; } }
+      _aqFryOff.x*=0.9; _aqFryOff.y*=0.9; fcx+=_aqFryOff.x; fcy+=_aqFryOff.y;
+      const frySpread=1+Math.min(2.4,(Math.abs(_aqFryOff.x)+Math.abs(_aqFryOff.y))*0.08);
+      ctx.fillStyle='rgba(255,236,170,0.62)';
+      for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2*frySpread, fy=fcy+Math.sin(now*0.005+p.off)*p.r*frySpread+Math.sin(now*0.02+p.ph)*1.2; ctx.fillRect(Math.round(fx),Math.round(fy),1,1); ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1); }
 
-      // reef fish (bounce off the crystal walls)
-      for(const F of _aqReef){ F.x+=F.vx; F.y+=F.vy+Math.sin(now*0.003+F.ph)*0.09;
+      // reef fish — flee the flicked ball, then ease back to a calm cruise; bounce off the crystal walls
+      for(const F of _aqReef){
+        F.scare=(F.scare||0)*0.93;
+        if(flick){ const dx=F.x-bx,dy=F.y-by,dd=Math.hypot(dx,dy)||0.001, R=52+bsp*3.2;
+          if(dd<R){ const push=(1-dd/R)*(0.7+bsp*0.08); F.vx+=dx/dd*push; F.vy+=dy/dd*push; F.scare=Math.min(1,F.scare+0.7); } }
+        const spd=Math.hypot(F.vx,F.vy);
+        if(F.scare>0.05){ const mx=2.6; if(spd>mx){ F.vx*=mx/spd; F.vy*=mx/spd; } }
+        else if(spd>0.001){ const tgt=0.16+F.d*0.2, ns=spd+(tgt-spd)*0.04; F.vx*=ns/spd; F.vy*=ns/spd; }
+        F.x+=F.vx; F.y+=F.vy+(F.scare>0.05?0:Math.sin(now*0.003+F.ph)*0.09);
         if(F.x<IN+5){ F.vx=Math.abs(F.vx); } if(F.x>IN+w-5){ F.vx=-Math.abs(F.vx); }
         if(F.y<IN+6){ F.vy=Math.abs(F.vy); } if(F.y>IN+h-6){ F.vy=-Math.abs(F.vy); }
-        ctx.globalAlpha=0.55+F.d*0.42; drawReefFish(F.x,F.y,F.vx<0,now,F.sp,F.ph); }
+        ctx.globalAlpha=0.34+F.d*0.24; drawReefFish(F.x,F.y,F.vx<0,now,F.sp,F.ph); }
       ctx.globalAlpha=1;
 
       // rising bubbles
-      ctx.fillStyle='rgba(202,244,255,0.6)';
+      ctx.fillStyle='rgba(202,244,255,0.42)';
       for(const B of _aqBub){ B.y-=B.vy; B.x+=Math.sin(now*0.004+B.dr)*0.2; if(B.y<IN){ B.y=IN+h; B.x=IN+Math.random()*w; } ctx.fillRect(Math.round(B.x),Math.round(B.y),B.sz,B.sz); }
+
+      // frosted crystal — a pale haze that sinks the sea life deeper behind the glass so the
+      // coin, nails & tokens resting on top always read clearly against it
+      ctx.fillStyle='rgba(150,196,222,0.26)'; ctx.fillRect(IN,IN,w,h);
 
       ctx.restore();
 
