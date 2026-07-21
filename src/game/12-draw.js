@@ -65,8 +65,8 @@
       drawAmbient(now);
       // giant tifo banners — official stadium only
       if(ambType()==='stadium'){
-        drawTifo('blue', OX+W/2, OY*0.52, now);
-        drawTifo('red',  OX+W/2, OY+H+(CH-(OY+H))*0.48, now);
+        drawTifoNeutral(OX+W/2, OY*0.52, now);
+        drawTifoNeutral(OX+W/2, OY+H+(CH-(OY+H))*0.48, now);
       }
       // camera flashes + roar during celebration
       if(banner>0){
