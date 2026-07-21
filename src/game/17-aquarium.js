@@ -51,7 +51,7 @@
       {len:15,ht:7,body:'#e0596a',belly:'#ffb8c0',fin:'#a03040',stripe:null},      // snapper
       {len:9, ht:9,body:'#7ad0a0',belly:'#c8f2d8',fin:'#3a9060',stripe:null}       // puffer
     ];
-    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[], _aqFryOff={x:0,y:0};
+    let _aqInit=false, _aqReef=[], _aqJelly=[], _aqBub=[], _aqFry=[], _aqFryOff={x:0,y:0}, _aqPrevBsp=0, _aqPulse=null;
     function _aqEnsure(){
       if(_aqInit) return; _aqInit=true;
       const IN=WALL+3, w=W-WALL*2-6, h=H-WALL*2-6;
@@ -66,9 +66,14 @@
     function drawAquariumFX(ctx,now){
       _aqEnsure();
       const IN=WALL, w=W-WALL*2, h=H-WALL*2;
-      // the flicked ball spooks the sea life: a fast-moving coin nearby sends fish darting away
-      let bx=-999,by=-999,bsp=0,flick=false;
-      try{ if(typeof coin!=='undefined'&&coin&&(typeof phase==='undefined'||phase==='play')){ bx=coin.x; by=coin.y; bsp=Math.hypot(coin.vx||0,coin.vy||0); flick=bsp>1.4; } }catch(e){}
+      // the disturbance is the FLICK itself — the moment the ball is struck away from (near) rest.
+      // We spook the water only around that launch spot, not along the whole flight path.
+      let bx=-999,by=-999,bsp=0;
+      try{ if(typeof coin!=='undefined'&&coin&&(typeof phase==='undefined'||phase==='play')){ bx=coin.x; by=coin.y; bsp=Math.hypot(coin.vx||0,coin.vy||0); } }catch(e){}
+      if(bsp>1.6 && _aqPrevBsp<0.8){ _aqPulse={x:bx,y:by,life:8,life0:8}; }   // launch detected → ripple at the flick spot
+      _aqPrevBsp=bsp;
+      const pulse=(_aqPulse&&_aqPulse.life>0)?_aqPulse:null;
+      if(_aqPulse){ _aqPulse.life--; if(_aqPulse.life<=0) _aqPulse=null; }
       ctx.save(); ctx.beginPath(); ctx.rect(IN,IN,w,h); ctx.clip();
 
       // shafts of sunlight / caustics rippling across the sea floor
@@ -77,32 +82,32 @@
         const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.08)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
       ctx.restore();
 
-      // only the water right where the ball whips past is disturbed — a small startle zone
-      const startleR = 22 + bsp*1.1;
+      // small startle zone around the spot the ball was flicked from
+      const startleR = 30, pStr = pulse ? (pulse.life/pulse.life0) : 0, px = pulse?pulse.x:0, py = pulse?pulse.y:0;
 
-      // jellyfish (deep, drifting up) — gently shoved aside if the ball passes close
-      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(flick){ const dx=J.x-bx,dy=J.y-by,dd=Math.hypot(dx,dy)||0.001; if(dd<startleR){ const k=(1-dd/startleR)*0.5; J.x+=dx/dd*k; J.y+=dy/dd*k; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
+      // jellyfish (deep, drifting up) — gently shoved aside if the flick happened close
+      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(pulse){ const dx=J.x-px,dy=J.y-py,dd=Math.hypot(dx,dy)||0.001; if(dd<startleR){ const k=(1-dd/startleR)*0.5*pStr; J.x+=dx/dd*k; J.y+=dy/dd*k; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
 
-      // schooling fry — scatter only if the ball darts through the shoal, then regroup (drag)
+      // schooling fry — scatter only if the ball was flicked from within the shoal, then regroup (drag)
       let fcx=IN+w*0.5+Math.sin(now*0.0006)*w*0.32, fcy=IN+h*0.5+Math.cos(now*0.0009)*h*0.3;
-      if(flick){ const dx=fcx-bx,dy=fcy-by,dc=Math.hypot(dx,dy)||0.001; if(dc<startleR+10){ const k=(1-dc/(startleR+10))*3.2; _aqFryOff.x+=dx/dc*k; _aqFryOff.y+=dy/dc*k; } }
+      if(pulse){ const dx=fcx-px,dy=fcy-py,dc=Math.hypot(dx,dy)||0.001; if(dc<startleR+10){ const k=(1-dc/(startleR+10))*3.0*pStr; _aqFryOff.x+=dx/dc*k; _aqFryOff.y+=dy/dc*k; } }
       _aqFryOff.x*=0.9; _aqFryOff.y*=0.9; fcx+=_aqFryOff.x; fcy+=_aqFryOff.y;
       const frySpread=1+Math.min(1.8,(Math.abs(_aqFryOff.x)+Math.abs(_aqFryOff.y))*0.06);
       ctx.fillStyle='rgba(255,236,170,0.62)';
       for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2*frySpread, fy=fcy+Math.sin(now*0.005+p.off)*p.r*frySpread+Math.sin(now*0.02+p.ph)*1.2; ctx.fillRect(Math.round(fx),Math.round(fy),1,1); ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1); }
 
-      // reef fish — startle only in the small zone the ball flicked through, then a physical
+      // reef fish — startle only for fish near the spot the ball was flicked from, then a physical
       // burst-and-glide: a fish turns and darts SIDEWAYS along its swimming axis (fish don't
       // rocket straight up), water drag bleeds the dash off, and it settles back to a slow cruise
       const DRAG=0.93;
       for(const F of _aqReef){
         F.fear=(F.fear||0)*0.95;
-        if(flick){ const dx=F.x-bx,dy=F.y-by,dd=Math.hypot(dx,dy)||0.001;
+        if(pulse){ const dx=F.x-px,dy=F.y-py,dd=Math.hypot(dx,dy)||0.001;
           if(dd<startleR){
-            // escape mostly to the left/right (away from the ball), with only a slight vertical tilt
+            // escape mostly to the left/right (away from the flick spot), with only a slight vertical tilt
             let ax=(Math.abs(dx)>3)?Math.sign(dx):(F.vx>=0?1:-1), ay=(dy/dd)*0.35;
             const m=Math.hypot(ax,ay)||1; ax/=m; ay/=m;
-            const kick=(1-dd/startleR)*(0.45+bsp*0.03);
+            const kick=(1-dd/startleR)*0.6*pStr;
             F.vx+=ax*kick; F.vy+=ay*kick; F.fear=Math.min(1,F.fear+0.8);
           } }
         const spd=Math.hypot(F.vx,F.vy)||0.001, tgt=0.14+F.d*0.16;
