@@ -175,7 +175,7 @@
       board=BOARDS[boardKey];
       try{ if(typeof _ballTracks!=='undefined'&&_ballTracks) _ballTracks.length=0; }catch(e){}
       try{ if(typeof gumballs!=='undefined'&&gumballs) gumballs.length=0; }catch(e){}
-      try{ if(typeof dice!=='undefined'&&dice) dice.length=0; if(typeof chipBumpers!=='undefined'&&chipBumpers) chipBumpers.length=0; rouletteCap=null; rouletteShot=false; }catch(e){}
+      try{ if(typeof dice!=='undefined'&&dice) dice.length=0; if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0; rouletteCap=null; rouletteShot=false; }catch(e){}
       try{ buildAmbient(); }catch(e){}
       bc.clearRect(0,0,W,H);
       board.surface(bc);
