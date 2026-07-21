@@ -77,26 +77,38 @@
         const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.08)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
       ctx.restore();
 
-      // jellyfish (deep, drifting up) — also nudged aside by a nearby flick
-      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(flick){ const dx=J.x-bx,dy=J.y-by,dd=Math.hypot(dx,dy)||0.001; if(dd<56){ J.x+=dx/dd*0.8; J.y+=dy/dd*0.8; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
+      // only the water right where the ball whips past is disturbed — a small startle zone
+      const startleR = 22 + bsp*1.1;
 
-      // schooling fry — tiny darting dots that scatter away from the flicked ball
+      // jellyfish (deep, drifting up) — gently shoved aside if the ball passes close
+      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(flick){ const dx=J.x-bx,dy=J.y-by,dd=Math.hypot(dx,dy)||0.001; if(dd<startleR){ const k=(1-dd/startleR)*0.5; J.x+=dx/dd*k; J.y+=dy/dd*k; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
+
+      // schooling fry — scatter only if the ball darts through the shoal, then regroup (drag)
       let fcx=IN+w*0.5+Math.sin(now*0.0006)*w*0.32, fcy=IN+h*0.5+Math.cos(now*0.0009)*h*0.3;
-      if(flick){ const dx=fcx-bx,dy=fcy-by,dc=Math.hypot(dx,dy)||0.001; if(dc<58){ _aqFryOff.x+=dx/dc*4.5; _aqFryOff.y+=dy/dc*4.5; } }
+      if(flick){ const dx=fcx-bx,dy=fcy-by,dc=Math.hypot(dx,dy)||0.001; if(dc<startleR+10){ const k=(1-dc/(startleR+10))*3.2; _aqFryOff.x+=dx/dc*k; _aqFryOff.y+=dy/dc*k; } }
       _aqFryOff.x*=0.9; _aqFryOff.y*=0.9; fcx+=_aqFryOff.x; fcy+=_aqFryOff.y;
-      const frySpread=1+Math.min(2.4,(Math.abs(_aqFryOff.x)+Math.abs(_aqFryOff.y))*0.08);
+      const frySpread=1+Math.min(1.8,(Math.abs(_aqFryOff.x)+Math.abs(_aqFryOff.y))*0.06);
       ctx.fillStyle='rgba(255,236,170,0.62)';
       for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2*frySpread, fy=fcy+Math.sin(now*0.005+p.off)*p.r*frySpread+Math.sin(now*0.02+p.ph)*1.2; ctx.fillRect(Math.round(fx),Math.round(fy),1,1); ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1); }
 
-      // reef fish — flee the flicked ball, then ease back to a calm cruise; bounce off the crystal walls
+      // reef fish — startle only in the small zone the ball flicked through, then a physical
+      // burst-and-glide: a fish turns and darts SIDEWAYS along its swimming axis (fish don't
+      // rocket straight up), water drag bleeds the dash off, and it settles back to a slow cruise
+      const DRAG=0.93;
       for(const F of _aqReef){
-        F.scare=(F.scare||0)*0.93;
-        if(flick){ const dx=F.x-bx,dy=F.y-by,dd=Math.hypot(dx,dy)||0.001, R=52+bsp*3.2;
-          if(dd<R){ const push=(1-dd/R)*(0.7+bsp*0.08); F.vx+=dx/dd*push; F.vy+=dy/dd*push; F.scare=Math.min(1,F.scare+0.7); } }
-        const spd=Math.hypot(F.vx,F.vy);
-        if(F.scare>0.05){ const mx=2.6; if(spd>mx){ F.vx*=mx/spd; F.vy*=mx/spd; } }
-        else if(spd>0.001){ const tgt=0.16+F.d*0.2, ns=spd+(tgt-spd)*0.04; F.vx*=ns/spd; F.vy*=ns/spd; }
-        F.x+=F.vx; F.y+=F.vy+(F.scare>0.05?0:Math.sin(now*0.003+F.ph)*0.09);
+        F.fear=(F.fear||0)*0.95;
+        if(flick){ const dx=F.x-bx,dy=F.y-by,dd=Math.hypot(dx,dy)||0.001;
+          if(dd<startleR){
+            // escape mostly to the left/right (away from the ball), with only a slight vertical tilt
+            let ax=(Math.abs(dx)>3)?Math.sign(dx):(F.vx>=0?1:-1), ay=(dy/dd)*0.35;
+            const m=Math.hypot(ax,ay)||1; ax/=m; ay/=m;
+            const kick=(1-dd/startleR)*(0.45+bsp*0.03);
+            F.vx+=ax*kick; F.vy+=ay*kick; F.fear=Math.min(1,F.fear+0.8);
+          } }
+        const spd=Math.hypot(F.vx,F.vy)||0.001, tgt=0.14+F.d*0.16;
+        if(F.fear>0.06 && spd>tgt){ F.vx*=DRAG; F.vy*=DRAG; const MX=1.3; if(spd>MX){ F.vx*=MX/spd; F.vy*=MX/spd; } }   // gliding down from the dash
+        else { const ns=spd+(tgt-spd)*0.03; F.vx*=ns/spd; F.vy*=ns/spd; }                                              // relaxed cruise
+        F.x+=F.vx; F.y+=F.vy+(F.fear>0.06?0:Math.sin(now*0.003+F.ph)*0.08);
         if(F.x<IN+5){ F.vx=Math.abs(F.vx); } if(F.x>IN+w-5){ F.vx=-Math.abs(F.vx); }
         if(F.y<IN+6){ F.vy=Math.abs(F.vy); } if(F.y>IN+h-6){ F.vy=-Math.abs(F.vy); }
         ctx.globalAlpha=0.34+F.d*0.24; drawReefFish(F.x,F.y,F.vx<0,now,F.sp,F.ph); }
