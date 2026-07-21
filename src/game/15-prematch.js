@@ -210,7 +210,7 @@
       const p=PRESETS[idx], chip=mk('div','display:flex;align-items:center;gap:4px;');
       const c=document.createElement('canvas'); c.width=24; c.height=16; c.style.width='26px'; c.style.height='18px'; c.style.imageRendering='pixelated';
       const g=c.getContext('2d'); g.imageSmoothingEnabled=false; paintPattern(g,0,0,24,16,p.kit); g.strokeStyle='rgba(0,0,0,0.5)'; g.strokeRect(0.5,0.5,23,15);
-      chip.appendChild(c); chip.appendChild(mk('span',FS(7,highlight?'#a9c94b':'#e8ddca'),p.abbr));
+      chip.appendChild(c); chip.appendChild(mk('span',FS(7,highlight?'#a9c94b':'#f4e9c8'),p.abbr));
       return chip;
     }
 
@@ -258,7 +258,7 @@
       const NODESB=[];
       for(let l=0;l<lvls;l++){ const n=tour.size>>l; for(let j=0;j<n;j++){ const t=teamAt(l,j), pos=posAt(l,j), nxt=tour.rounds[l+1]; if(t!=null) NODESB.push({x:pos.x,y:pos.y,t:t}); const out=(t!=null)&&nxt&&nxt.indexOf(t)<0; if(out) g.globalAlpha=0.35; bracketFlag(g,pos.x,pos.y,l===0?R0:10,t,hlAt(l,j)); g.globalAlpha=1; } }
       const lc=tour.rounds.length-1, oi=curRound().indexOf(currentOpponent());
-      if(oi>=0 && !tour.eliminated){ const op=posAt(lc,oi); g.beginPath(); g.arc(op.x,op.y,(lc===0?R0:10)+2.5,0,Math.PI*2); g.lineWidth=2; g.strokeStyle='#e8ddca'; g.stroke(); }
+      if(oi>=0 && !tour.eliminated){ const op=posAt(lc,oi); g.beginPath(); g.arc(op.x,op.y,(lc===0?R0:10)+2.5,0,Math.PI*2); g.lineWidth=2; g.strokeStyle='#f4e9c8'; g.stroke(); }
       const midY=(posAt(lvls-1,0).y+posAt(lvls-1,1).y)/2;
       if(typeof NS_TROPHY!=='undefined'&&NS_TROPHY.complete&&NS_TROPHY.naturalWidth){ g.drawImage(NS_TROPHY,Math.round(CXX-14),Math.round(midY-14),28,28); } else { drawTrophy(g,CXX,midY,7); }
       // advancing: slide a gold pulse from the previous round node to the new one
@@ -288,7 +288,7 @@
       const c=document.createElement('canvas'); c.width=64; c.height=42; c.style.width='96px'; c.style.height='63px'; c.style.imageRendering='pixelated'; c.style.border='2px solid #3a3050';
       const g=c.getContext('2d'); g.imageSmoothingEnabled=false; paintPattern(g,0,0,64,42,p.kit); pad.appendChild(c);
       pad.appendChild(mk('div',FS(10,'#f4e9c8')+'text-align:center;',p.name.toUpperCase()));
-      pad.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;',champ?'YOU WON THE CUP':roundName(Math.max(2,curRound().length*2))+' EXIT')); if(tour.history&&tour.history.length){ var hist=mk('div','width:100%;max-width:280px;background:rgba(20,16,30,0.7);border:2px solid #3a3050;border-radius:8px;padding:8px 9px;margin-top:2px;'); hist.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;margin-bottom:7px;letter-spacing:1px;','YOUR RUN')); tour.history.forEach(function(h){ var row=mk('div','display:flex;align-items:center;gap:7px;margin-bottom:5px;'); row.appendChild(mk('div',FS(6,'#7d719c')+'width:32px;flex:0 0 auto;',h.round)); var fc=document.createElement('canvas'); fc.width=20; fc.height=13; fc.style.cssText='width:22px;height:14px;image-rendering:pixelated;border:1px solid rgba(0,0,0,0.5);flex:0 0 auto;'; try{ var fgg=fc.getContext('2d'); fgg.imageSmoothingEnabled=false; paintPattern(fgg,0,0,20,13,h.opp.kit); }catch(e){} row.appendChild(fc); row.appendChild(mk('div',FS(7,'#e8ddca')+'flex:1;text-align:left;','v '+h.opp.abbr)); row.appendChild(mk('div',FS(8,h.won?'#a9c94b':'#e05a4a')+'flex:0 0 auto;',h.ps+'-'+h.os)); hist.appendChild(row); }); pad.appendChild(hist); }
+      pad.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;',champ?'YOU WON THE CUP':roundName(Math.max(2,curRound().length*2))+' EXIT')); if(tour.history&&tour.history.length){ var hist=mk('div','width:100%;max-width:280px;background:rgba(20,16,30,0.7);border:2px solid #3a3050;border-radius:8px;padding:8px 9px;margin-top:2px;'); hist.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;margin-bottom:7px;letter-spacing:1px;','YOUR RUN')); tour.history.forEach(function(h){ var row=mk('div','display:flex;align-items:center;gap:7px;margin-bottom:5px;'); row.appendChild(mk('div',FS(6,'#7d719c')+'width:32px;flex:0 0 auto;',h.round)); var fc=document.createElement('canvas'); fc.width=20; fc.height=13; fc.style.cssText='width:22px;height:14px;image-rendering:pixelated;border:1px solid rgba(0,0,0,0.5);flex:0 0 auto;'; try{ var fgg=fc.getContext('2d'); fgg.imageSmoothingEnabled=false; paintPattern(fgg,0,0,20,13,h.opp.kit); }catch(e){} row.appendChild(fc); row.appendChild(mk('div',FS(7,'#f4e9c8')+'flex:1;text-align:left;','v '+h.opp.abbr)); row.appendChild(mk('div',FS(8,h.won?'#a9c94b':'#e05a4a')+'flex:0 0 auto;',h.ps+'-'+h.os)); hist.appendChild(row); }); pad.appendChild(hist); }
       const again=mk('button',"margin-top:6px;width:100%;"+FS(10,'#0b1a0e')+"background:#a9c94b;border:2px solid #e6ff7a;padding:10px;cursor:pointer;",'NEW CUP  ▸');
       again.onclick=()=>{ mode='tournament'; buildPre(); }; pad.appendChild(again);
       const menu=mk('button',"width:100%;"+FS(8,'#8a7ea0')+"background:#14101e;border:2px solid #3a3050;padding:8px;cursor:pointer;",'MENU');
