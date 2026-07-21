@@ -163,7 +163,7 @@
     var CANDY_PAD_R=11;
     function candyPads(){ return [ {x:W*0.30,y:H*0.30}, {x:W*0.70,y:H*0.40}, {x:W*0.50,y:H*0.52}, {x:W*0.32,y:H*0.70}, {x:W*0.68,y:H*0.68} ]; }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
-    function hzTier(){ var l=(typeof aiLevel!=='undefined'&&aiLevel)?aiLevel:'med'; return l==='hard'?2:(l==='easy'?0:1); }
+    function hzTier(){ var l; if((typeof mode!=='undefined'&&mode==='royale')&&(typeof royaleLevel!=='undefined'&&royaleLevel)){ l=royaleLevel; } else { l=(typeof aiLevel!=='undefined'&&aiLevel)?aiLevel:'med'; } return l==='hard'?2:(l==='easy'?0:1); }
     function stadiumHazards(){ return (typeof mode!=='undefined' && mode==='royale'); }
     // STORM: puddles (drag pools) + lightning strikes (scatter near the ball)
     var stormStrikeT=120, stormStrike=null;
