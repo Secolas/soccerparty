@@ -174,7 +174,7 @@
       board=BOARDS[boardKey];
       try{ if(typeof _ballTracks!=='undefined'&&_ballTracks) _ballTracks.length=0; }catch(e){}
       try{ if(typeof gumballs!=='undefined'&&gumballs) gumballs.length=0; if(typeof candyPatches!=='undefined'&&candyPatches) candyPatches.length=0; if(typeof gumSpots!=='undefined'&&gumSpots) gumSpots.length=0; }catch(e){}
-      try{ if(typeof dice!=='undefined'&&dice) dice.length=0; if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0; rouletteCap=null; rouletteShot=false; rouletteBox=null; if(typeof ROUL_BASE!=='undefined') rouletteAng=ROUL_BASE; if(typeof beachBalls!=='undefined'&&beachBalls) beachBalls.length=0; if(typeof beachCrabs!=='undefined'&&beachCrabs) beachCrabs.length=0; }catch(e){}
+      try{ if(typeof dice!=='undefined'&&dice) dice.length=0; if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0; rouletteCap=null; rouletteShot=false; rouletteBox=null; skateOnRail=false; skateCD=0; if(typeof ROUL_BASE!=='undefined') rouletteAng=ROUL_BASE; if(typeof beachBalls!=='undefined'&&beachBalls) beachBalls.length=0; if(typeof beachCrabs!=='undefined'&&beachCrabs) beachCrabs.length=0; }catch(e){}
       try{ buildAmbient(); }catch(e){}
       bc.clearRect(0,0,W,H);
       board.surface(bc);
