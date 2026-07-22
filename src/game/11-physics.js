@@ -175,7 +175,7 @@
     var gumballs=[];
     function initGumballs(){ gumballs=[]; var t=hzTier(), n=[2,3,5][t], cols=['#ff5a8a','#5ad0ff','#ffc21e','#5ae08a','#c86aff']; for(var i=0;i<n;i++){ var ang=Math.random()*6.283, sp=0.35+t*0.22+Math.random()*0.15; gumballs.push({x:WALL+24+Math.random()*(W-WALL*2-48), y:H*0.3+Math.random()*(H*0.4), vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp, r:6, col:cols[i%5]}); } }
     // CASINO: roulette wheel (capture → spin → launch), rolling dice boxes, shuffle walls (hard)
-    var ROUL_R=30, ROUL_BASE=-2.0943951, rouletteCap=null, rouletteLastN=0, rouletteFlash=0, rouletteCD=0, rouletteAng=0, rouletteShot=false, rouletteBox=null;
+    var ROUL_R=30, ROUL_BASE=-2.0943951, rouletteCap=null, rouletteLastN=0, rouletteFlash=0, rouletteCD=0, rouletteAng=0, rouletteShot=false, rouletteBox=null, _numTblF=1;
     var dice=[], numBoxes=[];
     function diceFaces(){ var o=[]; for(var i=0;i<dice.length;i++) o.push(dice[i].t); return o; }
     // a valid cube orientation: top t, north n, east e (no two are equal or opposite/sum-7)
