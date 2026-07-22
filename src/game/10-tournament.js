@@ -20,6 +20,7 @@
     var ROYALE_ARENAS_2=[
       {name:'SUGAR RUSH',pitch:'candy',ab:[],d:1,blurb:'Jelly pads bounce the ball clean over players, sticky caramel bogs it down, and gumballs roll across.'},
       {name:'THUNDERDOME',pitch:'storm',ab:[],d:2,blurb:'A rotating wind curves every shot, rain puddles drag the ball, and lightning scatters it from where it strikes.'},
+      {name:'THE DEEP',pitch:'aquarium',ab:[],d:3,blurb:'A crystal tank over the sea — currents drag the ball, bubble geysers erupt from the floor, and a big fish patrols the deep.'},
       {name:'ORBIT LAB',pitch:'space',ab:[],d:3,blurb:'A zero-g deck where magnet plates tug the ball off its line and the floor barely grips.'},
       {name:'HIGH ROLLER',pitch:'casino',ab:[],d:4,blurb:'The roulette captures the ball, spins, and lands on a number — knock the dice to a lucky face.'},
       {name:'THE HALF-PIPE',pitch:'skate',ab:[],d:5,blurb:'A concrete park where the side ramps kick the ball back and grind rails fling it along.'},
