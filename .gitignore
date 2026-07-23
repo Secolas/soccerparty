@@ -1,0 +1,9 @@
+# Promo-capture tooling (not part of the game; installed ad hoc for screenshots/video)
+node_modules/
+package.json
+package-lock.json
+_*.mjs
+# Raw capture working dir — curated assets live in promo-shots-final/ and promo-video/
+promo-gaps/
+promo-shots/
+promo-shots2/
