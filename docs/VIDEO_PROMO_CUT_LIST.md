@@ -9,35 +9,35 @@ needs to be shot or AI-generated.
 on the Shot 3 goal. Cut on the beat.
 
 Legend: 🎬 = video clip · 🖼️ = still (animate with a Ken Burns move or feed to
-Higgsfield image-to-video) · ⚠️ = gap, not yet captured (see "Gaps to fill").
+Higgsfield image-to-video) · ◐ = partly captured, one short live grab still
+needed. All filenames are real captured assets in `promo-shots-final/` (`.png`)
+and `promo-video/` (`.webm`).
 
 ---
 
 ## Timeline at a glance
 
-| # | Time | Beat | Primary asset | Type |
-|---|------|------|---------------|------|
-| 1 | 0:00–0:03 | Logo cold-open | `inmatch`/logo crop ⚠️ + Higgsfield | 🖼️⚠️ |
-| 2 | 0:03–0:08 | Flick hook | `02-neon-flick.webm` + `10-flick-aim-arrow.png` | 🎬🖼️ |
-| 3 | 0:08–0:12 | GOAL | `12-ball-in-motion.png` + goal grab ⚠️ | 🖼️⚠️ |
-| 4 | 0:12–0:18 | Pitch variety | `04-pitch-carousel.webm`, `01-aquarium-ambience.webm`, `inmatch-04/05/11` | 🎬🖼️ |
-| 5 | 0:18–0:23 | Stadium Royale | `07-royale-world-map.png` + `06-royale-setup.png` | 🖼️ |
-| 6 | 0:23–0:27 | Abilities | ability grab ⚠️ + `08-how-to-play.png` | ⚠️🖼️ |
-| 7 | 0:27–0:29 | Coin economy | `03-neon-board-kickoff.png` + wallet grab ⚠️ | 🖼️⚠️ |
-| 8 | 0:29–0:30 | Logo + CTA | same as Shot 1 | 🖼️⚠️ |
+| # | Time | Beat | Primary asset (clip) | Support / stills |
+|---|------|------|----------------------|------------------|
+| 1 | 0:00–0:03 | Logo cold-open | `06-logo-boot.webm` 🎬 | `00-logo-tap-to-start.png`, `00b-loading-bar.png` |
+| 2 | 0:03–0:08 | Flick hook | `02-neon-flick.webm` 🎬 | `10-flick-aim-arrow.png`, `11-flick-ball-travel.png` |
+| 3 | 0:08–0:12 | GOAL | `05-goal-run.webm` 🎬 | `13-goal-celebration.png`, `12-ball-in-motion.png` |
+| 4 | 0:12–0:18 | Pitch variety | `04-pitch-carousel.webm`, `01-aquarium-ambience.webm` 🎬 | `inmatch-04-NEON.png`, `inmatch-11-AQUARIUM.png`, `inmatch-05-ICE.png` |
+| 5 | 0:18–0:23 | Stadium Royale | — (Ken Burns on stills) | `07-royale-world-map.png`, `06-royale-setup.png` |
+| 6 | 0:23–0:27 | Abilities | `07-abilities.webm` 🎬 | `14-ability-curveball.png`, `15-ability-cannon.png`, `16-ability-laser-aim.png` |
+| 7 | 0:27–0:29 | Coin economy ◐ | `08-coin-rush-play.webm` 🎬 | `17-coin-rush-board.png` + ◐ wallet-payout live grab |
+| 8 | 0:29–0:30 | Logo + CTA | `06-logo-boot.webm` 🎬 (tail/loop) | `00-logo-tap-to-start.png` |
 
 ---
 
 ## Shot-by-shot
 
 ### Shot 1 — Logo cold-open · 0:00–0:03
-- **Asset:** ⚠️ no standalone logo frame yet. Two options:
-  - **Fast:** crop the "SOCCER / PARTY" logo from the top of
-    `01-menu-exhibition.png` onto a black card.
-  - **Best:** feed that crop to Higgsfield with a slow push-in (see prompt pack
-    Shot 1) so it glows/assembles.
-- **Editor:** black bg, logo centered, slow 3–5% scale-up. Optional coin-spin
-  overlay.
+- **Asset:** 🎬 `06-logo-boot.webm` (the real TAP-TO-START boot), or hold the
+  still `00-logo-tap-to-start.png`. `00b-loading-bar.png` is an optional beat.
+- **Editor:** use the clip's logo hold, or a slow 3–5% scale-up on the still.
+  Optional: feed `00-logo-tap-to-start.png` to Higgsfield for a glow/assemble
+  push-in.
 - **Caption:** none. **Audio:** anthem intro swells in; whistle on cut-out.
 
 ### Shot 2 — Flick hook · 0:03–0:08
@@ -49,15 +49,12 @@ Higgsfield image-to-video) · ⚠️ = gap, not yet captured (see "Gaps to fill"
 - **Caption:** **FLICK. AIM. SCORE.** (snap in on release)
 - **Audio:** slingshot *thwip* on release, wall *ping* if it bounces.
 
-### Shot 3 — GOAL celebration · 0:08–0:12  ⚠️
-- **Asset:** 🖼️ `12-ball-in-motion.png` / `11-flick-ball-travel.png` cover the
-  approach, **but there is no net-bulge goal frame yet.**
-- **Fill it (pick one):**
-  - **Live grab (5s):** play a match, score, screen-record the net bulge + crowd.
-  - **Higgsfield:** feed `03-neon-board-kickoff.png` with the Shot 3 prompt
-    ("ball slams into the goal, net bulges, tifo waves, crowd erupts").
+### Shot 3 — GOAL celebration · 0:08–0:12
+- **Asset:** 🎬 `05-goal-run.webm` (flick → ball crosses the line → celebration)
+  + freeze on `13-goal-celebration.png` ("GOAL!" + confetti + tifo + players
+  cheering). `12-ball-in-motion.png` covers the approach if you want a cut-in.
 - **Editor:** crash-zoom on the goal mouth, 1–2 frame white flash, screen shake,
-  then cut to the scorebug flipping.
+  then hold the celebration; cut to the scorebug flip.
 - **Caption:** **GOOOAL!** **Audio:** rising 4-note goal arpeggio + crowd swell
   (the drop lands here).
 
@@ -84,28 +81,29 @@ Higgsfield image-to-video) · ⚠️ = gap, not yet captured (see "Gaps to fill"
 - **Caption:** **STADIUM ROYALE — BEAT 9 BOSSES.**
 - **Audio:** tension riser under the pan.
 
-### Shot 6 — Abilities · 0:23–0:27  ⚠️
-- **Asset:** ⚠️ no ability-firing footage yet. `08-how-to-play.png` can flash the
-  ability list as a filler, but it reads as a menu, not action.
-- **Fill it (pick one):**
-  - **Live grab:** in a match, earn/buy Cannon, Curveball, Chip and screen-record
-    each firing (3× ~1.5s).
-  - **Higgsfield:** generate per the Shot 6 prompt (cannon muzzle-flash, curve
-    arc, chip loft).
-- **Editor:** 3 rapid punch-in cuts, one per ability, each with a light burst.
-- **Caption:** **CURVE • CANNON • CHIP • 20+ ABILITIES**
+### Shot 6 — Abilities · 0:23–0:27
+- **Asset:** 🎬 `07-abilities.webm`, plus punch-in stills
+  `14-ability-curveball.png` (bending Magnus trail), `15-ability-cannon.png`
+  (full-length power beam), `16-ability-laser-aim.png` (sniper aim line).
+- **Editor:** 3 rapid punch-in cuts, one per ability, each with a light burst;
+  the curveball's arc and the cannon's beam read best held ~1s each.
+- **Caption:** **CURVE • CANNON • LASER • 20+ ABILITIES**
 - **Audio:** a distinct chiptune zap per ability.
 
-### Shot 7 — Coin economy · 0:27–0:29  ⚠️
-- **Asset:** 🖼️ `03-neon-board-kickoff.png` shows the gold coin tokens lining the
-  rails (good establishing frame), **but no coins-into-wallet moment.**
-- **Fill it:** live-grab a goal that banks the pot (the "BRA CLAIMS N COINS —
-  ASSIST x2!" toast + coins flying to the wallet), or Higgsfield per Shot 7.
-- **Editor:** tight push-in on the pot, coins streak up to the wallet counter.
+### Shot 7 — Coin economy · 0:27–0:29  ◐
+- **Asset:** 🖼️ `17-coin-rush-board.png` (gold tokens on the pitch + coin
+  counters) and 🎬 `08-coin-rush-play.webm` establish the economy. ◐ The
+  coins-flying-to-wallet **payout** is the one remaining live grab — Coin Rush's
+  post-goal draft overlay blocks headless automation, so score once with Coin
+  Rush on and screen-record the ~2s "CLAIMS N COINS — ASSIST x2!" payout (or
+  generate it in Higgsfield from `17-coin-rush-board.png`).
+- **Editor:** open on the board (tokens visible), tight push-in on the pot,
+  coins streak up to the wallet counter.
 - **Caption:** **BANK THE POT. ASSIST ×2.** **Audio:** rising coin "ching."
 
 ### Shot 8 — Logo + CTA outro · 0:29–0:30+
-- **Asset:** reuse Shot 1 logo (crop or Higgsfield).
+- **Asset:** reuse `00-logo-tap-to-start.png` (or the tail/loop of
+  `06-logo-boot.webm`).
 - **Editor:** settle the logo, gold shimmer sweep, coin lands with a wink.
 - **Caption:** **SOCCER PARTY** → *Play free in your browser*
 - **Audio:** champion sting + final whistle.
