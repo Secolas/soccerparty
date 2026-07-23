@@ -22,6 +22,13 @@ frames / clips.
 | `11-flick-ball-travel.png` | Ball travelling after release |
 | `12-ball-in-motion.png` | Flicked ball crossing the pitch |
 | `inmatch-01..12-*.png` | **Full-size in-match boards for all 12 pitches** (GRASS, STREET, BEACH, NEON, ICE, COBBLE, CLAY, TURF, STONE, SAVANNA, AQUARIUM, WOOD) |
+| `00-logo-tap-to-start.png` | **Logo cold-open** — SOCCER/PARTY + TAP TO START |
+| `00b-loading-bar.png` | Boot loading bar |
+| `13-goal-celebration.png` | **GOAL! celebration** (confetti, tifo, crowd) |
+| `14-ability-curveball.png` | **Curveball** — bending Magnus trail |
+| `15-ability-cannon.png` | **Cannon** — full-length power beam |
+| `16-ability-laser-aim.png` | **Laser/sniper** aim line |
+| `17-coin-rush-board.png` | **Coin Rush** — gold tokens on the pitch + coin counters |
 
 ## Clips (`promo-video/`, webm)
 

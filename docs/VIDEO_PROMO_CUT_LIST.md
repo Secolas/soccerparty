@@ -112,19 +112,26 @@ Higgsfield image-to-video) · ⚠️ = gap, not yet captured (see "Gaps to fill"
 
 ---
 
-## Gaps to fill (only 4 short grabs)
+## Gaps — update (3 of 4 now captured)
 
-Everything else is captured. To finish the cut you need:
+All four storyboard gaps were driven and captured from the real game:
 
-1. **Logo card** (Shots 1 & 8) — crop from `01-menu-exhibition.png`, or a clean
-   TAP-TO-START screen-record (~2s). Higgsfield can animate the crop.
-2. **A goal** (Shot 3) — ~5s live screen-record of a net-bulge + celebration.
-3. **Abilities firing** (Shot 6) — 3× ~1.5s of Cannon / Curveball / Chip.
-4. **Coins → wallet** (Shot 7) — ~3s of a pot payout with the assist toast.
-
-All four are quick live screen-records on a phone/browser, or Higgsfield
-image-to-video from the stills we already have (prompts in
-`VIDEO_PROMO_AI_PROMPT.md`).
+1. ✅ **Logo card** (Shots 1 & 8) — `00-logo-tap-to-start.png`,
+   `00b-loading-bar.png`, clip `06-logo-boot.webm`.
+2. ✅ **Goal** (Shot 3) — `13-goal-celebration.png` ("GOAL! BRAZIL", confetti,
+   tifo), clip `05-goal-run.webm`. Scripted by reading the live ball/keeper
+   positions and finishing into an open corner.
+3. ✅ **Abilities firing** (Shot 6) — `14-ability-curveball.png` (bending
+   trail), `15-ability-cannon.png` (power beam), `16-ability-laser-aim.png`,
+   clip `07-abilities.webm`.
+4. ◐ **Coins → wallet** (Shot 7) — the economy is captured
+   (`17-coin-rush-board.png` shows tokens on the pitch + coin counters, plus
+   `08-coin-rush-play.webm`), but the coins-flying-to-wallet **payout
+   animation** is not: Coin Rush's post-goal ability-draft overlay blocks
+   headless automation, so the run can't reach a banked pot unattended. This is
+   the single remaining live grab — score once with Coin Rush on and
+   screen-record the ~2s "CLAIMS N COINS" payout, or generate it in Higgsfield
+   from `17-coin-rush-board.png`.
 
 ## Assembly quick-steps (CapCut / Premiere / Resolve)
 
