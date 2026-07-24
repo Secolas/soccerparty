@@ -9,10 +9,10 @@
       try{ if(!force && localStorage.getItem('ns_onboard_seen')) return; }catch(e){}
       if(document.getElementById('ns_onboard')) return;
       var STEPS=[
-        {img:'assets/generated/icon-app.png', t:'SOCCER PARTY', b:'Pixel flick-football. Score goals, win powers, party on the pitch.'},
+        {img:'assets/generated/icon-app.png', t:'SOCCER PARTY', b:'Pixel flick-football. Score goals, win abilities, party on the pitch.'},
         {img:'assets/generated/icon-flick.png', t:'FLICK TO SHOOT', b:'Drag back from the ball and let go — like a slingshot. The longer you pull, the harder the shot.'},
-        {img:'assets/generated/icon-striker.png', t:'SCORE & KEEP THE BALL', b:'Flick into the far goal. Clip one of YOUR players and you keep the turn — up to 3 flicks.'},
-        {img:'assets/generated/icon-cannon.png', t:'WIN ABILITIES', b:'Score to earn powers — cannons, big keepers, curveballs. Tap a slot on the scoreboard to see or pick one.'},
+        {img:'assets/generated/icon-striker.png', t:'SCORE & KEEP THE BALL', b:'Flick into the far goal. Hit one of YOUR players and you keep the turn — up to 3 flicks.'},
+        {img:'assets/generated/icon-cannon.png', t:'WIN ABILITIES', b:'Score to earn abilities — cannons, big keepers, curveballs. Tap a slot on the scoreboard to see or pick one.'},
         {img:'assets/generated/icon-trophy.png', t:'PICK A MODE', b:'Jump into Exhibition, chase the cup in Tournament, or brave STADIUM ROYALE — 9 hazard stadiums.'}
       ];
       var i=0;
