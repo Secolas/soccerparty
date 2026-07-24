@@ -40,7 +40,7 @@
       if(tutSeen(kind)) return;
       TUT={kind:kind, i:0, over:false, steps:tutScript(kind), nudged:false};
       if(kind==='exh'){ try{ winTarget=3; }catch(e){} }   // tutorial match is always first-to-3
-      _tutWireStart();
+      try{ _tutWireStart(); }catch(e){}
       tutRender();
     }
 
@@ -126,6 +126,7 @@
       _tutFx++;
       var t=(_tutFx%90)/90, pulse=0.5+0.5*Math.sin(_tutFx*0.09);
       ctx.save();
+      ctx.translate(OX,OY);   // draw() has already restored the pitch transform by here
       if(st.fx==='players'){
         // ring the player's outfield nails so it's obvious what to drag
         var shown=0;
@@ -157,4 +158,63 @@
         }
       }
       ctx.restore();
+    }
+
+    // --- scripted setup screen -------------------------------------------
+    // Until the tutorial is done the exhibition tab offers no choices: the
+    // match is fixed at Brazil (you, first flick) vs Argentina, 5-a-side,
+    // first-to-3, easy CPU, so every step of the script is reproducible.
+    function tutForceExhConfig(){
+      try{
+        var ci=function(nm){ for(var i=0;i<COUNTRIES.length;i++){ if(COUNTRIES[i]&&COUNTRIES[i].name===nm) return i; } return -1; };
+        var br=ci('Brazil'), ar=ci('Argentina');
+        if(br>=0) sel.red={i:br,rand:false};
+        if(ar>=0) sel.blue={i:ar,rand:false};
+        teamSize=5; formationName={red:defaultFormation(5),blue:defaultFormation(5)};
+        exhWin=3; cpuSel='cpu'; exhLevel='easy';
+      }catch(e){}
+    }
+
+    function buildTutorialSetup(host){
+      tutForceExhConfig();
+      host.appendChild(mk('div',FS(9,'#a9c94b')+'text-align:center;margin:6px 0 4px;letter-spacing:1px;','TUTORIAL'));
+      host.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;line-height:1.9;margin-bottom:8px;','Learn the flick in one short match. Everything is set up for you.'));
+      // the fixed match-up
+      var vs=mk('div','display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0 10px;');
+      try{
+        var _rp=COUNTRIES[sel.red.i], _bp=COUNTRIES[sel.blue.i];
+        var side=function(p,lab,col){ var w=mk('div','display:flex;flex-direction:column;align-items:center;gap:3px;');
+          try{ w.appendChild(royFlag(p,26,18)); }catch(e){}
+          w.appendChild(mk('div',FS(6,col),(p&&p.abbr)||'?'));
+          w.appendChild(mk('div',FS(5,'#8a7ea0'),lab)); return w; };
+        vs.appendChild(side(_rp,'YOU','#a9c94b'));
+        vs.appendChild(mk('div',FS(9,'#ffd84a'),'VS'));
+        vs.appendChild(side(_bp,'CPU','#e89a8a'));
+      }catch(e){}
+      host.appendChild(vs);
+      // read-only summary of the locked settings
+      var box=mk('div','display:flex;flex-direction:column;gap:4px;margin-bottom:9px;');
+      [['SQUAD','5 A-SIDE'],['GOALS TO WIN','3'],['OPPONENT','CPU · EASY'],['FIRST FLICK','YOU (BRAZIL)']].forEach(function(r){
+        var row=mk('div','display:flex;align-items:center;padding:6px 9px;border-radius:7px;background:#14101e;border:1px solid #2a2438;');
+        row.appendChild(mk('div',FS(6,'#8a7ea0')+'flex:1;text-align:left;',r[0]));
+        row.appendChild(mk('div',FS(6,'#f4e9c8')+'flex:0 0 auto;',r[1]));
+        box.appendChild(row);
+      });
+      host.appendChild(box);
+      var play=mk('button','margin-top:2px;width:100%;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:11px;cursor:pointer;','START TUTORIAL  ▸');
+      play.onclick=function(){
+        tutForceExhConfig();
+        teamKits.red=resolveSel('red'); teamKits.blue=resolveSel('blue',teamKits.red);
+        buildBoard(); buildCrowd();
+        mode='exhibition'; winTarget=3; matchLen=0; aiLevel='easy';
+        aiEnabled={red:false,blue:true};        // newMatch() sets current='red', so Brazil flicks first
+        pre.style.display='none'; newMatch();
+        try{ showVsIntro(); }catch(e){}
+        try{ setTimeout(function(){ tutStart('exh'); },2300); }catch(e){}
+      };
+      host.appendChild(play);
+      // never trap a player who does not want it
+      var skip=mk('div',FS(6,'#8a7ea0')+'text-align:center;margin-top:9px;padding:7px;cursor:pointer;letter-spacing:1px;','SKIP TUTORIAL');
+      skip.onclick=function(){ tutMarkSeen('exh'); host.innerHTML=''; buildExhibition(host); };
+      host.appendChild(skip);
     }
