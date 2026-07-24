@@ -56,6 +56,70 @@ conditions (our per-stadium pattern).
 Leaning: **Underwater** or **Moon** — both change how the *ball itself* feels,
 which reads as a bigger "new stadium" moment than another obstacle course.
 
+## Royale Map 2 — candidate arenas (Season 2)
+
+A second 9-arena Royale ladder. These extend the brainstorm above; each still
+needs a genuinely new physics/hazard idea + 3 signature conditions. Visual +
+music + ambience prototypes are being built first (as selectable exhibition
+pitches), with the Royale hazards layered on later.
+
+### 🌪️ STORM — "THUNDERDOME" (medium)
+- **Shifting wind** — a global wind vector that slowly rotates, curving every flight
+- **Puddles** — rain pools that drag / slow the ball
+- **Lightning** — telegraphed strikes that scatter the ball from the impact point
+- *New mechanic:* a dynamic, changing wind force (vs. underwater's static current lanes)
+- *Prototype:* visual + music ✅
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) shifting wind: a slowly-rotating,
+  gusting vector curves the ball in flight (only above ~0.8 speed, so it still settles);
+  (2) puddles: drag pools that slow the ball — 2/3/5 by easy/med/hard; (3) lightning: telegraphed
+  strikes that scatter the ball from the impact point — off on easy, med/hard by frequency+radius.
+
+### 🎰 CASINO — "HIGH ROLLER" (medium)
+- **Roulette turntable** — a spinning centre disc that imparts spin/curve when crossed
+- **Dice bumpers** — bounce the ball off at a random face-value angle
+- **Card-shuffle walls** — side walls that periodically slide / reshuffle
+- *New mechanic:* a rotational field that adds angular momentum
+- *Prototype:* visual + music ✅
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) roulette: ball rolling into the spinning
+  centre wheel is captured, spun ~1s, lands on a number N, then launched out. Easy = random
+  direction; med/hard = if a die shows N it rockets toward the opponent goal, else random (ball is
+  ejected outside the wheel + short cooldown so it can't re-capture in a loop). (2) dice (med+):
+  two 6-sided box objects drift around; the ball bounces off their faces and each hit tumbles the
+  die to the next face (+1), so you can knock a die toward the number you want. (3) shuffle walls
+  (hard): sliding wall blocks on the side rails that move and reshuffle; the ball bounces off them.
+
+### 🍬 CANDY — "SUGAR RUSH" (easy–medium)
+- **Jelly pads** — trampoline zones that amplify the bounce (restitution > 1)
+- **Caramel patches** — sticky floor that bogs the ball down
+- **Rolling gumballs** — big candy marbles drifting across as soft obstacles
+- *New mechanic:* super-bounce pads (amplify along the normal, unlike deflecting bumpers)
+- *Prototype:* visual + music ✅
+- *Hazard built:* ALL THREE ✅ (difficulty-scaled) — (1) jelly trampolines: rolling over a pad
+  launches the ball airborne (reuses chip physics) so it hops over players; (2) caramel patches:
+  sticky floor that bogs the ball down — 1/3/5 by easy/med/hard; (3) rolling gumballs: drifting
+  candy marbles the ball bounces off — 2/3/5 by easy/med/hard.
+
+### 🛰️ SPACE STATION — "ORBIT LAB" (hard)
+- **Magnet plates** — floor tiles that attract or repel, flipping polarity on a timer
+- **Airlock vents** — periodic suction pulling the ball toward a wall
+- **Rotating ring** — a slowly spinning corridor of walls
+- *New mechanic:* polarity-flipping magnetic zones (spatial, not the one-shot Magnet ability)
+- *Prototype:* visual + music ✅
+
+### 🛹 SKATEPARK — "THE HALF-PIPE" (medium)
+- **Tilting pitch** — the whole floor tips side to side; the ball rolls toward the low edge
+- **Quarter-pipe rails** — curved edges that ramp the ball back in
+- **Grind bars** — lanes that speed the ball up along them
+- *New mechanic:* a tilting-gravity floor — the biggest new "ball-feel" moment after Moon
+- *Prototype:* visual + music ✅ (tilt shown via a shifting light sheen; real tilt-gravity is the hazard)
+
+### 🌿 JUNGLE TEMPLE — "VINE RUINS" (medium–hard)
+- **Swinging vines** — catch the ball and sling it out on a pendulum arc
+- **Collapsing tiles** — floor that drops away, opening no-go gaps mid-rally
+- **Blow-dart statues** — periodic darts that knock the ball off-line
+- *New mechanic:* pendulum grab-and-release (catch → arc → fling)
+- *Prototype:* visual + music ✅ (decorative swinging vines; the grab-and-fling is the hazard)
+
 ## Other parking-lot notes
 - Draft polish: coin rerolls / an extra draft slot; possibly weight the player
   draft by rarity.
