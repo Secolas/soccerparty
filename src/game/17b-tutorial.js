@@ -60,7 +60,12 @@
     function tutHook(ev,arg){
       if(!tutActive()) return;
       var st=TUT.steps[TUT.i]; if(!st) return;
-      if(ev==='lose' && st.go==='keep'){ tutNudge('Missed — normally that hands the turn over. Kept it for you: flick again and clip one of YOUR players.'); return; }
+      if(ev==='lose'){
+        tutNudge(st.go==='keep'
+          ? 'Missed — normally that hands the turn over. Kept it for you: flick again and clip one of YOUR players.'
+          : 'Missed — the CPU waits until the tutorial is done. Flick again.');
+        return;
+      }
       if(ev==='goal' && arg && arg!=='red') return;           // only the player's goals count
       if(ev==='abopen' && st.go!=='abpick') return;
       if(ev===st.go) tutAdvance();
@@ -81,9 +86,11 @@
     function tutForceToss(){ try{ if(mode==='exhibition' && !tutSeen('exh')) return 'red'; }catch(e){} return null; }
     // Which card the ability drop should badge as the guided pick.
     function tutRecommendAb(){ if(!tutActive()) return null; var st=TUT.steps[TUT.i]; return (st&&st.rec)?st.rec:null; }
-    // On the KEEP step the turn may not pass — the player retries until they
-    // clip their own player, so the lesson cannot be skipped by missing.
-    function tutBlockTurnLoss(){ if(!tutActive()) return false; var st=TUT.steps[TUT.i]; return !!(st&&st.go==='keep'); }
+    // The exhibition tutorial keeps the ball with the player for its whole run:
+    // the CPU only gets a turn once every step is finished (or the tutorial is
+    // skipped). That also means missing never skips the KEEP lesson.
+    function tutHoldsTurn(){ return tutActive() && TUT.kind==='exh'; }
+    function tutBlockTurnLoss(){ return tutHoldsTurn(); }
     // Only the action the current step asks for is allowed, so the player
     // cannot run ahead of the script (kick off early, flick during an
     // explainer) and desync the coach from the match.
