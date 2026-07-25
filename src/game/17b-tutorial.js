@@ -26,9 +26,9 @@
       }
       return [
         {id:'boards', t:'THE TWO BOARDS', b:'YOUR board is the one at the BOTTOM. Your opponent is at the TOP. Each board shows that team’s score and its ability slots.', go:'tap', hl:['ns_bot','ns_top']},
-        {id:'flickmeter', t:'YOUR FLICKS LEFT', b:'The boot icon on your board counts the flicks you have left this turn — three per turn.', go:'tap', hl:['ns_flick_red','ns_flicknum_red']},
         {id:'move',  t:'MOVE YOUR PLAYERS', b:'Drag one of YOUR players to a better spot before kickoff.', go:'move', fx:'players'},
         {id:'kick',  t:'KICK OFF',          b:'Line-up ready? Hit PLAY to start the match.', go:'play'},
+        {id:'flickmeter', t:'YOUR FLICKS LEFT', b:'The boot icon on your board counts the flicks you have left this turn — three per turn.', go:'tap', hl:['ns_flick_red','ns_flicknum_red']},
         {id:'flick', t:'FLICK TO SHOOT',    b:'Drag BACK from the ball and let go — like a slingshot. The longer you pull, the harder it goes.', go:'flick', fx:'ball'},
         {id:'keep',  t:'KEEP YOUR TURN',    b:'Hit one of YOUR OWN players and you keep the turn — up to 3 flicks. Miss, and the turn passes over.', go:'keep', fx:'ball'},
         {id:'score', t:'NOW SCORE',         b:'Put it in the far goal. First to 3 goals wins the match.', go:'goal', fx:'goal'},
