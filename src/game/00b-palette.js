@@ -3,6 +3,12 @@
     // startRoyaleArena sets it, then clears it one frame later and re-renders.
     var _royScoreDefer=false;
 
+    // Announcement text uses the game palette, never the team/country colour:
+    // a goal, a win or a turn prompt should look the same whoever is playing.
+    // Team colour still appears as trim (banner bars, active-board glow, kits).
+    var TEXT_MAIN='#f4e9c8';     // headline/body text on dark panels
+    var TEXT_ACCENT='#a9c94b';   // labels and prompts
+
     // ================= UI COLOR TOKENS =================
     // Single source of truth for the game's menu/overlay palette. Every panel
     // (onboarding, HOW TO PLAY, ability draft, results, achievements, shop)
