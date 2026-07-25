@@ -2,8 +2,15 @@
 // The core game (runtime + fonts) is inlined in index.html, so caching the
 // shell makes the game playable offline; game art under assets/ is cached
 // on first fetch so it's available offline on subsequent launches.
-var CACHE = 'soccerparty-v1';
-var SHELL = ['./', 'index.html', 'manifest.json', 'assets/generated/icon-app.png'];
+var CACHE = 'soccerparty-v2';
+var SHELL = [
+  './', 'index.html', 'manifest.json',
+  // React is vendored (no CDN), so the app cannot boot without these.
+  'assets/vendor/react.production.min.js',
+  'assets/vendor/react-dom.production.min.js',
+  'assets/generated/icon-app.png',
+  'assets/generated/icon-app-512.png'
+];
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();
@@ -39,16 +46,20 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // Everything else same-origin: cache-first, then network (and cache it).
+  // Everything else same-origin: stale-while-revalidate. Serve the cached copy
+  // immediately (fast, works offline) and quietly refresh it in the background,
+  // so regenerated art is picked up on the next launch instead of being pinned
+  // for ever by a plain cache-first.
   e.respondWith(
     caches.match(req).then(function (hit) {
-      return hit || fetch(req).then(function (res) {
-        if (res && res.status === 200) {
+      var net = fetch(req).then(function (res) {
+        if (res && res.status === 200 && res.type === 'basic') {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(req, copy); });
         }
         return res;
       }).catch(function () { return hit; });
+      return hit || net;
     })
   );
 });

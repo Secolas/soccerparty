@@ -14,6 +14,7 @@
 //   3. the canvas actually renders (non-blank pixels)
 //   4. the tap-gate, menu and a real match are reachable
 //   5. a flick is registered by the game (the flick counter ticks down)
+//   6. the PWA installs and the game still boots with the network cut
 //
 // Usage: node tools/smoke.mjs [--headed] [--slow] [--shots <dir>]
 //   CHROMIUM_PATH=... to use a preinstalled browser.
@@ -260,6 +261,57 @@ try {
     await page.waitForTimeout(400);
   }
   await shot('after-flick');
+
+  // 6. PWA: the manifest has to be installable and the service worker has to
+  //    make the game boot offline. This only became possible once React stopped
+  //    being fetched from a CDN, so it is worth guarding — it would regress
+  //    silently the moment anything re-introduced a runtime download.
+  const mf = await page.evaluate(async () => {
+    const link = document.querySelector('link[rel=manifest]');
+    if (!link) return { ok: false, why: 'no <link rel=manifest>' };
+    try {
+      const res = await fetch(link.href);
+      if (!res.ok) return { ok: false, why: 'manifest ' + res.status };
+      const m = await res.json();
+      const big = (m.icons || []).some(i => parseInt(i.sizes) >= 192);
+      const maskable = (m.icons || []).some(i => (i.purpose || '').includes('maskable'));
+      return { ok: true, name: m.name, display: m.display, big, maskable };
+    } catch (e) { return { ok: false, why: String(e) }; }
+  });
+  if (!mf.ok) problems.push(`manifest not usable: ${mf.why}`);
+  else {
+    if (mf.display !== 'standalone') problems.push(`manifest display is "${mf.display}", expected standalone`);
+    if (!mf.big) problems.push('manifest has no icon >= 192px — browsers will not offer to install it');
+    if (!mf.maskable) problems.push('manifest has no maskable icon — Android will letterbox the home-screen icon');
+  }
+
+  const sw = await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return 'unsupported';
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(r => setTimeout(() => r(null), 15000)),
+    ]).catch(() => null);
+    return reg ? (reg.active ? 'active' : 'not-active') : 'never-ready';
+  });
+  if (sw !== 'active') problems.push(`service worker ${sw} — the game will not work offline`);
+
+  // cut the network and make sure it still starts
+  await page.waitForTimeout(1500);            // let the precache settle
+  await page.context().setOffline(true);
+  let offlineBooted = false;
+  try {
+    await page.reload({ waitUntil: 'load', timeout: 25000 });
+    offlineBooted = await page.waitForFunction(
+      () => /TAP TO START/.test(document.body.innerText || ''), { timeout: 20000 }
+    ).then(() => true).catch(() => false);
+  } catch (e) { /* reported below */ }
+  const offlineReact = offlineBooted
+    ? await page.evaluate(() => !!(window.React && window.ReactDOM)).catch(() => false)
+    : false;
+  if (!offlineBooted) problems.push('game did not boot with the network offline');
+  else if (!offlineReact) problems.push('offline boot is missing React — it is not being precached');
+  await shot('offline');
+  await page.context().setOffline(false);
 } catch (e) {
   problems.push(`harness: ${e.message}`);
 } finally {
@@ -276,4 +328,4 @@ if (problems.length) {
   for (const p of problems) console.error('  - ' + p);
   process.exit(1);
 }
-console.log('smoke OK — booted, rendered, started a match, flicked, zero external requests');
+console.log('smoke OK — booted, rendered, started a match, flicked, booted again offline, zero external requests');
