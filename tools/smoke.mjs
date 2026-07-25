@@ -15,7 +15,7 @@
 //   4. the tap-gate, menu and a real match are reachable
 //   5. a flick is registered by the game (the flick counter ticks down)
 //
-// Usage: node tools/smoke.mjs [--headed] [--shots <dir>]
+// Usage: node tools/smoke.mjs [--headed] [--slow] [--shots <dir>]
 //   CHROMIUM_PATH=... to use a preinstalled browser.
 
 import { createRequire } from 'node:module';
@@ -37,6 +37,9 @@ import { mkdirSync, createReadStream, statSync } from 'node:fs';
 import http from 'node:http';
 
 const HEADED = process.argv.includes('--headed');
+// --slow throttles the CPU to emulate a slow CI runner. Fixed sleeps used to make
+// this test pass locally and fail in CI; run with --slow to catch that here.
+const SLOW = process.argv.includes('--slow');
 const shotsIx = process.argv.indexOf('--shots');
 const SHOTS = shotsIx > -1 ? process.argv[shotsIx + 1] : null;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
@@ -62,6 +65,10 @@ const PORT = server.address().port;
 const INDEX = `http://127.0.0.1:${PORT}/index.html`;
 
 const problems = [];
+const waitFor = async (fn, failMsg, timeout = 20000) => {
+  try { await page.waitForFunction(fn, { timeout }); return true; }
+  catch (e) { if (failMsg) problems.push(failMsg); return false; }
+};
 const external = [];
 let step = 0;
 
@@ -81,6 +88,10 @@ await page.addInitScript(() => {
     localStorage.setItem("sp_first_exh","1");
   } catch (e) {}
 });
+if (SLOW) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+}
 const shot = async name => {
   if (!SHOTS) return;
   await page.screenshot({ path: path.join(SHOTS, `${String(++step).padStart(2, '0')}-${name}.png`) });
@@ -124,7 +135,13 @@ try {
 
   // dismiss it with a real trusted click in the middle of the screen
   await page.mouse.click(210, 440);
-  await page.waitForTimeout(3000);
+  // Wait for the menu rather than sleeping: CI runners are much slower than a
+  // dev machine, and fixed sleeps here are what made the first CI run flaky.
+  await waitFor(
+    () => [...document.querySelectorAll('button')]
+      .some(b => /^(PLAY|START TUTORIAL|START CUP|START ROYALE)\b/i.test((b.textContent || '').trim())
+                 && b.offsetParent !== null),
+    'menu never appeared after the tap-gate', 30000);
   await shot('menu');
 
   // 2. React must be the vendored copy, not a CDN download
@@ -144,59 +161,103 @@ try {
 
   // 4. into a match: drop the onboarding carousel, hit PLAY / START TUTORIAL
   await page.evaluate(() => { const o = document.getElementById('ns_onboard'); if (o) o.remove(); });
+  await clickText(/^2 PLAYERS$/);      // no CPU: whoever wins the toss, the game waits for a human
+  await page.waitForTimeout(300);
   const started = await clickText(/^(PLAY|START TUTORIAL|START CUP|START ROYALE)\b/);
   if (!started) problems.push('no PLAY/START button on the menu');
-  await page.waitForTimeout(3000);
 
+  await waitFor(() => !!document.getElementById('ns_scorebug'),
+    'scorebug missing after starting a match', 30000);
+  // the VS intro sits over the pitch for a couple of seconds
+  await waitFor(() => !document.getElementById('ns_vs'), null, 12000);
   await page.evaluate(() => { const v = document.getElementById('ns_vs'); if (v) v.remove(); });
-  await page.waitForTimeout(500);
   await shot('setup');
 
-  if (!await page.evaluate(() => !!document.getElementById('ns_scorebug')))
-    problems.push('scorebug missing after starting a match');
-
-  // kick off (setup -> play), then sit through the coin toss
+  // kick off: wait for the button, click it, then let the coin toss play out
+  await waitFor(() => {
+    const s = document.getElementById('ns_start');
+    return s && s.offsetParent !== null;
+  }, 'kickoff button never became clickable', 20000);
   await page.evaluate(() => { const s = document.getElementById('ns_start'); if (s) s.click(); });
-  await page.waitForTimeout(5000);
+
+  // the flick counter only shows once it is the player's turn and play has begun
+  await waitFor(() => {
+    const n = document.getElementById('ns_flicknum_red');
+    return n && n.offsetParent !== null;
+  }, null, 30000);
   await shot('play');
 
-  // 5. a flick must register. The game's state lives inside componentDidMount,
-  //    so assert on what the player can see: the flick counter ticking down.
-  const before = await page.evaluate(() => {
-    const n = document.getElementById('ns_flicknum_red');
-    return n && n.offsetParent !== null ? n.textContent.trim() : null;
-  });
-  if (before === null) {
-    problems.push('flick counter not visible — never reached a playable turn');
+  // 5. a flick must register. The game state lives inside componentDidMount, so
+  //    assert on what a player can see. Two things matter for reliability: the
+  //    ball has to be AT REST on our turn (the game ignores a grab while it is
+  //    moving), and the counter has to be sampled while the ball is live (it
+  //    resets to full once the turn passes).
+  const ready = await page.evaluate(() => new Promise(res => {
+    const c = document.getElementById('ns_game');
+    const g = c.getContext('2d');
+    // the ball is cream: bright and warm, unlike the pure-white pitch markings
+    const findBall = () => {
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      let sx = 0, sy = 0, n = 0;
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+        const i2 = (y * c.width + x) * 4, R = d[i2], G = d[i2 + 1], B = d[i2 + 2];
+        if (R > 225 && G > 210 && B > 140 && B < 215 && R - B > 30) { sx += x; sy += y; n++; }
+      }
+      return n > 4 ? { x: sx / n, y: sy / n } : null;
+    };
+    let last = null, stable = 0;
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      const n = ['ns_flicknum_red', 'ns_flicknum_blue']
+        .map(id => document.getElementById(id))
+        .find(e => e && e.offsetParent !== null);
+      const myTurn = !!n;
+      if (n) window.__turnId = n.id;
+      const b = findBall();
+      if (myTurn && b && last && Math.abs(b.x - last.x) < 0.7 && Math.abs(b.y - last.y) < 0.7) stable++;
+      else stable = 0;
+      last = b;
+      if (stable >= 4) { clearInterval(iv); res({ ok: true, bx: b.x, by: b.y, count: n.textContent.trim(), id: n.id }); }
+      else if (Date.now() - t0 > 45000) { clearInterval(iv); res({ ok: false, sawTurn: myTurn, sawBall: !!b }); }
+    }, 120);
+  }));
+
+  if (!ready.ok) {
+    problems.push(`never reached an idle player turn (my turn seen: ${ready.sawTurn}, ball found: ${ready.sawBall})`);
   } else {
-    const box = await page.evaluate(() => {
+    const box = await page.evaluate(([bx, by]) => {
       const c = document.getElementById('ns_game');
       const r = c.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const cx = r.left + (bx / c.width) * r.width;
+      const cy = r.top + (by / c.height) * r.height;
       const top = document.elementFromPoint(cx, cy);
       return { cx, cy, blockedBy: (top === c) ? null : (top ? (top.id || top.tagName) : 'nothing') };
-    });
+    }, [ready.bx, ready.by]);
     // an overlay sitting over the pitch is a real bug class in its own right
     if (box.blockedBy) problems.push(`pitch is covered by #${box.blockedBy} — taps cannot reach the ball`);
-    // Watch the counter while the ball is live. Sampling only after it settles
-    // is unreliable: once the turn passes the counter resets to full again.
-    const watch = page.evaluate(start => new Promise(res => {
+
+    const watch = page.evaluate(([start, id]) => new Promise(res => {
       let dropped = false;
       const t0 = Date.now();
       const iv = setInterval(() => {
-        const n = document.getElementById('ns_flicknum_red');
+        const n = document.getElementById(id);
         if (n && n.textContent.trim() !== start) dropped = true;
-        if (dropped || Date.now() - t0 > 4000) { clearInterval(iv); res(dropped); }
-      }, 60);
-    }), before);
+        if (dropped || Date.now() - t0 > 8000) { clearInterval(iv); res(dropped); }
+      }, 50);
+    }), [ready.count, ready.id]);
 
+    // Drag deliberately: a fast multi-step move can outrun a loaded main thread.
     await page.mouse.move(box.cx, box.cy);
     await page.mouse.down();
-    await page.mouse.move(box.cx, box.cy + 70, { steps: 8 });
+    for (let k = 1; k <= 7; k++) {
+      await page.mouse.move(box.cx, box.cy + k * 10);
+      await page.waitForTimeout(40);
+    }
+    await page.waitForTimeout(120);
     await page.mouse.up();
 
-    if (!await watch) problems.push(`flick did not register (counter never moved off ${before})`);
-    await page.waitForTimeout(600);
+    if (!await watch) problems.push(`flick did not register (counter never moved off ${ready.count})`);
+    await page.waitForTimeout(400);
   }
   await shot('after-flick');
 } catch (e) {
