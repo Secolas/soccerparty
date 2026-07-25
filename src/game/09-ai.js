@@ -46,7 +46,8 @@
     function aiSteerTarget(){ var gx=W/2; if(aiLevel==='easy') return gx; var gk=null; for(var i=0;i<nails.length;i++){ if(nails[i].team!==current && nails[i].goalie){ gk=nails[i]; break; } } if(gk){ var off=GOAL_W*0.30; gx=(gk.x<=W/2)?(W/2+off):(W/2-off); gx=Math.max(W/2-GOAL_W/2+COIN_R, Math.min(W/2+GOAL_W/2-COIN_R, gx)); } return gx; }
     // CHIP: loft the shot over a defender/keeper sitting in the lane just ahead of the ball.
     function aiMaybeChip(){ if(Math.hypot(coin.vx,coin.vy)<1.2) return; if(_aiChipRoll<0) return; var goalY=(current==='red')?NET_DEPTH:(H-NET_DEPTH); var toGoal=(current==='red')?(coin.vy<-0.3):(coin.vy>0.3); if(!toGoal) return; var dg=Math.abs(coin.y-goalY); if(dg>95||dg<32) return; var blocked=false; for(var i=0;i<nails.length;i++){ var n=nails[i]; if(n.team===current) continue; var ahead=(current==='red')?(n.y<coin.y):(n.y>coin.y); if(ahead && Math.abs(n.y-coin.y)<72 && Math.abs(n.x-coin.x)<NAIL_R+COIN_R+11){ blocked=true; break; } } if(!blocked) return; if(_aiChipRoll===0){ var pr=(aiLevel==='hard')?0.95:(aiLevel==='med'?0.75:0.45); _aiChipRoll=(Math.random()<pr)?1:-1; } if(_aiChipRoll===1){ chipUsed=true; coin.air=22; coin.air0=22; try{sfxGuided();}catch(e){} try{ setStatus(((teamKits[current]&&teamKits[current].abbr)||'CPU')+' CHIP!'); }catch(e){} } }
-    function maybeAI(delta){ if(pen&&pen.active&&pen.step!=='aim'){ aiPending=false; return; }
+    function maybeAI(delta){ try{ if(tutHoldsTurn()){ aiPending=false; return; } }catch(_th){}
+      if(pen&&pen.active&&pen.step!=='aim'){ aiPending=false; return; }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.guided&&steerBudget>0){ steerHold=aiSteerTarget(); }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
       if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; return; }
