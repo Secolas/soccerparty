@@ -46,7 +46,7 @@
       tutRender();
     }
 
-    function tutStop(){ if(!TUT) return; var k=TUT.kind; TUT.over=true; tutMarkSeen(k); TUT=null; try{ tutHighlight(null); }catch(e){} var p=el('ns_tutpanel'); if(p&&p.parentNode) p.parentNode.removeChild(p); }
+    function tutStop(){ if(!TUT) return; var k=TUT.kind; TUT.over=true; tutMarkSeen(k); TUT=null; try{ tutHighlight(null); }catch(e){} try{ var _sb=el('ns_start'); if(_sb){ _sb.style.pointerEvents='auto'; _sb.style.opacity='1'; } }catch(e){} var p=el('ns_tutpanel'); if(p&&p.parentNode) p.parentNode.removeChild(p); }
 
     function tutAdvance(){
       if(!tutActive()) return;
@@ -84,6 +84,31 @@
     // On the KEEP step the turn may not pass — the player retries until they
     // clip their own player, so the lesson cannot be skipped by missing.
     function tutBlockTurnLoss(){ if(!tutActive()) return false; var st=TUT.steps[TUT.i]; return !!(st&&st.go==='keep'); }
+    // Only the action the current step asks for is allowed, so the player
+    // cannot run ahead of the script (kick off early, flick during an
+    // explainer) and desync the coach from the match.
+    //   kind: 'drag'  moving a player in setup
+    //         'flick' pulling back on the ball
+    //         'play'  the kickoff button
+    function tutInputBlocked(kind){
+      if(!tutActive()) return false;
+      var g=(TUT.steps[TUT.i]||{}).go;
+      if(g==='tap'||g==='abpick') return true;              // read it first
+      if(kind==='drag')  return !(g==='move'||g==='play');
+      if(kind==='flick') return !(g==='flick'||g==='keep'||g==='goal');
+      if(kind==='play')  return (g!=='play');
+      return false;
+    }
+
+    // Tell the player why nothing happened, at most once a second.
+    var _tutBlkAt=0;
+    function tutBlockedHint(){
+      var now=0; try{ now=(typeof performance!=='undefined'&&performance.now)?performance.now():0; }catch(e){}
+      if(now-_tutBlkAt<1000) return; _tutBlkAt=now;
+      var st=tutActive()?TUT.steps[TUT.i]:null; if(!st) return;
+      tutNudge((st.go==='tap'||st.go==='abpick')?'Finish this step first.':'Not yet — do the step above.');
+    }
+
     function tutNudge(msg){
       if(!tutActive()) return;
       TUT.nudged=true;
@@ -121,6 +146,7 @@
       if(_g) _g.style.display=(st.go==='tap')?'block':'none';
       tutHighlight(st.hl);
       tutPlace();
+      try{ var _sb=el('ns_start'); if(_sb){ var _blk=tutInputBlocked('play'); _sb.style.pointerEvents=_blk?'none':'auto'; _sb.style.opacity=_blk?'0.45':'1'; } }catch(e){}
     }
 
     // Ring the DOM element a step is talking about, and clear the previous one.
