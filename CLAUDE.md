@@ -48,10 +48,36 @@ sorting after it lands outside the shared scope and silently breaks.
 1. Edit files under `src/`
 2. Rebuild: `node tools/build-game.mjs`
 3. Sanity-check: `node tools/build-game.mjs --check`
-4. Commit **both** the `src/` changes and the regenerated `index.html`
+4. Smoke-test: `node tools/smoke.mjs` (see below)
+5. Commit **both** the `src/` changes and the regenerated `index.html`
 
 CI (`.github/workflows/verify-build.yml`) fails any push where `index.html`
 doesn't match `src/`, so a stale or hand-edited `index.html` can't slip in.
+
+### Smoke test
+
+`--check` only proves `index.html` is in sync — it cannot see a game that
+renders a blank canvas, points a tutorial step at a hidden element, or stops
+booting. `node tools/smoke.mjs` boots the built page in headless Chromium,
+clicks through the tap-gate and menu into a match, flicks the ball, and fails on
+any page error **or any external network request**. It runs in CI as the
+`smoke` job and uploads screenshots on failure.
+
+- `--shots <dir>` writes a screenshot per stage (handy for eyeballing layout)
+- `--headed` watches it run
+- `CHROMIUM_PATH=...` uses a preinstalled browser instead of Playwright's
+
+### Vendored React — do not reintroduce a CDN
+
+The dc runtime downloads React + ReactDOM from unpkg.com unless
+`window.React`/`window.ReactDOM` already exist. That made the game unloadable
+when the CDN was blocked, added two blocking round-trips before first paint,
+ruled out offline use, and made headless testing impossible. `src/shell.html`
+therefore loads `assets/vendor/react*.production.min.js` before the runtime, so
+the game makes **zero external requests**. The smoke test enforces this.
+
+Refresh the pinned copies with `node tools/vendor-react.mjs` — it pulls them
+from npm and verifies them against the SRI hashes the runtime pins.
 
 ## Deployment
 
