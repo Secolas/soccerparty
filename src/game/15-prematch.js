@@ -84,7 +84,9 @@
       _tabII(tHelp,'assets/generated/icon-tab-howto.png','HOW TO');
       _tabII(tTrophy,'assets/generated/icon-tab-stars.png','AWARDS');
       tSettings.style.display='flex'; tSettings.style.flexDirection='column'; tSettings.style.alignItems='center'; tSettings.style.justifyContent='center'; tSettings.style.gap='3px'; tSettings.style.padding='5px 1px'; (function(){ var _ss=document.createElement('span'); _ss.textContent='SETTINGS'; _ss.style.cssText="font-family:'Press Start 2P',monospace;font-size:5px;letter-spacing:0.3px;line-height:1.2;text-align:center;color:#8a7ea0;"; tSettings.appendChild(_ss); })();
-      tabs.append(tExh,tTour,tRoyale,tPrac,tHelp,tTrophy,tSettings); pad.appendChild(tabs); pad.appendChild(body);
+      tabs.append(tExh,tTour,tRoyale,tPrac,tHelp,tTrophy,tSettings); pad.appendChild(tabs);
+      try{ if(CHALLENGE) chBanner(pad); }catch(e){}
+      pad.appendChild(body);
       styleTabs(); renderBody();
       if(_modesJustUnlocked){ _modesJustUnlocked=false; setTimeout(function(){ try{ spUnlockToast('ROYALE & TOURNAMENT UNLOCKED','New modes are on the menu'); }catch(e){} },500); }
       pre.appendChild(pad);
