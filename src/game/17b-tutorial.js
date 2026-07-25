@@ -25,13 +25,15 @@
         ];
       }
       return [
+        {id:'boards', t:'THE TWO BOARDS', b:'YOUR board is the one at the BOTTOM. Your opponent is at the TOP. Each board shows that team’s score and its ability slots.', go:'tap', hl:['ns_bot','ns_top']},
+        {id:'flickmeter', t:'YOUR FLICKS LEFT', b:'The boot icon on your board counts the flicks you have left this turn — three per turn.', go:'tap', hl:['ns_flick_red','ns_flicknum_red']},
         {id:'move',  t:'MOVE YOUR PLAYERS', b:'Drag one of YOUR players to a better spot before kickoff.', go:'move', fx:'players'},
         {id:'kick',  t:'KICK OFF',          b:'Line-up ready? Hit PLAY to start the match.', go:'play'},
         {id:'flick', t:'FLICK TO SHOOT',    b:'Drag BACK from the ball and let go — like a slingshot. The longer you pull, the harder it goes.', go:'flick', fx:'ball'},
         {id:'keep',  t:'KEEP YOUR TURN',    b:'Hit one of YOUR OWN players and you keep the turn — up to 3 flicks. Miss, and the turn passes over.', go:'keep', fx:'ball'},
         {id:'score', t:'NOW SCORE',         b:'Put it in the far goal. First to 3 goals wins the match.', go:'goal', fx:'goal'},
-        {id:'ab',    t:'YOU EARNED AN ABILITY', b:'Score and you get a drop of three — you keep ONE. Pick the one you want.', go:'abpick'},
-        {id:'abuse', t:'USE YOUR ABILITY',  b:'It sits in a slot on your scoreboard. Tap the slot to read it, or to switch it on and off.', go:'tap'},
+        {id:'ab',    t:'YOU EARNED AN ABILITY', b:'A drop of three — you keep ONE. Take SNIPER (badged PICK THIS): it draws a long aim line, so lining up a shot is far easier.', go:'abpick', rec:'sniper'},
+        {id:'abuse', t:'USE YOUR ABILITY',  b:'It now sits in a slot on YOUR board. Tap that slot to read it, or to switch it on and off.', go:'tap', hl:['ns_slot_red_0']},
         {id:'win',   t:'FINISH THE JOB',    b:'That is everything. Score 3 goals to take the win — good luck!', go:'tap'}
       ];
     }
@@ -44,7 +46,7 @@
       tutRender();
     }
 
-    function tutStop(){ if(!TUT) return; var k=TUT.kind; TUT.over=true; tutMarkSeen(k); TUT=null; var p=el('ns_tutpanel'); if(p&&p.parentNode) p.parentNode.removeChild(p); }
+    function tutStop(){ if(!TUT) return; var k=TUT.kind; TUT.over=true; tutMarkSeen(k); TUT=null; try{ tutHighlight(null); }catch(e){} var p=el('ns_tutpanel'); if(p&&p.parentNode) p.parentNode.removeChild(p); }
 
     function tutAdvance(){
       if(!tutActive()) return;
@@ -58,7 +60,7 @@
     function tutHook(ev,arg){
       if(!tutActive()) return;
       var st=TUT.steps[TUT.i]; if(!st) return;
-      if(ev==='lose' && st.go==='keep'){ tutNudge('Turn lost — that is the cost of missing. Try again: clip one of YOUR players.'); return; }
+      if(ev==='lose' && st.go==='keep'){ tutNudge('Missed — normally that hands the turn over. Kept it for you: flick again and clip one of YOUR players.'); return; }
       if(ev==='goal' && arg && arg!=='red') return;           // only the player's goals count
       if(ev==='abopen' && st.go!=='abpick') return;
       if(ev===st.go) tutAdvance();
@@ -75,6 +77,13 @@
       }catch(e){ return null; }
     }
 
+    // The tutorial match always kicks off with the player (Brazil).
+    function tutForceToss(){ try{ if(mode==='exhibition' && !tutSeen('exh')) return 'red'; }catch(e){} return null; }
+    // Which card the ability drop should badge as the guided pick.
+    function tutRecommendAb(){ if(!tutActive()) return null; var st=TUT.steps[TUT.i]; return (st&&st.rec)?st.rec:null; }
+    // On the KEEP step the turn may not pass — the player retries until they
+    // clip their own player, so the lesson cannot be skipped by missing.
+    function tutBlockTurnLoss(){ if(!tutActive()) return false; var st=TUT.steps[TUT.i]; return !!(st&&st.go==='keep'); }
     function tutNudge(msg){
       if(!tutActive()) return;
       TUT.nudged=true;
@@ -110,6 +119,35 @@
       if(_b) _b.textContent=st.b;
       if(_s){ _s.style.display='none'; _s.textContent=''; }
       if(_g) _g.style.display=(st.go==='tap')?'block':'none';
+      tutHighlight(st.hl);
+      tutPlace();
+    }
+
+    // Ring the DOM element a step is talking about, and clear the previous one.
+    var _tutHl=[];
+    function tutHighlight(ids){
+      for(var i=0;i<_tutHl.length;i++){ var o=_tutHl[i]; try{ o.el.style.outline=o.ol; o.el.style.outlineOffset=o.oo; o.el.style.borderRadius=o.br; }catch(e){} }
+      _tutHl=[];
+      if(!ids||!ids.length) return;
+      for(var k=0;k<ids.length;k++){
+        var e2=el(ids[k]); if(!e2) continue;
+        _tutHl.push({el:e2, ol:e2.style.outline, oo:e2.style.outlineOffset, br:e2.style.borderRadius});
+        e2.style.outline='2px solid #ffd84a'; e2.style.outlineOffset='2px'; e2.style.borderRadius='6px';
+      }
+    }
+
+    // Keep the coach panel clear of the ball: it sits at the bottom, but hops to
+    // the top while the ball is in the lower half, and hides entirely while the
+    // ability picker (a full-screen overlay) is open.
+    function tutPlace(){
+      var p=el('ns_tutpanel'); if(!p) return;
+      var drafting=!!el('ns_abdraft');
+      p.style.display=drafting?'none':'block';
+      if(drafting) return;
+      var low=false;
+      try{ low=(typeof coin!=='undefined'&&coin&&typeof phase!=='undefined'&&phase!=='setup'&&coin.y>H*0.55); }catch(e){}
+      if(low){ p.style.bottom='auto'; p.style.top='8px'; }
+      else { p.style.top='auto'; p.style.bottom='8px'; }
     }
 
     function _tutWireStart(){
@@ -122,6 +160,7 @@
     // --- canvas hint animation (game coords, drawn at the end of draw()) --
     function drawTutFx(now){
       if(!tutActive()) return;
+      try{ tutPlace(); }catch(e){}
       var st=TUT.steps[TUT.i]; if(!st||!st.fx) return;
       _tutFx++;
       var t=(_tutFx%90)/90, pulse=0.5+0.5*Math.sin(_tutFx*0.09);
