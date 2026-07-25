@@ -32,6 +32,16 @@
 </div>
   <div id="__bundler_loading">Unpacking...</div>
 
+  <!-- React/ReactDOM are vendored under assets/vendor so the game never fetches
+       them from a CDN at run time. The dc runtime skips its own unpkg download
+       when window.React and window.ReactDOM already exist (loadReactUmd), and
+       these classic scripts run before its DOMContentLoaded bootstrap, so the
+       game boots with no external request — works offline and behind blocked
+       CDNs. The files are byte-identical to the CDN copies (SRI verified).
+       Refresh with: node tools/vendor-react.mjs -->
+  <script src="assets/vendor/react.production.min.js"></script>
+  <script src="assets/vendor/react-dom.production.min.js"></script>
+
   <script>
     
 document.addEventListener('DOMContentLoaded', async function() {
