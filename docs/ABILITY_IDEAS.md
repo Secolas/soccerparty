@@ -50,6 +50,25 @@ Rarity scale: COMMON · UNCOMMON · RARE · EPIC · LEGENDARY
 | **Lob Shot / Chip** | 🪂 | RARE | Flick then tap to hop the ball over the next player it would hit (faked height + shadow). | Top-down height fake; keeper can still claim on landing |
 | **Market** | 🛒 | UNCOMMON | Economy mode only: currency you claim is doubled. | Filter out of the draft pool unless Coin Rush is on |
 
+## Season 3 batch (2026 — not yet built)
+
+New ideas to seed the Season 3 draft pool. Several hook directly into the new
+Royale arenas proposed in [`SEASON_3_IDEAS.md`](./SEASON_3_IDEAS.md); all obey
+the no-currency / hooks-existing-systems rule.
+
+| Name | Icon | Rarity | Effect | Notes / synergies |
+|---|---|---|---|---|
+| **Grappler** | 🪝 | RARE | Your flick can latch onto one of your own players and slingshot off it, releasing at +35% speed (manual aim). | New tether hook; Bungee Park arena; Sticky, Captain |
+| **Homing Shot** | 🎯 | EPIC | After crossing midfield your shot curves gently toward the goal's *current* centre — tracks a moving target. | Railyard's sliding goals; Sniper, Curveball |
+| **Decoy Run** | 🏃💨 | RARE | Your flick spawns a ghost decoy ball that peels toward a corner and draws the keeper; the real ball launches a half-beat later. | Hall of Mirrors; distinct from Feint's aim-lie |
+| **Trailblazer** | 🔆 | EPIC | Your shot leaves a fading speed-lane; your NEXT flick this possession accelerates +25% while riding it. | The Circuit arena; Playmaker, Tiki-Taka |
+| **Time Out** | ⏱️ | EPIC | Once per match, freeze ALL arena hazards and the opponent keeper for your single next flick. | Any hazard-heavy Royale stage; a defensive panic button |
+| **Slalom** | 🎿 | RARE | Your shot auto-weaves a gentle S to avoid the first two obstacles/players in its lane. | Obstacle arenas; Ghost, Soft Touch |
+| **Featherweight** | 🪶 | UNCOMMON | Your ball ignores slow-fields (mud, caramel, puddles, Sticky Pitch) — but keepers punch rebounds twice as far. | Risk/reward; counter to slow-field arenas; vs Wet Shot (which keeps pace off *impacts*) |
+| **Aftershock** | 💥 | RARE | When your shot is blocked by the keeper or a wall, a shockwave knocks nearby opponent players back and the rebound keeps 60% pace. | Counter-Attack, Heavy Ball — the riposte build |
+| **Sticky Gloves** | 🧤 | UNCOMMON | Your keeper catches and holds any shot it reaches — no rebounds conceded for a beat. | Anti-Counter-Attack; Zone Defense, Catenaccio |
+| **Gyroscope** | 🧭 | UNCOMMON | All your curve/spin is +50%, and you can tap once mid-flight to add a second curve. | Curveball + Serpent enabler; Banana Storm on demand |
+
 ---
 
 ## 1. Shot modifiers
