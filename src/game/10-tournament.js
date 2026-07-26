@@ -344,8 +344,12 @@
     you.appendChild(mk('div',FS(5,'#a9c94b'),'YOU'));
     row.appendChild(you); } else if(done){ row.appendChild(mk('div',FS(7,'#7fd07f')+'flex:0 0 auto;','WON'));
     } return row; } function royMapArt(){ try{ return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
+    function royMapAspect(){
+      try{ var im=royMapArt();
+        if(im&&im.naturalWidth&&im.naturalHeight) return im.naturalWidth/im.naturalHeight;
+      }catch(e){} return 1; }
     function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
-      ? [[0.17,0.82],[0.50,0.82],[0.83,0.82],[0.17,0.50],[0.50,0.50],[0.83,0.50],[0.17,0.17],[0.50,0.17],[0.83,0.17]]
+      ? [[0.16,0.83],[0.50,0.83],[0.84,0.81],[0.16,0.49],[0.50,0.49],[0.84,0.49],[0.16,0.16],[0.50,0.19],[0.85,0.17]]
       : [[0.19,0.84],[0.79,0.83],[0.22,0.66],[0.20,0.52],[0.50,0.49],[0.74,0.44],[0.26,0.32],[0.75,0.26],[0.47,0.15]]; })(); }
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
@@ -1107,7 +1111,7 @@
     '#ff6a4a']})[royaleLevel]||['MEDIUM',
     '#ffcf3a']; pad.appendChild(mk('div','display:inline-flex;align-items:center;margin:0 0 10px;padding:4px 13px;border-radius:20px;background:rgba(10,8,20,0.55);border:2px solid '+_dl[1]+';'+FS(8,_dl[1])+'letter-spacing:1px;','DIFFICULTY · '+_dl[0]));
     })(); var CW=Math.min((pre.clientWidth||380)-24, 400);
-    if(CW<220) CW=340; var CH=CW;
+    if(CW<220) CW=340; var CH=Math.round(CW/(royMapAspect()||1));
     var cv=document.createElement('canvas');
     cv.width=CW*2; cv.height=CH*2;
     cv.style.cssText='width:'+CW+'px;height:'+CH+'px;display:block;border-radius:10px;border:2px solid #3a3050;image-rendering:pixelated;box-shadow:0 6px 18px rgba(0,0,0,0.5);';
