@@ -262,6 +262,12 @@ try {
   }
   await shot('after-flick');
 
+  // The balance harness needs a hook into the game's closure, and that hook must
+  // never be reachable in a real session — it can start matches and rewrite
+  // loadouts. It is armed by ?sim=1 only; this page was loaded without it.
+  const simLeak = await page.evaluate(() => typeof window.__spSim);
+  if (simLeak !== 'undefined') problems.push(`__spSim is exposed without ?sim=1 (got ${simLeak}) — the sim hook is reachable in production`);
+
   // 6. PWA: the manifest has to be installable and the service worker has to
   //    make the game boot offline. This only became possible once React stopped
   //    being fetched from a CDN, so it is worth guarding — it would regress

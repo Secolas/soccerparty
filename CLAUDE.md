@@ -67,6 +67,35 @@ any page error **or any external network request**. It runs in CI as the
 - `--headed` watches it run
 - `CHROMIUM_PATH=...` uses a preinstalled browser instead of Playwright's
 
+### Balance harness
+
+`node tools/balance.mjs` plays CPU-vs-CPU matches and reports how often each
+ability wins. It drives the **real** engine and AI through a hook in
+`src/game/18c-sim.js`, armed only by `?sim=1` — never reimplemented physics,
+which would drift out of sync. The smoke test asserts `window.__spSim` is
+absent without the flag, so the hook cannot leak into production.
+
+Matches run in **practice mode**: it is the only mode that skips the goal-time
+ability draft, so a loadout survives the whole match. Speed comes from a
+virtual clock (rAF + `setTimeout` queued against a counter, frames batched
+through a `MessageChannel` because `setTimeout(0)` is clamped to ~4ms once
+nested) — over 200x realtime, about a second per match.
+
+Each ability is played on both sides to cancel any kickoff advantage, and
+results carry Wilson intervals. With no abilities the baseline sits at ~48%,
+so the sides are symmetric and any gap is the ability.
+
+```
+node tools/balance.mjs --n 100 --workers 4 --json out.json
+node tools/balance.mjs --only cannon,wall --level hard
+```
+
+**The AI is not a stand-in for a human.** Abilities that buy human precision —
+SNIPER (longer aim line), JOYSTICK (steer after the flick), CURVEBALL — give
+the CPU almost nothing, because `aiFlick` already computes an exact aim vector.
+Their numbers are floors, not verdicts. Engine-native abilities (CANNON's 1.5x
+power, FREEZE's power cap, BIG KEEPER, WALL, GLIDE) are measured faithfully.
+
 ### Vendored React — do not reintroduce a CDN
 
 The dc runtime downloads React + ReactDOM from unpkg.com unless
