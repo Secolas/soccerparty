@@ -95,6 +95,15 @@ loadout, so beating 50% is the point — 50% means the ability is worth no more
 than nothing, and below 50% it actively hurts its holder. Judge against the
 median ability (~54.5%), which the tool prints.
 
+**A single-ability sweep cannot measure everything.** Each ability is played
+alone against an empty loadout, so anything needing context that setup never
+creates measures as a no-op: `swap` (nothing to steal), `medic` (no curse to
+cure), `fog` (the AI reads no aim guide), `slowmo` (built to pair with
+Joystick). `AB_TOGGLE` abilities are measured permanently ON — the AI only
+toggles when holding both curve and serpent — so a human who switches a bad one
+off makes those numbers floors: promote on them, never demote. Do not set rarity
+from any of these; measuring them needs loadout *pairs*.
+
 **The AI is not a stand-in for a human.** Engine-native effects (CANNON's power
 multiplier, FREEZE, BIG KEEPER, WALL, GLIDE, WET's bounce bias) are measured
 faithfully. Abilities needing a manual follow-up input — CHIP's mid-flight tap,

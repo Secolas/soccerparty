@@ -30,6 +30,27 @@
 // Check whether an ability's flag is actually read by 09-ai.js before drawing a
 // conclusion from a low number.
 //
+// WHAT THIS SWEEP STRUCTURALLY CANNOT MEASURE
+// Each ability is played ALONE against an EMPTY loadout. Four classes of
+// ability therefore measure as a no-op no matter how strong they really are,
+// and their numbers must not be used to set rarity:
+//
+//   no-op vs empty  the effect needs something the empty opponent never had.
+//                   SWAP steals an opponent ability (there were none); MEDIC
+//                   cures a curse (none were cast).
+//   AI-immune       the effect targets the human interface. FOG hides the aim
+//                   guide; the AI computes vectors and never reads one.
+//   combo           designed to pair with another ability. SLOW MO's own
+//                   description says "Pair with Joystick".
+//   toggle floor    AB_TOGGLE abilities are measured permanently ON, because
+//                   aiPickShotMod only toggles when the AI holds BOTH curve and
+//                   serpent. A human switches a bad one off, so it can never be
+//                   worse than neutral: treat these as floors and only ever
+//                   promote on them, never demote.
+//
+// To measure these properly the sweep needs loadout pairs (ability vs ability),
+// not ability vs nothing.
+//
 // Usage:
 //   node tools/balance.mjs                     # every ability, default N
 //   node tools/balance.mjs --n 100             # matches per ability (per side)
