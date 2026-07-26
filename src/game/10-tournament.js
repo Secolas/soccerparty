@@ -350,7 +350,7 @@
       }catch(e){} return 1; }
     function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
       ? [[0.16,0.83],[0.50,0.83],[0.84,0.81],[0.16,0.49],[0.50,0.49],[0.84,0.49],[0.16,0.16],[0.50,0.19],[0.85,0.17]]
-      : [[0.19,0.84],[0.79,0.83],[0.22,0.66],[0.20,0.52],[0.50,0.49],[0.74,0.44],[0.26,0.32],[0.75,0.26],[0.47,0.15]]; })(); }
+      : [[0.17,0.82],[0.50,0.82],[0.81,0.82],[0.17,0.49],[0.50,0.49],[0.82,0.48],[0.18,0.18],[0.50,0.18],[0.84,0.17]]; })(); }
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
     if(zoom&&zoom>1.001){ var _hw=(cw/2)/zoom, _hh=(ch/2)/zoom;
