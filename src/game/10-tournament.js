@@ -343,19 +343,19 @@
     you.appendChild(royFlag(PRESETS[ROYALE.player],22,15));
     you.appendChild(mk('div',FS(5,'#a9c94b'),'YOU'));
     row.appendChild(you); } else if(done){ row.appendChild(mk('div',FS(7,'#7fd07f')+'flex:0 0 auto;','WON'));
-    } return row; } function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=[[0.19,
-    0.84],[0.79,0.83],[0.22,
-    0.66],[0.20,0.52],[0.50,
-    0.49],[0.74,0.44],[0.26,
-    0.32],[0.75,0.26],[0.47,
-    0.15]]; var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
+    } return row; } function royMapArt(){ try{ return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
+    function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
+      ? [[0.20,0.80],[0.50,0.80],[0.80,0.80],[0.20,0.49],[0.50,0.49],[0.80,0.49],[0.20,0.19],[0.50,0.19],[0.80,0.19]]
+      : [[0.19,0.84],[0.79,0.83],[0.22,0.66],[0.20,0.52],[0.50,0.49],[0.74,0.44],[0.26,0.32],[0.75,0.26],[0.47,0.15]]; })(); }
+    function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
     if(zoom&&zoom>1.001){ var _hw=(cw/2)/zoom, _hh=(ch/2)/zoom;
     if(camx<_hw)camx=_hw; if(camx>cw-_hw)camx=cw-_hw;
     if(camy<_hh)camy=_hh; if(camy>ch-_hh)camy=ch-_hh;
     g.translate(cw/2,ch/2); g.scale(zoom,zoom);
     g.translate(-camx,-camy);
-    } if(NS_ROYMAP&&NS_ROYMAP.complete&&NS_ROYMAP.naturalWidth){ g.drawImage(NS_ROYMAP,0,0,cw,ch);
+    } var _rmi=royMapArt();
+    if(_rmi&&_rmi.complete&&_rmi.naturalWidth){ g.drawImage(_rmi,0,0,cw,ch);
     } else { g.fillStyle='#3a5a2e';
     g.fillRect(0,0,cw,ch); } g.fillStyle='rgba(6,5,12,0.12)';
     g.fillRect(0,0,cw,ch); function P(k){ return {x:NODES[k][0]*cw, y:NODES[k][1]*ch};
@@ -1168,12 +1168,7 @@
       try{spClearRun('royale');
       }catch(e){} mode='royale';
       buildPre(); }; pad.appendChild(quit);
-      pre.appendChild(pad); var NODES2=[[0.19,
-      0.84],[0.79,0.83],[0.22,
-      0.66],[0.20,0.52],[0.50,
-      0.49],[0.74,0.44],[0.26,
-      0.32],[0.75,0.26],[0.47,
-      0.15]]; var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850;
+      pre.appendChild(pad); var NODES2=royMapNodes(); var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850;
       function frame(ts){ if(t0===null) t0=ts;
       var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3), fpos=from+(to-from)*e;
       var zoom=1, camx=CW/2, camy=CH/2;
@@ -1182,7 +1177,7 @@
       camx=(NODES2[lo][0]+(NODES2[hi][0]-NODES2[lo][0])*fr)*CW;
       camy=(NODES2[lo][1]+(NODES2[hi][1]-NODES2[lo][1])*fr)*CH;
       } try{ drawRoyMap(mctx,CW,CH,fpos,zoom,camx,camy);
-      }catch(err){} if((p<1||!NS_ROYMAP.complete) && pre.style.display!=='none' && el('ns_pre')) requestAnimationFrame(frame);
+      }catch(err){} var _rm=royMapArt(); if((p<1||!(_rm&&_rm.complete)) && pre.style.display!=='none' && el('ns_pre')) requestAnimationFrame(frame);
       } if(animate && ROYALE.i>0){ try{sfxStageAdvance();
       }catch(e){} } requestAnimationFrame(frame);
       } function startTourMatch(){
@@ -1246,6 +1241,7 @@
     } }catch(e){} try{ if(NS_WALL) imgs.push(NS_WALL);
     if(NS_TROPHY) imgs.push(NS_TROPHY);
     if(typeof NS_ROYMAP!=='undefined'&&NS_ROYMAP) imgs.push(NS_ROYMAP);
+    if(typeof NS_ROYMAP2!=='undefined'&&NS_ROYMAP2) imgs.push(NS_ROYMAP2);
     }catch(e){} var total=Math.max(1,imgs.length), t0=performance.now(), MIN=1100, done=false;
     function step(){ if(done) return;
     var elapsed=performance.now()-t0, loaded=0;

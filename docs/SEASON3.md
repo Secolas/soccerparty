@@ -128,10 +128,10 @@ Discovered while scoping — saves rediscovery:
 
 | piece | where |
 |---|---|
-| Arena list | `10-tournament.js` — `ROYALE_ARENAS` (S1, 9 arenas), `ROYALE_ARENAS_2` (S2, 8) |
+| Arena list | `10-tournament.js` — `ROYALE_ARENAS` (S1, 9 arenas), `ROYALE_ARENAS_2` (S2, 9) |
 | Arena entry | `{name, pitch, ab:[3 ability ids], d:difficulty, blurb}` |
 | Boss scaling | difficulty picks how many of `ab` apply: `easy 1 / med 2 / hard 3` |
-| Board theme | `03-boards.js` — 18 exist. **`skate` is defined and unused**, a freebie for a park arena |
+| Board theme | `03-boards.js` — 18 exist, and all 18 are in use: Season 2 has **nine** arenas, not eight (THE HALF-PIPE, pitch `skate`, sits sixth). A new season needs new board themes. |
 | Ambience | `05-ambience.js` — per-pitch scenery |
 | Hazard icons | `condMiniDraw(g,S,key)` in `10-tournament.js`, referenced by `'@name'` markers (never PNG paths — Season 2 originally shipped emoji because the PNGs never existed) |
 | Sounds | `08-sound.js` |
