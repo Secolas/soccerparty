@@ -90,11 +90,17 @@ node tools/balance.mjs --n 100 --workers 4 --json out.json
 node tools/balance.mjs --only cannon,wall --level hard
 ```
 
-**The AI is not a stand-in for a human.** Abilities that buy human precision —
-SNIPER (longer aim line), JOYSTICK (steer after the flick), CURVEBALL — give
-the CPU almost nothing, because `aiFlick` already computes an exact aim vector.
-Their numbers are floors, not verdicts. Engine-native abilities (CANNON's 1.5x
-power, FREEZE's power cap, BIG KEEPER, WALL, GLIDE) are measured faithfully.
+**50% is not the fair line.** Each ability is played against an *empty*
+loadout, so beating 50% is the point — 50% means the ability is worth no more
+than nothing, and below 50% it actively hurts its holder. Judge against the
+median ability (~54.5%), which the tool prints.
+
+**The AI is not a stand-in for a human.** Engine-native effects (CANNON's power
+multiplier, FREEZE, BIG KEEPER, WALL, GLIDE, WET's bounce bias) are measured
+faithfully. Abilities needing a manual follow-up input — CHIP's mid-flight tap,
+BACKSPIN's aim compensation — read low because the AI misplays them, which is
+evidence about the AI, not proof the ability is weak for a human. Check whether
+the ability's flag is read in `09-ai.js` before acting on a low number.
 
 ### Vendored React — do not reintroduce a CDN
 

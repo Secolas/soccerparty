@@ -14,12 +14,21 @@
 // full match takes about a second.
 //
 // READ THIS BEFORE TRUSTING THE NUMBERS
-// The AI is not a stand-in for a human. Abilities that sell *human* precision —
-// SNIPER (a longer aim line), JOYSTICK (steer after the flick), CURVEBALL —
-// give the CPU little or nothing, because aiFlick already computes an exact
-// aim vector. Their win rates here are floors, not verdicts. Engine-native
-// abilities (CANNON's 1.5x power, FREEZE's power cap, BIG KEEPER, WALL, GLIDE)
-// are measured faithfully.
+// The AI is not a stand-in for a human, so a win rate here is a claim about the
+// CPU's use of an ability, not a human's.
+//
+//   - Engine-native effects (CANNON's 1.5x power, FREEZE's power cap, BIG
+//     KEEPER, WALL, GLIDE, WET's bounce bias) are measured faithfully — the
+//     physics does not care who is holding the flick.
+//   - Abilities needing a manual follow-up input (CHIP's mid-flight tap,
+//     BACKSPIN's aim compensation) read LOW, because the AI either skips the
+//     input or fails to correct for the effect. A low score here is evidence
+//     about the AI, not proof the ability is weak for a human.
+//   - SNIPER is NOT the pure human-precision case it looks like: TAC.laser is
+//     read in 09-ai.js, so the CPU consumes it too and its score is real.
+//
+// Check whether an ability's flag is actually read by 09-ai.js before drawing a
+// conclusion from a low number.
 //
 // Usage:
 //   node tools/balance.mjs                     # every ability, default N
@@ -251,11 +260,19 @@ for (const ab of LIST) {
 }
 
 rows.sort((a, b) => b.pct - a.pct);
-console.log('\n=== ranked (a fair ability sits at 50%) ===');
+
+// 50% is NOT the fair line. Every ability here is played against an EMPTY
+// loadout, so beating 50% is the whole point — an ability sitting at 50% is
+// worth no more than having no ability at all, and one below 50% is actively
+// hurting whoever holds it. The reference for "balanced" is the median ability;
+// outliers are the ones whose interval clears it.
+const sortedPct = rows.map(r => r.pct).slice().sort((a, b) => a - b);
+const MED = sortedPct.length ? sortedPct[Math.floor(sortedPct.length / 2)] : 0.5;
+console.log(`\n=== ranked (median ability = ${(MED * 100).toFixed(1)}%; 50% means "no better than nothing") ===`);
 for (const r of rows) {
-  // flag only when the interval clears 50% — anything else is noise at this N
-  const verdict = r.lo > 0.5 ? 'STRONG' : (r.hi < 0.5 ? 'WEAK' : '');
-  console.log(`${r.id.padEnd(12)} ${(r.pct * 100).toFixed(1).padStart(5)}%  [${(r.lo * 100).toFixed(0)}-${(r.hi * 100).toFixed(0)}]  ${verdict}`);
+  const verdict = r.lo > MED ? 'ABOVE BAND' : (r.hi < MED ? 'BELOW BAND' : '');
+  const dead = r.pct < 0.5 ? '  <- worse than no ability' : '';
+  console.log(`${r.id.padEnd(12)} ${(r.pct * 100).toFixed(1).padStart(5)}%  [${(r.lo * 100).toFixed(0)}-${(r.hi * 100).toFixed(0)}]  ${verdict.padEnd(10)}${dead}`);
 }
 // A run that silently lost matches to crashes would look identical to a clean
 // one, so say it out loud.
@@ -264,8 +281,10 @@ const totalErrs = rows.reduce((a, r) => a + r.errs, 0);
 if (totalCrashes || totalErrs) {
   console.log(`\nWARNING: ${totalErrs} matches failed (${totalCrashes} page crashes) — those are excluded from the rates above.`);
 }
-const flagged = rows.filter(r => r.lo > 0.5 || r.hi < 0.5);
-console.log(`\n${flagged.length} of ${rows.length} abilities are outside the noise band at N=${N * 2}.`);
+const flagged = rows.filter(r => r.lo > MED || r.hi < MED);
+const dead = rows.filter(r => r.pct < 0.5);
+console.log(`\n${flagged.length} of ${rows.length} abilities sit outside the median band at N=${N * 2}.`);
+console.log(`${dead.length} are below 50% — holding them is worse than holding nothing.`);
 console.log(`took ${((Date.now() - t0) / 1000 / 60).toFixed(1)} min`);
 
 if (JSONOUT) {
