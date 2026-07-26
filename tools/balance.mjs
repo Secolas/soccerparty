@@ -124,6 +124,46 @@ async function newWorker(browser) {
   return page;
 }
 
+// A worker owns a page and replaces it when it dies or gets old. Chromium
+// renderers do crash under a sustained full-speed frame loop, and a sweep that
+// aborts on the 4th of 41 abilities is useless — a dead page has to cost one
+// match, not the run. Pages are also recycled periodically: match state is
+// rebuilt per match but the page accumulates across hundreds of them, and a
+// fresh page is far cheaper than debugging a slow leak.
+const RECYCLE_AFTER = 150;
+class Worker {
+  constructor(browser) { this.browser = browser; this.page = null; this.used = 0; this.crashes = 0; }
+  async ready() {
+    if (this.page && this.used < RECYCLE_AFTER) return this.page;
+    await this.dispose();
+    this.page = await newWorker(this.browser);
+    this.used = 0;
+    return this.page;
+  }
+  async dispose() {
+    if (!this.page) return;
+    try { await this.page.close(); } catch (e) {}
+    this.page = null;
+  }
+  async run(red, blue) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let page;
+      try { page = await this.ready(); }
+      catch (e) { this.page = null; continue; }
+      try {
+        this.used++;
+        return await playMatch(page, red, blue);
+      } catch (e) {
+        // page died mid-match: drop it, take a fresh one, retry once
+        this.crashes++;
+        this.page = null;
+        try { await page.close(); } catch (_) {}
+      }
+    }
+    return { err: 'worker-crash' };
+  }
+}
+
 async function playMatch(page, red, blue) {
   const ok = await page.evaluate(o => window.__spSim.start(o),
     { red, blue, level: LEVEL, size: SIZE, target: GOALS });
@@ -152,8 +192,9 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-gpu', '--mute-audio', '--disable-dev-shm-usage'],
 });
 
-const probe = await newWorker(browser);
-const ALL = await probe.evaluate(() => window.__spSim.abilities());
+const probePage = await newWorker(browser);
+const ALL = await probePage.evaluate(() => window.__spSim.abilities());
+await probePage.close();
 const LIST = ONLY.length ? ALL.filter(a => ONLY.includes(a)) : ALL;
 if (ONLY.length) {
   const missing = ONLY.filter(o => !ALL.includes(o));
@@ -165,24 +206,23 @@ console.log('(each ability is played on BOTH sides to cancel the kickoff advanta
 
 // Baseline: no abilities at all. Quantifies how much red gains just by kicking
 // off, which every ability number below has to be read against.
-const pages = [probe];
-for (let i = 1; i < WORKERS; i++) pages.push(await newWorker(browser));
+const workers = Array.from({ length: WORKERS }, () => new Worker(browser));
 
 async function pool(jobs) {
   const out = new Array(jobs.length);
   let next = 0;
-  await Promise.all(pages.map(async (page) => {
+  await Promise.all(workers.map(async (w) => {
     while (true) {
       const i = next++;
       if (i >= jobs.length) return;
-      out[i] = await jobs[i](page);
+      out[i] = await jobs[i](w);
     }
   }));
   return out;
 }
 
 const t0 = Date.now();
-const baseJobs = Array.from({ length: N * 2 }, () => (p) => playMatch(p, [], []));
+const baseJobs = Array.from({ length: N * 2 }, () => (w) => w.run([], []));
 const baseRes = await pool(baseJobs);
 const baseOk = baseRes.filter(r => !r.err);
 const baseRed = baseOk.filter(r => r.winner === 'red').length;
@@ -194,8 +234,8 @@ const rows = [];
 for (const ab of LIST) {
   // half the matches with the ability on red, half on blue
   const jobs = [
-    ...Array.from({ length: N }, () => (p) => playMatch(p, [ab], []).then(r => ({ ...r, holder: 'red' }))),
-    ...Array.from({ length: N }, () => (p) => playMatch(p, [], [ab]).then(r => ({ ...r, holder: 'blue' }))),
+    ...Array.from({ length: N }, () => (w) => w.run([ab], []).then(r => ({ ...r, holder: 'red' }))),
+    ...Array.from({ length: N }, () => (w) => w.run([], [ab]).then(r => ({ ...r, holder: 'blue' }))),
   ];
   const res = await pool(jobs);
   const ok = res.filter(r => !r.err);
@@ -216,6 +256,13 @@ for (const r of rows) {
   // flag only when the interval clears 50% — anything else is noise at this N
   const verdict = r.lo > 0.5 ? 'STRONG' : (r.hi < 0.5 ? 'WEAK' : '');
   console.log(`${r.id.padEnd(12)} ${(r.pct * 100).toFixed(1).padStart(5)}%  [${(r.lo * 100).toFixed(0)}-${(r.hi * 100).toFixed(0)}]  ${verdict}`);
+}
+// A run that silently lost matches to crashes would look identical to a clean
+// one, so say it out loud.
+const totalCrashes = workers.reduce((a, w) => a + w.crashes, 0);
+const totalErrs = rows.reduce((a, r) => a + r.errs, 0);
+if (totalCrashes || totalErrs) {
+  console.log(`\nWARNING: ${totalErrs} matches failed (${totalCrashes} page crashes) — those are excluded from the rates above.`);
 }
 const flagged = rows.filter(r => r.lo > 0.5 || r.hi < 0.5);
 console.log(`\n${flagged.length} of ${rows.length} abilities are outside the noise band at N=${N * 2}.`);
