@@ -58,10 +58,10 @@ the no-currency / hooks-existing-systems rule.
 
 | Name | Icon | Rarity | Effect | Notes / synergies |
 |---|---|---|---|---|
-| **Grappler** | 🪝 | RARE | Your flick can latch onto one of your own players and slingshot off it, releasing at +35% speed (manual aim). | New tether hook; Bungee Park arena; Sticky, Captain |
-| **Homing Shot** | 🎯 | EPIC | After crossing midfield your shot curves gently toward the goal's *current* centre — tracks a moving target. | Railyard's sliding goals; Sniper, Curveball |
-| **Decoy Run** | 🏃💨 | RARE | Your flick spawns a ghost decoy ball that peels toward a corner and draws the keeper; the real ball launches a half-beat later. | Hall of Mirrors; distinct from Feint's aim-lie |
-| **Trailblazer** | 🔆 | EPIC | Your shot leaves a fading speed-lane; your NEXT flick this possession accelerates +25% while riding it. | The Circuit arena; Playmaker, Tiki-Taka |
+| **Grappler** | 🪝 | RARE | Your flick can latch onto one of your own players and slingshot off it, releasing at +35% speed (manual aim). | New tether hook; Sticky, Captain |
+| **Homing Shot** | 🎯 | EPIC | After crossing midfield your shot curves gently toward the goal's *current* centre. | Weave past Gridiron rushers; Sniper, Curveball |
+| **Decoy Run** | 🏃💨 | RARE | Your flick spawns a ghost decoy ball that peels toward a corner and draws the keeper; the real ball launches a half-beat later. | Deception play; distinct from Feint's aim-lie |
+| **Trailblazer** | 🔆 | EPIC | Your shot leaves a fading speed-lane; your NEXT flick this possession accelerates +25% while riding it. | Grand Prix slipstream/boost; Playmaker, Tiki-Taka |
 | **Time Out** | ⏱️ | EPIC | Once per match, freeze ALL arena hazards and the opponent keeper for your single next flick. | Any hazard-heavy Royale stage; a defensive panic button |
 | **Slalom** | 🎿 | RARE | Your shot auto-weaves a gentle S to avoid the first two obstacles/players in its lane. | Obstacle arenas; Ghost, Soft Touch |
 | **Featherweight** | 🪶 | UNCOMMON | Your ball ignores slow-fields (mud, caramel, puddles, Sticky Pitch) — but keepers punch rebounds twice as far. | Risk/reward; counter to slow-field arenas; vs Wet Shot (which keeps pace off *impacts*) |

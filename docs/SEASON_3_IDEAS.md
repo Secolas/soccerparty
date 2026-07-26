@@ -1,134 +1,115 @@
 # Season 3 Ideas — Design Backlog
 
-Parking lot for post–Season 2 content. Season 3's headline is a **third Royale
-ladder** — a new 9-arena run in the same shape as Season 1 and Season 2 (ordered
-easy → hard, each arena with 3 signature conditions, built visual + music first
-and hazards layered on later, difficulty-scaled). Alongside it: a batch of new
-abilities (in [`ABILITY_IDEAS.md`](./ABILITY_IDEAS.md)) and a proposed set of new
-national teams (below).
+Parking lot for post–Season 2 content. **Season 3's theme is other sports** — a
+third Royale ladder where every stadium is built around a different sport
+(baseball, basketball, tennis, golf…), each borrowing a signature mechanic from
+that sport. Same shape as Season 1 & 2 (9 arenas, easy → hard, 3 signature
+conditions each, built visual + music first and hazards layered on later,
+difficulty-scaled).
 
-Everything here is a starting scaffold — refine, cut, and re-order freely.
+Alongside the ladder: a batch of new abilities (in
+[`ABILITY_IDEAS.md`](./ABILITY_IDEAS.md)) and a proposed set of new national
+teams (below). Everything here is a starting scaffold — refine, cut, re-order.
 
-## Mechanics already "spent" (do not re-skin)
+## Guiding idea
 
-Pulled from Season 1 + Season 2 so Season 3 arenas each land a genuinely new
-core idea. Avoid another take on:
+Every arena reads instantly as its sport (court markings, crowd, kit, music) and
+plays a hazard lifted from that sport. Where a sport's mechanic would echo one
+already "spent" in Season 1 or 2, either differentiate it or swap the mechanic —
+the notes call these out. Avoid re-skinning: ice-slip (frozen arena / would-be
+hockey), whole-floor tilt (skatepark / would-be halfpipe), pinball bumpers,
+portals, buoyant-water (aquarium / would-be swimming).
 
-- **Season 1:** ice-slip, ball-grabbing bushes, pinball bumpers,
-  cacti + geysers + dust-devil, portals + lasers, darkness + drains,
-  webs + spider + crates, walls + portcullis + boulder, boss-keeper abilities.
-- **Season 2:** buoyant ball + currents + shark, low-gravity + meteors +
-  tractor UFO, lava cracks + ember rain + rising tide, conveyor belts + pistons +
-  gears, shifting wind + puddles + lightning, roulette turntable + dice bumpers +
-  shuffle walls, jelly super-bounce pads + caramel sticky floor + rolling gumballs,
-  polarity-flipping magnet plates + airlock vents + rotating ring, tilting-gravity
-  floor + quarter-pipe rails + grind bars, swinging pendulum vines + collapsing
-  tiles + blow-darts.
+## Royale ladder — Season 3 (the "Sports" run)
 
-The unclaimed "new-mechanic" space Season 3 leans into: **the ball's identity**
-(one vs. many), **sustained verticality**, **elastic tethering**, **dynamic ball
-size**, **the goal itself moving**, **radial pull to a fixed point**, **the ball's
-own path as an obstacle**, **local time**, and **the attack direction flipping**.
+### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1)
+- **Batter's box** — a bat swings on a timed arc by the sideline; catch the beat
+  and it launches your ball goalward at +speed, mistime it and it swats it away
+- **Pitching machine** — a feeder that periodically fires a stray baseball across
+  the pitch as a moving obstacle
+- **Base paths** — diamond speed lanes; rolling along a base line carries faster
+- *New mechanic:* a **rhythm-timed deflector** (the bat) — the game's first
+  "hit the beat for a payoff" hazard. Friendly, teachable, great opener.
 
-## Royale ladder — Season 3 (the "Map 3" run)
+### 2. 🏀 THE HARDWOOD — "BASKETBALL" (easy–med, ~d2)
+- **Dribble ball** — the ball bounces with an oscillating height; it can only be
+  blocked/tackled when it's *down* on the hardwood, sailing over defenders on the
+  up-beat
+- **Backboards** — angled boards behind each goal you can bank a shot off
+- **Shot clock** — a possession timer that speeds the ball up as it runs down
+- *New mechanic:* a **dribble / height-cycle ball** — blockable only on the
+  down-beat. The marquee new ball-feel of the season.
 
-Nine arenas, easy → hard, each anchored on ONE genuinely new core mechanic plus
-two supporting conditions that can lean on existing systems (walls, obstacles,
-ambience) re-themed.
+### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3)
+- **The net** — a low barrier across midfield; grounded shots rebound off it, so
+  you must lob (Chip) over — flat play is walled into your own half
+- **Tramlines** — side speed lanes that keep the ball fast down the flanks
+- **Ball-kid** — a little sweeper that jogs on to clear a stalled ball back in
+- *New mechanic:* a **mid-pitch barrier only aerial shots clear** (a verticality
+  gate) — makes Chip/Lob abilities suddenly essential.
 
-### 1. 🪞 THE FUNHOUSE — "HALL OF MIRRORS" (easy, ~d1)
-- **Split panes** — crossing a mirror line spawns 1–2 decoy clones of the ball
-  that fan out; only the **real** ball can score, the decoys fade after a beat
-- **Warp glass** — a lens region that bends the *shown* aim guide (a fair-but-
-  disorienting visual bluff, no physics change)
-- **Silvered walls** — high-restitution mirror walls that return shots crisply
-- *New mechanic:* transient decoy balls (identity confusion) — track the real
-  one; a decoy never actually counts, so it's readable, not luck.
+### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
+- **Undulating greens** — patchy local slope contours that gently curve a *slow*
+  ball toward or away from a low point (not Skatepark's whole-floor tilt —
+  small, directional, a putting read)
+- **Bunkers** — sand patches that bog the ball down
+- **Windmill** — a rotating mini-golf sail that periodically blocks a lane
+- *New mechanic:* **patchy directional slope contours** — reward reading the
+  green, not just aiming straight.
 
-### 2. 🎈 CLOUD NINE — "SKY GARDENS" (easy–med, ~d2)
-- **Thermal columns** — vertical updrafts that keep an *airborne* ball aloft and
-  gently drifting (extends the Chip/Lob height-fake from one hop into flight)
-- **Cloud platforms** — soft puffs that briefly float the ball before it drops
-- **Gust birds** — a flock that crosses and nudges an airborne ball off line
-- *New mechanic:* sustained faked-height flight (aerial lanes) rather than the
-  current single-hop lob — a real "keep it in the air" game.
+### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
+- **Rushers** — linebacker markers that actively charge the ball's line and body
+  it off course (a *pursuing* hazard, not a static block)
+- **Yard lines** — zones that strip a little pace each line the ball crosses
+  upfield (defensive drag that deepens toward goal)
+- **Uprights** — narrow goalpost frames the ball rattles between
+- *New mechanic:* **pursuing tackler hazards** that chase the ball — the biggest
+  new "hazard type" of the season.
 
-### 3. 🪢 THE FAIRGROUND — "BUNGEE PARK" (medium, ~d2–3)
-- **Tether poles** — fixed posts that elastically catch a slow ball nearby and
-  yank it back like a bungee, releasing on a snap
-- **Rubber ring boundary** — springy outer edge that returns shots with a little
-  extra pace (amplify along the normal)
-- **Spinning teacups** — drifting fairground cups as soft rotating obstacles
-- *New mechanic:* elastic tethering to fixed anchor points — a pull that grows
-  with distance (opposite of a dead-stop trap; it launches you back).
+### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4)
+- **Pin rack** — a cluster of standing pins; strike them and they scatter into
+  rolling debris that lingers as fresh obstacles (destructible → mess)
+- **Gutter channels** — shallow side troughs that funnel a wall-hugging ball
+- **Oiled lane** — a slick centre strip the ball keeps its pace across
+- *New mechanic:* **destructible pin clusters** that convert into scattered
+  obstacles — the pitch gets messier the longer the rally runs.
 
-### 4. 🍄 SPORE GROTTO — "THE HIVE" (medium, ~d3)
-- **Grow/shrink spore zones** — clouds that swell the ball (big = easy for a
-  keeper to catch, but bullies through gaps) or shrink it (slips between players,
-  but easy to miss the goal); reverts outside the zone
-- **Drip stalactites** — timed ceiling drops that plink the ball off-line
-- **Glow spores** — drifting motes that softly bump a slow ball
-- *New mechanic:* dynamic ball radius — the first arena to change the ball's
-  *size*, which reshapes both shooting and saving.
+### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4)
+- **Slipstream** — trail close behind the roaming pace-car and you draft, gaining
+  speed; clip it and you spin out
+- **Boost strips** — DRS pads that punch a crossing ball forward
+- **Oil & tyre wall** — oil spills spin the ball; a springy tyre-wall boundary
+- *New mechanic:* **slipstream drafting** behind a moving object — the first
+  hazard you *want* to chase.
 
-### 5. 🚂 THE SHUNTING YARD — "RAILYARD" (med–hard, ~d3–4)
-- **Sliding goals** — each goal drifts along its goal-line on a slow rail, so the
-  target is never where it was last flick (travel + speed scale with difficulty)
-- **Boxcar walls** — freight cars that roll across mid-pitch as moving cover
-- **Turntable spur** — a small rotating disc mid-field that re-aims a rolling ball
-- *New mechanic:* the **goal moves** — prior arenas moved hazards or the ball;
-  this moves the objective. Keep the rail slow and clearly telegraphed so it
-  reads as a skill test, not a dice roll.
+### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5)
+- **Ring ropes** — the elastic boundary flings the ball back inward with extra
+  pace (a springy *edge*, distinct from Candy's interior bounce pads)
+- **Speed-bag** — a swinging bag mid-pitch that jabs a passing ball off line on
+  its beat
+- **Canvas drag** — the mat slows a dawdling ball, keeping rallies moving
+- *New mechanic:* a **fully elastic boundary** that returns shots amplified —
+  turns the whole edge of the pitch into a weapon.
 
-### 6. 🌀 EYE OF THE STORM — "THE MAELSTROM" (med–hard, ~d4)
-- **Whirlpool sink** — a fixed centre vortex that pulls a slow ball into a
-  decaying inward spiral, then spits it out on a random tangent (distinct from
-  Casino's roulette *capture* and Space Station's *rotating ring* — this is a
-  stationary radial pull with spiral decay)
-- **Cross-currents** — two opposing flow lanes that meet at the eye
-- **Debris ring** — junk orbiting the vortex as soft, moving obstacles
-- *New mechanic:* a stationary radial gravity-well on the floor — power beats it
-  (fast balls fly straight through), slow rollers get eaten.
+### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties)
+- **Event medley** — the arena cycles one signature condition from each prior
+  sport on a telegraphed rotation (bat-beat → net → rushers → ropes → …)
+- **Boss keeper** — per the S1 & S2 final pattern: a stacked keeper (Sweeper +
+  Reflexes + Big Keeper) plus a fixed signature bonus escalating by tier
+  (easy / med / hard each get one gift, e.g. Fog / Magnet / Cannon-style)
+- **Home crowd** — cosmetic amp for the finale
+- *New mechanic:* a **rotating gauntlet** that recombines the season's sports
+  gimmicks — "everything you learned, all at once."
 
-### 7. 💠 LIGHT TRAILS — "THE CIRCUIT" (hard, ~d4)
-- **Phosphor trails** — each flick leaves a glowing wall along its path that
-  lingers ~2s; later flicks (and the opponent) bounce off it — your own shot
-  builds the pitch's geometry within a possession
-- **Data gates** — thin barriers that toggle on a fast beat
-- **Charge nodes** — pads that briefly speed a ball crossing them
-- *New mechanic:* the ball's own recent path becomes a temporary obstacle — a
-  self-made maze that rewards planning a 3-flick possession like a Tron round.
-
-### 8. ⏳ CLOCKWORK — "THE CHRONO" (hard, ~d4–5)
-- **Time-dilation zones** — floor pools where the ball drops into slow-motion,
-  then snaps back to full pace the instant it exits (a *local* time-scale on the
-  ball's own clock — not a global slowmo)
-- **Metronome gates** — barriers that open and close on a fixed, audible beat;
-  read the tick and thread your flick through the gap
-- **Reversing cogs** — floor patches that briefly flip the ball's curve/spin
-- *New mechanic:* per-region time scaling on the ball — the standout new
-  "ball-feel" beat since Moon's low gravity; pairs with Slow Mo / Joystick.
-
-### 9. 🌌 THE VOID — "THE FLIP SIDE" (final boss, all difficulties)
-- **End-swap pulse** — on a long, telegraphed timer the two goals swap ends and
-  the whole board mirrors; the objective you're attacking flips (rare, dramatic,
-  always counts down out loud so it's never a surprise)
-- **Rift walls** — dark drifting barriers that thin and thicken
-- **Boss keeper** — per the Season 1 & 2 final pattern: a stacked keeper loadout
-  (e.g. Sweeper + Reflexes + Big Keeper) with a fixed signature bonus by tier —
-  easy / med / hard each get one escalating gift (Fog / Magnet / Cannon-style).
-- *New mechanic:* the attack direction itself flips mid-match — the ultimate
-  "everything you learned, now mirrored" finale.
-
-**Leaning:** **THE CHRONO** (time-dilation is the marquee new ball-feel) and
-**THE SHUNTING YARD** (a moving goal is a first for the game and changes how you
-aim every flick). **HALL OF MIRRORS** is the cheapest to prototype and a great
-low-difficulty opener. **THE VOID** is the boss and should ship last.
+**Leaning:** **BASEBALL** (the bat-beat is a fresh, teachable hook and a friendly
+first arena) and **BASKETBALL** (the dribble/height ball is the standout new
+ball-feel). **GRIDIRON**'s pursuing rushers are the biggest new hazard type; ship
+**THE PODIUM** last.
 
 *Prototype order (unchanged from S2):* land each arena as a selectable exhibition
 pitch — visual + music + ambience first — then layer the Royale hazard in,
 difficulty-scaled (easy softens/soft-caps the harshest condition; med/med-hard
-add count + frequency; hard runs all three at full radius/speed).
+add count + frequency; hard runs all three at full strength).
 
 ## New national teams (Season 3 roster expansion)
 
@@ -144,47 +125,47 @@ says *new art*, the flag needs a small bespoke pixel routine (like `brazil`,
 
 | Country | Abbr | Primary | Kit type (flag) | Art effort | Notes |
 |---|---|---|---|---|---|
-| **Uruguay** | URU | `#7bb1e0` | `nordic`→sun, or `hbands` + sun emblem | reuse (sun exists) | Sky/white with a Sun of May — reuse the `sun` emblem already drawn for ARG |
-| **Colombia** | COL | `#fcd116` | `tricolor-h` (yellow/blue/red) | reuse | Top band is double-height on the real flag; tricolor-h is a fair approximation |
+| **Uruguay** | URU | `#7bb1e0` | `hbands` + `sun` emblem | reuse (sun exists) | Sky/white with a Sun of May — reuse the `sun` emblem drawn for ARG |
+| **Colombia** | COL | `#fcd116` | `tricolor-h` (yellow/blue/red) | reuse | Top band is double-height on the real flag; tricolor-h approximates |
 | **Nigeria** | NGA | `#008751` | `tricolor-v` (green/white/green) | reuse | Clean fit for the existing vertical tricolor |
-| **Ivory Coast** | CIV | `#f77f00` | `tricolor-v` (orange/white/green) | reuse | Mirror of a green/white/orange; distinct primary from NGA |
+| **Ivory Coast** | CIV | `#f77f00` | `tricolor-v` (orange/white/green) | reuse | Distinct primary from NGA |
 | **Poland** | POL | `#dc143c` | `hhalves` (white/red) | reuse | Simplest possible fit |
-| **Sweden** | SWE | `#006aa7` | `nordic` (blue/gold) | reuse | Nordic cross type already exists (ISL uses it) |
-| **Ghana** | GHA | `#ce1126` | `tricolor-h` (red/gold/green) + `star` emblem | reuse | Black star sits over the gold band → use the `star` emblem, dark fg |
-| **Cameroon** | CMR | `#007a5e` | `tricolor-v` (green/red/yellow) + `star` emblem | reuse | Star on the centre red band |
-| **Morocco** | MAR | `#c1272d` | solid red + green pentagram | *new art* | Needs a 5-point green star centred on red — small bespoke routine |
-| **South Korea** | KOR | `#003478` | white + taegeuk + trigrams | *new art* | The most complex; taegeuk disc + 4 trigrams is a dedicated routine |
-| **Türkiye** | TUR | `#e30a17` | solid red + crescent & star | *new art* | Crescent + star pixel routine (reusable for other crescent flags) |
-| **Australia** | AUS | `#00247d` | blue + union canton + stars | *new art* | Canton is fiddly; lowest priority of the set |
+| **Sweden** | SWE | `#006aa7` | `nordic` (blue/gold) | reuse | Nordic cross already exists (ISL uses it) |
+| **Ghana** | GHA | `#ce1126` | `tricolor-h` (red/gold/green) + `star` | reuse | Black star over the gold band → `star` emblem, dark fg |
+| **Cameroon** | CMR | `#007a5e` | `tricolor-v` (green/red/yellow) + `star` | reuse | Star on the centre red band |
+| **Morocco** | MAR | `#c1272d` | solid red + green pentagram | *new art* | 5-point green star centred on red — small bespoke routine |
+| **South Korea** | KOR | `#003478` | white + taegeuk + trigrams | *new art* | Most complex; taegeuk disc + 4 trigrams |
+| **Türkiye** | TUR | `#e30a17` | solid red + crescent & star | *new art* | Crescent + star routine (reusable for other crescent flags) |
+| **Australia** | AUS | `#00247d` | blue + union canton + stars | *new art* | Fiddly canton; lowest priority |
 
 Suggested first tranche (all reuse existing pattern types, zero new art):
 **Uruguay, Colombia, Nigeria, Poland, Sweden, Ghana** — six teams that drop
 straight into `PRESETS` + `KIT_ALT` + `KIT_EMBLEM`. The *new art* flags
-(Morocco, South Korea, Türkiye, Australia) are a nice second pass once someone
-wants to draw them.
+(Morocco, South Korea, Türkiye, Australia) are a nice second pass.
 
 Implementation checklist per country (for whoever picks this up later):
 1. Add a `{cat:'country', …}` entry to `PRESETS` in `src/game/02-teams.js`.
 2. Add a `KIT_ALT[ABBR]` home/away pair and a `KIT_EMBLEM[ABBR]`.
 3. If it needs bespoke flag art, add a `paintPattern` branch + a `JERSEY` entry.
-4. Optionally map it in `COUNTRY_PITCH` (which pitch it plays its home matches on).
+4. Optionally map it in `COUNTRY_PITCH` (which pitch it plays home matches on).
 5. `node tools/build-game.mjs` → `--check` → `node tools/smoke.mjs`, commit
    `src/` **and** the regenerated `index.html`.
 
 ## Abilities
 
 Season 3's new ability ideas live in [`ABILITY_IDEAS.md`](./ABILITY_IDEAS.md)
-under **"Season 3 batch (2026)"** — several hook directly into the arenas above
-(Grappler ↔ Bungee Park, Homing Shot ↔ Railyard, Decoy Run ↔ Hall of Mirrors,
-Trailblazer ↔ The Circuit, Time Out ↔ any hazard arena).
+under **"Season 3 batch (2026)"** — several hook into the sports arenas above
+(Trailblazer ↔ Grand Prix boost/slipstream, Time Out ↔ any hazard arena,
+Slalom ↔ Gridiron rushers & Bowling pins, Aftershock ↔ Boxing, Gyroscope ↔
+Golf greens & Tennis).
 
 ## Other parking-lot notes
 
 - Only one genuinely-new core mechanic is needed per arena; the other two
   conditions can lean on existing systems re-themed.
 - Keep the 60 fps / no-per-frame-allocation guardrails from `POLISH_ROADMAP.md`
-  in mind — time-dilation, thermal-flight and phosphor trails especially must not
+  in mind — the dribble-ball height cycle and the rhythm bat especially must not
   add per-frame gradients to the draw loop.
 - Difficulty scaling convention (from Storm/Casino/Candy): easy softens or
   disables the harshest condition, med/med-hard adds count/frequency, hard runs
-  everything at full radius/speed.
+  everything at full strength.
