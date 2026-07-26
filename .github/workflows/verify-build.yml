@@ -25,6 +25,12 @@ jobs:
       - name: index.html matches src/
         run: node tools/build-game.mjs --check
 
+      # The source once had a 26,919-character line, which makes a one-character
+      # edit indistinguishable from a rewrite in a diff. Hold the line at a level
+      # that cannot regress to that; run `node tools/fmt.mjs` to fix.
+      - name: no monster source lines
+        run: node tools/fmt.mjs --check --limit 2000
+
       - name: game script parses
         run: |
           node -e "

@@ -67,6 +67,20 @@ any page error **or any external network request**. It runs in CI as the
 - `--headed` watches it run
 - `CHROMIUM_PATH=...` uses a preinstalled browser instead of Playwright's
 
+### Source formatting
+
+The game source is dense on purpose, but lines had grown to 26,919 characters —
+long enough that a one-character edit shows up in a diff as the whole line
+changing, so review cannot see what moved, and grep silently truncates.
+
+`node tools/fmt.mjs` breaks long lines at statement (`;`) and array-element
+(`,`) boundaries. It never reorders or rewrites anything, and it proves it:
+`canon()` strips all whitespace outside literals and drops comments, and the
+result must be byte-identical before and after or the tool refuses to write.
+CI runs `node tools/fmt.mjs --check --limit 2000` so the source cannot regress.
+
+Run it after any edit that leaves a long line behind, then rebuild.
+
 ### Balance harness
 
 `node tools/balance.mjs` plays CPU-vs-CPU matches and reports how often each
