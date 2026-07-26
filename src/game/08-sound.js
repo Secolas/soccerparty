@@ -98,7 +98,20 @@
     function explode(x,y,color){ const n=16+Math.floor(Math.random()*10); for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, sp=0.6+Math.random()*2.1; sparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:26+Math.random()*20,color:Math.random()>0.3?color:'#ffffff'}); } }
     // small, capped screen-kick for hard impacts (walls, keeper clashes). Soft
     // touches (v<~4) never shake; hard shots give a satisfying jolt, max ~3.5.
-    function nsKick(v){ var m=Math.min(3.5,(v-4)*0.6); if(m>0.3){ shake=Math.max(shake,m); try{ if(coin) coin.squish=Math.max(coin.squish||0,Math.min(6,Math.round(v*0.5))); }catch(e){} } }
+    function nsKick(v){ var m=Math.min(3.5,(v-4)*0.6); if(m>0.3){ shake=Math.max(shake,m); try{ if(coin) coin.squish=Math.max(coin.squish||0,Math.min(6,Math.round(v*0.5))); }catch(e){} }
+      // Hit-stop: freeze the simulation for a frame or two on a genuinely hard
+      // impact. The shake and squash already say "that hurt"; the tiny pause is
+      // what makes it register as a hit rather than a bounce. A full-power flick
+      // is FLICK_MAX=10 (Cannon ~15), so 7 is a firm strike and 12 is a rocket.
+      // Capped at 2 frames (~33ms) so play never feels sluggish, and skipped
+      // entirely for players who asked to reduce motion.
+      try{
+        if(typeof reduceMotion==='undefined' || !reduceMotion){
+          var hs = (v>=12) ? 2 : ((v>=7) ? 1 : 0);
+          if(hs) hitStop=Math.max(hitStop||0,hs);
+        }
+      }catch(e){}
+    }
     // rising crowd roar as a shot bears down on goal (envelope swells, not decays)
     function sfxCrowdSwell(){ const a=audio(); if(!a||muted) return; const dur=0.6, n=Math.floor(a.sampleRate*dur), buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0); for(let i=0;i<n;i++){ var e=i/n; d[i]=(Math.random()*2-1)*e*e; } const s=a.createBufferSource(); s.buffer=buf; const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=620; bp.Q.value=0.8; const g=a.createGain(); g.gain.value=0.085; s.connect(bp); bp.connect(g); g.connect(a.destination); s.start(); }
     function celebrate(t,mag){
