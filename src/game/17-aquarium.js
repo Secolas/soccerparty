@@ -74,16 +74,36 @@
       // shafts of sunlight / caustics rippling across the sea floor
       ctx.save(); ctx.globalCompositeOperation='lighter';
       for(let c=0;c<5;c++){ const cx=IN+(((now*0.012*(c*0.5+1))+c*0.23*w)%(w+50))-25, cy=IN+h*(0.12+0.18*c)+Math.sin(now*0.001+c)*10, rad=24+c*6;
-        const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad); rg.addColorStop(0,'rgba(150,236,255,0.08)'); rg.addColorStop(1,'rgba(150,236,255,0)'); ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2); }
+        const rg=ctx.createRadialGradient(cx,cy,2,cx,cy,rad);
+        rg.addColorStop(0,'rgba(150,236,255,0.08)');
+        rg.addColorStop(1,'rgba(150,236,255,0)');
+        ctx.fillStyle=rg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2);
+        }
       ctx.restore();
 
       // startle zone around the spot the ball was flicked from — localized, but wide enough to see
       const startleR = 72, pStr = pulse ? (pulse.life/pulse.life0) : 0, px = pulse?pulse.x:0, py = pulse?pulse.y:0;
       // a visible shock ripple expanding from the flick spot
-      if(pulse){ const rr=(1-pStr)*startleR+5; ctx.save(); ctx.globalAlpha=pStr*0.55; ctx.strokeStyle='rgba(205,246,255,0.95)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,rr,0,6.283); ctx.stroke(); ctx.globalAlpha=pStr*0.3; ctx.beginPath(); ctx.arc(px,py,rr*0.6,0,6.283); ctx.stroke(); ctx.restore(); }
+      if(pulse){ const rr=(1-pStr)*startleR+5;
+      ctx.save(); ctx.globalAlpha=pStr*0.55;
+      ctx.strokeStyle='rgba(205,246,255,0.95)';
+      ctx.lineWidth=1.5; ctx.beginPath();
+      ctx.arc(px,py,rr,0,6.283);
+      ctx.stroke(); ctx.globalAlpha=pStr*0.3;
+      ctx.beginPath(); ctx.arc(px,py,rr*0.6,0,6.283);
+      ctx.stroke(); ctx.restore();
+      }
 
       // jellyfish (deep, drifting up) — gently shoved aside if the flick happened close
-      for(const J of _aqJelly){ J.y+=J.vy; J.x+=Math.sin(now*0.001+J.ph)*0.14; if(pulse){ const dx=J.x-px,dy=J.y-py,dd=Math.hypot(dx,dy)||0.001; if(dd<startleR){ const k=(1-dd/startleR)*0.5*pStr; J.x+=dx/dd*k; J.y+=dy/dd*k; } } if(J.y<IN-8){ J.y=IN+h+8; J.x=IN+4+Math.random()*(w-8); } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph); }
+      for(const J of _aqJelly){ J.y+=J.vy;
+      J.x+=Math.sin(now*0.001+J.ph)*0.14;
+      if(pulse){ const dx=J.x-px,dy=J.y-py,dd=Math.hypot(dx,dy)||0.001;
+      if(dd<startleR){ const k=(1-dd/startleR)*0.5*pStr;
+      J.x+=dx/dd*k; J.y+=dy/dd*k;
+      } } if(J.y<IN-8){ J.y=IN+h+8;
+      J.x=IN+4+Math.random()*(w-8);
+      } drawJelly(J.x,J.y,J.sz,J.col,now,J.ph);
+      }
 
       // schooling fry — scatter only if the ball was flicked from within the shoal, then regroup (drag)
       let fcx=IN+w*0.5+Math.sin(now*0.0006)*w*0.32, fcy=IN+h*0.5+Math.cos(now*0.0009)*h*0.3;
@@ -91,7 +111,10 @@
       _aqFryOff.x*=0.9; _aqFryOff.y*=0.9; fcx+=_aqFryOff.x; fcy+=_aqFryOff.y;
       const frySpread=1+Math.min(1.8,(Math.abs(_aqFryOff.x)+Math.abs(_aqFryOff.y))*0.06);
       ctx.fillStyle='rgba(255,236,170,0.62)';
-      for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2*frySpread, fy=fcy+Math.sin(now*0.005+p.off)*p.r*frySpread+Math.sin(now*0.02+p.ph)*1.2; ctx.fillRect(Math.round(fx),Math.round(fy),1,1); ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1); }
+      for(const p of _aqFry){ const fx=fcx+Math.cos(now*0.004+p.off)*p.r*2.2*frySpread, fy=fcy+Math.sin(now*0.005+p.off)*p.r*frySpread+Math.sin(now*0.02+p.ph)*1.2;
+      ctx.fillRect(Math.round(fx),Math.round(fy),1,1);
+      ctx.fillRect(Math.round(fx)-1,Math.round(fy),1,1);
+      }
 
       // reef fish — startle only for fish near the spot the ball was flicked from, then a physical
       // burst-and-glide: a fish turns and darts SIDEWAYS along its swimming axis (fish don't
@@ -132,7 +155,10 @@
       const lg=ctx.createLinearGradient(0,sy-bh,0,sy+bh); lg.addColorStop(0,'rgba(210,246,255,0)'); lg.addColorStop(0.5,'rgba(210,246,255,0.07)'); lg.addColorStop(1,'rgba(210,246,255,0)');
       ctx.fillStyle=lg; ctx.fillRect(IN,sy-bh,w,bh*2);
       // faint fixed corner glare where light catches the glass
-      const cg=ctx.createRadialGradient(IN+w*0.28,IN+h*0.2,4,IN+w*0.28,IN+h*0.2,h*0.4); cg.addColorStop(0,'rgba(255,255,255,0.05)'); cg.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=cg; ctx.fillRect(IN,IN,w,h);
+      const cg=ctx.createRadialGradient(IN+w*0.28,IN+h*0.2,4,IN+w*0.28,IN+h*0.2,h*0.4);
+      cg.addColorStop(0,'rgba(255,255,255,0.05)');
+      cg.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=cg; ctx.fillRect(IN,IN,w,h);
       ctx.restore();
     }
 

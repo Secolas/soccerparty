@@ -32,7 +32,13 @@
       var next=mk('button',FS(10,PAL.ink)+'flex:1;background:'+PAL.btnGold+';border:2px solid '+PAL.goldEdge+';border-radius:9px;padding:11px;cursor:pointer;box-shadow:0 3px 0 '+PAL.goldSh+';letter-spacing:1px;','NEXT');
       back.onclick=function(){ if(i>0){ i--; render(); } };
       next.onclick=function(){ if(i<STEPS.length-1){ i++; render(); } else { done(); } };
-      function render(){ var st=STEPS[i]; emo.style.backgroundImage='url('+st.img+')'; ttl.textContent=st.t; body.textContent=st.b; dotEls.forEach(function(d,k){ d.style.background=(k===i)?PAL.green:PAL.frameSoft; }); back.style.visibility=(i>0)?'visible':'hidden'; next.textContent=(i<STEPS.length-1)?'NEXT ▸':'PLAY!'; }
+      function render(){ var st=STEPS[i];
+      emo.style.backgroundImage='url('+st.img+')';
+      ttl.textContent=st.t; body.textContent=st.b;
+      dotEls.forEach(function(d,k){ d.style.background=(k===i)?PAL.green:PAL.frameSoft;
+      }); back.style.visibility=(i>0)?'visible':'hidden';
+      next.textContent=(i<STEPS.length-1)?'NEXT ▸':'PLAY!';
+      }
       card.appendChild(emo); card.appendChild(ttl); card.appendChild(body); card.appendChild(dots);
       nav.appendChild(back); nav.appendChild(next); card.appendChild(nav);
       ov.appendChild(card); document.body.appendChild(ov); render();

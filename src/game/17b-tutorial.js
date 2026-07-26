@@ -25,7 +25,8 @@
         ];
       }
       return [
-        {id:'boards', t:'THE TWO BOARDS', b:'YOUR board is the one at the BOTTOM. Your opponent is at the TOP. Each board shows that team’s score and its ability slots.', go:'tap', hl:['ns_bot','ns_top']},
+        {id:'boards', t:'THE TWO BOARDS', b:'YOUR board is the one at the BOTTOM. Your opponent is at the TOP. Each board shows that team’s score and its ability slots.', go:'tap', hl:['ns_bot',
+        'ns_top']},
         {id:'move',  t:'MOVE YOUR PLAYERS', b:'Drag one of YOUR players to a better spot before kickoff.', go:'move', fx:'players'},
         {id:'kick',  t:'KICK OFF',          b:'Line-up ready? Hit PLAY to start the match.', go:'play'},
         {id:'flickmeter', t:'YOUR FLICKS LEFT', b:'The boot icon on your board counts the flicks you have left this turn — three per turn.', go:'tap', hl:['ns_flick_red','ns_flicknum_red']},
@@ -46,7 +47,15 @@
       tutRender();
     }
 
-    function tutStop(){ if(!TUT) return; var k=TUT.kind; TUT.over=true; tutMarkSeen(k); TUT=null; try{ tutHighlight(null); }catch(e){} try{ var _sb=el('ns_start'); if(_sb){ _sb.style.pointerEvents='auto'; _sb.style.opacity='1'; } }catch(e){} var p=el('ns_tutpanel'); if(p&&p.parentNode) p.parentNode.removeChild(p); }
+    function tutStop(){ if(!TUT) return;
+    var k=TUT.kind; TUT.over=true;
+    tutMarkSeen(k); TUT=null;
+    try{ tutHighlight(null);
+    }catch(e){} try{ var _sb=el('ns_start');
+    if(_sb){ _sb.style.pointerEvents='auto';
+    _sb.style.opacity='1'; } }catch(e){} var p=el('ns_tutpanel');
+    if(p&&p.parentNode) p.parentNode.removeChild(p);
+    }
 
     function tutAdvance(){
       if(!tutActive()) return;

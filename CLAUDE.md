@@ -67,6 +67,64 @@ any page error **or any external network request**. It runs in CI as the
 - `--headed` watches it run
 - `CHROMIUM_PATH=...` uses a preinstalled browser instead of Playwright's
 
+### Source formatting
+
+The game source is dense on purpose, but lines had grown to 26,919 characters —
+long enough that a one-character edit shows up in a diff as the whole line
+changing, so review cannot see what moved, and grep silently truncates.
+
+`node tools/fmt.mjs` breaks long lines at statement (`;`) and array-element
+(`,`) boundaries. It never reorders or rewrites anything, and it proves it:
+`canon()` strips all whitespace outside literals and drops comments, and the
+result must be byte-identical before and after or the tool refuses to write.
+CI runs `node tools/fmt.mjs --check --limit 2000` so the source cannot regress.
+
+Run it after any edit that leaves a long line behind, then rebuild.
+
+### Balance harness
+
+`node tools/balance.mjs` plays CPU-vs-CPU matches and reports how often each
+ability wins. It drives the **real** engine and AI through a hook in
+`src/game/18c-sim.js`, armed only by `?sim=1` — never reimplemented physics,
+which would drift out of sync. The smoke test asserts `window.__spSim` is
+absent without the flag, so the hook cannot leak into production.
+
+Matches run in **practice mode**: it is the only mode that skips the goal-time
+ability draft, so a loadout survives the whole match. Speed comes from a
+virtual clock (rAF + `setTimeout` queued against a counter, frames batched
+through a `MessageChannel` because `setTimeout(0)` is clamped to ~4ms once
+nested) — over 200x realtime, about a second per match.
+
+Each ability is played on both sides to cancel any kickoff advantage, and
+results carry Wilson intervals. With no abilities the baseline sits at ~48%,
+so the sides are symmetric and any gap is the ability.
+
+```
+node tools/balance.mjs --n 100 --workers 4 --json out.json
+node tools/balance.mjs --only cannon,wall --level hard
+```
+
+**50% is not the fair line.** Each ability is played against an *empty*
+loadout, so beating 50% is the point — 50% means the ability is worth no more
+than nothing, and below 50% it actively hurts its holder. Judge against the
+median ability (~54.5%), which the tool prints.
+
+**A single-ability sweep cannot measure everything.** Each ability is played
+alone against an empty loadout, so anything needing context that setup never
+creates measures as a no-op: `swap` (nothing to steal), `medic` (no curse to
+cure), `fog` (the AI reads no aim guide), `slowmo` (built to pair with
+Joystick). `AB_TOGGLE` abilities are measured permanently ON — the AI only
+toggles when holding both curve and serpent — so a human who switches a bad one
+off makes those numbers floors: promote on them, never demote. Do not set rarity
+from any of these; measuring them needs loadout *pairs*.
+
+**The AI is not a stand-in for a human.** Engine-native effects (CANNON's power
+multiplier, FREEZE, BIG KEEPER, WALL, GLIDE, WET's bounce bias) are measured
+faithfully. Abilities needing a manual follow-up input — CHIP's mid-flight tap,
+BACKSPIN's aim compensation — read low because the AI misplays them, which is
+evidence about the AI, not proof the ability is weak for a human. Check whether
+the ability's flag is read in `09-ai.js` before acting on a low number.
+
 ### Vendored React — do not reintroduce a CDN
 
 The dc runtime downloads React + ReactDOM from unpkg.com unless
