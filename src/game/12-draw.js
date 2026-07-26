@@ -105,9 +105,15 @@
 
     // velocity stretch (elongate along motion) + impact squash (flatten along
     // travel for a few frames after a hard hit). Scales space around the ball
-    // centre so the detailed coin art below is untouched. Returns true if a
+    // centre so the detailed art below is untouched. Returns true if a
     // transform was pushed (caller restores).
+    //
+    // BALL PIECE ONLY. A leather ball compresses against what it hits; a struck
+    // metal coin does not, and deforming it reads as rubber instead of solid.
+    // Coin mode still gets the whole rest of the impact kit — shake, hit-stop,
+    // sparks, sound — just not a shape it could never make.
     function ballDeform(cx,cy){
+      if(!useBall) return false;
       var sp=(typeof moving!=='undefined'&&moving&&!scoring)?Math.hypot(coin.vx,coin.vy):0;
       var q=(coin&&coin.squish)?coin.squish:0, sx=1, sy=1, ang=Math.atan2(coin.vy||0,coin.vx||0.0001);
       if(sp>2){ var k=Math.min(0.32,(sp-2)*0.016); sx=1+k; sy=1-k*0.72; }
