@@ -345,7 +345,7 @@
     row.appendChild(you); } else if(done){ row.appendChild(mk('div',FS(7,'#7fd07f')+'flex:0 0 auto;','WON'));
     } return row; } function royMapArt(){ try{ return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
     function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
-      ? [[0.34,0.81],[0.20,0.65],[0.32,0.50],[0.28,0.28],[0.58,0.41],[0.75,0.36],[0.79,0.18],[0.66,0.58],[0.55,0.09]]
+      ? [[0.17,0.82],[0.50,0.82],[0.83,0.82],[0.17,0.50],[0.50,0.50],[0.83,0.50],[0.17,0.17],[0.50,0.17],[0.83,0.17]]
       : [[0.19,0.84],[0.79,0.83],[0.22,0.66],[0.20,0.52],[0.50,0.49],[0.74,0.44],[0.26,0.32],[0.75,0.26],[0.47,0.15]]; })(); }
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
