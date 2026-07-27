@@ -20,96 +20,234 @@ the notes call these out. Avoid re-skinning: ice-slip (frozen arena / would-be
 hockey), whole-floor tilt (skatepark / would-be halfpipe), pinball bumpers,
 portals, buoyant-water (aquarium / would-be swimming).
 
+## Hazard difficulty grammar (shared scaffold)
+
+One reusable difficulty model that every Season 3 hazard plugs into, so a tier is
+just a set of parameters. Lifted from how Storm/Casino/Candy already scale in
+Season 2.
+
+**Three knobs** every hazard moves along:
+1. **Presence** — is it on at all? Easy usually switches the *nastiest* condition
+   fully OFF (Storm's lightning is off on easy).
+2. **Quantity** — how many instances (Candy's puddles 2/3/5, caramel 1/3/5).
+3. **Intensity + intent** — radius / speed / frequency, and *random vs.
+   aimed-at-you* (Casino's roulette is random on easy, aims at your goal on
+   med/hard).
+
+**Two invariants** that keep it fair at every tier:
+- **Speed-gate** — a hazard only acts above a speed threshold, so a dying ball
+  still settles and turns end (Storm's wind only bends flight above ~0.8 speed).
+- **Symmetry** — mirror geometry, both teams feel it. Tune every tier to
+  ~48–50% in `tools/balance.mjs` so any edge is skill, not the arena.
+
+**Telegraph rule** — every hazard must be readable *before* it acts (the bat's
+tempo, the pitching cadence, the shot-clock countdown). Difficulty raises the
+stakes; it never removes the tell.
+
+**Tier feel:**
+- **Easy** — "meet the sport": worst condition off, effects gentle, mistakes
+  harmless (you learn the mechanic safely).
+- **Med** — "the sport bites": all three on, moderate.
+- **Hard** — "the sport is hostile *and it targets you*": full intensity + aimed
+  + one extra instance.
+
+*Build order (unchanged from S2):* ship each arena as a selectable exhibition
+pitch — board + music + ambience first, no hazard — then build the hazard at
+**med** (the reference tuning) and derive easy (soften/disable) and hard
+(amplify + aim) as multipliers off it. Balance-harness each tier before locking.
+
+All numbers below are **starting values to tune**, not final.
+
 ## Royale ladder — Season 3 (the "Sports" run)
 
-### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1)
-- **Batter's box** — a bat swings on a timed arc by the sideline; catch the beat
-  and it launches your ball goalward at +speed, mistime it and it swats it away
-- **Pitching machine** — a feeder that periodically fires a stray baseball across
-  the pitch as a moving obstacle
-- **Base paths** — diamond speed lanes; rolling along a base line carries faster
-- *New mechanic:* a **rhythm-timed deflector** (the bat) — the game's first
-  "hit the beat for a payoff" hazard. Friendly, teachable, great opener.
+### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1) — fully specced opener
+
+**Fantasy:** a ballpark infield — the dirt diamond speeds you up, a batter takes
+swings by the plate, the pitching machine spits stray balls. Route your shot
+*through* the batter's box on the beat for a launch, or play it safe outside.
+
+*New mechanic:* a **rhythm-timed deflector** (the bat) — the game's first "hit
+the beat for a payoff" hazard.
+
+**Design decisions (resolved):** one bat per attacking side (mirrored →
+symmetric); base paths *help only*, no downside, to keep the opener inviting; on
+hard the swat sends the ball **wide toward the sideline, never a clean own-goal**
+(true own-goal risk is saved for later, harder arenas).
+
+The bat sweeps continuously on the arena tempo; contact direction = where the bat
+is in its arc. The **sweet spot** (pointing at the opponent goal) launches;
+elsewhere it whacks the ball in the swing's current direction, so mistiming sends
+it off-line.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Bat** swing period | 2.0 s | 1.4 s | 1.0 s |
+| **Bat** sweet-spot share of arc | 60% (forgiving) | 35% | 15% (tight) |
+| **Bat** sweet-spot launch | +25% toward goal | +40% | +55% |
+| **Bat** off-beat contact | gentle nudge only | ±15° deflection | full swat, wide to sideline |
+| **Bat** count | 1 / side | 1 / side | 2 / side |
+| **Pitching machine** | OFF | 1, fires 3.5 s | 2, fires 2.2 s, leads your lane |
+| **Base paths** carry | +10% | +20% | +35% + gentle lane steering |
+
+*Reuse:* bat = swinging-obstacle family (windmill/gears/speed-bag) + directional
+impulse + tempo timer (the one new primitive); machine = moving-projectile family
+(aquarium shark / dust-devil); base paths = directional speed-lane family
+(grind-bars/conveyor), masked to the diamond.
+
+*Ability synergies:* Cannon → sweet spot = a screamer (marquee combo); Slow Mo /
+Joystick trivializes the timing (fine — skill expression); Chip/Lob hops *over*
+the box and stray balls (the safe route); Wet Shot shrugs off machine deflections.
 
 ### 2. 🏀 THE HARDWOOD — "BASKETBALL" (easy–med, ~d2)
-- **Dribble ball** — the ball bounces with an oscillating height; it can only be
-  blocked/tackled when it's *down* on the hardwood, sailing over defenders on the
-  up-beat
-- **Backboards** — angled boards behind each goal you can bank a shot off
-- **Shot clock** — a possession timer that speeds the ball up as it runs down
-- *New mechanic:* a **dribble / height-cycle ball** — blockable only on the
-  down-beat. The marquee new ball-feel of the season.
+
+**Fantasy:** an indoor court — the ball *dribbles* (bounces), banks off backboards
+behind the goals, and the shot clock hurries you.
+
+*New mechanic:* a **dribble / height-cycle ball** — blockable only on the
+down-beat; on the up-beat it sails over defenders. The season's standout new
+ball-feel. Scale the *cycle*, not the count, since it touches every shot.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Dribble** bounce height / cycle | shallow, slow, long predictable down-windows | normal | high, fast, tight down-window (long air-time) |
+| **Backboards** | flat wall | angled behind each goal | steeper + on side rails |
+| **Shot clock** speed-up | none | +15% as it runs down | +30% + visible countdown |
+
+*Reuse:* dribble = the Chip/Lob faked-height system driven on a loop + a
+"blockable only when grounded" test; backboards = angled bounce walls
+(bumper/wall); shot clock = the existing match timer read per possession.
 
 ### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3)
-- **The net** — a low barrier across midfield; grounded shots rebound off it, so
-  you must lob (Chip) over — flat play is walled into your own half
-- **Tramlines** — side speed lanes that keep the ball fast down the flanks
-- **Ball-kid** — a little sweeper that jogs on to clear a stalled ball back in
-- *New mechanic:* a **mid-pitch barrier only aerial shots clear** (a verticality
-  gate) — makes Chip/Lob abilities suddenly essential.
+
+**Fantasy:** a grass court split by a net — flat shots come back at you, so you
+lob; the flanks are fast tramlines; a ball-kid clears dead balls.
+
+*New mechanic:* a **mid-pitch barrier only aerial shots clear** (a verticality
+gate) — makes Chip/Lob suddenly essential.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **The net** | low; shots above ~0.6 speed clear it | full; grounded shots rebound, must lob | tall; short chips clip and drop, needs a high lob |
+| **Tramlines** (flank speed lanes) | OFF | +15% carry | +30% + nudges ball toward the sideline |
+| **Ball-kid** (sweeper) | clears a fully-stopped ball to center after 2 s | same, faster | actively intercepts slow loose balls in the neutral third (soft pursuer) |
+
+*Reuse:* net = a conditional barrier keyed off the Chip height flag (permeable by
+altitude, like the portcullis but gated on height not time); tramlines =
+speed-lane family; ball-kid = the sweeper/pursuer AI.
 
 ### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
-- **Undulating greens** — patchy local slope contours that gently curve a *slow*
-  ball toward or away from a low point (not Skatepark's whole-floor tilt —
-  small, directional, a putting read)
-- **Bunkers** — sand patches that bog the ball down
-- **Windmill** — a rotating mini-golf sail that periodically blocks a lane
-- *New mechanic:* **patchy directional slope contours** — reward reading the
-  green, not just aiming straight.
+
+**Fantasy:** a links course — undulating greens curve your putts, sand bunkers
+bog you down, a mini-golf windmill guards a lane.
+
+*New mechanic:* **patchy directional slope contours** — reward reading the green,
+distinct from Skatepark's whole-floor tilt.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Green contours** | OFF (flat) | 2 gentle slopes curving slow balls to a low point | 4 stronger; some push *away* from goal (misreads punished) |
+| **Bunkers** (sand drag) | 1, mild | 3, moderate | 5, strong |
+| **Windmill** (rotating blocker) | OFF | 1, slow rotation, blocks one lane | 1 fast + a 2nd sail |
+
+*Reuse:* contours = localized, speed-gated directional force-field (Storm wind /
+currents, masked to patches); bunkers = drag-patch family (puddle/caramel);
+windmill = rotating-obstacle family (gears).
 
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
-- **Rushers** — linebacker markers that actively charge the ball's line and body
-  it off course (a *pursuing* hazard, not a static block)
-- **Yard lines** — zones that strip a little pace each line the ball crosses
-  upfield (defensive drag that deepens toward goal)
-- **Uprights** — narrow goalpost frames the ball rattles between
-- *New mechanic:* **pursuing tackler hazards** that chase the ball — the biggest
-  new "hazard type" of the season.
+
+**Fantasy:** a gridiron — linebackers rush your ball, yard lines drag it as you
+push upfield, narrow uprights guard the goal.
+
+*New mechanic:* **pursuing tackler hazards** that chase the ball — the biggest new
+hazard *type* of the season. Settle-safe: rushers only pursue while the ball is
+above the speed-gate and outside the deep zones; they retreat to lanes when it
+slows, so the ball always comes to rest.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Rushers** | 1, slow, gentle nudge (no steal) | 2, moderate, deflect off-line | 3, fast, can knock the ball back toward your half |
+| **Yard-line drag** | OFF | −5%/line (2 lines) | −8%/line (3 lines) — deepening near goal |
+| **Uprights** (narrow goal frame) | wide gap | standard | narrow + posts rattle shots out |
+
+*Reuse:* rushers = the sweeper/keeper-chase AI repurposed as roaming field
+markers; yard-line drag = zonal speed-loss (Zone-Defense-style bands); uprights =
+static bounce walls (bumper/wall).
 
 ### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4)
-- **Pin rack** — a cluster of standing pins; strike them and they scatter into
-  rolling debris that lingers as fresh obstacles (destructible → mess)
-- **Gutter channels** — shallow side troughs that funnel a wall-hugging ball
-- **Oiled lane** — a slick centre strip the ball keeps its pace across
-- *New mechanic:* **destructible pin clusters** that convert into scattered
-  obstacles — the pitch gets messier the longer the rally runs.
+
+**Fantasy:** a bowling lane — knock the pins and they scatter into a mess, gutters
+funnel wall-huggers, the oiled centre lane keeps you fast.
+
+*New mechanic:* **destructible pin clusters** that convert into scattered
+obstacles — the pitch gets messier the longer the rally runs.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Pin rack** | 1 rack, pins vanish on hit | 2 racks, struck pins linger ~2 s then clear | 3 racks, pins linger ~4 s and roll (persistent debris) |
+| **Gutter channels** | OFF | shallow, mild rail funnel | deep, strong funnel (wall shots get sucked down the rail) |
+| **Oiled lane** (keeps pace) | OFF | centre strip: no friction | wider strip + slight forward carry |
+
+*Reuse:* pins = the falling-crates spawned-obstacle family (web warehouse);
+gutters = directional lane funnel (conveyor); oiled lane = pace-preserving strip
+(Wet Shot's "keeps speed off contact", **not** ice-slip — that's spent).
 
 ### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4)
-- **Slipstream** — trail close behind the roaming pace-car and you draft, gaining
-  speed; clip it and you spin out
-- **Boost strips** — DRS pads that punch a crossing ball forward
-- **Oil & tyre wall** — oil spills spin the ball; a springy tyre-wall boundary
-- *New mechanic:* **slipstream drafting** behind a moving object — the first
-  hazard you *want* to chase.
+
+**Fantasy:** a race circuit — draft behind the pace-car for a tow, hit the DRS
+boost strips, mind the oil and the tyre walls.
+
+*New mechanic:* **slipstream drafting** behind a moving object — the first hazard
+you actually *want* to chase.
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Pace-car / slipstream** | parked (static obstacle) | roams; draft behind = +20% | faster; draft +30%; clipping spins the ball |
+| **Boost strips** (DRS) | 1 pad, +15% | 2 pads, +25% | 3 pads, +35% (mirrored to both lanes) |
+| **Oil + tyre wall** | tyre-wall springy edge only | + 1 oil spill (spins crossing ball) | + 3 oil spills, stronger spin |
+
+*Reuse:* pace-car = mover + local speed-field (tractor-UFO for the draft zone);
+boost = speed-lane/charge-node; oil = spin-injection (roulette spin / Serpent
+curve); tyre wall = high-restitution boundary (bumper along the edge).
 
 ### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5)
-- **Ring ropes** — the elastic boundary flings the ball back inward with extra
-  pace (a springy *edge*, distinct from Candy's interior bounce pads)
-- **Speed-bag** — a swinging bag mid-pitch that jabs a passing ball off line on
-  its beat
-- **Canvas drag** — the mat slows a dawdling ball, keeping rallies moving
-- *New mechanic:* a **fully elastic boundary** that returns shots amplified —
-  turns the whole edge of the pitch into a weapon.
+
+**Fantasy:** a boxing ring — the ropes fling you back in with interest, a
+speed-bag jabs on the beat, the canvas centre drags you down.
+
+*New mechanic:* a **fully elastic boundary** (the ropes) that returns shots
+amplified — turns the whole pitch edge into a weapon (brutal with bounce builds).
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Ring ropes** (elastic edge) | +10% on wall bounce | +25% | +40% (pinball edges) |
+| **Speed-bag** (beat jab) | OFF | 1, slow beat, small deflection | 1 fast + a 2nd bag, bigger jab |
+| **Canvas drag** (centre slow zone) | OFF | mild | strong (forces play out to the chaotic ropes) |
+
+*Reuse:* ropes = high-restitution boundary (Candy jelly applied along the edge);
+speed-bag = reuses the Baseball bat's swinging + timing tech (blocking flavor);
+canvas drag = drag zone (puddle/caramel).
 
 ### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties)
-- **Event medley** — the arena cycles one signature condition from each prior
-  sport on a telegraphed rotation (bat-beat → net → rushers → ropes → …)
-- **Boss keeper** — per the S1 & S2 final pattern: a stacked keeper (Sweeper +
-  Reflexes + Big Keeper) plus a fixed signature bonus escalating by tier
-  (easy / med / hard each get one gift, e.g. Fog / Magnet / Cannon-style)
-- **Home crowd** — cosmetic amp for the finale
-- *New mechanic:* a **rotating gauntlet** that recombines the season's sports
-  gimmicks — "everything you learned, all at once."
 
-**Leaning:** **BASEBALL** (the bat-beat is a fresh, teachable hook and a friendly
-first arena) and **BASKETBALL** (the dribble/height ball is the standout new
-ball-feel). **GRIDIRON**'s pursuing rushers are the biggest new hazard type; ship
-**THE PODIUM** last.
+**Fantasy:** a decathlon finale — the arena cycles through every sport's signature
+gimmick against a boss keeper.
 
-*Prototype order (unchanged from S2):* land each arena as a selectable exhibition
-pitch — visual + music + ambience first — then layer the Royale hazard in,
-difficulty-scaled (easy softens/soft-caps the harshest condition; med/med-hard
-add count + frequency; hard runs all three at full strength).
+*New mechanic:* a **rotating gauntlet** that recombines the season's sports
+gimmicks — "everything you learned, all at once."
+
+| Condition | Easy | Med | Hard |
+|---|---|---|---|
+| **Event medley** | 1 borrowed condition active at a time, slow rotation | 1–2 active, medium rotation | 2–3 overlapping, fast rotation |
+| **Boss keeper** | Sweeper + Reflexes + Big Keeper + **Fog** gift | …+ **Magnet** gift | …+ **Cannon**-style gift |
+| **Home crowd** | cosmetic amp | cosmetic amp | cosmetic amp |
+
+*Pattern:* mirrors the S1 & S2 finals (stacked boss keeper + a fixed signature
+bonus escalating by tier). Ship it last.
+
+**Build-order leaning:** **BASEBALL** first (bat-beat is fresh, teachable, and a
+friendly opener), then **BASKETBALL** (the dribble ball is the marquee ball-feel).
+**GRIDIRON**'s pursuing rushers are the riskiest to get settle-safe — prototype
+that one early to de-risk the pursuer primitive. **THE PODIUM** ships last.
 
 ## New national teams (Season 3 roster expansion)
 
@@ -166,6 +304,6 @@ Golf greens & Tennis).
 - Keep the 60 fps / no-per-frame-allocation guardrails from `POLISH_ROADMAP.md`
   in mind — the dribble-ball height cycle and the rhythm bat especially must not
   add per-frame gradients to the draw loop.
-- Difficulty scaling convention (from Storm/Casino/Candy): easy softens or
-  disables the harshest condition, med/med-hard adds count/frequency, hard runs
-  everything at full strength.
+- The one genuinely new engine primitive the season needs is the **beat/timing
+  clock** (bat, speed-bag) — build it once in Baseball and reuse it in Boxing and
+  the Podium medley.
