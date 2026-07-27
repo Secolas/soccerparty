@@ -721,10 +721,7 @@
     if(approot && !approot.__nsFit){ approot.__nsFit=1;
     document.documentElement.classList.add('ns-capped');
     var fst=document.createElement('style');
-    // The board cap is wider than the menus on purpose: the stands need the room
-    // to show the crowd on desktop, while menu/overlay copy stays at the narrower
-    // width so line lengths remain readable.
-    fst.textContent='html.ns-capped #dc-root,html.ns-capped .sc-host{max-width:640px !important;margin-left:auto !important;margin-right:auto !important;} html.ns-capped #ns_pre>div,html.ns-capped #ns_howto>div{max-width:460px !important;margin-left:auto !important;margin-right:auto !important;} body{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;overflow:hidden;overscroll-behavior:none;} #dc-root{position:relative;}';
+    fst.textContent='html.ns-capped #dc-root,html.ns-capped .sc-host{max-width:460px !important;margin-left:auto !important;margin-right:auto !important;} html.ns-capped #ns_pre>div,html.ns-capped #ns_howto>div{max-width:460px !important;margin-left:auto !important;margin-right:auto !important;} body{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;overflow:hidden;overscroll-behavior:none;} #dc-root{position:relative;}';
     (document.head||document.documentElement).appendChild(fst);
     setTimeout(function(){ try{ window.dispatchEvent(new Event('resize'));
     }catch(e){} },40); } var oldsb=el('ns_scorebug');
@@ -1069,10 +1066,7 @@
     if(_hs) _top.classList.add('ns-flip');
     else _top.classList.remove('ns-flip');
     }  })(); (function(){ var g=el('ns_game'), t=el('ns_top'), bt=el('ns_bot');
-    // Match the VISIBLE board, not the canvas. The canvas is wider than the
-    // screen on a phone (the side stands hang off and get clipped by #ns_stage),
-    // so sizing these bars to the canvas would push them off both edges.
-    if(g&&t&&bt){ var _stg=el('ns_stage'), w=(_stg&&_stg.offsetWidth)||g.offsetWidth;
+    if(g&&t&&bt){ var w=g.offsetWidth;
     if(w){ t.style.width=w+'px';
     bt.style.width=w+'px'; } } if(!window.__nsRz){ window.__nsRz=1;
     window.addEventListener('resize', function(){ setTimeout(updateScoreboards,90);

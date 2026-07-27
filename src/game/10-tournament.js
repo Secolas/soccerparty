@@ -1255,7 +1255,7 @@
     var finish=((real>=1&&elapsed>=MIN)||elapsed>6000);
     if(finish) p=1; var fr=_fan?_fanFrame(_fan.img,Math.floor(elapsed/150),{c:_col,hairTop:13}):null;
     if(fr){ g.clearRect(0,0,48,48);
-    g.drawImage(fr,0,0,fr.width,fr.height,0,0,48,48); } fill.style.width=(p*100)+'%';
+    g.drawImage(fr,0,0); } fill.style.width=(p*100)+'%';
     coin.style.left=(p*barW)+'px';
     pct.textContent='LOADING  '+Math.round(p*100)+'%';
     if(finish){ done=true; ov.style.opacity='0';

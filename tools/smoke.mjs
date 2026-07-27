@@ -196,19 +196,11 @@ try {
   const ready = await page.evaluate(() => new Promise(res => {
     const c = document.getElementById('ns_game');
     const g = c.getContext('2d');
-    // The ball is cream: bright and warm, unlike the pure-white pitch markings.
-    // Search only the pitch interior. The ball is always on the pitch, while the
-    // surround holds a large animated crowd whose skin tones land in the same
-    // warm range — scanning the whole canvas lets the crowd dominate the centroid
-    // so it never settles and the ball never reads as idle.
-    // The side stands are ~13% of the canvas width and the ends ~3% of its
-    // height; these insets clear both with margin, and the ball at kickoff sits
-    // near the centre spot, far inside. Widen the stands and these must grow too.
-    const mx = Math.round(c.width * 0.14), my = Math.round(c.height * 0.05);
+    // the ball is cream: bright and warm, unlike the pure-white pitch markings
     const findBall = () => {
       const d = g.getImageData(0, 0, c.width, c.height).data;
       let sx = 0, sy = 0, n = 0;
-      for (let y = my; y < c.height - my; y++) for (let x = mx; x < c.width - mx; x++) {
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
         const i2 = (y * c.width + x) * 4, R = d[i2], G = d[i2 + 1], B = d[i2 + 2];
         if (R > 225 && G > 210 && B > 140 && B < 215 && R - B > 30) { sx += x; sy += y; n++; }
       }
