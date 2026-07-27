@@ -1,8 +1,5 @@
     // ================= AMBIENCE (per-pitch scenery: beach umbrellas, snow, drones...) =================
     let ambient=[];
-    // festive casual crowd colours — mixed in with team/national colours so the
-    // stands read like a real cheering crowd, not a block of monochrome ultras
-    const _CASUAL_FAN=['#e0433a','#e8913a','#f2c23a','#4cae74','#3aa7c0','#4a6fd0','#8a5ad0','#d0559a','#e8e2d4','#5b6470'];
     // when the ball slams a pitch wall, nearby wildlife bolts. Physics reports the impact here
     // (in canvas coords); each hit lives a few frames and startles only critters close to it.
     var _wallHits=[];
@@ -29,37 +26,13 @@
       var _rows=Math.max(7,Math.floor((H-16)/20));
       for(var _sd=0;_sd<2;_sd++){ for(var _r=0;_r<_rows;_r++){ var _lft=(_sd===0);
       var _e=NS_FANS[Math.floor(Math.random()*NS_FANS.length)];
-      var _fp=(_lft?_pl:_pr);
-      // ~55% casual colours, the rest team/national — flag-holders always stay national
-      var _cc=(_e&&_e.pose!=='flag'&&Math.random()<0.55)
-        ? _CASUAL_FAN[Math.floor(Math.random()*_CASUAL_FAN.length)]
-        : _fp[Math.floor(Math.random()*_fp.length)];
+      var _fp=(_lft?_pl:_pr); var _cc=_fp[Math.floor(Math.random()*_fp.length)];
       var _cnm=_lft?(teamKits['blue']&&teamKits['blue'].name):(teamKits['red']&&teamKits['red'].name);
       var _tn=(_e&&_e.pose==='flag')?(window._flagTintFor?window._flagTintFor(_cnm,_cc):_cc):{c:_cc,hairTop:(_e&&(_e.pose==='standing'||_e.pose==='seated'))?15:0};
       var _bx=(_lft?6:(OX+W+6))+(Math.random()-0.5)*1.5;
       var _by=OY+9+(_r+0.5)*((H-18)/_rows)+(Math.random()-0.5)*2.5;
       ambient.push({kind:'fan', img:(_e&&_e.img), x:_bx, y:_by, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn, flip:((_e&&_e.pose==='flag')?(_sd===0):(_sd===1))});
-      } }
-      // tiered crowd behind each goal — only when the end stands are tall enough
-      // to hold a fan (deep-stadium layout). In the shallow layout OY is too small
-      // and this is skipped, so the same code serves both looks via CROWD_TB.
-      if(OY>=22){ var _gcols=Math.max(6,Math.floor((W-16)/15));
-        for(var _g=0;_g<2;_g++){ var _topEnd=(_g===0);
-        var _gp=_topEnd?_pl:_pr;
-        var _gnm=_topEnd?(teamKits['blue']&&teamKits['blue'].name):(teamKits['red']&&teamKits['red'].name);
-        for(var _gr=0;_gr<2;_gr++){ for(var _gc=0;_gc<_gcols;_gc++){
-          var _e2=NS_FANS[Math.floor(Math.random()*NS_FANS.length)];
-          var _cc2=(_e2&&_e2.pose!=='flag'&&Math.random()<0.6)
-            ? _CASUAL_FAN[Math.floor(Math.random()*_CASUAL_FAN.length)]
-            : _gp[Math.floor(Math.random()*_gp.length)];
-          var _tn2=(_e2&&_e2.pose==='flag')?(window._flagTintFor?window._flagTintFor(_gnm,_cc2):_cc2):{c:_cc2,hairTop:(_e2&&(_e2.pose==='standing'||_e2.pose==='seated'))?15:0};
-          var _gx=OX+8+(_gc+0.5)*((W-16)/_gcols)+(Math.random()-0.5)*2;
-          var _gy=_topEnd?(OY-3-_gr*7):(CH-3-_gr*7);
-          // drawn larger than the side fans: the deep end stands have the room,
-          // and a 48px sheet shown at 24px keeps far more of its detail
-          ambient.push({kind:'fan', img:(_e2&&_e2.img), x:_gx, y:_gy, sz:24, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn2, flip:(_gc%2===0)});
-        } } }
-      } } if(t==='beach'){
+      } } } if(t==='beach'){
         for(let i=0;i<5;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.18+Math.random()*0.22, phase:Math.random()*6.28});
         ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.06});
         ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.05, small:true});
@@ -378,55 +351,14 @@
     dd[i3+1]=Math.min(255,Math.round(col2[1]*k3));
     dd[i3+2]=Math.min(255,Math.round(col2[2]*k3));
     } } c.putImageData(id2,0,0);
-    }catch(e){} } cv._fkey=key; window._fanCache[key]=cv;
-    return cv; }
-    // Pre-bake a fan frame at its on-screen size, ONCE, with smooth filtering.
-    // The sheets are 48px but render ~17-24px; blitting that with the canvas-wide
-    // nearest-neighbour setting is a non-integer reduction that drops pixels
-    // irregularly and shreds the faces and outlines the art actually has. Scaling
-    // once with smoothing keeps them readable, and the result is cached so the
-    // draw loop still only blits (no per-frame work — POLISH_ROADMAP guardrail).
-    function _fanAtSize(cv,sz){
-      if(!cv) return null; if(!(sz>0)) return cv;
-      if(!window._fanSizeCache) window._fanSizeCache={};
-      var k=(cv._fkey||'')+'@'+sz, s=window._fanSizeCache[k];
-      if(s) return s;
-      s=document.createElement('canvas'); s.width=sz; s.height=sz;
-      var c2=s.getContext('2d');
-      c2.imageSmoothingEnabled=true; try{ c2.imageSmoothingQuality='high'; }catch(e){}
-      c2.drawImage(cv,0,0,48,48,0,0,sz,sz);
-      window._fanSizeCache[k]=s; return s;
-    }
-    function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
-    if(!cv) return; var sc=_fanAtSize(cv,sz)||cv;
-    var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
+    }catch(e){} } window._fanCache[key]=cv;
+    return cv; } function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
+    if(!cv) return; var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
     if(flip){ ctx.save(); ctx.translate(dx+sz,dy);
-    ctx.scale(-1,1); ctx.drawImage(sc,0,0,sc.width,sc.height,0,0,sz,sz);
-    ctx.restore(); } else { ctx.drawImage(sc,0,0,sc.width,sc.height,dx,dy,sz,sz);
-    } }
-    // Stadium floodlight banks in the four corners — a soft warm halo + a little
-    // bulb grid, gently pulsing. Drawn behind the fans; kept in the corners so it
-    // never sits over the goal or the play area.
-    function _drawFloodlights(now){
-      var corners=[[5,6],[CW-5,6],[5,CH-6],[CW-5,CH-6]];
-      for(var i=0;i<corners.length;i++){ var cx=corners[i][0], cy=corners[i][1];
-        var fl=0.75+0.25*Math.sin(now*0.003+i*1.7);
-        // cool blue-white light (real floodlights read cool) — deliberately kept
-        // out of the warm-cream range the ball-finder uses so pulsing corner
-        // lights can never be mistaken for the ball
-        ctx.save(); ctx.globalAlpha=0.16*fl; ctx.fillStyle='#eaf2ff';
-        ctx.beginPath(); ctx.arc(cx,cy,6,0,6.283); ctx.fill(); ctx.restore();
-        ctx.fillStyle='#23262e'; ctx.fillRect(cx-3,cy-2,6,4);           // housing
-        for(var by=0;by<2;by++) for(var bx=0;bx<3;bx++){                // bulb grid
-          ctx.fillStyle='rgba(234,242,255,'+(0.68+0.32*fl).toFixed(2)+')';
-          ctx.fillRect(cx-3+bx*2, cy-2+by*2, 1,1);
-        }
-        ctx.fillStyle='#2b2f38'; ctx.fillRect(cx, (cy<CH/2)?(cy+2):(cy-5), 1, 3); // mast
-      }
-    }
-    function drawAmbient(now){
+    ctx.scale(-1,1); ctx.drawImage(cv,0,0,48,48,0,0,sz,sz);
+    ctx.restore(); } else { ctx.drawImage(cv,0,0,48,48,dx,dy,sz,sz);
+    } } function drawAmbient(now){
       const t=ambType();
-      if(t==='stadium'||t==='arena') _drawFloodlights(now);
       // age the wall-impact scares (the ball hitting a wall spooks only the wildlife right there)
       for(var _wi=0;_wi<_wallHits.length;_wi++) _wallHits[_wi].life--;
       while(_wallHits.length && _wallHits[0].life<=0) _wallHits.shift();
@@ -438,7 +370,7 @@
         if(a.y<2) a.y=2; } if(a.x>CW+3) a.x=-3;
         if(a.x<-3) a.x=CW+3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now);
         }
-        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,a.sz||17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
+        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
         else if(a.kind==='snow'){ if(typeof royBlizzard==='function'&&royBlizzard()) continue;
         a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2;
         if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;

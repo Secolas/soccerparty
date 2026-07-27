@@ -196,18 +196,11 @@ try {
   const ready = await page.evaluate(() => new Promise(res => {
     const c = document.getElementById('ns_game');
     const g = c.getContext('2d');
-    // the ball is cream: bright and warm, unlike the pure-white pitch markings.
-    // Scan only the pitch interior, not the whole canvas — the ball always lives
-    // on the pitch, while the surround stands hold a warm, ANIMATED crowd (fans,
-    // national flags, floodlights) whose cream-range pixels would otherwise
-    // dominate and jitter the centroid so it never reads as a stable idle ball.
-    // Insets clear the stands in every layout (sides ~5%, ends up to ~8% of the
-    // canvas) with margin to spare; the ball at/after kickoff sits well inside.
-    const mx = Math.round(c.width * 0.09), my = Math.round(c.height * 0.11);
+    // the ball is cream: bright and warm, unlike the pure-white pitch markings
     const findBall = () => {
       const d = g.getImageData(0, 0, c.width, c.height).data;
       let sx = 0, sy = 0, n = 0;
-      for (let y = my; y < c.height - my; y++) for (let x = mx; x < c.width - mx; x++) {
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
         const i2 = (y * c.width + x) * 4, R = d[i2], G = d[i2 + 1], B = d[i2 + 2];
         if (R > 225 && G > 210 && B > 140 && B < 215 && R - B > 30) { sx += x; sy += y; n++; }
       }

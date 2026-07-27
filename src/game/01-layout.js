@@ -1,6 +1,6 @@
     // ---- Dimensions: board coords (W,H) inside a larger canvas with crowd stands ----
     const PW=210, PH=330;
-    const CROWD_TB=30, CROWD_LR=12;
+    const CROWD_TB=10, CROWD_LR=12;
     const W=PW, H=PH;
     const CW=W+CROWD_LR*2, CH=H+CROWD_TB*2;
     const OX=CROWD_LR, OY=CROWD_TB;
