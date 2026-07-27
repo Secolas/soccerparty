@@ -1603,6 +1603,8 @@
     }); var NS_WALL=new Image();
     try{ NS_WALL.src='assets/generated/icon-wall.png';
     }catch(e){} var NS_ROYMAP=new Image();
+    var NS_ROYMAP2=new Image();
+    try{ NS_ROYMAP2.src='assets/generated/roymap2.png'; }catch(e){}
     try{ NS_ROYMAP.src='assets/generated/roymap.png';
     }catch(e){} var NS_BUSH=[];
     for(var _nbi=0;_nbi<4;_nbi++){ (function(_k){ var _im=new Image();
