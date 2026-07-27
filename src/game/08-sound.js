@@ -1119,7 +1119,7 @@
     if(!muted) sfxJackpot();
     } else { if(!muted) sfxSlotLand();
     } }catch(e){} if(done) done();
-    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4};
+    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:4,drill:2,backspin:4};
     function abWeight(id){ return (AB_WEIGHT[id]!=null)?AB_WEIGHT[id]:4;
     } var AB_EXCLUSIVE=[['curve',
     'serpent']], AB_TOGGLE=['curve',
