@@ -361,17 +361,77 @@
     ctx.beginPath(); ctx.ellipse(-r*0.3,-r*0.3,r*0.22,r*0.14,0,0,6.283);
     ctx.fill(); ctx.restore();
     } }
-    function drawStormPuddles(ctx,now){ var pud=stormPuddles();
-    for(var i=0;i<pud.length;i++){ var p=pud[i];
-    var rg=ctx.createRadialGradient(p.x,p.y,1,p.x,p.y,p.r);
-    rg.addColorStop(0,'rgba(120,160,195,0.34)');
-    rg.addColorStop(1,'rgba(120,160,195,0.05)');
-    ctx.fillStyle=rg; ctx.beginPath();
-    ctx.ellipse(p.x,p.y,p.r,p.r*0.55,0,0,6.283);
-    ctx.fill(); ctx.strokeStyle='rgba(180,205,230,0.22)';
-    ctx.lineWidth=1; ctx.beginPath();
-    ctx.ellipse(p.x,p.y,p.r,p.r*0.55,0,0,6.283);
-    ctx.stroke(); } }
+    // STORM puddles, drawn as pixel art instead of a radial gradient. At one canvas
+    // pixel per game unit a gradient resolves to a soft grey haze, which the
+    // pixelated upscale then magnifies — it read as a smudge on the lens rather than
+    // water lying on the grass. Four fixed tones with an ordered-dither edge and a
+    // darkened rim in the turf, with the moving parts drawn over the top.
+    //
+    // The body never changes, so it is baked once into an offscreen canvas and
+    // blitted; only the reflection, ripples and rain dimples cost anything per frame.
+    // The dither parity is taken in board space so the checker stays locked to the
+    // pitch instead of crawling when a puddle lands on an odd pixel.
+    var PUD_DEEP='#2b5a78', PUD_MID='#3d7a9c', PUD_LITE='#5b9dbe', PUD_SKY='#96cadf';
+    var PUD_RIM='rgba(16,40,28,0.6)', PUD_RING='rgba(196,230,244,';
+    var _pudCache={};
+    function _pudBody(r,par){
+      var key=r+'|'+par, c=_pudCache[key];
+      if(c) return c;
+      var rx=r, ry=r*0.55, ox=Math.ceil(rx)+1, oy=Math.ceil(ry)+1;
+      var cv=document.createElement('canvas');
+      cv.width=ox*2+1; cv.height=oy*2+1;
+      var g=cv.getContext('2d'); g.imageSmoothingEnabled=false;
+      for(var y=-oy;y<=oy;y++) for(var x=-ox;x<=ox;x++){
+        var d=(x*x)/(rx*rx)+(y*y)/(ry*ry);
+        if(d>1.05) continue;
+        var odd=((par+x+y)&1), col;
+        if(d>0.85){ col=odd?PUD_DEEP:PUD_RIM; }
+        else { col=d>0.6?PUD_DEEP:(d>0.28?PUD_MID:PUD_LITE);
+          if(d>0.5&&d<0.7&&!odd) col=PUD_MID; }
+        g.fillStyle=col; g.fillRect(ox+x,oy+y,1,1);
+      }
+      c={cv:cv,ox:ox,oy:oy}; _pudCache[key]=c; return c;
+    }
+    // rain dimples need to sit still for a beat, not re-roll every frame
+    function _pudRnd(s){ s=(s*1103515245+12345)>>>0; return ((s>>>16)&0x7fff)/32767; }
+    function drawStormPuddles(ctx,now){
+      var pud=stormPuddles();
+      for(var i=0;i<pud.length;i++){
+        var p=pud[i], cx=Math.round(p.x), cy=Math.round(p.y), rx=p.r, ry=p.r*0.55;
+        var b=_pudBody(p.r,(cx+cy)&1);
+        ctx.drawImage(b.cv,cx-b.ox,cy-b.oy);
+        // the sky, broken up on the surface
+        var span=Math.round(rx*0.76), ry4=Math.round(ry*0.42);
+        ctx.fillStyle=PUD_SKY;
+        for(var x=-span;x<=span;x++){
+          if(((x+((now*0.01)|0))%3)===0) continue;
+          ctx.fillRect(cx+x,cy-ry4+Math.round(Math.sin(x*0.42+now*0.002)*0.6),1,1);
+        }
+        var gx=cx+Math.round(rx*0.35), gy=cy-Math.round(ry*0.64);
+        ctx.fillStyle='#e2f2fa'; ctx.fillRect(gx,gy,2,1);
+        ctx.fillStyle='#bcdeed'; ctx.fillRect(gx,gy+1,1,1);
+        // two ripple rings, expanding and fading, offset per puddle
+        for(var k=0;k<2;k++){
+          var ph=(now*0.00045+k*0.5+i*0.27)%1, r2=ph*rx*0.9, y2=ph*ry*0.9;
+          if(r2<2.5) continue;
+          ctx.fillStyle=PUD_RING+((1-ph)*0.55).toFixed(2)+')';
+          var n=Math.max(16,Math.round(r2*4)), lx=null, ly=null;
+          for(var a=0;a<=n;a++){
+            var th=a/n*6.283;
+            var nx=Math.round(cx+Math.cos(th)*r2), ny=Math.round(cy+Math.sin(th)*y2);
+            if(nx===lx&&ny===ly) continue;
+            lx=nx; ly=ny; ctx.fillRect(nx,ny,1,1);
+          }
+        }
+        var seed=((now/240)|0)*7+i*131;
+        for(var q=0;q<4;q++){
+          var ang=_pudRnd(seed+q*3)*6.283, rr=Math.sqrt(_pudRnd(seed+q*3+1))*0.78;
+          var dx=(cx+Math.cos(ang)*rx*rr)|0, dy=(cy+Math.sin(ang)*ry*rr)|0;
+          ctx.fillStyle='#b4dcec'; ctx.fillRect(dx,dy,1,1);
+          ctx.fillStyle='#7fb4cc'; ctx.fillRect(dx+1,dy,1,1);
+        }
+      }
+    }
     function drawCaramel(ctx,now){ var car=(typeof candyBog!=='undefined')?candyBog:[];
     for(var i=0;i<car.length;i++){ var p=car[i];
     ctx.save(); ctx.translate(p.x,p.y);
