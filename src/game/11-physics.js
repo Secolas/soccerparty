@@ -1024,7 +1024,7 @@
     //   HARD: + a catcher's glove on each of the four bases — a moving ball that reaches one is caught.
     // Every effect only touches a MOVING ball, so the ball still settles and turns end.
     var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false;
-    var BB_RZ=34, BB_HITR=22, BB_CONTACT=6, BB_SWING=14, BB_ARC=2.6, BB_POWER=5.6;
+    var BB_RZ=40, BB_SWING=12, BB_ARC=2.6, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
     function initBaseball(){ var t=hzTier();
     // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
     // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
@@ -1746,19 +1746,22 @@
       coin.vy-=1.6*_pcdot*_pcuy; } coin.vx+=_pc.vx*0.5;
       coin.vy+=_pc.vy*0.5; try{ if(typeof sfxBump==='function') sfxBump(5);
       }catch(e){} break; } } }
-      // EASY+ reactive bats: rest until a moving ball enters the zone, then swing at a fixed speed.
-      // The swing connects a beat later (BB_CONTACT), so a hard flick beats it — a strike. A connect
-      // launches the ball toward that bat's opposite goal at a fixed power (no scaling by difficulty).
+      // EASY+ reactive bats: rest until a moving ball rolls into the zone, then swing at a fixed
+      // speed. The barrel SWEEPS through its arc and connects the instant it overlaps the ball — so
+      // a slow ball is hit reliably, but a hard flick blows past before the barrel arrives (a strike).
+      // A connect launches the ball toward that bat's opposite goal at a fixed power (no scaling).
       for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
       if(_bb.cd>0){ _bb.cd--; continue; }
       if(!_bb.swing){ if(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ){ _bb.swing=true;
-      _bb.swT=0; } continue; }
-      _bb.swT++; if(_bb.swT===BB_CONTACT){ if(_bbmov&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_HITR){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
+      _bb.swT=0; _bb.hit=false; } continue; }
+      _bb.swT++; var _bang=_bb.rest+(_bb.swT/BB_SWING)*BB_ARC;
+      var _bhx=_bb.x+Math.cos(_bang)*BB_REACH, _bhy=_bb.y+Math.sin(_bang)*BB_REACH;
+      if(!_bb.hit&&_bbmov&&Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+BB_BARREL){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
       coin.vx=_bax/_bad*BB_POWER; coin.vy=_bay/_bad*BB_POWER;
-      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(coin.x,coin.y,current,12,true);
+      _bb.hit=true; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,12,true);
       }catch(e){} try{ shake=Math.max(shake||0,4);
-      }catch(e){} } } if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=18; } }
+      }catch(e){} } if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
