@@ -559,6 +559,7 @@
       if(typeof candyBog!=='undefined'&&candyBog) candyBog.length=0;
       if(typeof bbBats!=='undefined'&&bbBats) bbBats.length=0;
       if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
+      if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

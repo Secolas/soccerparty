@@ -1015,34 +1015,47 @@
     '#c86aff']; for(var g=0;g<gbdefs.length;g++){ var a=Math.random()*6.283, sp=0.5+Math.random()*0.15;
     gumballs.push({x:gbdefs[g].x,y:gbdefs[g].y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6,col:cols[g%5]});
     } } }
-    // BASEBALL (THE DIAMOND, Season 3) — ADDITIVE by difficulty, like the S2 arenas:
-    //   EASY: one swinging bat per attacking side (mirrored, symmetric) — a moving ball caught by
-    //         the bat head is "cracked" in the swing direction, so where it goes depends on the beat.
-    //   MED : + a pitching machine that fires stray balls across the pitch (deflect the ball only).
-    //   HARD: + a fast dirt infield that keeps the ball quick inside the diamond, and a faster swing.
+    // BASEBALL (THE DIAMOND, Season 3) — ADDITIVE by difficulty, NO power/speed scaling:
+    //   EASY: one bat per half (mirrored). It RESTS and only swings when a ball enters its zone. The
+    //         swing is the SAME speed at every difficulty and connects a beat AFTER it triggers
+    //         (BB_CONTACT), so a hard flick blows past before the bat comes round — a "strike". A
+    //         connect launches the ball toward that bat's OPPOSITE goal at a fixed power.
+    //   MED : + a pitching machine firing a stray ball in from a random side / diagonal.
+    //   HARD: + a catcher's glove on each of the four bases — a moving ball that reaches one is caught.
     // Every effect only touches a MOVING ball, so the ball still settles and turns end.
-    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbInfield=false;
-    function initBaseball(){ var t=hzTier(); bbBats=[];
-    var sw=0.055+(t>=2?0.02:0);
-    bbBats.push({x:W*0.30,y:H*0.32,r:30,ph:0,sp:sw,dir:1,cd:0});
-    bbBats.push({x:W*0.70,y:H*0.68,r:30,ph:3.14159,sp:sw,dir:1,cd:0});
-    bbPitchOn=(t>=1); bbInfield=(t>=2);
-    bbPitchBalls=[]; bbPitchCD=90;
+    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false;
+    var BB_RZ=34, BB_HITR=22, BB_CONTACT=6, BB_SWING=14, BB_ARC=2.6, BB_POWER=5.6;
+    function initBaseball(){ var t=hzTier();
+    // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
+    // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
+    bbBats=[{x:W/2,y:H*0.20,rest:-1.03,tgt:H,swing:false,swT:0,cd:0},
+    {x:W/2,y:H*0.80,rest:2.11,tgt:0,swing:false,swT:0,cd:0}];
+    bbPitchOn=(t>=1); bbGlovesOn=(t>=2);
+    bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
+    if(bbGlovesOn){ var cx=W/2,cy=H/2,dx=W*0.30,dy=H*0.24, _bp=[[cx,cy-dy],
+    [cx+dx,cy],[cx,cy+dy],[cx-dx,cy]];
+    for(var _gi=0;_gi<_bp.length;_gi++) bbGloves.push({x:_bp[_gi][0],y:_bp[_gi][1],r:12,flash:0}); }
     }
-    // advance the bat swing, cooldowns and the pitching machine from the draw loop so they keep going
-    // between shots (like the storm gust). Ball collisions themselves are applied from stepPhysics.
+    function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
+    if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
+    else if(e===1){ sx=W-WALL-2; sy=pad+Math.random()*(H-2*pad); }
+    else if(e===2){ sx=pad+Math.random()*(W-2*pad); sy=WALL+2; }
+    else { sx=pad+Math.random()*(W-2*pad); sy=H-WALL-2; }
+    var tx=WALL+Math.random()*(W-2*WALL), ty=WALL+Math.random()*(H-2*WALL);
+    var dx=tx-sx, dy=ty-sy, d=Math.hypot(dx,dy)||1, sp=2.6+Math.random()*0.9;
+    bbPitchBalls.push({x:sx,y:sy,vx:dx/d*sp,vy:dy/d*sp,r:5});
+    }
+    // advance the pitching machine + glove flashes from the draw loop so they animate between shots.
+    // The bat swing state machine runs from stepPhysics (it is triggered by and acts on the ball).
     function baseballTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='baseball'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(bbBats.length===0){ try{ initBaseball(); }catch(e){} }
-    for(var _bti=0;_bti<bbBats.length;_bti++){ var _btb=bbBats[_bti];
-    _btb.ph+=_btb.sp*_btb.dir; if(_btb.ph>6.283) _btb.ph-=6.283;
-    if(_btb.ph<0) _btb.ph+=6.283;
-    if(_btb.cd>0) _btb.cd--; }
     if(bbPitchOn){ for(var _pmi=bbPitchBalls.length-1;_pmi>=0;_pmi--){ var _pm=bbPitchBalls[_pmi];
     _pm.x+=_pm.vx; _pm.y+=_pm.vy;
-    if(_pm.x>W-WALL+8||_pm.x<WALL-8||_pm.y<WALL-8||_pm.y>H-WALL+8) bbPitchBalls.splice(_pmi,1);
-    } if(bbPitchCD>0){ bbPitchCD--; } else if(bbPitchBalls.length<2){ bbPitchBalls.push({x:WALL+3,y:H*0.34+Math.random()*(H*0.32),vx:2.6+Math.random()*0.8,vy:(Math.random()-0.5)*0.7,r:5});
-    bbPitchCD=140+Math.floor(Math.random()*70);
+    if(_pm.x>W-WALL+10||_pm.x<WALL-10||_pm.y<WALL-10||_pm.y>H-WALL+10) bbPitchBalls.splice(_pmi,1);
+    } if(bbPitchCD>0){ bbPitchCD--; } else if(bbPitchBalls.length<2){ _bbSpawnPitch();
+    bbPitchCD=130+Math.floor(Math.random()*80);
     try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
+    if(bbGlovesOn){ for(var _gf=0;_gf<bbGloves.length;_gf++){ if(bbGloves[_gf].flash>0) bbGloves[_gf].flash--; } }
     }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
     function hzTier(){ var l;
@@ -1711,29 +1724,38 @@
       }catch(e){} try{ nsKick(5);
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
       coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
-      var _bbt=hzTier(); if(moving&&(!coin.air||coin.air<=0)){ var _bbsp=Math.hypot(coin.vx,coin.vy);
-      // HARD dirt infield: keep the ball fast inside the diamond (bounded, never accelerates a slow ball)
-      if(bbInfield&&_bbsp>0.6&&_bbsp<6){ if(Math.abs(coin.x-W/2)/(W*0.30)+Math.abs(coin.y-H/2)/(H*0.24)<1){ coin.vx*=1.02;
-      coin.vy*=1.02; } }
+      var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
+      if(_bbmov){
+      // HARD gloves: a base glove catches (stops) a moving ball that reaches it
+      for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
+      if(_bbsp>0.5&&Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R){ coin.x=_gc.x;
+      coin.y=_gc.y; coin.vx=0; coin.vy=0;
+      _bbsp=0; _gc.flash=22; try{ if(typeof sfxBump==='function') sfxBump(6);
+      }catch(e){} try{ shake=Math.max(shake||0,3);
+      }catch(e){} break; } }
       // MED+ pitching machine: a stray ball crossing the pitch deflects the moving ball (never traps it)
-      for(var _pci=0;_pci<bbPitchBalls.length;_pci++){ var _pc=bbPitchBalls[_pci];
+      for(var _pci=0;_pci<bbPitchBalls.length&&_bbsp>0.5;_pci++){ var _pc=bbPitchBalls[_pci];
       var _pcx=coin.x-_pc.x,_pcy=coin.y-_pc.y,_pcd=Math.hypot(_pcx,_pcy),_pcm=COIN_R+_pc.r;
-      if(_pcd<_pcm&&_pcd>0&&_bbsp>0.5){ var _pcux=_pcx/_pcd,_pcuy=_pcy/_pcd;
+      if(_pcd<_pcm&&_pcd>0){ var _pcux=_pcx/_pcd,_pcuy=_pcy/_pcd;
       coin.x+=_pcux*(_pcm-_pcd); coin.y+=_pcuy*(_pcm-_pcd);
       var _pcdot=coin.vx*_pcux+coin.vy*_pcuy; if(_pcdot<0){ coin.vx-=1.6*_pcdot*_pcux;
       coin.vy-=1.6*_pcdot*_pcuy; } coin.vx+=_pc.vx*0.5;
       coin.vy+=_pc.vy*0.5; try{ if(typeof sfxBump==='function') sfxBump(5);
-      }catch(e){} break; } }
-      // EASY+ swinging bats: a moving ball reaching the bat head is cracked along the swing direction
+      }catch(e){} break; } } }
+      // EASY+ reactive bats: rest until a moving ball enters the zone, then swing at a fixed speed.
+      // The swing connects a beat later (BB_CONTACT), so a hard flick beats it — a strike. A connect
+      // launches the ball toward that bat's opposite goal at a fixed power (no scaling by difficulty).
       for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
-      if(_bb.cd>0) continue; var _bhx=_bb.x+Math.cos(_bb.ph)*_bb.r, _bhy=_bb.y+Math.sin(_bb.ph)*_bb.r;
-      if(Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+7&&_bbsp>0.5){ var _btx=-Math.sin(_bb.ph)*_bb.dir, _bty=Math.cos(_bb.ph)*_bb.dir;
-      var _bhit=_bbsp+(0.9+0.7*_bbt)*2; coin.vx=coin.vx*0.3+_btx*_bhit;
-      coin.vy=coin.vy*0.3+_bty*_bhit; _bb.cd=22;
+      if(_bb.cd>0){ _bb.cd--; continue; }
+      if(!_bb.swing){ if(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ){ _bb.swing=true;
+      _bb.swT=0; } continue; }
+      _bb.swT++; if(_bb.swT===BB_CONTACT){ if(_bbmov&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_HITR){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
+      coin.vx=_bax/_bad*BB_POWER; coin.vy=_bay/_bad*BB_POWER;
       try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,10,true);
-      }catch(e){} try{ shake=Math.max(shake||0,3);
-      }catch(e){} break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
+      }catch(e){} try{ spawnSparks(coin.x,coin.y,current,12,true);
+      }catch(e){} try{ shake=Math.max(shake||0,4);
+      }catch(e){} } } if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=18; } }
+      } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
       if(_d.tumble>0) _d.tumble--;

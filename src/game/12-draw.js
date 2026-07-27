@@ -394,13 +394,31 @@
     ctx.arc(0,0,g.r,0,6.283);
     ctx.stroke(); ctx.restore();
     } }
-    // BASEBALL (THE DIAMOND) — pitching machine + stray balls (med+), then the swinging bats
-    // (barrel glows gold on the cooldown right after a crack)
+    // BASEBALL (THE DIAMOND) — base gloves (hard), stray pitched balls (med), full reactive bats (easy)
+    function _drawBat(ctx,x,y,ang,lit){ var reach=30;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(0,-1.4);
+    ctx.lineTo(reach*0.68,-2.6); ctx.lineTo(reach,-4.2);
+    ctx.lineTo(reach+3.2,0); ctx.lineTo(reach,4.2);
+    ctx.lineTo(reach*0.68,2.6); ctx.lineTo(0,1.4);
+    ctx.closePath(); ctx.fillStyle=lit?'#e8b45a':'#c98a3a';
+    ctx.fill(); ctx.strokeStyle='rgba(80,52,16,0.7)';
+    ctx.lineWidth=0.7; ctx.stroke();
+    ctx.fillStyle='rgba(255,236,196,0.55)'; ctx.fillRect(reach*0.55,-2.6,reach*0.3,1.3);
+    ctx.fillStyle='#9a6224'; ctx.beginPath();
+    ctx.arc(0,0,2.6,0,6.283); ctx.fill();
+    ctx.restore(); }
     function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
-    if(typeof bbPitchOn!=='undefined'&&bbPitchOn){ ctx.save();
-    ctx.fillStyle='#3a3a42'; ctx.fillRect(WALL-1,H*0.5-7,6,14);
-    ctx.fillStyle='#5a5a66'; ctx.fillRect(WALL-1,H*0.5-7,6,3);
-    ctx.restore(); for(var p=0;p<bbPitchBalls.length;p++){ var pb=bbPitchBalls[p];
+    if(typeof bbGlovesOn!=='undefined'&&bbGlovesOn){ for(var gi=0;gi<bbGloves.length;gi++){ var gl=bbGloves[gi];
+    ctx.save(); ctx.translate(gl.x,gl.y);
+    ctx.fillStyle=gl.flash>0?'#f0c060':'#8a5a2a'; ctx.beginPath();
+    ctx.arc(0,0,gl.r+(gl.flash>0?2:0),0,6.283); ctx.fill();
+    ctx.fillStyle='#5a3410'; ctx.beginPath();
+    ctx.arc(0,gl.r*0.15,gl.r*0.55,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(40,24,8,0.7)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,0,gl.r,-0.6,3.75); ctx.stroke();
+    ctx.restore(); } }
+    if(typeof bbPitchOn!=='undefined'&&bbPitchOn){ for(var p=0;p<bbPitchBalls.length;p++){ var pb=bbPitchBalls[p];
     ctx.save(); ctx.translate(pb.x,pb.y);
     ctx.fillStyle='#f4f0e6'; ctx.beginPath();
     ctx.arc(0,0,pb.r,0,6.283); ctx.fill();
@@ -409,18 +427,13 @@
     ctx.beginPath(); ctx.arc(pb.r*0.4,0,pb.r*1.1,Math.PI-0.9,Math.PI+0.9); ctx.stroke();
     ctx.restore(); } }
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
-    var hx=b.x+Math.cos(b.ph)*b.r, hy=b.y+Math.sin(b.ph)*b.r;
-    ctx.save(); ctx.fillStyle='rgba(240,240,232,0.9)';
-    ctx.beginPath(); ctx.arc(b.x,b.y,3,0,6.283);
-    ctx.fill(); ctx.strokeStyle=(b.cd>0)?'#ffd84a':'#b5793f';
-    ctx.lineWidth=3; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(b.x,b.y);
-    ctx.lineTo(hx,hy); ctx.stroke();
-    ctx.fillStyle=(b.cd>0)?'#ffe07a':'#e0a050';
-    ctx.beginPath(); ctx.arc(hx,hy,4,0,6.283);
-    ctx.fill(); ctx.fillStyle='rgba(255,255,255,0.5)';
-    ctx.beginPath(); ctx.arc(hx-1,hy-1,1.5,0,6.283);
-    ctx.fill(); ctx.restore(); } }
+    var ang=b.rest+(b.swing?(b.swT/BB_SWING)*BB_ARC:0);
+    _drawBat(ctx,b.x,b.y,ang,b.swing); }
+    if(typeof bbBats!=='undefined'){ for(var z=0;z<bbBats.length;z++){ var bz=bbBats[z];
+    if(!bz.swing&&!bz.cd){ ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,0.10)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(bz.x,bz.y,BB_RZ,0,6.283);
+    ctx.stroke(); ctx.restore(); } } } }
     // CASINO roulette wheel (spins; shows the winning number on a result)
     function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);
     var cols=['#c83a4a','#2a2a30',
