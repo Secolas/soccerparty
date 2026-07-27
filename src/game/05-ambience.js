@@ -55,7 +55,9 @@
           var _tn2=(_e2&&_e2.pose==='flag')?(window._flagTintFor?window._flagTintFor(_gnm,_cc2):_cc2):{c:_cc2,hairTop:(_e2&&(_e2.pose==='standing'||_e2.pose==='seated'))?15:0};
           var _gx=OX+8+(_gc+0.5)*((W-16)/_gcols)+(Math.random()-0.5)*2;
           var _gy=_topEnd?(OY-3-_gr*7):(CH-3-_gr*7);
-          ambient.push({kind:'fan', img:(_e2&&_e2.img), x:_gx, y:_gy, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn2, flip:(_gc%2===0)});
+          // drawn larger than the side fans: the deep end stands have the room,
+          // and a 48px sheet shown at 24px keeps far more of its detail
+          ambient.push({kind:'fan', img:(_e2&&_e2.img), x:_gx, y:_gy, sz:24, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn2, flip:(_gc%2===0)});
         } } }
       } } if(t==='beach'){
         for(let i=0;i<5;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.18+Math.random()*0.22, phase:Math.random()*6.28});
@@ -376,12 +378,31 @@
     dd[i3+1]=Math.min(255,Math.round(col2[1]*k3));
     dd[i3+2]=Math.min(255,Math.round(col2[2]*k3));
     } } c.putImageData(id2,0,0);
-    }catch(e){} } window._fanCache[key]=cv;
-    return cv; } function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
-    if(!cv) return; var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
+    }catch(e){} } cv._fkey=key; window._fanCache[key]=cv;
+    return cv; }
+    // Pre-bake a fan frame at its on-screen size, ONCE, with smooth filtering.
+    // The sheets are 48px but render ~17-24px; blitting that with the canvas-wide
+    // nearest-neighbour setting is a non-integer reduction that drops pixels
+    // irregularly and shreds the faces and outlines the art actually has. Scaling
+    // once with smoothing keeps them readable, and the result is cached so the
+    // draw loop still only blits (no per-frame work — POLISH_ROADMAP guardrail).
+    function _fanAtSize(cv,sz){
+      if(!cv) return null; if(!(sz>0)) return cv;
+      if(!window._fanSizeCache) window._fanSizeCache={};
+      var k=(cv._fkey||'')+'@'+sz, s=window._fanSizeCache[k];
+      if(s) return s;
+      s=document.createElement('canvas'); s.width=sz; s.height=sz;
+      var c2=s.getContext('2d');
+      c2.imageSmoothingEnabled=true; try{ c2.imageSmoothingQuality='high'; }catch(e){}
+      c2.drawImage(cv,0,0,48,48,0,0,sz,sz);
+      window._fanSizeCache[k]=s; return s;
+    }
+    function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
+    if(!cv) return; var sc=_fanAtSize(cv,sz)||cv;
+    var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
     if(flip){ ctx.save(); ctx.translate(dx+sz,dy);
-    ctx.scale(-1,1); ctx.drawImage(cv,0,0,48,48,0,0,sz,sz);
-    ctx.restore(); } else { ctx.drawImage(cv,0,0,48,48,dx,dy,sz,sz);
+    ctx.scale(-1,1); ctx.drawImage(sc,0,0,sc.width,sc.height,0,0,sz,sz);
+    ctx.restore(); } else { ctx.drawImage(sc,0,0,sc.width,sc.height,dx,dy,sz,sz);
     } }
     // Stadium floodlight banks in the four corners — a soft warm halo + a little
     // bulb grid, gently pulsing. Drawn behind the fans; kept in the corners so it
@@ -417,7 +438,7 @@
         if(a.y<2) a.y=2; } if(a.x>CW+3) a.x=-3;
         if(a.x<-3) a.x=CW+3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now);
         }
-        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
+        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,a.sz||17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
         else if(a.kind==='snow'){ if(typeof royBlizzard==='function'&&royBlizzard()) continue;
         a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2;
         if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;
