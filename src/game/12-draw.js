@@ -398,9 +398,6 @@
     // Uses the generated sprite-bat / sprite-glove PNGs, with a procedural draw as fallback.
     function _drawBat(ctx,x,y,ang,lit){ var img=(typeof NS_BAT!=='undefined')?NS_BAT:null;
     if(img&&img.complete&&img.naturalWidth){ var L=38, h=L*img.naturalHeight/img.naturalWidth;
-    ctx.save(); ctx.fillStyle='rgba(30,16,6,0.22)';
-    ctx.beginPath(); ctx.ellipse(x,y+2,L*0.48,Math.max(3,h*0.5),ang,0,6.283);
-    ctx.fill(); ctx.restore();
     ctx.save(); ctx.imageSmoothingEnabled=false;
     ctx.translate(x,y); ctx.rotate(ang);
     ctx.drawImage(img,-4,-h/2,L,h);
@@ -434,11 +431,23 @@
     ctx.lineWidth=1; ctx.beginPath();
     ctx.arc(gl.x,gl.y,gl.r+2.5,0,6.283); ctx.stroke();
     ctx.restore();
+    // catch / release animation: squeeze shut around a claimed ball (catchT), then spring back open
+    // when the ball leaves (openT). Squash on the closing beat and a slight overshoot on the opening
+    // one, so the "it has your ball" / "you are free" states are felt, not just colour-coded.
+    var _sc=1, _sq=1;
+    if(gl.catchT>0){ var _ct=1-gl.catchT/14;                  // 0 -> just caught, 1 -> settled shut
+    _sc=0.80+0.34*Math.exp(-3.4*_ct)*Math.cos(7.0*_ct);       // damped pinch inward
+    _sq=1+0.16*Math.exp(-3.4*_ct)*Math.cos(7.0*_ct+1.1);
+    } else if(gl.openT>0){ var _ot=1-gl.openT/12;             // 0 -> just released, 1 -> back to rest
+    _sc=1+0.30*Math.exp(-3.0*_ot)*Math.cos(6.2*_ot);          // springs open past its resting size
+    _sq=1-0.12*Math.exp(-3.0*_ot)*Math.cos(6.2*_ot);
+    } else if(gl.caught) _sc=0.86;                             // held shut while it has the ball
     if(gimg&&gimg.complete&&gimg.naturalWidth){ var gs=gl.r*2.1+(gl.flash>0?3:0);
     ctx.save(); ctx.imageSmoothingEnabled=false;
-    if(gl.caught) ctx.globalAlpha=0.5;
+    ctx.translate(gl.x,gl.y); ctx.scale(_sc,_sc*_sq);
+    if(gl.caught&&!gl.catchT) ctx.globalAlpha=0.72;
     if(gl.flash>0){ ctx.shadowColor='#ffd84a'; ctx.shadowBlur=6; }
-    ctx.drawImage(gimg,gl.x-gs/2,gl.y-gs/2,gs,gs);
+    ctx.drawImage(gimg,-gs/2,-gs/2,gs,gs);
     ctx.restore(); continue; }
     ctx.save(); ctx.translate(gl.x,gl.y);
     ctx.fillStyle=gl.flash>0?'#f0c060':'#8a5a2a'; ctx.beginPath();
@@ -1062,7 +1071,8 @@
     }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
     drawGumballs(ctx,now); drawJelly(ctx,now);
     }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
-    drawBaseball(ctx,now); }catch(e){} return;
+    }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
+    site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
@@ -1382,6 +1392,9 @@
         }
         drawEndMarks(ctx,team);
       }
+      // THE DIAMOND's props sit on top of the markings: the bat stands at home plate, inside the
+      // goal box, so drawing it with the ground FX left the white box lines striped across it.
+      try{ if(boardKey==='baseball'&&stadiumHazards()) drawBaseball(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';

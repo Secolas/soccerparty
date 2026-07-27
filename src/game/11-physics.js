@@ -1044,7 +1044,7 @@
     // ONE glove, on the pitcher's mound. Four of them — sat at coordinates matching no drawn base —
     // turned midfield into four ball-traps that ate any shot passing through. It starts disarmed so
     // the kickoff ball, which sits inside it, has to leave once before it can ever be claimed.
-    if(bbGlovesOn) bbGloves.push({x:W/2,y:H/2,r:13,flash:0,armed:false});
+    if(bbGlovesOn) bbGloves.push({x:W/2,y:H/2,r:13,flash:0,armed:false,caught:false,catchT:0,openT:0});
     }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1065,7 +1065,9 @@
     } if(bbPitchCD>0){ bbPitchCD--; } else if(bbPitchBalls.length<2){ _bbSpawnPitch();
     bbPitchCD=130+Math.floor(Math.random()*80);
     try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
-    if(bbGlovesOn){ for(var _gf=0;_gf<bbGloves.length;_gf++){ if(bbGloves[_gf].flash>0) bbGloves[_gf].flash--; } }
+    if(bbGlovesOn){ for(var _gf=0;_gf<bbGloves.length;_gf++){ var _gg=bbGloves[_gf];
+    if(_gg.flash>0) _gg.flash--; if(_gg.catchT>0) _gg.catchT--;
+    if(_gg.openT>0) _gg.openT--; } }
     }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
     function hzTier(){ var l;
@@ -1740,10 +1742,13 @@
       // the ball has left, so the ball you flick off the mound is never re-caught in place.
       for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
       var _gin=Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R;
-      if(!_gin){ _gc.armed=true; _gc.caught=false; continue; }
+      if(!_gin){ _gc.armed=true;
+      if(_gc.caught){ _gc.caught=false; _gc.openT=12;   /* the ball just left — spring back open */
+      try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} }
+      continue; }
       if(_gc.armed&&_bbsp>0.5&&_bbsp<BB_CATCH_MAX){ coin.x=_gc.x; coin.y=_gc.y;
       coin.vx=0; coin.vy=0; _bbsp=0;
-      _gc.armed=false; _gc.caught=true; _gc.flash=22;
+      _gc.armed=false; _gc.caught=true; _gc.flash=22; _gc.catchT=14; _gc.openT=0;
       try{ if(typeof sfxBump==='function') sfxBump(6);
       }catch(e){} try{ shake=Math.max(shake||0,3);
       }catch(e){} break; } }
