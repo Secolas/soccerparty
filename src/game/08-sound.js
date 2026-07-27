@@ -1035,7 +1035,7 @@
     if(im) im.remove(); w.textContent='·';
     } } }); try{ renderAiImmunityBadge();
     }catch(e){} } function staminaMul(){ if(pen&&pen.active) return 1;
-    if(mode==='practice'||mode==='penalty') return 1;
+    if(mode==='penalty') return 1;
     return STAMINA[Math.min(flickCount, STAMINA.length-1)];
     }
     function renderAiImmunityBadge(){ if(typeof _royScoreDefer!=='undefined'&&_royScoreDefer) return;
