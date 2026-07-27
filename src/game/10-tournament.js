@@ -1113,7 +1113,8 @@
     pre.style.display='block';
     pre.scrollTop=0; var pad=mk('div','padding:12px 12px 20px;display:flex;flex-direction:column;align-items:center;');
     pad.appendChild(mk('div',FS(13,'#a9c94b')+'text-align:center;letter-spacing:1px;text-shadow:0 3px 0 #1c1330;','STADIUM ROYALE'));
-    pad.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;margin:4px 0 8px;','STADIUM '+(ROYALE.i+1)+' OF '+ROYALE_ARENAS.length));
+    var _stTitle=mk('div',FS(7,'#9a8fb0')+'text-align:center;margin:4px 0 8px;','STADIUM '+(ROYALE.i+1)+' OF '+ROYALE_ARENAS.length);
+    pad.appendChild(_stTitle);
     (function(){ var _dl=({easy:['EASY',
     '#5dd15d'],med:['MEDIUM',
     '#ffcf3a'],hard:['HARD',
@@ -1156,16 +1157,22 @@
       descBox.appendChild(vrow);
       })(); }
       renderDesc(ROYALE.i);
-      pad.appendChild(mk('div',FS(5,'#6f6684')+'text-align:center;margin-top:5px;','tap any stadium on the map to preview it'));
+      // Season 3 is the in-development ladder, so its map nodes are a JUMP, not just a preview —
+      // otherwise a new stadium can only be reached by winning every stadium before it.
+      var _royJump=(royMap===3);
+      pad.appendChild(mk('div',FS(5,'#6f6684')+'text-align:center;margin-top:5px;',_royJump?'tap any stadium on the map to jump straight to it':'tap any stadium on the map to preview it'));
       cv.style.cursor='pointer';
       cv.addEventListener('click',function(ev){ try{ var r=cv.getBoundingClientRect(), fx=(ev.clientX-r.left)/r.width, fy=(ev.clientY-r.top)/r.height;
       if(typeof NODES2==='undefined') return;
       var best=-1,bd=0.085; for(var _n=0;_n<NODES2.length&&_n<ROYALE_ARENAS.length;_n++){ var nd=NODES2[_n];
       if(!nd) continue; var dd=Math.hypot(fx-nd[0],fy-nd[1]);
       if(dd<bd){ bd=dd; best=_n;
-      } } if(best>=0){ renderDesc(best);
+      } } if(best>=0){ if(_royJump&&best!==ROYALE.i){ ROYALE.i=best;
+      try{ _stTitle.textContent='STADIUM '+(best+1)+' OF '+ROYALE_ARENAS.length;
+      go.textContent='ENTER STADIUM '+(best+1)+'  ▸';
+      }catch(e){} } renderDesc(best);
       try{ if(!muted) sfxClick();
-      }catch(e){} } }catch(e){} }); 
+      }catch(e){} } }catch(e){} });
       var go=mk('button','margin-top:10px;width:100%;max-width:'+CW+'px;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:12px;cursor:pointer;','ENTER STADIUM '+(ROYALE.i+1)+'  ▸');
       go.onclick=function(){ var cn=(typeof NODES2!=='undefined'&&NODES2[ROYALE.i])?NODES2[ROYALE.i]:[0.5,
       0.5]; var cpx=cn[0]*CW, cpy=cn[1]*CH, t0=null;
