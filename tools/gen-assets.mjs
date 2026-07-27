@@ -187,10 +187,13 @@ const ASSETS = [
   { file: "icon-cactus.png", size: 64, prompt: `A single green saguaro cactus with two upraised arms and rows of little white spikes, chunky and bold with a thick dark outline, filled solid like a sticker, centered. NO pot, NO ground, NO background, NO shadow. ${ICON}` },
   { file: "icon-geyser.png", size: 64, prompt: `A sand geyser erupting, a tall spout of tan and pale-yellow sand and dust blasting straight upward out of a small vent, with a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
   { file: "sprite-cactus.png", size: 64, prompt: `A single green saguaro cactus standing upright, front view, thick rounded trunk with two upraised arms and rows of tiny white spikes and a couple of small red flowers on top, ONE thick dark outline on the outer edge, filled solid like a sticker. NO pot, NO ground line, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
+  // sprite-bat.png / sprite-glove.png are NOT generated here. They render at only
+  // 38px / 27px in-game, and a 1024px AI render downscaled that far turns to
+  // speckle (the glove came out an unreadable orange blob). They are hand-authored
+  // pixel art instead — see tools/draw-props.mjs. Do NOT add prompts for them here
+  // or `npm run gen` will overwrite the drawn art.
 
   // Season 3 BASEBALL (THE DIAMOND) — top-down props, rotated in-engine
-  { file: "sprite-bat.png", size: 64, deFringe: true, prompt: `A single classic wooden baseball bat lying perfectly HORIZONTAL, top-down view from directly straight above. BOLD chunky silhouette: a short thin handle with a small round knob on the far LEFT end, widening into a big fat rounded barrel that fills the RIGHT two-thirds. Warm polished caramel-tan wood, a darker brown wrapped grip on the handle, and one bright cream highlight streak running along the barrel. ONE thick dark outline, big simple high-contrast shapes that read clearly when shrunk tiny, filled solid like a sticker. NO ball, NO hands, NO ground line, NO shadow, one bat floating alone horizontally in wide empty magenta space. ${ICON}` },
-  { file: "sprite-glove.png", size: 64, deFringe: true, prompt: `A single classic baseball fielder's glove seen from the SIDE at a slight three-quarter angle, the iconic mitt silhouette: four rounded finger stalls fanning up at the top, a fat thumb on the left, and a big open catching pocket in the middle, tan leather with darker shadow in the pocket and cream lacing. BOLD chunky simple silhouette with ONE thick dark outline that instantly reads as a baseball glove even when shrunk tiny, filled solid like a sticker, centered. NO baseball, NO hand, NO wrist, NO arm, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
 
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
