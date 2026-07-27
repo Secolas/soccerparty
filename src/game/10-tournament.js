@@ -60,7 +60,9 @@
     // Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
     var ROYALE_ARENAS_3=[
       {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
-      'cannon','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'}
+      'cannon','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'},
+      {name:'THE HARDWOOD',pitch:'court',ab:['volley',
+      'chip','reflex'],d:2,blurb:'A basketball court — the ball dribbles as it runs through midcourt and sails clean over players on the up-beat (easy); angled backboards beside each post bank a shot goalwards (medium); a shot clock hurries the ball along the longer one possession runs (hard).'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

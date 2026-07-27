@@ -1049,6 +1049,26 @@
     // the kickoff ball, which sits inside it, has to leave once before it can ever be claimed.
     if(bbGlovesOn) bbGloves.push({x:W/2,y:H/2,r:13,flash:0,armed:false,caught:false,catchT:0,openT:0});
     }
+    // BASKETBALL (THE HARDWOOD, Season 3) — ADDITIVE by difficulty, no power/speed scaling:
+    //   EASY: the ball DRIBBLES — while it is running through midcourt it hops on a fixed beat, and on
+    //         the up-beat it sails clean over outfield players. The hop is confined to midcourt ON
+    //         PURPOSE: going airborne skips every nail collision including the GOALIE (see collideStep),
+    //         so letting it hop near the goals would let shots float past the keeper at random.
+    //   MED : + backboards angled beside each goal — bank a shot off one and it deflects goalwards.
+    //   HARD: + a shot clock; the longer one possession runs, the more the ball is hurried along.
+    var bkDribT=0, bkDribOn=false, bkBoardsOn=false, bkClockOn=false, bkClock=0, bkBoards=[], bkBoardFlash=0;
+    var BK_PERIOD=30, BK_HOP=13, BK_MINSP=1.2, BK_CLOCK=300, BK_BOARD_R=4;
+    function initCourt(){ var t=hzTier();
+    bkDribOn=true; bkBoardsOn=(t>=1); bkClockOn=(t>=2);
+    bkDribT=0; bkClock=BK_CLOCK; bkBoards=[];
+    if(bkBoardsOn){ var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), _o=13, _d=17;
+    // one angled board outside each post, canted so a ball off it is turned back toward the goal mouth
+    bkBoards.push({x1:gL-_o,y1:NET_DEPTH+2,x2:gL-_o-_d,y2:NET_DEPTH+2+_d});
+    bkBoards.push({x1:gR+_o,y1:NET_DEPTH+2,x2:gR+_o+_d,y2:NET_DEPTH+2+_d});
+    bkBoards.push({x1:gL-_o,y1:H-NET_DEPTH-2,x2:gL-_o-_d,y2:H-NET_DEPTH-2-_d});
+    bkBoards.push({x1:gR+_o,y1:H-NET_DEPTH-2,x2:gR+_o+_d,y2:H-NET_DEPTH-2-_d});
+    } }
+    function _bkMid(y){ var pad=NET_DEPTH+GOAL_AREA_D+10; return y>pad&&y<H-pad; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
     else if(e===1){ sx=W-WALL-2; sy=pad+Math.random()*(H-2*pad); }
@@ -1804,6 +1824,33 @@
       }catch(e){} try{ spawnSparks(_bhx,_bhy,current,8,true);
       }catch(e){} } }
       if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
+      } if((typeof boardKey!=='undefined')&&boardKey==='court'&&!scoring&&stadiumHazards()){ if(!bkDribOn) initCourt();
+      var _ksp=Math.hypot(coin.vx,coin.vy), _kmov=(moving&&(!coin.air||coin.air<=0));
+      // EASY dribble: hop on a fixed beat while running through midcourt
+      if(moving&&_ksp>BK_MINSP&&_bkMid(coin.y)){ bkDribT++;
+      if(bkDribT%BK_PERIOD===0&&(!coin.air||coin.air<=0)){ coin.air=BK_HOP; coin.air0=BK_HOP;
+      try{ if(typeof nsKick==='function') nsKick(3); }catch(e){} }
+      } else if(!moving) bkDribT=0;
+      // MED backboards: bank a shot off the angled board beside a post
+      if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
+      var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
+      var _kt=_kl2?((coin.x-_kb.x1)*_kdx+(coin.y-_kb.y1)*_kdy)/_kl2:0;
+      _kt=Math.max(0,Math.min(1,_kt));
+      var _kqx=_kb.x1+_kdx*_kt, _kqy=_kb.y1+_kdy*_kt, _kd=Math.hypot(coin.x-_kqx,coin.y-_kqy);
+      if(_kd<COIN_R+BK_BOARD_R&&_kd>0){ var _knx=-_kdy/Math.sqrt(_kl2), _kny=_kdx/Math.sqrt(_kl2);
+      if(coin.vx*_knx+coin.vy*_kny>0){ _knx=-_knx; _kny=-_kny; }   /* face the incoming ball */
+      var _kdot=coin.vx*_knx+coin.vy*_kny;
+      coin.vx-=2*_kdot*_knx; coin.vy-=2*_kdot*_kny;
+      coin.vx*=1.06; coin.vy*=1.06;
+      var _kpush=(COIN_R+BK_BOARD_R)-_kd;
+      coin.x+=(coin.x-_kqx)/_kd*_kpush; coin.y+=(coin.y-_kqy)/_kd*_kpush;
+      bkBoardFlash=10; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
+      }catch(e){} break; } } }
+      // HARD shot clock: one possession running long hurries the ball along (bounded, resets at rest)
+      if(bkClockOn){ if(moving){ if(bkClock>0) bkClock--;
+      if(bkClock<BK_CLOCK*0.5&&_ksp>0.8&&_ksp<6.5){ coin.vx*=1.012; coin.vy*=1.012; }
+      } else bkClock=BK_CLOCK; }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];

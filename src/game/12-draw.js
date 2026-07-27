@@ -468,6 +468,29 @@
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
     var ang=b.swing?(b.start+b.dir*(b.swT/BB_SWING)*BB_ARC):b.rest;
     _drawBat(ctx,b.x,b.y,ang,b.swing); } }
+    // BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the shot clock (hard)
+    function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
+    // the boards and the clock are standing furniture, so lay them out from the draw side too —
+    // stepPhysics has not run yet at kickoff, and waiting for it left the court bare until first touch
+    if(!bkDribOn){ try{ initCourt(); }catch(e){} }
+    for(var i=0;i<bkBoards.length;i++){ var b=bkBoards[i];
+    ctx.save(); ctx.lineCap='round';
+    ctx.strokeStyle='rgba(20,12,4,0.35)'; ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1+1.5); ctx.lineTo(b.x2,b.y2+1.5); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ffe9a8':'#f4efe0'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ff9c3c':'#d2542c'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.restore(); }
+    if(bkBoardFlash>0) bkBoardFlash--;
+    if(bkClockOn){ var f=Math.max(0,Math.min(1,bkClock/BK_CLOCK)), late=f<0.5;
+    ctx.save(); ctx.translate(W-WALL-11,H/2);
+    ctx.fillStyle='rgba(12,8,4,0.62)'; ctx.fillRect(-6,-11,12,22);
+    ctx.fillStyle=late?'#ff5a3c':'#ffd84a';
+    var hh=Math.round(20*f); ctx.fillRect(-4,11-hh-1,8,hh);
+    ctx.strokeStyle='rgba(255,240,210,0.5)'; ctx.lineWidth=1;
+    ctx.strokeRect(-6.5,-11.5,13,23); ctx.restore(); }
+    }
     // CASINO roulette wheel (spins; shows the winning number on a result)
     function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);
     var cols=['#c83a4a','#2a2a30',
@@ -1395,6 +1418,7 @@
       // THE DIAMOND's props sit on top of the markings: the bat stands at home plate, inside the
       // goal box, so drawing it with the ground FX left the white box lines striped across it.
       try{ if(boardKey==='baseball'&&stadiumHazards()) drawBaseball(ctx,now); }catch(e){}
+      try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';
