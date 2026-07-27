@@ -1025,10 +1025,10 @@
     //         slowed below BB_CATCH_MAX — a live shot blows straight through it.
     // Every effect only touches a MOVING ball, so the ball still settles and turns end.
     var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false;
-    var BB_RZ=40, BB_SWING=12, BB_ARC=2.6, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
+    var BB_RZ=40, BB_SWING=14, BB_ARC=Math.PI, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
     // A glove only claims a ball that is already dying. A real shot beats it, so the hazard reads as
     // "do not leave it short through the middle" — a skill test, not a random confiscation.
-    var BB_CATCH_MAX=2.2;
+    var BB_CATCH_MAX=3.2;   /* a ball still rolling this slowly through the mound is claimed; a live shot blows through */
     function initBaseball(){ var t=hzTier();
     // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
     // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
@@ -1037,8 +1037,11 @@
     // read as random. Now it is the last line in front of the keeper: a soft shot gets cleared,
     // a hard flick strikes past it.
     var _hp=NET_DEPTH+32;
-    bbBats=[{x:W/2,y:_hp,rest:-1.03,tgt:H,swing:false,swT:0,cd:0},
-    {x:W/2,y:H-_hp,rest:2.11,tgt:0,swing:false,swT:0,cd:0}];
+    // isTop picks which half the 180-degree sweep arcs through: the top bat sweeps across its
+    // downfield side, the bottom bat across its upfield side, so each always swings out over the
+    // pitch and never back into its own net.
+    bbBats=[{x:W/2,y:_hp,rest:-1.03,tgt:H,isTop:1,swing:false,swT:0,cd:0,start:0,dir:1},
+    {x:W/2,y:H-_hp,rest:2.11,tgt:0,isTop:0,swing:false,swT:0,cd:0,start:0,dir:1}];
     bbPitchOn=(t>=1); bbGlovesOn=(t>=2);
     bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
     // ONE glove, on the pitcher's mound. Four of them — sat at coordinates matching no drawn base —
@@ -1737,21 +1740,27 @@
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
       coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
       var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
-      if(_bbmov){
-      // HARD glove: the mound glove catches (stops) a DYING ball that enters it. It re-arms only once
-      // the ball has left, so the ball you flick off the mound is never re-caught in place.
+      // HARD glove: the mound glove claims a DYING ball that enters it. It re-arms only once the ball
+      // has left, so the ball you flick off the mound is never re-caught in place.
+      // This runs whether or not the coin is moving ON PURPOSE: gated behind the `moving` check it
+      // missed the most common case — a ball that rolls in and STOPS inside the glove stops being
+      // checked the moment it settles, so it just sat on the mound uncaught. The lower speed bound is
+      // gone for the same reason (a decelerating ball could skip the old 0.5-2.2 window between
+      // frames). The kickoff ball is still safe: the glove spawns disarmed and only arms once the
+      // ball has left it.
       for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
       var _gin=Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R;
       if(!_gin){ _gc.armed=true;
       if(_gc.caught){ _gc.caught=false; _gc.openT=12;   /* the ball just left — spring back open */
       try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} }
       continue; }
-      if(_gc.armed&&_bbsp>0.5&&_bbsp<BB_CATCH_MAX){ coin.x=_gc.x; coin.y=_gc.y;
+      if(_gc.armed&&_bbsp<BB_CATCH_MAX&&(!coin.air||coin.air<=0)){ coin.x=_gc.x; coin.y=_gc.y;
       coin.vx=0; coin.vy=0; _bbsp=0;
       _gc.armed=false; _gc.caught=true; _gc.flash=22; _gc.catchT=14; _gc.openT=0;
       try{ if(typeof sfxBump==='function') sfxBump(6);
       }catch(e){} try{ shake=Math.max(shake||0,3);
       }catch(e){} break; } }
+      if(_bbmov){
       // MED+ pitching machine: a stray ball crossing the pitch deflects the moving ball (never traps it)
       for(var _pci=0;_pci<bbPitchBalls.length&&_bbsp>0.5;_pci++){ var _pc=bbPitchBalls[_pci];
       var _pcx=coin.x-_pc.x,_pcy=coin.y-_pc.y,_pcd=Math.hypot(_pcx,_pcy),_pcm=COIN_R+_pc.r;
@@ -1770,11 +1779,16 @@
       // only ever deflects a moving coin) but it makes the two hazards play off each other.
       for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
       if(_bb.cd>0){ _bb.cd--; continue; }
-      if(!_bb.swing){ var _btrig=(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ);
+      if(!_bb.swing){ var _btrig=(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ), _btx=coin.x;
       if(!_btrig){ for(var _bpi=0;_bpi<bbPitchBalls.length;_bpi++){ var _bp0=bbPitchBalls[_bpi];
-      if(!_bp0.struck&&Math.hypot(_bp0.x-_bb.x,_bp0.y-_bb.y)<BB_RZ){ _btrig=true; break; } } }
-      if(_btrig){ _bb.swing=true; _bb.swT=0; _bb.hit=false; } continue; }
-      _bb.swT++; var _bang=_bb.rest+(_bb.swT/BB_SWING)*BB_ARC;
+      if(!_bp0.struck&&Math.hypot(_bp0.x-_bb.x,_bp0.y-_bb.y)<BB_RZ){ _btrig=true; _btx=_bp0.x; break; } } }
+      if(_btrig){ _bb.swing=true; _bb.swT=0; _bb.hit=false;
+      // swing FROM the side the ball is on, sweeping a full 180 degrees across the bat's own front,
+      // so the barrel always travels through the ball instead of away from it
+      var _bR=(_btx>=_bb.x); _bb.start=_bR?0:Math.PI;
+      _bb.dir=(_bR===!!_bb.isTop)?1:-1;
+      } continue; }
+      _bb.swT++; var _bang=_bb.start+_bb.dir*(_bb.swT/BB_SWING)*BB_ARC;
       var _bhx=_bb.x+Math.cos(_bang)*BB_REACH, _bhy=_bb.y+Math.sin(_bang)*BB_REACH;
       if(!_bb.hit&&_bbmov&&Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+BB_BARREL){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
       coin.vx=_bax/_bad*BB_POWER; coin.vy=_bay/_bad*BB_POWER;
