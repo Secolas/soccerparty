@@ -398,6 +398,9 @@
     // Uses the generated sprite-bat / sprite-glove PNGs, with a procedural draw as fallback.
     function _drawBat(ctx,x,y,ang,lit){ var img=(typeof NS_BAT!=='undefined')?NS_BAT:null;
     if(img&&img.complete&&img.naturalWidth){ var L=38, h=L*img.naturalHeight/img.naturalWidth;
+    ctx.save(); ctx.fillStyle='rgba(30,16,6,0.22)';
+    ctx.beginPath(); ctx.ellipse(x,y+2,L*0.48,Math.max(3,h*0.5),ang,0,6.283);
+    ctx.fill(); ctx.restore();
     ctx.save(); ctx.imageSmoothingEnabled=false;
     ctx.translate(x,y); ctx.rotate(ang);
     ctx.drawImage(img,-4,-h/2,L,h);
