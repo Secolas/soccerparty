@@ -5,7 +5,10 @@
       const w=GOAL_W-12, h=CROWD_TB-2;
       const cvs=document.createElement('canvas'); cvs.width=w; cvs.height=h;
       const g=cvs.getContext('2d'); g.imageSmoothingEnabled=false;
-      paintPattern(g,0,0,w,h,kit);
+      // a big national flag hung behind the goal (matches the promo look); fall
+      // back to the kit pattern if the flag painter isn't available yet
+      if(typeof _paintFlag==='function'){ try{ _paintFlag(g,0,0,w,h,teamKits[side].name); }catch(e){ paintPattern(g,0,0,w,h,kit); } }
+      else paintPattern(g,0,0,w,h,kit);
       // seam shading so it reads as fabric
       g.fillStyle='rgba(0,0,0,0.12)'; for(let x=0;x<w;x+=4) g.fillRect(x,0,1,h);
       g.fillStyle='rgba(255,255,255,0.08)'; g.fillRect(0,0,w,1);
