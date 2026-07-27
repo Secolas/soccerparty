@@ -394,8 +394,20 @@
     ctx.arc(0,0,g.r,0,6.283);
     ctx.stroke(); ctx.restore();
     } }
-    // BASEBALL (THE DIAMOND) swinging bats — glow gold on their cooldown right after a crack
+    // BASEBALL (THE DIAMOND) — pitching machine + stray balls (med+), then the swinging bats
+    // (barrel glows gold on the cooldown right after a crack)
     function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
+    if(typeof bbPitchOn!=='undefined'&&bbPitchOn){ ctx.save();
+    ctx.fillStyle='#3a3a42'; ctx.fillRect(WALL-1,H*0.5-7,6,14);
+    ctx.fillStyle='#5a5a66'; ctx.fillRect(WALL-1,H*0.5-7,6,3);
+    ctx.restore(); for(var p=0;p<bbPitchBalls.length;p++){ var pb=bbPitchBalls[p];
+    ctx.save(); ctx.translate(pb.x,pb.y);
+    ctx.fillStyle='#f4f0e6'; ctx.beginPath();
+    ctx.arc(0,0,pb.r,0,6.283); ctx.fill();
+    ctx.strokeStyle='#c8102e'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(-pb.r*0.4,0,pb.r*1.1,-0.9,0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(pb.r*0.4,0,pb.r*1.1,Math.PI-0.9,Math.PI+0.9); ctx.stroke();
+    ctx.restore(); } }
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
     var hx=b.x+Math.cos(b.ph)*b.r, hy=b.y+Math.sin(b.ph)*b.r;
     ctx.save(); ctx.fillStyle='rgba(240,240,232,0.9)';

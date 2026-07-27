@@ -1015,23 +1015,34 @@
     '#c86aff']; for(var g=0;g<gbdefs.length;g++){ var a=Math.random()*6.283, sp=0.5+Math.random()*0.15;
     gumballs.push({x:gbdefs[g].x,y:gbdefs[g].y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6,col:cols[g%5]});
     } } }
-    // BASEBALL (THE DIAMOND, Season 3) — one swinging bat per attacking side (mirrored, symmetric).
-    // The bat head orbits its plate; a moving ball caught by the head is "cracked" in the swing
-    // direction, so where the ball goes depends on the beat you hit it on. Med+ also runs a fast dirt
-    // infield. Both effects only touch a moving ball, so the ball still settles and turns end.
-    var bbBats=[];
+    // BASEBALL (THE DIAMOND, Season 3) — ADDITIVE by difficulty, like the S2 arenas:
+    //   EASY: one swinging bat per attacking side (mirrored, symmetric) — a moving ball caught by
+    //         the bat head is "cracked" in the swing direction, so where it goes depends on the beat.
+    //   MED : + a pitching machine that fires stray balls across the pitch (deflect the ball only).
+    //   HARD: + a fast dirt infield that keeps the ball quick inside the diamond, and a faster swing.
+    // Every effect only touches a MOVING ball, so the ball still settles and turns end.
+    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbInfield=false;
     function initBaseball(){ var t=hzTier(); bbBats=[];
-    var sw=0.05+0.02*t;
+    var sw=0.055+(t>=2?0.02:0);
     bbBats.push({x:W*0.30,y:H*0.32,r:30,ph:0,sp:sw,dir:1,cd:0});
     bbBats.push({x:W*0.70,y:H*0.68,r:30,ph:3.14159,sp:sw,dir:1,cd:0});
+    bbPitchOn=(t>=1); bbInfield=(t>=2);
+    bbPitchBalls=[]; bbPitchCD=90;
     }
-    // advance the bat swing + cooldowns from the draw loop so the bats keep swinging between shots
+    // advance the bat swing, cooldowns and the pitching machine from the draw loop so they keep going
+    // between shots (like the storm gust). Ball collisions themselves are applied from stepPhysics.
     function baseballTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='baseball'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(bbBats.length===0){ try{ initBaseball(); }catch(e){} }
     for(var _bti=0;_bti<bbBats.length;_bti++){ var _btb=bbBats[_bti];
     _btb.ph+=_btb.sp*_btb.dir; if(_btb.ph>6.283) _btb.ph-=6.283;
     if(_btb.ph<0) _btb.ph+=6.283;
     if(_btb.cd>0) _btb.cd--; }
+    if(bbPitchOn){ for(var _pmi=bbPitchBalls.length-1;_pmi>=0;_pmi--){ var _pm=bbPitchBalls[_pmi];
+    _pm.x+=_pm.vx; _pm.y+=_pm.vy;
+    if(_pm.x>W-WALL+8||_pm.x<WALL-8||_pm.y<WALL-8||_pm.y>H-WALL+8) bbPitchBalls.splice(_pmi,1);
+    } if(bbPitchCD>0){ bbPitchCD--; } else if(bbPitchBalls.length<2){ bbPitchBalls.push({x:WALL+3,y:H*0.34+Math.random()*(H*0.32),vx:2.6+Math.random()*0.8,vy:(Math.random()-0.5)*0.7,r:5});
+    bbPitchCD=140+Math.floor(Math.random()*70);
+    try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
     }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
     function hzTier(){ var l;
@@ -1701,10 +1712,19 @@
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
       coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
       var _bbt=hzTier(); if(moving&&(!coin.air||coin.air<=0)){ var _bbsp=Math.hypot(coin.vx,coin.vy);
-      // med+ dirt infield: keep the ball fast inside the diamond (bounded, never accelerates a slow ball)
-      if(_bbt>=1&&_bbsp>0.6&&_bbsp<6){ if(Math.abs(coin.x-W/2)/(W*0.30)+Math.abs(coin.y-H/2)/(H*0.24)<1){ coin.vx*=1.02;
+      // HARD dirt infield: keep the ball fast inside the diamond (bounded, never accelerates a slow ball)
+      if(bbInfield&&_bbsp>0.6&&_bbsp<6){ if(Math.abs(coin.x-W/2)/(W*0.30)+Math.abs(coin.y-H/2)/(H*0.24)<1){ coin.vx*=1.02;
       coin.vy*=1.02; } }
-      // swinging bats: a moving ball reaching the bat head is cracked along the swing direction
+      // MED+ pitching machine: a stray ball crossing the pitch deflects the moving ball (never traps it)
+      for(var _pci=0;_pci<bbPitchBalls.length;_pci++){ var _pc=bbPitchBalls[_pci];
+      var _pcx=coin.x-_pc.x,_pcy=coin.y-_pc.y,_pcd=Math.hypot(_pcx,_pcy),_pcm=COIN_R+_pc.r;
+      if(_pcd<_pcm&&_pcd>0&&_bbsp>0.5){ var _pcux=_pcx/_pcd,_pcuy=_pcy/_pcd;
+      coin.x+=_pcux*(_pcm-_pcd); coin.y+=_pcuy*(_pcm-_pcd);
+      var _pcdot=coin.vx*_pcux+coin.vy*_pcuy; if(_pcdot<0){ coin.vx-=1.6*_pcdot*_pcux;
+      coin.vy-=1.6*_pcdot*_pcuy; } coin.vx+=_pc.vx*0.5;
+      coin.vy+=_pc.vy*0.5; try{ if(typeof sfxBump==='function') sfxBump(5);
+      }catch(e){} break; } }
+      // EASY+ swinging bats: a moving ball reaching the bat head is cracked along the swing direction
       for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
       if(_bb.cd>0) continue; var _bhx=_bb.x+Math.cos(_bb.ph)*_bb.r, _bhy=_bb.y+Math.sin(_bb.ph)*_bb.r;
       if(Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+7&&_bbsp>0.5){ var _btx=-Math.sin(_bb.ph)*_bb.dir, _bty=Math.cos(_bb.ph)*_bb.dir;

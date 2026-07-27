@@ -60,7 +60,7 @@
     // Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
     var ROYALE_ARENAS_3=[
       {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
-      'cannon','reflex'],d:1,blurb:'A ballpark infield — a swinging bat by each plate cracks the ball across the pitch, and on medium+ the dirt base paths keep it running fast.'}
+      'cannon','reflex'],d:1,blurb:'A ballpark infield — swinging bats crack the ball across the pitch (easy); a pitching machine fires stray balls (medium); the dirt infield runs fast (hard).'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
