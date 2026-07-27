@@ -104,6 +104,12 @@ node tools/balance.mjs --n 100 --workers 4 --json out.json
 node tools/balance.mjs --only cannon,wall --level hard
 ```
 
+**One run is not a measurement.** Run-to-run spread is far wider than the
+printed Wilson interval. The no-ability baseline must be 50% by construction,
+yet it has come out anywhere from 46.7% to 60.0%. Because the rarity bands are
+only 6-7pp wide, a single run cannot place an ability in a tier — run it three
+times or more and pool the raw counts before changing a weight.
+
 **50% is not the fair line.** Each ability is played against an *empty*
 loadout, so beating 50% is the point — 50% means the ability is worth no more
 than nothing, and below 50% it actively hurts its holder. Judge against the

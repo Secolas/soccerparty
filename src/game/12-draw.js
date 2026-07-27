@@ -1518,7 +1518,7 @@
         const pull=Math.min(rawP,TAC.frozen?21:42); var bx=coin.x-Math.cos(angD)*pull, by=coin.y-Math.sin(angD)*pull;
         ctx.strokeStyle='rgba(255,250,235,0.85)'; ctx.lineWidth=1.6; ctx.setLineDash([2,2]); ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(coin.x,coin.y); ctx.stroke(); ctx.setLineDash([]);
         var pEff=power*staminaMul();
-        var _stamMode=(mode!=='practice' && mode!=='penalty' && !(pen&&pen.active));
+        var _stamMode=(mode!=='penalty' && !(pen&&pen.active));
         var L=(13+pEff*0.6)*(TAC.laser?2.4:1);
         if(TAC.backspin) L=400; const pcol=TAC.frozen?'#7fdcff':(_stamMode?['#5dff5d',
         '#ffd21a','#ff2a1a','#b31414'][Math.min(flickCount,3)]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
@@ -1654,6 +1654,8 @@
     }); var NS_WALL=new Image();
     try{ NS_WALL.src='assets/generated/icon-wall.png';
     }catch(e){} var NS_ROYMAP=new Image();
+    var NS_ROYMAP2=new Image();
+    try{ NS_ROYMAP2.src='assets/generated/roymap2.png'; }catch(e){}
     try{ NS_ROYMAP.src='assets/generated/roymap.png';
     }catch(e){} var NS_BUSH=[];
     for(var _nbi=0;_nbi<4;_nbi++){ (function(_k){ var _im=new Image();

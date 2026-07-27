@@ -51,6 +51,20 @@
 // To measure these properly the sweep needs loadout pairs (ability vs ability),
 // not ability vs nothing.
 //
+// ONE RUN IS NOT A MEASUREMENT
+// Run-to-run spread is much wider than the Wilson interval printed below, and
+// the no-ability baseline proves it: with neither side holding anything, and
+// every ability played on both sides, it must sit at 50%, yet across five runs
+// it came out 46.7, 48.3, 49.0, 53.3 and 60.0%. INJURY likewise read 62.0, then
+// 46.7, 51.7, 56.7 and 51.7 on the same configuration; pooling all 680 matches
+// puts it at 54.7%, so the 62.0 was an outlier — and it was acted on, promoting
+// the ability a rarity tier before the repeats showed the truth.
+//
+// Since the rarity bands are only 6-7pp wide, a single run cannot place an
+// ability in a tier. Before changing any weight, run the ability at least three
+// times and pool the counts (wins/matches summed), rather than trusting one
+// number or averaging percentages.
+//
 // Usage:
 //   node tools/balance.mjs                     # every ability, default N
 //   node tools/balance.mjs --n 100             # matches per ability (per side)
