@@ -97,20 +97,37 @@ Therefore:
   correct nation onto the upper part of that cloth. A pre-coloured flag will not
   become the right country.
 
-### Style, to match the promo video
+### Style — cozy chibi (the promo-video look)
 
-> chunky retro pixel art sprite, THICK NEAR-BLACK OUTLINE around the whole
-> character, bold high-contrast saturated colours, strong simple readable
-> silhouette, low detail, few colours, rounded friendly proportions, cheerful
-> stadium football fan, full body head to feet, front view, feet at the bottom of
-> the frame, MID-GREY shirt with no colour or pattern (it is recoloured in game),
-> colourful hair skin shorts and shoes, transparent background, no text, no
+The reference is **cozy chibi pixel art**, the Kairosoft / *Pocket League Story*
+look. Read off the video frames, the recipe is:
+
+- **Chibi proportions** — head is roughly 40% of total height, body short and
+  stubby, arms simple and stubby.
+- **NO outline.** The video's fans have no dark contour at all. They are flat
+  colour shapes.
+- **Flat colour, no gradients or dithering.** One tone per area.
+- **Tiny palette — about 4 colours per character:** skin, hair, shirt, mouth.
+- **Face is three marks:** two dark dot eyes and an open mouth (a small dark-red
+  oval). No nose, no eyebrows.
+- **Hair is a simple cap/bowl shape** in one flat colour.
+
+> cozy chibi pixel art, Kairosoft style, cute tiny stadium football fan, big head
+> small stubby body, arms raised cheering, simple happy face with two black dot
+> eyes and an open shouting mouth, no nose, flat solid colours with no shading and
+> no gradients, only about four colours, NO OUTLINE, front view, full body head to
+> feet, feet at the bottom of the frame, transparent background, no text, no
 > watermark, no drop shadow
 
-A **thick dark outline** matters more than any other single thing: these render
-small against a dark stand, and an outline-less fan blends into the crowd behind
-it. Bold shapes beat fine shading — the face should be a few decisive pixels
-(eyes, open shouting mouth).
+Keep the shirt **mid-grey** (see the recolour rule above) — the game paints the
+team colour onto it.
+
+> **Do not add a heavy dark outline to make the fans readable.** That is not the
+> video's style, and the readability problem is mine to fix in code, not yours to
+> fix in the art. It exists because our terrace behind the fans is dark green
+> while the video's is light grey — that is why no-outline art reads fine there
+> and washes out here. Author it flat and outline-free like the video; I'll
+> lighten the terrace behind the crowd so it pops.
 
 ### Order of work (don't skip step 1)
 
