@@ -428,12 +428,7 @@
     ctx.restore(); } }
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
     var ang=b.rest+(b.swing?(b.swT/BB_SWING)*BB_ARC:0);
-    _drawBat(ctx,b.x,b.y,ang,b.swing); }
-    if(typeof bbBats!=='undefined'){ for(var z=0;z<bbBats.length;z++){ var bz=bbBats[z];
-    if(!bz.swing&&!bz.cd){ ctx.save();
-    ctx.strokeStyle='rgba(255,255,255,0.10)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.arc(bz.x,bz.y,BB_RZ,0,6.283);
-    ctx.stroke(); ctx.restore(); } } } }
+    _drawBat(ctx,b.x,b.y,ang,b.swing); } }
     // CASINO roulette wheel (spins; shows the winning number on a result)
     function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);
     var cols=['#c83a4a','#2a2a30',

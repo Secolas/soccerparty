@@ -1034,7 +1034,7 @@
     bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
     if(bbGlovesOn){ var cx=W/2,cy=H/2,dx=W*0.30,dy=H*0.24, _bp=[[cx,cy-dy],
     [cx+dx,cy],[cx,cy+dy],[cx-dx,cy]];
-    for(var _gi=0;_gi<_bp.length;_gi++) bbGloves.push({x:_bp[_gi][0],y:_bp[_gi][1],r:12,flash:0}); }
+    for(var _gi=0;_gi<_bp.length;_gi++) bbGloves.push({x:_bp[_gi][0],y:_bp[_gi][1],r:12,flash:0,armed:true}); }
     }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1726,11 +1726,15 @@
       coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
       var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
       if(_bbmov){
-      // HARD gloves: a base glove catches (stops) a moving ball that reaches it
+      // HARD gloves: a base glove catches (stops) a moving ball that ENTERS it. Each glove re-arms
+      // only once the ball has left, so the ball you flick off a base is never re-caught in place.
       for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
-      if(_bbsp>0.5&&Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R){ coin.x=_gc.x;
-      coin.y=_gc.y; coin.vx=0; coin.vy=0;
-      _bbsp=0; _gc.flash=22; try{ if(typeof sfxBump==='function') sfxBump(6);
+      var _gin=Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R;
+      if(!_gin){ _gc.armed=true; continue; }
+      if(_gc.armed&&_bbsp>0.5){ coin.x=_gc.x; coin.y=_gc.y;
+      coin.vx=0; coin.vy=0; _bbsp=0;
+      _gc.armed=false; _gc.flash=22;
+      try{ if(typeof sfxBump==='function') sfxBump(6);
       }catch(e){} try{ shake=Math.max(shake||0,3);
       }catch(e){} break; } }
       // MED+ pitching machine: a stray ball crossing the pitch deflects the moving ball (never traps it)
