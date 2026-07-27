@@ -1870,19 +1870,56 @@
     ctx.fillRect(ox-2,oy-2,2,dh+7);
     for(var c=0;c<dw;c++){ var t2=c/dw, wv=Math.sin(ph*0.14+t2*6.0)*2.6*t2;
     ctx.drawImage(off, t2*FW,0, Math.max(0.5,FW/dw),FH, ox+c, oy+wv, 1, dh);
-    } ctx.restore(); } function drawBanner(){
-      const t=banner, appear=Math.min(1,(110-t)/8), scale=0.55+appear*0.45+Math.sin((110-t)*0.3)*0.02;
-      const side=bannerTeam, tc=primary(side);
+    } ctx.restore(); }
+    // rounded-rect path helper (no fill/stroke — caller decides)
+    function _rr(c,x,y,w,h,r){ c.beginPath();
+      c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+      c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+    }
+    // 4-point twinkle star (two crossed kites), centred at x,y
+    function _goalSpark(c,x,y,r,col,a){ if(a<=0||r<=0.4) return;
+      c.save(); c.globalAlpha=Math.min(1,a); c.fillStyle=col; c.translate(x,y);
+      c.beginPath();
+      c.moveTo(0,-r); c.lineTo(r*0.28,0); c.lineTo(0,r); c.lineTo(-r*0.28,0); c.closePath();
+      c.moveTo(-r,0); c.lineTo(0,r*0.28); c.lineTo(r,0); c.lineTo(0,-r*0.28); c.closePath();
+      c.fill(); c.restore();
+    }
+    function drawBanner(){
+      const t=banner, appear=Math.min(1,(110-t)/9), out=Math.min(1,t/7);
+      // easeOutBack: a small overshoot so the word punches in and settles
+      const eb=1+2.70158*Math.pow(appear-1,3)+1.70158*Math.pow(appear-1,2);
+      const scale=0.4+eb*0.62+Math.sin((110-t)*0.25)*0.015;
+      const side=bannerTeam, tc=primary(side), nm=teamKits[side].name.toUpperCase();
       ctx.save(); ctx.translate(W/2,H/2); ctx.scale(scale,scale);
-      ctx.fillStyle='rgba(16,10,6,0.86)'; ctx.fillRect(-W/2,-30,W,60);
-      ctx.fillStyle=tc; ctx.fillRect(-W/2,-30,W,4); ctx.fillRect(-W/2,26,W,4);
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font="bold 22px 'Press Start 2P', monospace";
-      ctx.lineWidth=5; ctx.strokeStyle='#120a06'; ctx.strokeText('GOAL!',0,-6);
-      ctx.fillStyle='#f4e9c8'; ctx.fillText('GOAL!',0,-7);
+      const gw=ctx.measureText('GOAL!').width, hw=gw/2;
+      // soft dark plaque hugging the text (keeps it readable on any board —
+      // grass, neon, snow — without the old full-width TV lower-third bar)
+      ctx.globalAlpha=0.42*out; ctx.fillStyle='#0a0713';
+      _rr(ctx,-hw-22,-30,gw+44,60,14); ctx.fill();
+      ctx.globalAlpha=0.85*out; ctx.fillStyle=tc; ctx.fillRect(-hw-12,26,gw+24,3);
+      // rainbow sunset gradient — cyan → blue → gold → orange → pink, matching the
+      // promo look. Cached: local coords, remapped by the current CTM each frame,
+      // so it never allocates per frame (POLISH_ROADMAP draw-loop guardrail).
+      if(!window._goalGrad){ const gg=ctx.createLinearGradient(0,-20,0,8);
+        gg.addColorStop(0,'#6fe6ff'); gg.addColorStop(0.22,'#3f8cff');
+        gg.addColorStop(0.48,'#ffd23f'); gg.addColorStop(0.72,'#ff7a1a');
+        gg.addColorStop(1,'#ff3d7f'); window._goalGrad=gg; }
+      ctx.globalAlpha=out;
+      ctx.fillStyle='rgba(6,4,12,0.5)'; ctx.fillText('GOAL!',0,-4);      // drop shadow
+      ctx.lineJoin='round'; ctx.lineWidth=8; ctx.strokeStyle='#12101e';  // chunky sticker outline
+      ctx.strokeText('GOAL!',0,-7);
+      ctx.fillStyle=window._goalGrad; ctx.fillText('GOAL!',0,-7);
       ctx.font="9px 'Press Start 2P', monospace";
-      ctx.lineWidth=3; ctx.strokeStyle='#120a06'; ctx.strokeText(teamKits[side].name.toUpperCase(),0,13);
-      ctx.fillStyle=TEXT_MAIN; ctx.fillText(teamKits[side].name.toUpperCase(),0,12);
+      ctx.lineWidth=4; ctx.strokeStyle='#12101e'; ctx.strokeText(nm,0,13);
+      ctx.fillStyle=TEXT_MAIN; ctx.fillText(nm,0,12);
+      // twinkling sparkles around the headline
+      const _sp=[[-hw-16,-13,7],[hw+15,-17,6],[-hw-6,15,5],[hw+7,13,6],[2,-30,6],[-hw*0.5,-24,4],[hw*0.55,-22,4]];
+      for(let i=0;i<_sp.length;i++){ const s=_sp[i];
+        const tw=0.3+0.7*Math.max(0,Math.sin((110-t)*0.3+i*1.7));
+        _goalSpark(ctx,s[0],s[1],s[2]*(0.6+0.4*appear)*tw,(i%2?'#fff6c8':'#ffffff'),Math.min(1,appear*1.4)*tw*out);
+      }
       ctx.restore();
     }
 
