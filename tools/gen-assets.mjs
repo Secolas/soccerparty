@@ -188,6 +188,10 @@ const ASSETS = [
   { file: "icon-geyser.png", size: 64, prompt: `A sand geyser erupting, a tall spout of tan and pale-yellow sand and dust blasting straight upward out of a small vent, with a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
   { file: "sprite-cactus.png", size: 64, prompt: `A single green saguaro cactus standing upright, front view, thick rounded trunk with two upraised arms and rows of tiny white spikes and a couple of small red flowers on top, ONE thick dark outline on the outer edge, filled solid like a sticker. NO pot, NO ground line, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
 
+  // Season 3 BASEBALL (THE DIAMOND) — top-down props, rotated in-engine
+  { file: "sprite-bat.png", size: 64, deFringe: true, prompt: `A single baseball bat lying flat and perfectly HORIZONTAL, viewed from directly straight above (top-down), a thin round handle with a small round knob on the LEFT end and a thick smoothly-tapering rounded barrel on the RIGHT end, smooth polished light-tan wood with a slightly darker wood grain on the handle grip and a soft cream highlight along the barrel, ONE thick dark outline on the outer edge, filled solid like a sticker. NO ball, NO hands, NO ground line, NO shadow, floating alone horizontally in wide empty magenta space. ${ICON}` },
+  { file: "sprite-glove.png", size: 64, deFringe: true, prompt: `A single baseball catcher's mitt glove viewed from directly straight above (top-down), a fat round padded brown leather mitt with a ring of chunky laced fingers around the top edge and a deep round darker pocket in the center, warm tan and chocolate-brown leather with a cream lacing and a soft highlight, ONE thick dark outline on the outer edge, filled solid like a sticker, roughly circular and centered. NO ball, NO hand, NO arm, NO ground line, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
+
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in
   //  each bush and lunges (frames 0->3 = coil->full thrust) at a ball that passes near, shoving

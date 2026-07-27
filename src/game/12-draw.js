@@ -394,9 +394,17 @@
     ctx.arc(0,0,g.r,0,6.283);
     ctx.stroke(); ctx.restore();
     } }
-    // BASEBALL (THE DIAMOND) — base gloves (hard), stray pitched balls (med), full reactive bats (easy)
-    function _drawBat(ctx,x,y,ang,lit){ var reach=30;
-    ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+    // BASEBALL (THE DIAMOND) — base gloves (hard), stray pitched balls (med), reactive bats (easy).
+    // Uses the generated sprite-bat / sprite-glove PNGs, with a procedural draw as fallback.
+    function _drawBat(ctx,x,y,ang,lit){ var img=(typeof NS_BAT!=='undefined')?NS_BAT:null;
+    if(img&&img.complete&&img.naturalWidth){ var L=38, h=L*img.naturalHeight/img.naturalWidth;
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    ctx.translate(x,y); ctx.rotate(ang);
+    ctx.drawImage(img,-4,-h/2,L,h);
+    if(lit){ ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.35;
+    ctx.drawImage(img,-4,-h/2,L,h); }
+    ctx.restore(); return; }
+    var reach=30; ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
     ctx.beginPath(); ctx.moveTo(0,-1.4);
     ctx.lineTo(reach*0.68,-2.6); ctx.lineTo(reach,-4.2);
     ctx.lineTo(reach+3.2,0); ctx.lineTo(reach,4.2);
@@ -409,7 +417,13 @@
     ctx.arc(0,0,2.6,0,6.283); ctx.fill();
     ctx.restore(); }
     function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
+    var gimg=(typeof NS_GLOVE!=='undefined')?NS_GLOVE:null;
     if(typeof bbGlovesOn!=='undefined'&&bbGlovesOn){ for(var gi=0;gi<bbGloves.length;gi++){ var gl=bbGloves[gi];
+    if(gimg&&gimg.complete&&gimg.naturalWidth){ var gs=gl.r*2.4+(gl.flash>0?3:0);
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    if(gl.flash>0){ ctx.shadowColor='#ffd84a'; ctx.shadowBlur=6; }
+    ctx.drawImage(gimg,gl.x-gs/2,gl.y-gs/2,gs,gs);
+    ctx.restore(); continue; }
     ctx.save(); ctx.translate(gl.x,gl.y);
     ctx.fillStyle=gl.flash>0?'#f0c060':'#8a5a2a'; ctx.beginPath();
     ctx.arc(0,0,gl.r+(gl.flash>0?2:0),0,6.283); ctx.fill();
@@ -1649,6 +1663,10 @@
     try{ NS_MUD.src='assets/generated/sprite-mud.png';
     }catch(e){} var NS_CACTUS=new Image();
     try{ NS_CACTUS.src='assets/generated/sprite-cactus.png';
+    }catch(e){} var NS_BAT=new Image();
+    try{ NS_BAT.src='assets/generated/sprite-bat.png';
+    }catch(e){} var NS_GLOVE=new Image();
+    try{ NS_GLOVE.src='assets/generated/sprite-glove.png';
     }catch(e){} var NS_SERP=[];
     for(var _nsi=0;_nsi<4;_nsi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/serp-corner-'+(_k+1)+'.png';
