@@ -56,7 +56,13 @@
       {name:'THE SHORE',pitch:'beach',ab:['sweeper',
       'clearance','anchor'],d:6,blurb:'A sunny beach — tide waves sweep the ball down the sand, drifting beach balls bounce it around, and crabs scuttle across the pitch.'},
       {name:'THE TURF',pitch:'turf',ab:[],d:7,blurb:'The Season 2 final — a gauntlet of the whole run. Four stadiums strike at once: wind, orbit, jungle and shore — a nuisance on Easy, a maelstrom on Hard. No keeper tricks; survive the chaos and score.'}
-    ]; var ROYALE_DRAFT_POOL=['cannon',
+    ];
+    // Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
+    var ROYALE_ARENAS_3=[
+      {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
+      'cannon','reflex'],d:1,blurb:'A ballpark infield — a swinging bat by each plate cracks the ball across the pitch, and on medium+ the dirt base paths keep it running fast.'}
+    ];
+    var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
     'curve','backspin','wet',
     'boomerang','volley','trio',
@@ -88,6 +94,7 @@
     } function royDiffsFor(season){ try{ var o=spAchGet();
     return ((season===2)?o.royDiffs2:o.royDiffs1)||[];
     }catch(e){ return []; } } function royLvlUnlocked(season,lvl){ if(lvl==='easy') return true;
+    if(season===3) return true;  /* Season 3 is open at all difficulties for testing */
     var d=royDiffsFor(season);
     if(lvl==='med') return d.indexOf('easy')>=0;
     if(lvl==='hard') return d.indexOf('med')>=0;
@@ -105,7 +112,7 @@
     } var pa=PRESETS[a].primary||(PRESETS[a].kit.colors||[])[0], pb=PRESETS[b].primary||(PRESETS[b].kit.colors||[])[0];
     return _d(pa,pb)<100; }catch(e){ return false;
     } }
-    function startRoyale(pi,fixed){ ROYALE_ARENAS=(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1; var opps=[];
+    function startRoyale(pi,fixed){ ROYALE_ARENAS=(royMap===3)?ROYALE_ARENAS_3:(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1; var opps=[];
       if(fixed && fixed.opps && fixed.opps.length){
         // a challenge link supplies the fixture list, so both players face the
         // same run of opponents; pad or trim if the ladder length ever changes

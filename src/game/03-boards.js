@@ -500,10 +500,44 @@
         g.lineTo(x+(Math.random()-0.5)*8,h);
         g.stroke(); } g.strokeStyle='rgba(240,235,200,0.7)';
         g.strokeRect(2,2,w-4,h-4);
+        } },
+
+      baseball:{ name:'BALLPARK', surround:'#123a1e', stand:'#1c5a2e', tier:'rgba(255,255,255,0.05)',
+        frame:'#2f7a3a',frameHi:'#57b96a',frameLo:'#1c5024',post:'#f4f0e0',
+        line:'rgba(255,255,255,0.85)',line2:'rgba(255,255,255,0.6)',
+        netRecess:'#14401f',netBack:'rgba(0,0,0,0.32)',netMesh:'rgba(235,245,235,0.32)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,245,235,0.58)',netOverlay:'rgba(10,40,20,0.42)',
+        surface(g){ var g1='#2f8a3e', g2='#2a7d38';
+        g.fillStyle=g1; g.fillRect(0,0,W,H);
+        var bands=12, bw=(W-WALL*2)/bands;
+        for(var i=0;i<bands;i++){ g.fillStyle=(i%2)?g2:g1;
+        g.fillRect(Math.round(WALL+i*bw),WALL,Math.ceil(bw)+1,H-WALL*2);
+        } var cx=W/2, cy=H/2, dx=W*0.30, dy=H*0.24;
+        g.fillStyle='#b5793f'; g.beginPath();
+        g.moveTo(cx,cy-dy); g.lineTo(cx+dx,cy);
+        g.lineTo(cx,cy+dy); g.lineTo(cx-dx,cy);
+        g.closePath(); g.fill();
+        g.strokeStyle='rgba(245,240,225,0.8)'; g.lineWidth=2; g.stroke();
+        g.fillStyle='#c88a4e'; g.beginPath();
+        g.arc(cx,cy,9,0,6.283); g.fill();
+        g.fillStyle='#f4f0e0'; var bpts=[[cx,cy-dy],
+        [cx+dx,cy],[cx,cy+dy],[cx-dx,cy]];
+        for(var b=0;b<4;b++){ g.save();
+        g.translate(bpts[b][0],bpts[b][1]);
+        g.rotate(0.785); g.fillRect(-3,-3,6,6);
+        g.restore(); } },
+        preview(g,w,h){ g.fillStyle='#2f8a3e';
+        g.fillRect(0,0,w,h); g.fillStyle='#b5793f';
+        g.beginPath(); g.moveTo(w/2,h*0.25);
+        g.lineTo(w*0.8,h/2); g.lineTo(w/2,h*0.75);
+        g.lineTo(w*0.2,h/2); g.closePath();
+        g.fill(); g.fillStyle='#f4f0e0';
+        g.fillRect(w/2-1,h/2-1,2,2);
+        g.strokeStyle='rgba(240,235,200,0.7)';
+        g.strokeRect(2,2,w-4,h-4);
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -523,6 +557,7 @@
       try{ if(typeof gumballs!=='undefined'&&gumballs) gumballs.length=0;
       if(typeof candyPatches!=='undefined'&&candyPatches) candyPatches.length=0;
       if(typeof candyBog!=='undefined'&&candyBog) candyBog.length=0;
+      if(typeof bbBats!=='undefined'&&bbBats) bbBats.length=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

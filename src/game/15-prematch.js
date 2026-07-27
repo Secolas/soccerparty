@@ -556,7 +556,7 @@
     } function buildRoyaleSetup(host, forceNew){ fmtRefreshers=[];
     var _royRun=null; if(!forceNew){ try{ _royRun=spGetRun('royale');
     }catch(e){} } host.appendChild(mk('div',FS(9,'#a9c94b')+'text-align:center;margin:6px 0 6px;letter-spacing:1px;','STADIUM ROYALE'));
-    if(_royRun){ var _lm={easy:'EASY',med:'MEDIUM',hard:'HARD'}, _lvl=_lm[_royRun.royaleLevel]||'MEDIUM', _stg=(_royRun.royale&&typeof _royRun.royale.i==='number')?(_royRun.royale.i+1):1, _sn=(_royRun.royale&&_royRun.royale.map===2)?2:1, _rlen=((_sn===2)?ROYALE_ARENAS_2.length:ROYALE_ARENAS_1.length);
+    if(_royRun){ var _lm={easy:'EASY',med:'MEDIUM',hard:'HARD'}, _lvl=_lm[_royRun.royaleLevel]||'MEDIUM', _stg=(_royRun.royale&&typeof _royRun.royale.i==='number')?(_royRun.royale.i+1):1, _sn=(_royRun.royale&&_royRun.royale.map)||1, _rlen=(_sn===3?ROYALE_ARENAS_3.length:(_sn===2?ROYALE_ARENAS_2.length:ROYALE_ARENAS_1.length));
     host.appendChild(mk('div',FS(8,'#a9c94b')+'text-align:center;margin:8px 0 2px;','RUN IN PROGRESS'));
     host.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;line-height:1.9;margin:2px 0 6px;','SEASON '+_sn+'  •  STADIUM '+_stg+' OF '+_rlen+'  •  '+_lvl));
     var resume=mk('button','margin-top:10px;width:100%;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:11px;cursor:pointer;','RESUME ROYALE  ▸');
@@ -590,7 +590,7 @@
     pr[0].style.borderColor=sel?'#a9c94b':(lk?'#2a2438':'#3a3050');
     pr[0].style.opacity=lk?'0.6':'1';
     }); } [['SEASON 1',1],['SEASON 2',
-    2]].forEach(function(o){ var b=mk('button',SQBTN+'font-size:7px;padding:6px 10px;',o[0]);
+    2],['SEASON 3',3]].forEach(function(o){ var b=mk('button',SQBTN+'font-size:7px;padding:6px 10px;',o[0]);
     b.onclick=function(){ if(o[1]===2&&_s2lock()){ try{ _lockMsg('CLEAR SEASON 1 TO UNLOCK SEASON 2');
     }catch(e){} return; } royMap=o[1];
     if(!royLvlUnlocked(royMap,royaleLevel)) royaleLevel=royTopUnlocked(royMap);

@@ -394,6 +394,21 @@
     ctx.arc(0,0,g.r,0,6.283);
     ctx.stroke(); ctx.restore();
     } }
+    // BASEBALL (THE DIAMOND) swinging bats — glow gold on their cooldown right after a crack
+    function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
+    for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
+    var hx=b.x+Math.cos(b.ph)*b.r, hy=b.y+Math.sin(b.ph)*b.r;
+    ctx.save(); ctx.fillStyle='rgba(240,240,232,0.9)';
+    ctx.beginPath(); ctx.arc(b.x,b.y,3,0,6.283);
+    ctx.fill(); ctx.strokeStyle=(b.cd>0)?'#ffd84a':'#b5793f';
+    ctx.lineWidth=3; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(b.x,b.y);
+    ctx.lineTo(hx,hy); ctx.stroke();
+    ctx.fillStyle=(b.cd>0)?'#ffe07a':'#e0a050';
+    ctx.beginPath(); ctx.arc(hx,hy,4,0,6.283);
+    ctx.fill(); ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.arc(hx-1,hy-1,1.5,0,6.283);
+    ctx.fill(); ctx.restore(); } }
     // CASINO roulette wheel (spins; shows the winning number on a result)
     function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);
     var cols=['#c83a4a','#2a2a30',
@@ -996,7 +1011,9 @@
     stormStrikeTick(); drawStormPuddles(ctx,now);
     }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
     drawGumballs(ctx,now); drawJelly(ctx,now);
-    }catch(e){} return; } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
+    }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
+    drawBaseball(ctx,now); }catch(e){} return;
+    } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
     drawSpaceAsteroids(ctx,now);

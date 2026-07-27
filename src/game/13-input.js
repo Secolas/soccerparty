@@ -482,7 +482,7 @@
     }catch(e){} return true;
     } if(m==='royale'&&R.royale){ ROYALE=R.royale;
     mode='royale'; try{ royMap=(ROYALE&&ROYALE.map)||1;
-    ROYALE_ARENAS=(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1;
+    ROYALE_ARENAS=(royMap===3)?ROYALE_ARENAS_3:(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1;
     }catch(e){} if(R.royaleLevel) royaleLevel=R.royaleLevel;
     try{ if(pre) pre.style.display='none';
     }catch(e){} try{ showRoyaleMap();

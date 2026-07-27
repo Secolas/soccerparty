@@ -1015,6 +1015,24 @@
     '#c86aff']; for(var g=0;g<gbdefs.length;g++){ var a=Math.random()*6.283, sp=0.5+Math.random()*0.15;
     gumballs.push({x:gbdefs[g].x,y:gbdefs[g].y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6,col:cols[g%5]});
     } } }
+    // BASEBALL (THE DIAMOND, Season 3) — one swinging bat per attacking side (mirrored, symmetric).
+    // The bat head orbits its plate; a moving ball caught by the head is "cracked" in the swing
+    // direction, so where the ball goes depends on the beat you hit it on. Med+ also runs a fast dirt
+    // infield. Both effects only touch a moving ball, so the ball still settles and turns end.
+    var bbBats=[];
+    function initBaseball(){ var t=hzTier(); bbBats=[];
+    var sw=0.05+0.02*t;
+    bbBats.push({x:W*0.30,y:H*0.32,r:30,ph:0,sp:sw,dir:1,cd:0});
+    bbBats.push({x:W*0.70,y:H*0.68,r:30,ph:3.14159,sp:sw,dir:1,cd:0});
+    }
+    // advance the bat swing + cooldowns from the draw loop so the bats keep swinging between shots
+    function baseballTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='baseball'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
+    if(bbBats.length===0){ try{ initBaseball(); }catch(e){} }
+    for(var _bti=0;_bti<bbBats.length;_bti++){ var _btb=bbBats[_bti];
+    _btb.ph+=_btb.sp*_btb.dir; if(_btb.ph>6.283) _btb.ph-=6.283;
+    if(_btb.ph<0) _btb.ph+=6.283;
+    if(_btb.cd>0) _btb.cd--; }
+    }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
     function hzTier(){ var l;
     if((typeof mode!=='undefined'&&mode==='royale')&&(typeof royaleLevel!=='undefined'&&royaleLevel)){ l=royaleLevel;
@@ -1681,7 +1699,21 @@
       }catch(e){} try{ spawnSparks(candyPatches[_ji].x,candyPatches[_ji].y,current,10,true);
       }catch(e){} try{ nsKick(5);
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
-      coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
+      coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
+      var _bbt=hzTier(); if(moving&&(!coin.air||coin.air<=0)){ var _bbsp=Math.hypot(coin.vx,coin.vy);
+      // med+ dirt infield: keep the ball fast inside the diamond (bounded, never accelerates a slow ball)
+      if(_bbt>=1&&_bbsp>0.6&&_bbsp<6){ if(Math.abs(coin.x-W/2)/(W*0.30)+Math.abs(coin.y-H/2)/(H*0.24)<1){ coin.vx*=1.02;
+      coin.vy*=1.02; } }
+      // swinging bats: a moving ball reaching the bat head is cracked along the swing direction
+      for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
+      if(_bb.cd>0) continue; var _bhx=_bb.x+Math.cos(_bb.ph)*_bb.r, _bhy=_bb.y+Math.sin(_bb.ph)*_bb.r;
+      if(Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+7&&_bbsp>0.5){ var _btx=-Math.sin(_bb.ph)*_bb.dir, _bty=Math.cos(_bb.ph)*_bb.dir;
+      var _bhit=_bbsp+(0.9+0.7*_bbt)*2; coin.vx=coin.vx*0.3+_btx*_bhit;
+      coin.vy=coin.vy*0.3+_bty*_bhit; _bb.cd=22;
+      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,10,true);
+      }catch(e){} try{ shake=Math.max(shake||0,3);
+      }catch(e){} break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
       if(_d.tumble>0) _d.tumble--;
