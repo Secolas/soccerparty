@@ -1,87 +1,106 @@
-# Crowd-Sprite Batch — run in LOCAL Claude Code (PixelLab connected)
+# Crowd-Sprite Batch (PixelLab) — the fans in the side stands
 
-Regenerate the stadium crowd characters (`fan-*-sheet.png`) as one cohesive,
-higher-detail Dave-the-Diver set — the fans in the stands and behind the goals.
-This is the art upgrade that makes the crowd read like the promo video instead
-of the older, flatter sprites.
+Authoring spec for `assets/generated/fan-*-sheet.png`, the cheering crowd in the
+left and right stands. The stands are now wide enough to show these at full size
+in two columns, so this art is the main thing standing between the game and the
+promo-video look.
 
-## READ THIS FIRST — the recolor constraint (most important thing here)
+## THE SIZE RULE — 32×32, non-negotiable
 
-The game **recolors each fan at runtime** so one sprite serves every team and a
-festive mix of casual colours. It does this by recolouring the **low-saturation
-(grey/white) pixels** of the sprite — see `_fanFrame` in `src/game/05-ambience.js`.
-So the source art MUST follow these rules or the tinting breaks:
+**Author every frame at exactly 32×32.** The game draws fans at 32px
+(`FAN_PX` in `src/game/01-layout.js`), and when the sheet's frame size equals the
+draw size the blit is 1:1 and pixel-perfect.
 
-- **Draw the shirt/jersey in plain WHITE or light GREY.** The engine paints the
-  team/casual colour onto those grey pixels. A shirt drawn red in the source can
-  never be recoloured — it will stay red for every team.
-- **Skin, hair, shorts, shoes stay coloured** — they are saturated, so the
-  recolour leaves them alone (the top ~15px of hair is explicitly preserved).
-- **Flag-holders (`fan-flag-*`): draw the flag cloth in plain WHITE/GREY too.**
-  The engine paints the correct national flag onto the top portion of that grey
-  cloth (`_flagTintFor`). A pre-coloured flag will not become the right country.
-- Keep a **single dark outline** and a clean, readable silhouette. At 48px
-  drawn down to ~17px in play, detail turns to mush — bold shapes read, fine
-  shading does not (see `PIXELLAB_STYLE.md`, the small-tier rule).
+This is the whole reason the old crowd looked mushy: the sheets were 48px and the
+game drew them at 17px. That is a 2.82x non-integer reduction, so it dropped
+pixels irregularly and turned faces into speckle. Any mismatch resamples and
+softens the art — 32×32 in, 32px out, nothing lost.
 
-## Fixed spec for EVERY sprite
+(The engine reads the frame size from the sheet *height*, so a 48px sheet still
+loads; it just gets resampled down to 32 and loses detail. Don't rely on it.)
 
-- **Frame size:** 48×48. Export each pose as a **horizontal sprite sheet**
-  (frames laid left-to-right, each 48px wide). The engine reads
-  `frames = sheet.width / 48` automatically, so any frame count works — 4 is a
-  good default.
+## Sheet format
+
+- **Frame:** 32×32, transparent background.
+- **Sheet:** frames laid out horizontally, left to right, in ONE png. The engine
+  computes `frames = sheet.width / sheet.height`, so any frame count works —
+  4 is a good default (→ a 128×32 sheet).
 - **Filename:** `fan-<pose>-<n>-sheet.png` in `assets/generated/`, overwriting
-  the old sheets. Poses and variant count below.
-- **Anchoring:** feet at the bottom of the frame, centred horizontally
-  (the game draws the sprite feet-down).
-- **Params:** single outline · basic shading · low detail · white/grey shirt.
-- **No text, no watermark, no drop shadow, transparent background.**
+  the existing sheets. Poses and variants below.
+- **Anchoring:** feet on the BOTTOM edge of the frame, centred horizontally. The
+  game draws fans feet-down; art floating in the frame will hover.
+
+## THE RECOLOUR RULE — grey shirts
+
+The game recolours each fan at runtime so one sprite serves every team and a
+festive mix of casual colours (`_fanFrame` in `src/game/05-ambience.js`). It
+repaints only the pixels that are **low-saturation AND mid-luminance**:
+`saturation < 0.22` and `luma` between `60` and `236`.
+
+So:
+
+- **Draw the shirt in MID-TO-LIGHT GREY — not pure white.** Pure white is luma
+  255, above the band, and would stay white for every team. Aim for a grey around
+  40–80% brightness with its shading inside that range.
+- **Skin, hair, shorts and shoes should be COLOURFUL** — saturated colour is
+  ignored by the recolour pass, so it survives untouched. (The top of the hair is
+  additionally protected, scaled from the frame size.)
+- **The outline should be very dark** (luma under 60) so it is below the band and
+  never repainted as shirt.
+- **Flag-holders:** draw the flag cloth as plain grey too — the engine paints the
+  correct national flag onto the upper part of that cloth. A pre-coloured flag
+  will not become the right country.
+
+## Readability at 32px
+
+These render 32px on a dark stand, so:
+
+- **A thick, near-black outline all the way around** is what separates each fan
+  from the crowd behind it. This mattered more than any other single thing in
+  testing — outline-less fans blurred into the background.
+- **Bold shapes over fine detail.** Faces should be a few decisive pixels (eyes,
+  open shouting mouth), not soft shading.
+- **Silhouette first:** raised arms, a scarf held overhead, a flag on a pole —
+  the pose should be readable from the outline alone.
+
+## The poses (4 variants each, 16 sheets total)
+
+Vary faces, hair colour, skin tone and build across variants so the stand doesn't
+look cloned. Keep the shirt grey on every one.
+
+- **`fan-standing-<n>-sheet.png`** — standing, BOTH ARMS RAISED, mouth open
+  shouting; a 1–2px vertical bounce across the frames.
+- **`fan-scarf-<n>-sheet.png`** — holding a scarf stretched overhead with both
+  hands, waving side to side across the frames. Scarf is grey.
+- **`fan-flag-<n>-sheet.png`** — holding a flag on a thin pole, cloth flying to
+  one side and rippling across the frames. Cloth is plain grey.
+- **`fan-seated-<n>-sheet.png`** — a calmer seated spectator, gentle clap; these
+  fill the outer column and read as depth.
 
 ## STYLE PREFIX — paste at the start of every prompt
 
-> detailed expressive pixel art in the style of Dave the Diver, warm rich
-> saturated palette, rounded friendly proportions, clean bold readable
-> silhouette, single dark outline, cozy vibrant mood, tiny stadium fan
-> character, WHITE/LIGHT-GREY shirt (recolourable), transparent background,
-> no text, no watermark, no drop shadow
+> chunky retro pixel art sprite, THICK NEAR-BLACK OUTLINE around the whole
+> character, bold high-contrast saturated colours, strong simple readable
+> silhouette, low detail, few colours, rounded friendly proportions, cheerful
+> stadium football fan, full body head to feet, front view, feet at the bottom of
+> the frame, MID-GREY shirt with no colour or pattern (it is recoloured in game),
+> colourful hair skin shorts and shoes, transparent background, no text, no
+> watermark, no drop shadow
 
-## The poses (pose → filename → what it does)
+## Workflow
 
-Generate **4 variants** of each pose (`-1` … `-4`) so the crowd looks varied —
-different faces, hair colours, skin tones, builds, and slightly different arm
-positions. Keep the shirt grey on every one.
+1. **Anchor first:** make ONLY `fan-standing-1` at 32×32, pick the best, then
+   **verify the recolour** — rebuild (`node tools/build-game.mjs`), open the game,
+   start an exhibition, and check the shirt takes the team colour. If it stays
+   grey or stays white, the shirt luma is outside the 60–236 band; fix it before
+   making 15 more.
+2. **Batch the rest matching the anchor** so all 16 read as one crowd.
+3. Save into `assets/generated/`, overwriting the old sheets.
+4. `node tools/build-game.mjs` → `node tools/smoke.mjs` → commit.
 
-- **`fan-standing-<n>-sheet.png`** — a fan standing and cheering, both arms
-  raised, mouth open shouting, a small up-and-down bounce across the 4 frames.
-- **`fan-scarf-<n>-sheet.png`** — a fan holding a football **scarf** stretched
-  overhead with both hands, waving it side to side across the frames.
-- **`fan-flag-<n>-sheet.png`** — a fan holding a **flag on a pole**; the flag
-  cloth is a plain white/grey rectangle (the engine paints the nation onto it),
-  rippling across the frames. Bias the flag to one side so it mirrors cleanly.
-- **`fan-seated-<n>-sheet.png`** — a calmer seated spectator, gentle clap or
-  lean, subtle motion — these fill the back rows and read as depth.
+## Checks after dropping the art in
 
-## WORKFLOW (don't skip step 1)
-
-1. **Anchor first:** generate ONLY `fan-standing-1` a few times at 48px, pick
-   the best on-model one, and **check it recolours** — open the built game
-   (`node tools/build-game.mjs`) and confirm the shirt takes the team colour. If
-   the shirt won't recolour, the source shirt isn't grey — fix and redo before
-   generating the rest.
-2. **Batch the rest matching the anchor** — tell PixelLab to match the approved
-   `fan-standing-1` for palette, proportion, outline weight, and framing, so all
-   16 sheets feel like one set.
-3. Save each to `assets/generated/` (overwrite the old `fan-*-sheet.png`).
-4. Commit the PNGs. On the web/remote side I rebuild and smoke-test; the V2
-   crowd composition (tiered fans behind the goals, national flags, floodlights)
-   already consumes these filenames, so better art drops straight in with no
-   code change.
-
-## Sanity check after generating
-
-- `node tools/build-game.mjs` then open the game — start an exhibition and look
-  at the stands and behind the goals.
-- Confirm: shirts show varied team/casual colours (recolour working), flags
-  show the right nations, silhouettes read clearly at play size.
-- `node tools/smoke.mjs` should still pass (booted, rendered, zero external
-  requests).
+- Shirts show varied team/casual colours (recolour working), flags show the right
+  nations, and each fan is separable from its neighbour at 32px.
+- The stands are cropped on a phone and full-width on desktop — check both.
+- `node tools/smoke.mjs` still passes.

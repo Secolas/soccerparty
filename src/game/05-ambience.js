@@ -23,16 +23,23 @@
       var _kr=(teamKits['red']&&teamKits['red'].kit&&teamKits['red'].kit.colors)||[_rt];
       var _pl=(window._FAN_PAL&&window._FAN_PAL[teamKits['blue']&&teamKits['blue'].name])||[_lt];
       var _pr=(window._FAN_PAL&&window._FAN_PAL[teamKits['red']&&teamKits['red'].name])||[_rt];
-      var _rows=Math.max(7,Math.floor((H-16)/20));
-      for(var _sd=0;_sd<2;_sd++){ for(var _r=0;_r<_rows;_r++){ var _lft=(_sd===0);
+      // Two columns of fans per side, packed into the wide stand. Rows are spaced
+      // by the sprite height so neighbours never overlap, and the outer column is
+      // the one that gets cropped first on a narrow screen — so the fans nearest
+      // the pitch (the ones always visible) are the front row.
+      var _cols=Math.max(1,Math.floor(CROWD_LR/(FAN_PX*0.55)));
+      var _rows=Math.max(7,Math.floor((H-16)/(FAN_PX*0.62)));
+      for(var _sd=0;_sd<2;_sd++){ for(var _r=0;_r<_rows;_r++){ for(var _cl=0;_cl<_cols;_cl++){ var _lft=(_sd===0);
       var _e=NS_FANS[Math.floor(Math.random()*NS_FANS.length)];
       var _fp=(_lft?_pl:_pr); var _cc=_fp[Math.floor(Math.random()*_fp.length)];
       var _cnm=_lft?(teamKits['blue']&&teamKits['blue'].name):(teamKits['red']&&teamKits['red'].name);
       var _tn=(_e&&_e.pose==='flag')?(window._flagTintFor?window._flagTintFor(_cnm,_cc):_cc):{c:_cc,hairTop:(_e&&(_e.pose==='standing'||_e.pose==='seated'))?15:0};
-      var _bx=(_lft?6:(OX+W+6))+(Math.random()-0.5)*1.5;
-      var _by=OY+9+(_r+0.5)*((H-18)/_rows)+(Math.random()-0.5)*2.5;
-      ambient.push({kind:'fan', img:(_e&&_e.img), x:_bx, y:_by, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn, flip:((_e&&_e.pose==='flag')?(_sd===0):(_sd===1))});
-      } } } if(t==='beach'){
+      // column 0 sits against the pitch, later columns step outward
+      var _step=CROWD_LR/_cols, _in=Math.round(FAN_PX*0.42)+_cl*_step;
+      var _bx=(_lft?(OX-_in):(OX+W+_in))+(Math.random()-0.5)*1.5;
+      var _by=OY+9+(_r+0.5+(_cl%2)*0.5)*((H-18)/_rows)+(Math.random()-0.5)*2.5;
+      ambient.push({kind:'fan', img:(_e&&_e.img), x:_bx, y:_by, sz:FAN_PX, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn, flip:((_e&&_e.pose==='flag')?(_sd===0):(_sd===1))});
+      } } } } if(t==='beach'){
         for(let i=0;i<5;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.18+Math.random()*0.22, phase:Math.random()*6.28});
         ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.06});
         ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.05, small:true});
@@ -290,29 +297,29 @@
     ctx.fillRect(x+1,y-1,1,2-s);
     }
     function _fanFrame(img,frame,tint,flip){ if(!img||!img.complete||!img.naturalWidth) return null;
-    var fw=48, nf=Math.max(1,Math.floor(img.naturalWidth/fw)), f=((frame%nf)+nf)%nf;
+    var fw=img.naturalHeight||48, nf=Math.max(1,Math.floor(img.naturalWidth/fw)), f=((frame%nf)+nf)%nf;
     if(!window._fanCache) window._fanCache={};
     var isFlag=(tint&&typeof tint==='object'&&!Array.isArray(tint)&&tint.flag);
     var isBody=(tint&&typeof tint==='object'&&!Array.isArray(tint)&&tint.c&&!tint.flag);
     var arr=(isFlag||isBody)?null:(Array.isArray(tint)?tint:(tint?[tint]:null));
-    var key=isFlag?((img.src||'')+'|'+f+'|F'+tint.dir+tint.flag.join(',')+'|'+(tint.shirt||'')+'|'+(flip?1:0)):(isBody?((img.src||'')+'|'+f+'|B'+tint.c+'|'+(tint.hairTop||0)):((img.src||'')+'|'+f+'|'+(arr?arr.join(','):'')));
+    var key=isFlag?((img.src||'')+'|'+f+'|F'+tint.dir+tint.flag.join(',')+'|'+(tint.shirt||'')+'|'+(flip?1:0)):(isBody?((img.src||'')+'|'+f+'|B'+tint.c+'|'+(tint.hairTop?Math.round(tint.hairTop*fw/48):0)):((img.src||'')+'|'+f+'|'+(arr?arr.join(','):'')));
     var cv=window._fanCache[key];
     if(cv) return cv; cv=document.createElement('canvas');
-    cv.width=48; cv.height=48;
+    cv.width=fw; cv.height=fw;
     var c=cv.getContext('2d');
     c.imageSmoothingEnabled=false;
-    c.drawImage(img,f*fw,0,fw,48,0,0,48,48);
+    c.drawImage(img,f*fw,0,fw,fw,0,0,fw,fw);
     function _hx(h){ h=(''+h).replace('#','');
     if(h.length===3) h=h.charAt(0)+h.charAt(0)+h.charAt(1)+h.charAt(1)+h.charAt(2)+h.charAt(2);
     return [parseInt(h.slice(0,2),16),
     parseInt(h.slice(2,4),16),
     parseInt(h.slice(4,6),16)];
-    } if(isFlag){ try{ var id=c.getImageData(0,0,48,48), d=id.data;
-    var fcols=tint.flag.map(_hx), scol=_hx(tint.shirt||tint.flag[0]), FY=20, n=fcols.length;
-    var minx=48,maxx=0,miny=48,maxy=0,any=false;
+    } if(isFlag){ try{ var id=c.getImageData(0,0,fw,fw), d=id.data;
+    var fcols=tint.flag.map(_hx), scol=_hx(tint.shirt||tint.flag[0]), FY=Math.round(fw*20/48), n=fcols.length;
+    var minx=fw,maxx=0,miny=fw,maxy=0,any=false;
     for(var i=0;i<d.length;i+=4){ if(d[i+3]<8) continue;
     var r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx===0?0:(mx-mn)/mx,lum=(r+g+b)/3;
-    if(sat<0.22&&lum>60&&lum<236){ var q=i/4, px=q%48, py=(q-px)/48;
+    if(sat<0.22&&lum>60&&lum<236){ var q=i/4, px=q%fw, py=(q-px)/fw;
     if(py<FY){ if(px<minx)minx=px;
     if(px>maxx)maxx=px; if(py<miny)miny=py;
     if(py>maxy)maxy=py; any=true;
@@ -320,7 +327,7 @@
     for(var j2=0;j2<d.length;j2+=4){ if(d[j2+3]<8) continue;
     var r2=d[j2],g2=d[j2+1],b2=d[j2+2],mx2=Math.max(r2,g2,b2),mn2=Math.min(r2,g2,b2),sat2=mx2===0?0:(mx2-mn2)/mx2,lum2=(r2+g2+b2)/3;
     if(!(sat2<0.22&&lum2>60&&lum2<236)) continue;
-    var q2=j2/4, px2=q2%48, py2=(q2-px2)/48, col;
+    var q2=j2/4, px2=q2%fw, py2=(q2-px2)/fw, col;
     if(py2<FY&&any){ var bi;
     if(tint.dir==='h'){ bi=Math.floor((py2-miny)/bh*n);
     } else { bi=Math.floor((px2-minx)/bw*n);
@@ -331,32 +338,50 @@
     d[j2+1]=Math.min(255,Math.round(col[1]*k));
     d[j2+2]=Math.min(255,Math.round(col[2]*k));
     } c.putImageData(id,0,0);
-    }catch(e){} } else if(isBody){ try{ var idb=c.getImageData(0,0,48,48), db=idb.data, bc=_hx(tint.c), ht=tint.hairTop||0;
+    }catch(e){} } else if(isBody){ try{ var idb=c.getImageData(0,0,fw,fw), db=idb.data, bc=_hx(tint.c), ht=tint.hairTop?Math.round(tint.hairTop*fw/48):0;
     for(var ib=0;ib<db.length;ib+=4){ if(db[ib+3]<8) continue;
     var rb=db[ib],gb=db[ib+1],bb=db[ib+2],mxb=Math.max(rb,gb,bb),mnb=Math.min(rb,gb,bb),satb=mxb===0?0:(mxb-mnb)/mxb,lumb=(rb+gb+bb)/3;
     if(!(satb<0.22&&lumb>60&&lumb<236)) continue;
-    var qb=ib/4, pxb=qb%48, pyb=(qb-pxb)/48;
+    var qb=ib/4, pxb=qb%fw, pyb=(qb-pxb)/fw;
     if(pyb<ht) continue; var kb=Math.min(1.25,lumb/255+0.42);
     db[ib]=Math.min(255,Math.round(bc[0]*kb));
     db[ib+1]=Math.min(255,Math.round(bc[1]*kb));
     db[ib+2]=Math.min(255,Math.round(bc[2]*kb));
     } c.putImageData(idb,0,0);
-    }catch(e){} } else if(arr){ try{ var cols=arr.map(_hx), n2=cols.length, sw=48/n2, id2=c.getImageData(0,0,48,48), dd=id2.data;
+    }catch(e){} } else if(arr){ try{ var cols=arr.map(_hx), n2=cols.length, sw=fw/n2, id2=c.getImageData(0,0,fw,fw), dd=id2.data;
     for(var i3=0;i3<dd.length;i3+=4){ if(dd[i3+3]<8) continue;
     var r3=dd[i3],g3=dd[i3+1],b3=dd[i3+2], mx3=Math.max(r3,g3,b3), mn3=Math.min(r3,g3,b3), sat3=mx3===0?0:(mx3-mn3)/mx3, lum3=(r3+g3+b3)/3;
-    if(sat3<0.22&&lum3>60&&lum3<236){ var px3=(i3/4)%48;
+    if(sat3<0.22&&lum3>60&&lum3<236){ var px3=(i3/4)%fw;
     var col2=cols[Math.min(n2-1,Math.floor(px3/sw))];
     var k3=Math.min(1.25,lum3/255+0.42);
     dd[i3]=Math.min(255,Math.round(col2[0]*k3));
     dd[i3+1]=Math.min(255,Math.round(col2[1]*k3));
     dd[i3+2]=Math.min(255,Math.round(col2[2]*k3));
     } } c.putImageData(id2,0,0);
-    }catch(e){} } window._fanCache[key]=cv;
-    return cv; } function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
-    if(!cv) return; var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
+    }catch(e){} } cv._fkey=key; window._fanCache[key]=cv;
+    return cv; }
+    // When a sheet is authored at exactly the size it renders (FAN_PX), the blit
+    // below is 1:1 and pixel-perfect. If the two ever differ, resampling with the
+    // canvas-wide nearest-neighbour setting drops pixels irregularly and wrecks
+    // faces, so pre-bake that one case at the target size with smoothing, cached
+    // so the draw loop still only blits.
+    function _fanAtSize(cv,sz){
+      if(!cv||cv.width===sz) return cv;
+      if(!window._fanSizeCache) window._fanSizeCache={};
+      var k=(cv._fkey||'')+'@'+sz, s=window._fanSizeCache[k];
+      if(s) return s;
+      s=document.createElement('canvas'); s.width=sz; s.height=sz;
+      var c2=s.getContext('2d');
+      c2.imageSmoothingEnabled=true; try{ c2.imageSmoothingQuality='high'; }catch(e){}
+      c2.drawImage(cv,0,0,cv.width,cv.height,0,0,sz,sz);
+      window._fanSizeCache[k]=s; return s;
+    }
+    function _fanTint(img,x,y,sz,frame,tint,flip){ var cv=_fanFrame(img,frame,tint,flip);
+    if(!cv) return; var sc=_fanAtSize(cv,sz)||cv, sw=sc.width;
+    var dx=Math.round(x-sz/2), dy=Math.round(y-sz);
     if(flip){ ctx.save(); ctx.translate(dx+sz,dy);
-    ctx.scale(-1,1); ctx.drawImage(cv,0,0,48,48,0,0,sz,sz);
-    ctx.restore(); } else { ctx.drawImage(cv,0,0,48,48,dx,dy,sz,sz);
+    ctx.scale(-1,1); ctx.drawImage(sc,0,0,sw,sw,0,0,sz,sz);
+    ctx.restore(); } else { ctx.drawImage(sc,0,0,sw,sw,dx,dy,sz,sz);
     } } function drawAmbient(now){
       const t=ambType();
       // age the wall-impact scares (the ball hitting a wall spooks only the wildlife right there)
@@ -370,7 +395,7 @@
         if(a.y<2) a.y=2; } if(a.x>CW+3) a.x=-3;
         if(a.x<-3) a.x=CW+3; drawBird(Math.round(a.x),Math.round(a.y),a.phase,now);
         }
-        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,17,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
+        else if(a.kind==='fan'){ _fanTint(a.img,a.x,a.y,a.sz||FAN_PX,Math.floor(now*a.spd+a.phase),a.tint,a.flip); }
         else if(a.kind==='snow'){ if(typeof royBlizzard==='function'&&royBlizzard()) continue;
         a.y+=a.vy; a.x+=Math.sin(now*0.003+a.drift)*0.2;
         if(a.y>CH+2){a.y=-2;a.x=Math.random()*CW;
