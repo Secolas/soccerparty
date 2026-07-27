@@ -419,8 +419,21 @@
     function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
     var gimg=(typeof NS_GLOVE!=='undefined')?NS_GLOVE:null;
     if(typeof bbGlovesOn!=='undefined'&&bbGlovesOn){ for(var gi=0;gi<bbGloves.length;gi++){ var gl=bbGloves[gi];
-    if(gimg&&gimg.complete&&gimg.naturalWidth){ var gs=gl.r*2.4+(gl.flash>0?3:0);
+    // The glove sits on the pitcher's mound — brown leather on brown dirt, which vanished. A chalk
+    // ring and a contact shadow separate it from the mound, and it greys out while disarmed so the
+    // "it only claims a dying ball, and only once" rule is visible instead of having to be learnt.
+    // The dim tracks `caught`, not `armed` — the glove also spawns disarmed (the kickoff ball starts
+    // inside it), and greying it out before it has done anything would read as broken.
+    ctx.save();
+    ctx.fillStyle='rgba(30,16,6,0.28)'; ctx.beginPath();
+    ctx.arc(gl.x,gl.y+2,gl.r*1.05,0,6.283); ctx.fill();
+    ctx.strokeStyle=gl.flash>0?'rgba(255,216,74,0.9)':'rgba(248,244,232,0.5)';
+    ctx.lineWidth=1; ctx.beginPath();
+    ctx.arc(gl.x,gl.y,gl.r+2.5,0,6.283); ctx.stroke();
+    ctx.restore();
+    if(gimg&&gimg.complete&&gimg.naturalWidth){ var gs=gl.r*2.1+(gl.flash>0?3:0);
     ctx.save(); ctx.imageSmoothingEnabled=false;
+    if(gl.caught) ctx.globalAlpha=0.5;
     if(gl.flash>0){ ctx.shadowColor='#ffd84a'; ctx.shadowBlur=6; }
     ctx.drawImage(gimg,gl.x-gs/2,gl.y-gs/2,gs,gs);
     ctx.restore(); continue; }

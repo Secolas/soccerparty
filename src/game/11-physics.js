@@ -1016,25 +1016,35 @@
     gumballs.push({x:gbdefs[g].x,y:gbdefs[g].y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6,col:cols[g%5]});
     } } }
     // BASEBALL (THE DIAMOND, Season 3) — ADDITIVE by difficulty, NO power/speed scaling:
-    //   EASY: one bat per half (mirrored). It RESTS and only swings when a ball enters its zone. The
-    //         swing is the SAME speed at every difficulty and connects a beat AFTER it triggers
-    //         (BB_CONTACT), so a hard flick blows past before the bat comes round — a "strike". A
-    //         connect launches the ball toward that bat's OPPOSITE goal at a fixed power.
+    //   EASY: one bat at each home plate (mirrored). It RESTS and only swings when a ball enters its
+    //         zone. The swing is the SAME speed at every difficulty and the barrel sweeps its arc, so
+    //         a hard flick blows past before the barrel arrives — a "strike". A connect launches the
+    //         ball toward that bat's OPPOSITE goal at a fixed power.
     //   MED : + a pitching machine firing a stray ball in from a random side / diagonal.
-    //   HARD: + a catcher's glove on each of the four bases — a moving ball that reaches one is caught.
+    //   HARD: + ONE catcher's glove on the pitcher's mound, which claims only a ball that has already
+    //         slowed below BB_CATCH_MAX — a live shot blows straight through it.
     // Every effect only touches a MOVING ball, so the ball still settles and turns end.
     var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false;
     var BB_RZ=40, BB_SWING=12, BB_ARC=2.6, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
+    // A glove only claims a ball that is already dying. A real shot beats it, so the hazard reads as
+    // "do not leave it short through the middle" — a skill test, not a random confiscation.
+    var BB_CATCH_MAX=2.2;
     function initBaseball(){ var t=hzTier();
     // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
     // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
-    bbBats=[{x:W/2,y:H*0.20,rest:-1.03,tgt:H,swing:false,swT:0,cd:0},
-    {x:W/2,y:H*0.80,rest:2.11,tgt:0,swing:false,swT:0,cd:0}];
+    // The bat stands AT home plate, which the board art draws NET_DEPTH+32 out from each goal —
+    // it used to float at H*0.20 / H*0.80, matching nothing on the pitch, which is why the swing
+    // read as random. Now it is the last line in front of the keeper: a soft shot gets cleared,
+    // a hard flick strikes past it.
+    var _hp=NET_DEPTH+32;
+    bbBats=[{x:W/2,y:_hp,rest:-1.03,tgt:H,swing:false,swT:0,cd:0},
+    {x:W/2,y:H-_hp,rest:2.11,tgt:0,swing:false,swT:0,cd:0}];
     bbPitchOn=(t>=1); bbGlovesOn=(t>=2);
     bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
-    if(bbGlovesOn){ var cx=W/2,cy=H/2,dx=W*0.30,dy=H*0.24, _bp=[[cx,cy-dy],
-    [cx+dx,cy],[cx,cy+dy],[cx-dx,cy]];
-    for(var _gi=0;_gi<_bp.length;_gi++) bbGloves.push({x:_bp[_gi][0],y:_bp[_gi][1],r:12,flash:0,armed:true}); }
+    // ONE glove, on the pitcher's mound. Four of them — sat at coordinates matching no drawn base —
+    // turned midfield into four ball-traps that ate any shot passing through. It starts disarmed so
+    // the kickoff ball, which sits inside it, has to leave once before it can ever be claimed.
+    if(bbGlovesOn) bbGloves.push({x:W/2,y:H/2,r:13,flash:0,armed:false});
     }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1726,14 +1736,14 @@
       coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
       var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
       if(_bbmov){
-      // HARD gloves: a base glove catches (stops) a moving ball that ENTERS it. Each glove re-arms
-      // only once the ball has left, so the ball you flick off a base is never re-caught in place.
+      // HARD glove: the mound glove catches (stops) a DYING ball that enters it. It re-arms only once
+      // the ball has left, so the ball you flick off the mound is never re-caught in place.
       for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
       var _gin=Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R;
-      if(!_gin){ _gc.armed=true; continue; }
-      if(_gc.armed&&_bbsp>0.5){ coin.x=_gc.x; coin.y=_gc.y;
+      if(!_gin){ _gc.armed=true; _gc.caught=false; continue; }
+      if(_gc.armed&&_bbsp>0.5&&_bbsp<BB_CATCH_MAX){ coin.x=_gc.x; coin.y=_gc.y;
       coin.vx=0; coin.vy=0; _bbsp=0;
-      _gc.armed=false; _gc.flash=22;
+      _gc.armed=false; _gc.caught=true; _gc.flash=22;
       try{ if(typeof sfxBump==='function') sfxBump(6);
       }catch(e){} try{ shake=Math.max(shake||0,3);
       }catch(e){} break; } }

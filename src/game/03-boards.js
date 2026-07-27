@@ -506,34 +506,95 @@
         frame:'#2f7a3a',frameHi:'#57b96a',frameLo:'#1c5024',post:'#f4f0e0',
         line:'rgba(255,255,255,0.85)',line2:'rgba(255,255,255,0.6)',
         netRecess:'#14401f',netBack:'rgba(0,0,0,0.32)',netMesh:'rgba(235,245,235,0.32)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,245,235,0.58)',netOverlay:'rgba(10,40,20,0.42)',
-        surface(g){ var g1='#2f8a3e', g2='#2a7d38';
+        // A ballpark read from above. The old version filled half the pitch with one
+        // brown lozenge, which buried midfield and read as nothing in particular. A real
+        // infield is mostly GRASS with dirt only on the base paths, so the diamond is
+        // drawn as a dirt ring with a grass island inside it — smaller, lighter, and
+        // instantly recognisable. Home plate sits in front of each goal (both teams
+        // attack, so the park is mirrored), which is also where the bat swings.
+        surface(g){ var g1='#2f8a3e', g2='#2a7d38', ISL='#379a4b', DIRT='#a9703a', DIRT2='#c2854a';
+        var cx=W/2, cy=H/2, IW=W-WALL*2, IH=H-WALL*2;
         g.fillStyle=g1; g.fillRect(0,0,W,H);
-        var bands=12, bw=(W-WALL*2)/bands;
+        // mown grass: the cut stripes, crossed by a much fainter second pass, so the outfield
+        // reads as turf rather than as flat colour
+        var bands=10, bw=IW/bands;
         for(var i=0;i<bands;i++){ g.fillStyle=(i%2)?g2:g1;
-        g.fillRect(Math.round(WALL+i*bw),WALL,Math.ceil(bw)+1,H-WALL*2);
-        } var cx=W/2, cy=H/2, dx=W*0.30, dy=H*0.24;
-        g.fillStyle='#b5793f'; g.beginPath();
-        g.moveTo(cx,cy-dy); g.lineTo(cx+dx,cy);
-        g.lineTo(cx,cy+dy); g.lineTo(cx-dx,cy);
+        g.fillRect(Math.round(WALL+i*bw),WALL,Math.ceil(bw)+1,IH); }
+        g.fillStyle='rgba(255,255,255,0.028)';
+        for(var r=0;r<12;r+=2) g.fillRect(WALL,Math.round(WALL+r*IH/12),IW,Math.ceil(IH/12)+1);
+        // warning track: a dirt apron all the way round the wall
+        g.fillStyle='rgba(150,96,52,0.5)';
+        g.fillRect(WALL,WALL,IW,5); g.fillRect(WALL,H-WALL-5,IW,5);
+        g.fillRect(WALL,WALL,5,IH); g.fillRect(W-WALL-5,WALL,5,IH);
+        // Seeded grit. Real infield dirt is never one flat colour, but Math.random() here would
+        // crawl every frame — so the speckle runs off a fixed LCG and comes out identical each draw.
+        var _sd=1234567;
+        function rnd(){ _sd=(_sd*1103515245+12345)&0x7fffffff; return _sd/0x7fffffff; }
+        function speck(px,py,rad,n){ for(var s=0;s<n;s++){ var a=rnd()*6.283, d=Math.sqrt(rnd())*rad;
+        g.fillStyle=rnd()<0.5?'rgba(255,228,186,0.18)':'rgba(74,40,16,0.18)';
+        g.fillRect(px+Math.cos(a)*d,py+Math.sin(a)*d,1,1); } }
+        function diamond(hx,hy,f){ g.beginPath();
+        g.moveTo(cx,cy-hy*f); g.lineTo(cx+hx*f,cy);
+        g.lineTo(cx,cy+hy*f); g.lineTo(cx-hx*f,cy); g.closePath(); }
+        // A real infield is mostly GRASS, with dirt only on the base paths — so the diamond is a
+        // dirt ring with a lighter grass island inside it, not one solid brown lozenge.
+        var DX=58, DY=52;
+        diamond(DX,DY,1); g.fillStyle=DIRT; g.fill();
+        g.save(); diamond(DX,DY,1); g.clip(); speck(cx,cy,DX,120); g.restore();
+        diamond(DX,DY,0.55); g.fillStyle=ISL; g.fill();
+        diamond(DX,DY,0.55); g.strokeStyle='rgba(64,36,12,0.35)'; g.lineWidth=1; g.stroke();
+        diamond(DX,DY,1); g.strokeStyle='rgba(248,244,232,0.6)'; g.lineWidth=1; g.stroke();
+        // pitcher's mound on the centre spot, with its rubber
+        // Kept small on purpose: on HARD a leather glove sits here, and a wide brown mound under a
+        // brown glove read as one mud pie. At this size the glove lands on the green island instead
+        // and its silhouette is unmistakable.
+        g.fillStyle=DIRT2; g.beginPath(); g.arc(cx,cy,9,0,6.283); g.fill();
+        g.strokeStyle='rgba(70,40,14,0.45)'; g.lineWidth=1;
+        g.beginPath(); g.arc(cx,cy,9,0,6.283); g.stroke();
+        speck(cx,cy,8,16);
+        g.fillStyle='#f4f0e0'; g.fillRect(cx-3.5,cy-1,7,2);
+        // bases at the diamond points, each with a contact shadow so they sit on the dirt
+        var bp=[[cx,cy-DY],[cx+DX,cy],[cx,cy+DY],[cx-DX,cy]];
+        for(var b=0;b<4;b++){ g.save(); g.translate(bp[b][0],bp[b][1]); g.rotate(0.785);
+        g.fillStyle='rgba(48,26,8,0.4)'; g.fillRect(-2.8,-2.4,7.2,7.2);
+        g.fillStyle='#f8f5ea'; g.fillRect(-3.6,-3.6,7.2,7.2); g.restore(); }
+        // Home plate in front of each goal — both ends attack, so the park is mirrored. This is
+        // also exactly where the bat swings, so the hazard and the art finally agree.
+        [[NET_DEPTH+32,1],[H-NET_DEPTH-32,-1]].forEach(function(hp){
+        var hy=hp[0], dir=hp[1];
+        g.fillStyle=DIRT2; g.beginPath(); g.arc(cx,hy,19,0,6.283); g.fill();
+        g.strokeStyle='rgba(70,40,14,0.4)'; g.lineWidth=1;
+        g.beginPath(); g.arc(cx,hy,19,0,6.283); g.stroke();
+        speck(cx,hy,18,40);
+        g.fillStyle='#f8f5ea'; g.beginPath();
+        g.moveTo(cx-4,hy-3*dir); g.lineTo(cx+4,hy-3*dir); g.lineTo(cx+4,hy+1*dir);
+        g.lineTo(cx,hy+4*dir); g.lineTo(cx-4,hy+1*dir); g.closePath(); g.fill();
+        // batter's boxes either side, catcher's box behind, foul lines out to the corners
+        g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1;
+        g.strokeRect(cx-15,hy-6,9,13); g.strokeRect(cx+6,hy-6,9,13);
+        g.strokeStyle='rgba(255,255,255,0.35)'; g.strokeRect(cx-7,hy-dir*16,14,12);
+        g.strokeStyle='rgba(255,255,255,0.4)'; g.beginPath();
+        g.moveTo(cx,hy); g.lineTo(WALL+6,hy+(cy-hy)*0.85);
+        g.moveTo(cx,hy); g.lineTo(W-WALL-6,hy+(cy-hy)*0.85); g.stroke();
+        // on-deck circles out by the wall
+        g.fillStyle='rgba(169,112,58,0.5)';
+        g.beginPath(); g.arc(cx-38,hy+dir*4,7,0,6.283); g.fill();
+        g.beginPath(); g.arc(cx+38,hy+dir*4,7,0,6.283); g.fill(); });
+        },
+        preview(g,w,h){ g.fillStyle='#2f8a3e'; g.fillRect(0,0,w,h);
+        var cx=w/2, cy=h/2, dx=w*0.32, dy=h*0.24;
+        for(var i=0;i<8;i++){ if(i%2){ g.fillStyle='#2a7d38'; g.fillRect(Math.round(i*w/8),0,Math.ceil(w/8)+1,h); } }
+        g.fillStyle='#a9703a'; g.beginPath();
+        g.moveTo(cx,cy-dy); g.lineTo(cx+dx,cy); g.lineTo(cx,cy+dy); g.lineTo(cx-dx,cy);
         g.closePath(); g.fill();
-        g.strokeStyle='rgba(245,240,225,0.8)'; g.lineWidth=2; g.stroke();
-        g.fillStyle='#c88a4e'; g.beginPath();
-        g.arc(cx,cy,9,0,6.283); g.fill();
-        g.fillStyle='#f4f0e0'; var bpts=[[cx,cy-dy],
-        [cx+dx,cy],[cx,cy+dy],[cx-dx,cy]];
-        for(var b=0;b<4;b++){ g.save();
-        g.translate(bpts[b][0],bpts[b][1]);
-        g.rotate(0.785); g.fillRect(-3,-3,6,6);
-        g.restore(); } },
-        preview(g,w,h){ g.fillStyle='#2f8a3e';
-        g.fillRect(0,0,w,h); g.fillStyle='#b5793f';
-        g.beginPath(); g.moveTo(w/2,h*0.25);
-        g.lineTo(w*0.8,h/2); g.lineTo(w/2,h*0.75);
-        g.lineTo(w*0.2,h/2); g.closePath();
-        g.fill(); g.fillStyle='#f4f0e0';
-        g.fillRect(w/2-1,h/2-1,2,2);
-        g.strokeStyle='rgba(240,235,200,0.7)';
-        g.strokeRect(2,2,w-4,h-4);
+        g.fillStyle='#379a4b'; g.beginPath();
+        g.moveTo(cx,cy-dy*0.55); g.lineTo(cx+dx*0.55,cy); g.lineTo(cx,cy+dy*0.55); g.lineTo(cx-dx*0.55,cy);
+        g.closePath(); g.fill();
+        g.fillStyle='#c2854a'; g.beginPath(); g.arc(cx,cy,Math.max(2,w*0.05),0,6.283); g.fill();
+        g.fillStyle='#c2854a';
+        g.beginPath(); g.arc(cx,h*0.11,Math.max(2,w*0.07),0,6.283); g.fill();
+        g.beginPath(); g.arc(cx,h*0.89,Math.max(2,w*0.07),0,6.283); g.fill();
+        g.strokeStyle='rgba(240,235,200,0.7)'; g.strokeRect(2,2,w-4,h-4);
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
