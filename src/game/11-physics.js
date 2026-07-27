@@ -1765,10 +1765,15 @@
       // speed. The barrel SWEEPS through its arc and connects the instant it overlaps the ball — so
       // a slow ball is hit reliably, but a hard flick blows past before the barrel arrives (a strike).
       // A connect launches the ball toward that bat's opposite goal at a fixed power (no scaling).
+      // The bat also swings at a PITCHED ball that comes near and cracks it away down the pitch —
+      // the batter doing what a batter is for. It is cosmetic for the match (a struck baseball still
+      // only ever deflects a moving coin) but it makes the two hazards play off each other.
       for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
       if(_bb.cd>0){ _bb.cd--; continue; }
-      if(!_bb.swing){ if(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ){ _bb.swing=true;
-      _bb.swT=0; _bb.hit=false; } continue; }
+      if(!_bb.swing){ var _btrig=(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ);
+      if(!_btrig){ for(var _bpi=0;_bpi<bbPitchBalls.length;_bpi++){ var _bp0=bbPitchBalls[_bpi];
+      if(!_bp0.struck&&Math.hypot(_bp0.x-_bb.x,_bp0.y-_bb.y)<BB_RZ){ _btrig=true; break; } } }
+      if(_btrig){ _bb.swing=true; _bb.swT=0; _bb.hit=false; } continue; }
       _bb.swT++; var _bang=_bb.rest+(_bb.swT/BB_SWING)*BB_ARC;
       var _bhx=_bb.x+Math.cos(_bang)*BB_REACH, _bhy=_bb.y+Math.sin(_bang)*BB_REACH;
       if(!_bb.hit&&_bbmov&&Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+BB_BARREL){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
@@ -1776,7 +1781,15 @@
       _bb.hit=true; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
       }catch(e){} try{ spawnSparks(_bhx,_bhy,current,12,true);
       }catch(e){} try{ shake=Math.max(shake||0,4);
-      }catch(e){} } if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
+      }catch(e){} }
+      for(var _bsi=0;_bsi<bbPitchBalls.length;_bsi++){ var _bp=bbPitchBalls[_bsi];
+      if(_bp.struck) continue;
+      if(Math.hypot(_bp.x-_bhx,_bp.y-_bhy)<_bp.r+BB_BARREL){ var _pax=(W/2)-_bp.x, _pay=_bb.tgt-_bp.y, _pad=Math.hypot(_pax,_pay)||1;
+      _bp.vx=_pax/_pad*4.6; _bp.vy=_pay/_pad*4.6;
+      _bp.struck=true; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,8,true);
+      }catch(e){} } }
+      if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
