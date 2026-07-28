@@ -191,6 +191,15 @@ cannot be beaten along the ground, paired with the launcher that beats it.
 - A kickoff sits the ball exactly ON the net line, which the net would otherwise knock straight
   back. A ball leaving the centre spot is treated as a **serve** and allowed through; after that
   the net is absolute.
+- **The AI plays the court** (`tnAimPlan` / `tnBlocksAt` + the shot and chip branches in `09-ai.js`).
+  When the net is between it and the goal it picks a route rather than shooting into the cord:
+  with **Chip** it shoots at goal and lifts the ball in flight (`aiMaybeChip` triggers 7–34px before
+  the net — 22 frames of air clears the band and still lands short of the goal at every flick speed);
+  otherwise it aims down an **open side lane**, which its existing curve search then bends round toward
+  goal; failing that it runs onto a **live racket** to be lobbed over. Lane openness is sampled across
+  the ball's width, so a half-extended shutter is not mistaken for a gap.
+- On all three S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
+  scoring on threading something, so a loose CPU shot is simply a wasted turn.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 

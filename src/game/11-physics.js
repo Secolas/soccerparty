@@ -1174,6 +1174,40 @@
     var lane=tnApron();
     if(d.side<0){ var p0=tnNetX0(); return {x0:p0-e*lane,x1:p0}; }
     var p1=tnNetX1(); return {x0:p1,x1:p1+e*lane}; }
+    // Does the net (or a closed gate) block a ground crossing at this x? Used by the AI so it can
+    // tell "must go over" from "there is a lane open".
+    function tnBlocksAt(x){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return false;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    if(x>tnNetX0()&&x<tnNetX1()) return true;
+    for(var i=0;i<tnDoors.length;i++){ var sp=tnDoorSpan(tnDoors[i]);
+    if(sp&&x>sp.x0-COIN_R*0.4&&x<sp.x1+COIN_R*0.4) return true; }
+    return false; }
+    // Where should the CPU aim on CENTRE COURT? Returns a waypoint, or null to just shoot at goal.
+    //   - has Chip        -> null (shoot at goal; aiMaybeChip lifts it over the net in flight)
+    //   - a lane is open  -> hug that lane, so a curve/banana can bend round the net
+    //   - else a live racket that is roughly on the way -> run onto it and get lobbed over
+    function tnAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    var ny=H/2, gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
+    var mustCross=((coin.y-ny)*(gy-ny)<0);      // ball and target goal on opposite sides of the net
+    if(!mustCross) return null;
+    var ab=(typeof sideAb!=='undefined'&&sideAb[team])?sideAb[team]:[];
+    if(ab.indexOf('chip')>=0&&(typeof chipUsed==='undefined'||!chipUsed)) return null;
+    var lanes=[{x:(WALL+tnNetX0())/2},{x:(tnNetX1()+W-WALL)/2}];
+    // sample across the ball's width, not just its centre: mid-slide a shutter can already overlap
+    // the edge of the ball while the centre line still looks clear
+    var openLanes=[]; for(var l=0;l<lanes.length;l++){ var lx=lanes[l].x;
+    if(!tnBlocksAt(lx)&&!tnBlocksAt(lx-COIN_R)&&!tnBlocksAt(lx+COIN_R)) openLanes.push(lanes[l]); }
+    if(openLanes.length){ openLanes.sort(function(a,b){ return Math.abs(a.x-coin.x)-Math.abs(b.x-coin.x); });
+    return {x:openLanes[0].x,y:gy,kind:'lane'}; }
+    var best=null,bd=1e9;
+    for(var r=0;r<tnRackets.length;r++){ var rk=tnRackets[r];
+    if(!tnRackLive(rk)) continue;
+    if((rk.y-ny)*(coin.y-ny)<=0) continue;      // must be on the ball's own side of the net
+    var d=Math.hypot(rk.x-coin.x,rk.y-coin.y);
+    if(d<bd){ bd=d; best=rk; } }
+    if(best) return {x:best.x,y:best.y,kind:'racket'};
+    return null; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

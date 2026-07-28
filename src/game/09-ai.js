@@ -52,9 +52,19 @@
       var _rimT=null; try{ if(typeof bkAimTarget==='function') _rimT=bkAimTarget(t); }catch(e){}
       if(_rimT){ spread=Math.min(spread,_rimT.half*0.45);
       goalX=_rimT.x+(Math.random()*2-1)*spread; goalY=_rimT.y; }
+      // CENTRE COURT: the net cannot be beaten along the ground. Aim down an open side lane (a curve
+      // then bends it back at goal) or onto a live racket that will lob it over. With Chip the plan is
+      // null and it shoots straight at goal, lifting the ball in flight instead — see aiMaybeChip.
+      var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
+      if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
+      goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
+      // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
+      // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
+      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'); }catch(e){}
+      if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
-      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1);
+      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
@@ -136,6 +146,15 @@
     // CHIP: loft the shot over a defender/keeper sitting in the lane just ahead of the ball.
     function aiMaybeChip(){ if(Math.hypot(coin.vx,coin.vy)<1.2) return;
     if(_aiChipRoll<0) return;
+    // CENTRE COURT: chip the NET. Nothing crosses it on the ground, so lift the ball just before it
+    // arrives — 22 frames of air is enough to clear the band and land on the far side.
+    try{ if((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards()){
+    var _ny=H/2, _dn=Math.abs(coin.y-_ny);
+    var _atNet=((coin.y>_ny&&coin.vy<-0.3)||(coin.y<_ny&&coin.vy>0.3));
+    if(_atNet&&_dn<34&&_dn>7&&tnBlocksAt(coin.x)){ chipUsed=true;
+    coin.air=22; coin.air0=22;
+    try{sfxGuided();}catch(e){} try{ setStatus(((teamKits[current]&&teamKits[current].abbr)||'CPU')+' CHIP!');
+    }catch(e){} } return; } }catch(e){}
     var goalY=(current==='red')?NET_DEPTH:(H-NET_DEPTH);
     var toGoal=(current==='red')?(coin.vy<-0.3):(coin.vy>0.3);
     if(!toGoal) return; var dg=Math.abs(coin.y-goalY);
