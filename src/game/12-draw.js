@@ -499,26 +499,30 @@
     ctx.restore(); }
     // the hoops: a basketball rim seen from above — an orange ring with a net cinching below it, and
     // a small backboard plate on the goal side. Drawn as a ring, not a bar, so it reads as a hoop.
+    // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the
+    // GOAL side is -Y: the net hangs that way (the ball drops through and out toward the goal) with
+    // the backboard beyond it, which is the way round a hoop actually reads.
     for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0, armed=bkRimPass[rm.for];
-    var rx=rm.half, ry=rm.half*0.52, nd=rm.fy;   // nd: -1 = guards the top goal, +1 = the bottom
+    var rx=rm.half, ry=rm.half*0.52;
     ctx.save(); ctx.translate(rm.x,rm.y);
+    ctx.rotate(Math.atan2(rm.fy,rm.fx)+Math.PI/2);
     ctx.fillStyle='rgba(24,14,4,0.30)';                                   // contact shadow
     ctx.beginPath(); ctx.ellipse(0,2,rx,ry,0,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(246,240,224,0.85)';                               // backboard, behind the ring
-    ctx.fillRect(-rx*0.92,nd<0?-ry-4.5:ry+1.5,rx*1.84,3);
-    ctx.fillStyle='rgba(60,36,12,0.5)';
-    ctx.fillRect(-rx*0.92,nd<0?-ry-4.5:ry+4.2,rx*1.84,0.8);
-    ctx.strokeStyle='rgba(252,248,240,0.42)'; ctx.lineWidth=1;            // net, cinching to a throat
+    ctx.strokeStyle='rgba(252,248,240,0.45)'; ctx.lineWidth=1;            // net, cinching goalwards
     for(var n=0;n<7;n++){ var a=Math.PI*(n/6);
-    var sx=Math.cos(a)*rx, sy=Math.sin(a)*ry*(nd<0?1:-1);
+    var sx=Math.cos(a)*rx, sy=Math.sin(a)*ry;
     ctx.beginPath(); ctx.moveTo(sx,sy);
-    ctx.quadraticCurveTo(sx*0.55,sy+nd*-3.5,sx*0.22,sy+nd*-7.5); ctx.stroke(); }
-    ctx.beginPath(); ctx.ellipse(0,nd*7.5*-1,rx*0.34,ry*0.42,0,0,6.283); ctx.stroke();
+    ctx.quadraticCurveTo(sx*0.55,-3.2,sx*0.20,-6.6); ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(0,-6.6,rx*0.30,ry*0.36,0,0,6.283); ctx.stroke();
+    ctx.fillStyle='rgba(246,240,224,0.9)';                                // backboard, beyond the net
+    ctx.fillRect(-rx*0.95,-ry-7.5,rx*1.9,2.6);
+    ctx.fillStyle='rgba(60,36,12,0.55)';
+    ctx.fillRect(-rx*0.95,-ry-5.2,rx*1.9,0.9);
     ctx.lineWidth=2.6;                                                     // the rim itself
     ctx.strokeStyle=hot?'#ffe98a':(armed?'#9fe06a':'#e2622c');
     ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.283); ctx.stroke();
     ctx.lineWidth=1; ctx.strokeStyle=hot?'#fffbe0':'rgba(255,190,120,0.85)';
-    ctx.beginPath(); ctx.ellipse(0,-0.7,rx*0.92,ry*0.72,0,Math.PI,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0,0.6,rx*0.92,ry*0.72,0,0,Math.PI); ctx.stroke();
     ctx.restore(); }
     if(bkNoBasket>0){ bkNoBasket--;
     ctx.save(); ctx.globalAlpha=Math.min(1,bkNoBasket/22);

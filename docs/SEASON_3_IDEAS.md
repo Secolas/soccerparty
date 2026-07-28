@@ -124,6 +124,14 @@ a goal if the ball went through something first.
   — not re-thrown each goal. You learn the three lanes and pick one, and both teams
   face the same layout. A single wide gate was considered and rejected: it is passed
   almost every shot, so the rule stops biting.
+- They sit on an **arc** in front of the goal, each facing the goal centre, so the two
+  wing hoops are **angled diagonally** — you shoot through them from the wing, the way
+  the approach actually arrives. The net hangs on the goal side (the ball drops through
+  and out toward the goal) with the backboard beyond it.
+- **The AI aims through them** (`bkAimTarget` + the shot branch in `09-ai.js`): it picks
+  the hoop closest to its natural line at goal — wing hoop from the wing, centre hoop
+  from central — and tightens its spread to the hoop mouth. Without this the CPU keeps
+  having goals waved off and the rule becomes a one-sided advantage for the player.
 - The mouth is `BK_RIM_HALF*2` = 16px against a 10px ball — a bit over 1.5 balls
   wide. Exactly coin-tight reads as a luck check once anything deflects.
 - A shot reaching the net without going through a hoop is bounced back out with a

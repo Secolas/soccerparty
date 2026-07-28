@@ -43,9 +43,15 @@
       portalUsed=false; ricochetUsed=false;
       serpentPhase=0; turnFlash=Math.max(turnFlash,10);
       return; }
-      const goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
-      const spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
-      const goalX=W/2+(Math.random()*2-1)*spread;
+      let goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
+      let spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
+      let goalX=W/2+(Math.random()*2-1)*spread;
+      // THE HARDWOOD: a shot only counts if it went through a hoop, so aim at the hoop that best
+      // lines up with the run at goal instead of the goal mouth. Without this the CPU keeps having
+      // goals waved off and the rim rule quietly becomes a one-sided advantage for the player.
+      var _rimT=null; try{ if(typeof bkAimTarget==='function') _rimT=bkAimTarget(t); }catch(e){}
+      if(_rimT){ spread=Math.min(spread,_rimT.half*0.45);
+      goalX=_rimT.x+(Math.random()*2-1)*spread; goalY=_rimT.y; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
       const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1);

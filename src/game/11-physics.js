@@ -1075,13 +1075,30 @@
     // facing that goal. A shot only counts if it went through one of them (see bkGoalDenied). They sit
     // at fixed, mirrored spots rather than being re-thrown each goal: you learn the three lanes and
     // pick one, and the layout stays symmetric for both teams.
+    // Laid out on an ARC in front of each goal rather than a flat row: every hoop sits the same
+    // distance from the goal mouth and each one FACES the goal centre, so the outer two are angled
+    // diagonally — you shoot through them from the wing, the way the approach actually comes in.
     function bkSpawnRims(){ bkRims=[];
     if(!bkRimOn) return;
-    // 'red' scores in the TOP goal, so its gates live in the top box (which is goalAreaRect('blue'))
-    var ends=[{team:'red',box:goalAreaRect('blue'),fy:-1,t:0.78},{team:'blue',box:goalAreaRect('red'),fy:1,t:0.22}];
-    for(var e=0;e<ends.length;e++){ var en=ends[e], bx=en.box, ry=bx.y+bx.h*en.t;
-    for(var s=0;s<3;s++){ var rx=bx.x+bx.w*(0.2+0.3*s);
-    bkRims.push({x:rx,y:ry,fx:0,fy:en.fy,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
+    var ends=[{team:'red',gy:NET_DEPTH,into:1},{team:'blue',gy:H-NET_DEPTH,into:-1}];
+    var R=25, angs=[-0.73,0,0.73];
+    for(var e=0;e<ends.length;e++){ var en=ends[e], gx=W/2, gy=en.gy;
+    for(var s=0;s<angs.length;s++){ var a=angs[s]*en.into;
+    var px=gx-Math.sin(a)*R*en.into, py=gy+Math.cos(a)*R*en.into;
+    var fx=gx-px, fy=gy-py, fl=Math.hypot(fx,fy)||1;
+    bkRims.push({x:px,y:py,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
+    // the hoop the AI should shoot through: the one closest to its natural line at goal
+    function bkAimTarget(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn)) return null;
+    if(!bkRims.length){ try{ initCourt(); }catch(e){} }
+    var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH), gx=W/2;
+    var vx=gx-coin.x, vy=gy-coin.y, vl=Math.hypot(vx,vy)||1; vx/=vl; vy/=vl;
+    var best=null, bestD=1e9;
+    for(var i=0;i<bkRims.length;i++){ var r=bkRims[i]; if(r.for!==team) continue;
+    var dx=r.x-coin.x, dy=r.y-coin.y, along=dx*vx+dy*vy;
+    if(along<=2) continue;                                    // must be ahead of the ball
+    var perp=Math.abs(dx*(-vy)+dy*vx);                        // how far off the natural line it sits
+    if(perp<bestD){ bestD=perp; best=r; } }
+    return best; }
     function initCourt(){ var t=hzTier();
     bkOn=true; bkTrampOn=(t>=1); bkRimOn=(t>=2);
     bkBoards=[]; bkTramps=[]; bkRims=[];
