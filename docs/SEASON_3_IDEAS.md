@@ -147,23 +147,29 @@ a goal if the ball went through something first.
 - A shot reaching the net without going through a hoop is bounced back out with a
   **NO BASKET** flash (reusing the VAR-style denial path).
 
-### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3)
+### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — BUILT
 
-**Fantasy:** a grass court split by a net — flat shots come back at you, so you
-lob; the flanks are fast tramlines; a ball-kid clears dead balls.
+**Fantasy:** a blue hard court split by a net — hit through the cord or lob it, run
+the fast tramlines down the flanks, and don't dawdle past the ball-kids.
 
-*New mechanic:* a **mid-pitch barrier only aerial shots clear** (a verticality
-gate) — makes Chip/Lob suddenly essential.
+*New mechanic:* a **speed-gated permeable barrier** — the first hazard that lets the
+ball through only if it is travelling hard enough.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **The net** | low; shots above ~0.6 speed clear it | full; grounded shots rebound, must lob | tall; short chips clip and drop, needs a high lob |
-| **Tramlines** (flank speed lanes) | OFF | +15% carry | +30% + nudges ball toward the sideline |
-| **Ball-kid** (sweeper) | clears a fully-stopped ball to center after 2 s | same, faster | actively intercepts slow loose balls in the neutral third (soft pursuer) |
+| **The net** across midfield — a hard grounded shot punches through and loses pace off the cord; a soft roll is stopped dead and knocked back; a lob (Chip air) sails over untouched | on | on | on |
+| **Tramlines** — the flank lanes carry the ball fast and lean it toward the sideline | — | on | on |
+| **Ball-kids** — two patrol the neutral third and swat a dawdling ball back to the middle | — | — | 2 |
 
-*Reuse:* net = a conditional barrier keyed off the Chip height flag (permeable by
-altitude, like the portcullis but gated on height not time); tramlines =
-speed-lane family; ball-kid = the sweeper/pursuer AI.
+*Design notes:*
+- The doc originally had grounded shots **rebound outright**, forcing a lob. That
+  would leave any loadout without Chip unable to attack at all, so the net is
+  **speed-gated** instead: hit it hard, or go over it. The verticality gate survives
+  (a lob is still the clean way through) without a loadout being able to lock you out.
+- The ball-kids only act on a **moving** ball (speed 0.5–3.2), never a resting one, so
+  they can't shunt a settled ball and break the "ball at rest = your turn" contract.
+- Airborne goals are already rejected by the engine, so lobbing the net can never
+  turn into lobbing the keeper.
 
 ### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
 

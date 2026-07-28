@@ -468,6 +468,32 @@
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
     var ang=b.swing?(b.start+b.dir*(b.swT/BB_SWING)*BB_ARC):b.rest;
     _drawBat(ctx,b.x,b.y,ang,b.swing); } }
+    // TENNIS (CENTRE COURT) — the net across midfield, flank tramlines (med), ball-kids (hard)
+    function drawTennis(ctx,now){ if(typeof tnKids==='undefined') return;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    var ny=H/2, ix=WALL+14, iw=W-2*(WALL+14), lit=tnNetFlash>0;
+    if(tnTramOn){ ctx.save(); ctx.fillStyle='rgba(120,200,255,0.10)';
+    ctx.fillRect(ix,WALL,TN_TRAM,H-WALL*2);
+    ctx.fillRect(ix+iw-TN_TRAM,WALL,TN_TRAM,H-WALL*2);
+    ctx.restore(); }
+    ctx.save();                                                  // the net: mesh band + white cord
+    ctx.fillStyle='rgba(14,22,30,0.32)'; ctx.fillRect(WALL,ny-3.5,W-WALL*2,7);
+    ctx.strokeStyle='rgba(228,240,252,0.34)'; ctx.lineWidth=1;
+    for(var x=WALL;x<W-WALL;x+=3){ ctx.beginPath(); ctx.moveTo(x+0.5,ny-3.5); ctx.lineTo(x+0.5,ny+3.5); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(WALL,ny-3.5); ctx.lineTo(W-WALL,ny-3.5);
+    ctx.moveTo(WALL,ny+3.5); ctx.lineTo(W-WALL,ny+3.5); ctx.stroke();
+    ctx.fillStyle=lit?'#ffe98a':'#f2f7ff'; ctx.fillRect(WALL,ny-4.5,W-WALL*2,2);
+    ctx.fillStyle='#cfd8e6'; ctx.fillRect(WALL-1,ny-6,2,12); ctx.fillRect(W-WALL-1,ny-6,2,12);
+    ctx.restore();
+    for(var i=0;i<tnKids.length;i++){ var k=tnKids[i], kl=k.flash>0;
+    ctx.save(); ctx.translate(k.x,k.y);
+    ctx.fillStyle='rgba(12,20,10,0.28)'; ctx.beginPath();
+    ctx.ellipse(0,3,k.r*0.8,k.r*0.4,0,0,6.283); ctx.fill();
+    ctx.fillStyle=kl?'#ffe07a':'#e8e4d6'; ctx.fillRect(-3,-5,6,7);   // shirt
+    ctx.fillStyle='#2f4a7a'; ctx.fillRect(-3,2,6,3);                  // shorts
+    ctx.fillStyle='#f0c9a0'; ctx.beginPath(); ctx.arc(0,-7,2.6,0,6.283); ctx.fill();
+    ctx.fillStyle='#c8ff4a'; ctx.beginPath(); ctx.arc(4,-1,1.8,0,6.283); ctx.fill();
+    ctx.restore(); } }
     // BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the shot clock (hard)
     function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
     // the boards and the clock are standing furniture, so lay them out from the draw side too —
@@ -1142,6 +1168,7 @@
     }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
     drawGumballs(ctx,now); drawJelly(ctx,now);
     }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
+    }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
     }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
     site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
@@ -1471,6 +1498,7 @@
       // goal box, so drawing it with the ground FX left the white box lines striped across it.
       try{ if(boardKey==='baseball'&&stadiumHazards()) drawBaseball(ctx,now); }catch(e){}
       try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
+      try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';

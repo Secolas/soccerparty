@@ -502,6 +502,35 @@
         g.strokeRect(2,2,w-4,h-4);
         } },
 
+      tennis:{ name:'CENTRE COURT', surround:'#123a2a', stand:'#1b5540', tier:'rgba(255,255,255,0.05)',
+        frame:'#1f6b4e',frameHi:'#37a074',frameLo:'#124a34',post:'#f4f8ff',
+        line:'rgba(255,255,255,0.92)',line2:'rgba(255,255,255,0.7)',
+        netRecess:'#123c50',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(235,246,255,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,246,255,0.56)',netOverlay:'rgba(8,30,44,0.46)',
+        surface(g){ g.fillStyle='#2f7a5a'; g.fillRect(0,0,W,H);            // green apron
+        var ix=WALL+14, iw=W-2*(WALL+14);
+        g.fillStyle='#2f6fae'; g.fillRect(ix,WALL,iw,H-WALL*2);            // blue court
+        g.fillStyle='rgba(255,255,255,0.06)';
+        for(var b=WALL;b<H-WALL;b+=22){ g.fillRect(ix,b,iw,11); }
+        g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=1.4;
+        g.strokeRect(ix+0.5,WALL+0.5,iw-1,H-WALL*2-1);                     // baseline + sidelines
+        var tl=10;                                                          // tramlines down each flank
+        g.beginPath(); g.moveTo(ix+tl+0.5,WALL); g.lineTo(ix+tl+0.5,H-WALL);
+        g.moveTo(ix+iw-tl-0.5,WALL); g.lineTo(ix+iw-tl-0.5,H-WALL); g.stroke();
+        var sb=52;                                                          // service boxes
+        g.beginPath(); g.moveTo(ix+tl,H/2-sb+0.5); g.lineTo(ix+iw-tl,H/2-sb+0.5);
+        g.moveTo(ix+tl,H/2+sb-0.5); g.lineTo(ix+iw-tl,H/2+sb-0.5);
+        g.moveTo(W/2+0.5,H/2-sb); g.lineTo(W/2+0.5,H/2+sb); g.stroke();
+        g.beginPath(); g.moveTo(W/2+0.5,WALL); g.lineTo(W/2+0.5,WALL+7);   // centre marks
+        g.moveTo(W/2+0.5,H-WALL-7); g.lineTo(W/2+0.5,H-WALL); g.stroke();
+        },
+        preview(g,w,h){ g.fillStyle='#2f7a5a'; g.fillRect(0,0,w,h);
+        g.fillStyle='#2f6fae'; g.fillRect(w*0.14,0,w*0.72,h);
+        g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=1;
+        g.strokeRect(w*0.14+0.5,1.5,w*0.72-1,h-3);
+        g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+        g.strokeRect(2,2,w-4,h-4);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -637,7 +666,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -660,6 +689,8 @@
       if(typeof bbBats!=='undefined'&&bbBats) bbBats.length=0;
       if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
       if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
+      if(typeof tnKids!=='undefined'&&tnKids) tnKids.length=0;
+      tnOn=false; tnNetFlash=0;
       if(typeof bkBoards!=='undefined'&&bkBoards) bkBoards.length=0;
       bkOn=false; bkRimOn=false; bkTrampOn=false;
       if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;

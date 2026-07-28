@@ -1114,6 +1114,29 @@
     var tx=WALL+20+Math.random()*(W-WALL*2-40);
     if(_bkFree(tx,ty,BK_TRAMP_R)){ bkTramps.push({x:tx,y:ty,r:BK_TRAMP_R,flash:0}); break; } } } }
     bkSpawnRims(); }
+    // TENNIS (CENTRE COURT, Season 3) — ADDITIVE by difficulty:
+    //   EASY: the NET across midfield. A grounded ball only crosses if it is travelling hard enough;
+    //         a soft roll is stopped dead at the cord and knocked back. A lob (Chip air) sails over
+    //         untouched, which is the clean way through. NOTE the doc wanted grounded shots to rebound
+    //         outright and force a lob — that would leave any loadout without Chip unable to attack at
+    //         all, so the net is speed-gated instead: hit it hard, or go over it.
+    //   MED : + tramlines down each flank that carry the ball fast and pull it toward the sideline.
+    //   HARD: + ball-kids patrolling the neutral third who swat a dawdling ball back to the middle.
+    var tnOn=false, tnTramOn=false, tnKidOn=false, tnKids=[], tnNetFlash=0, tnPrevY=0;
+    var TN_NET_MIN=2.6, TN_TRAM=10, TN_KID_R=9;
+    function initTennis(){ var t=hzTier();
+    tnOn=true; tnTramOn=(t>=1); tnKidOn=(t>=2);
+    tnKids=[]; tnNetFlash=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
+    if(tnKidOn){ tnKids.push({x:W*0.32,y:H/2-42,vx:0.55,r:TN_KID_R,flash:0});
+    tnKids.push({x:W*0.68,y:H/2+42,vx:-0.55,r:TN_KID_R,flash:0}); } }
+    // ball-kids shuffle along their line from the draw loop so they move between shots
+    function tennisTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    if(tnNetFlash>0) tnNetFlash--;
+    for(var i=0;i<tnKids.length;i++){ var k=tnKids[i];
+    k.x+=k.vx; if(k.x<WALL+18){ k.x=WALL+18; k.vx=Math.abs(k.vx); }
+    if(k.x>W-WALL-18){ k.x=W-WALL-18; k.vx=-Math.abs(k.vx); }
+    if(k.flash>0) k.flash--; } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1904,6 +1927,30 @@
       }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
       else { for(var _tf=0;_tf<bkTramps.length;_tf++){ if(bkTramps[_tf].flash>0) bkTramps[_tf].flash--; } }
       bkPrev.x=coin.x; bkPrev.y=coin.y;
+      } if((typeof boardKey!=='undefined')&&boardKey==='tennis'&&!scoring&&stadiumHazards()){ if(!tnOn) initTennis();
+      var _tsp=Math.hypot(coin.vx,coin.vy), _tair=(coin.air>0), _tmov=(moving&&!_tair);
+      // EASY the net: a lob clears it; a hard grounded shot punches through and loses pace off the
+      // cord; anything slower is stopped at the net and knocked back the way it came
+      var _ny=H/2, _was=tnPrevY-_ny, _now=coin.y-_ny;
+      if(moving&&_was*_now<0){ if(!_tair){
+      if(_tsp>=TN_NET_MIN){ coin.vx=coin.vx*0.74+(Math.random()-0.5)*0.5;
+      coin.vy*=0.74; tnNetFlash=10;
+      try{ if(typeof sfxBump==='function') sfxBump(3); }catch(e){}
+      } else { coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
+      coin.vy=-coin.vy*0.45; coin.vx*=0.6;
+      tnNetFlash=14; try{ if(typeof sfxBump==='function') sfxBump(5);
+      }catch(e){} try{ spawnSparks(coin.x,_ny,current,6,true); }catch(e){} } } }
+      tnPrevY=coin.y;
+      // MED tramlines: the flank lanes run fast and lean the ball toward the sideline
+      if(tnTramOn&&_tmov&&_tsp>0.8){ var _ix=WALL+14, _iw=W-2*(WALL+14);
+      var _inL=(coin.x>_ix&&coin.x<_ix+TN_TRAM), _inR=(coin.x<_ix+_iw&&coin.x>_ix+_iw-TN_TRAM);
+      if(_inL||_inR){ coin.vy*=1.03; coin.vx+=(_inL?-0.05:0.05); } }
+      // HARD ball-kids: a dawdling ball through the neutral third gets swatted back to the middle
+      if(_tmov&&_tsp>0.5&&_tsp<3.2){ for(var _ki=0;_ki<tnKids.length;_ki++){ var _k=tnKids[_ki];
+      if(Math.hypot(coin.x-_k.x,coin.y-_k.y)<_k.r+COIN_R){ var _kx=W/2-coin.x, _ky=H/2-coin.y, _kl=Math.hypot(_kx,_ky)||1;
+      coin.vx=_kx/_kl*2.6; coin.vy=_ky/_kl*2.6;
+      _k.flash=16; try{ if(typeof sfxBump==='function') sfxBump(4);
+      }catch(e){} try{ spawnSparks(_k.x,_k.y,current,7,true); }catch(e){} break; } } }
       // EASY backboards: bank a shot off the angled board beside a post
       if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
       var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
