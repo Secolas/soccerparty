@@ -1056,19 +1056,48 @@
     //         so letting it hop near the goals would let shots float past the keeper at random.
     //   MED : + backboards angled beside each goal — bank a shot off one and it deflects goalwards.
     //   HARD: + a shot clock; the longer one possession runs, the more the ball is hurried along.
-    var bkDribT=0, bkDribOn=false, bkBoardsOn=false, bkClockOn=false, bkClock=0, bkBoards=[], bkBoardFlash=0;
-    var BK_PERIOD=30, BK_HOP=13, BK_MINSP=1.2, BK_CLOCK=300, BK_BOARD_R=4;
+    var bkOn=false, bkBoards=[], bkBoardFlash=0, bkTramps=[], bkTrampOn=false;
+    var bkRims=[], bkRimOn=false, bkRimPass={red:false,blue:false}, bkNoBasket=0, bkLastScore=-1;
+    var bkPrev={x:0,y:0};
+    var BK_BOARD_R=4, BK_TRAMP_R=11, BK_HOP=16, BK_RIM_HALF=13, BK_POST_R=3;
+    // pick a spot that does not sit on a player, the ball, or another prop
+    function _bkFree(x,y,r,extra){ try{ for(var i=0;i<nails.length;i++){ if(Math.hypot(x-nails[i].x,y-nails[i].y)<r+NAIL_R+7) return false; }
+    }catch(e){} try{ if(coin&&Math.hypot(x-coin.x,y-coin.y)<r+COIN_R+9) return false; }catch(e){}
+    for(var b=0;b<bkBoards.length;b++){ var _b=bkBoards[b];
+    if(Math.hypot(x-(_b.x1+_b.x2)/2,y-(_b.y1+_b.y2)/2)<r+16) return false; }
+    for(var t=0;t<bkTramps.length;t++){ if(Math.hypot(x-bkTramps[t].x,y-bkTramps[t].y)<r+BK_TRAMP_R+8) return false; }
+    for(var m=0;m<bkRims.length;m++){ if(Math.hypot(x-bkRims[m].x,y-bkRims[m].y)<r+BK_RIM_HALF+12) return false; }
+    if(extra) for(var e=0;e<extra.length;e++){ if(Math.hypot(x-extra[e].x,y-extra[e].y)<r+extra[e].r) return false; }
+    return true; }
+    // HARD rim: one hoop per goal, re-thrown after every goal. Its mouth faces that goal, and a shot
+    // only counts if it went THROUGH the hoop first — see bkGoalDenied in collideStep.
+    function bkSpawnRims(){ bkRims=[];
+    if(!bkRimOn) return; var ends=[{team:'red',gy:NET_DEPTH},{team:'blue',gy:H-NET_DEPTH}];
+    for(var e=0;e<ends.length;e++){ var en=ends[e], placed=null;
+    for(var tryN=0;tryN<80&&!placed;tryN++){
+    var y=(en.team==='red')?(NET_DEPTH+GOAL_AREA_D+14+Math.random()*(H*0.30)):(H-NET_DEPTH-GOAL_AREA_D-14-Math.random()*(H*0.30));
+    var x=WALL+26+Math.random()*(W-WALL*2-52);
+    if(_bkFree(x,y,BK_RIM_HALF+6)) placed={x:x,y:y}; }
+    if(!placed) placed={x:W/2,y:(en.team==='red')?(NET_DEPTH+GOAL_AREA_D+30):(H-NET_DEPTH-GOAL_AREA_D-30)};
+    // the mouth faces the goalie it guards, so shooting through it points you at the goal
+    var fx=(W/2)-placed.x, fy=en.gy-placed.y, fl=Math.hypot(fx,fy)||1;
+    bkRims.push({x:placed.x,y:placed.y,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } }
     function initCourt(){ var t=hzTier();
-    bkDribOn=true; bkBoardsOn=(t>=1); bkClockOn=(t>=2);
-    bkDribT=0; bkClock=BK_CLOCK; bkBoards=[];
-    if(bkBoardsOn){ var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), _o=13, _d=17;
-    // one angled board outside each post, canted so a ball off it is turned back toward the goal mouth
+    bkOn=true; bkTrampOn=(t>=1); bkRimOn=(t>=2);
+    bkBoards=[]; bkTramps=[]; bkRims=[];
+    bkRimPass={red:false,blue:false}; bkNoBasket=0;
+    var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), _o=13, _d=17;
+    // EASY backboards: one angled board outside each post, canted to turn a bank shot goalwards
     bkBoards.push({x1:gL-_o,y1:NET_DEPTH+2,x2:gL-_o-_d,y2:NET_DEPTH+2+_d});
     bkBoards.push({x1:gR+_o,y1:NET_DEPTH+2,x2:gR+_o+_d,y2:NET_DEPTH+2+_d});
     bkBoards.push({x1:gL-_o,y1:H-NET_DEPTH-2,x2:gL-_o-_d,y2:H-NET_DEPTH-2-_d});
     bkBoards.push({x1:gR+_o,y1:H-NET_DEPTH-2,x2:gR+_o+_d,y2:H-NET_DEPTH-2-_d});
-    } }
-    function _bkMid(y){ var pad=NET_DEPTH+GOAL_AREA_D+10; return y>pad&&y<H-pad; }
+    if(bkTrampOn){ for(var n=0;n<3;n++){ for(var tryN=0;tryN<70;tryN++){
+    var ty=NET_DEPTH+GOAL_AREA_D+18+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-36);
+    var tx=WALL+20+Math.random()*(W-WALL*2-40);
+    if(_bkFree(tx,ty,BK_TRAMP_R)){ bkTramps.push({x:tx,y:ty,r:BK_TRAMP_R,flash:0}); break; } } } }
+    bkSpawnRims(); }
+    function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
     else if(e===1){ sx=W-WALL-2; sy=pad+Math.random()*(H-2*pad); }
@@ -1824,14 +1853,44 @@
       }catch(e){} try{ spawnSparks(_bhx,_bhy,current,8,true);
       }catch(e){} } }
       if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
-      } if((typeof boardKey!=='undefined')&&boardKey==='court'&&!scoring&&stadiumHazards()){ if(!bkDribOn) initCourt();
+      } if((typeof boardKey!=='undefined')&&boardKey==='court'&&!scoring&&stadiumHazards()){ if(!bkOn) initCourt();
       var _ksp=Math.hypot(coin.vx,coin.vy), _kmov=(moving&&(!coin.air||coin.air<=0));
-      // EASY dribble: hop on a fixed beat while running through midcourt
-      if(moving&&_ksp>BK_MINSP&&_bkMid(coin.y)){ bkDribT++;
-      if(bkDribT%BK_PERIOD===0&&(!coin.air||coin.air<=0)){ coin.air=BK_HOP; coin.air0=BK_HOP;
-      try{ if(typeof nsKick==='function') nsKick(3); }catch(e){} }
-      } else if(!moving) bkDribT=0;
-      // MED backboards: bank a shot off the angled board beside a post
+      // re-throw the hoops after every goal, and clear the "went through it" flag between attempts
+      var _ktot=((score&&score.red)|0)+((score&&score.blue)|0);
+      if(_ktot!==bkLastScore){ bkLastScore=_ktot; bkSpawnRims();
+      bkRimPass.red=false; bkRimPass.blue=false; }
+      if(!moving){ bkRimPass.red=false; bkRimPass.blue=false; }
+      if(bkNoBasket>0) bkNoBasket--;
+      // HARD rim: crossing the hoop mouth toward its goal arms that goal; the posts are solid, so
+      // clipping one rims you out instead
+      for(var _rmi=0;_rmi<bkRims.length;_rmi++){ var _rm=bkRims[_rmi];
+      if(_rm.flash>0) _rm.flash--;
+      if(_kmov){ var _d0=(bkPrev.x-_rm.x)*_rm.fx+(bkPrev.y-_rm.y)*_rm.fy;
+      var _d1=(coin.x-_rm.x)*_rm.fx+(coin.y-_rm.y)*_rm.fy;
+      if(_d0<0&&_d1>=0){ var _lat=(coin.x-_rm.x)*(-_rm.fy)+(coin.y-_rm.y)*_rm.fx;
+      if(Math.abs(_lat)<_rm.half-COIN_R*0.35){ bkRimPass[_rm.for]=true; _rm.flash=20;
+      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_rm.x,_rm.y,current,10,true); }catch(e){} } }
+      for(var _pk=-1;_pk<=1;_pk+=2){ var _px=_rm.x+(-_rm.fy)*_rm.half*_pk, _py=_rm.y+_rm.fx*_rm.half*_pk;
+      var _pdx=coin.x-_px, _pdy=coin.y-_py, _pd=Math.hypot(_pdx,_pdy), _pmin=COIN_R+BK_POST_R;
+      if(_pd<_pmin&&_pd>0){ var _pux=_pdx/_pd, _puy=_pdy/_pd;
+      coin.x+=_pux*(_pmin-_pd); coin.y+=_puy*(_pmin-_pd);
+      var _pdot=coin.vx*_pux+coin.vy*_puy;
+      if(_pdot<0){ coin.vx-=1.7*_pdot*_pux; coin.vy-=1.7*_pdot*_puy; }
+      try{ if(typeof sfxBump==='function') sfxBump(4); }catch(e){} } } } }
+      // MED trampoline: a BAD hop — it throws the ball up AND kicks it off its line, so unlike the
+      // candy jelly pad (which launches you helpfully along your travel) it costs you control
+      if(_kmov&&_ksp>0.9){ for(var _tri=0;_tri<bkTramps.length;_tri++){ var _tr=bkTramps[_tri];
+      if(_tr.flash>0) _tr.flash--;
+      if(Math.hypot(coin.x-_tr.x,coin.y-_tr.y)<_tr.r+COIN_R*0.5){ coin.air=BK_HOP; coin.air0=BK_HOP;
+      var _tang=Math.atan2(coin.vy,coin.vx)+(Math.random()-0.5)*1.15, _tsp=_ksp*0.86;
+      coin.vx=Math.cos(_tang)*_tsp; coin.vy=Math.sin(_tang)*_tsp;
+      _tr.flash=14; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_tr.x,_tr.y,current,9,true);
+      }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
+      else { for(var _tf=0;_tf<bkTramps.length;_tf++){ if(bkTramps[_tf].flash>0) bkTramps[_tf].flash--; } }
+      bkPrev.x=coin.x; bkPrev.y=coin.y;
+      // EASY backboards: bank a shot off the angled board beside a post
       if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
       var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
       var _kt=_kl2?((coin.x-_kb.x1)*_kdx+(coin.y-_kb.y1)*_kdy)/_kl2:0;
@@ -1847,10 +1906,6 @@
       bkBoardFlash=10; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
       }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
       }catch(e){} break; } } }
-      // HARD shot clock: one possession running long hurries the ball along (bounded, resets at rest)
-      if(bkClockOn){ if(moving){ if(bkClock>0) bkClock--;
-      if(bkClock<BK_CLOCK*0.5&&_ksp>0.8&&_ksp<6.5){ coin.vx*=1.012; coin.vy*=1.012; }
-      } else bkClock=BK_CLOCK; }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
@@ -2329,6 +2384,10 @@
       try{sfxBump(4);}catch(e){} return;
       } } if(shieldHit('blue')) return;
       if('red'!==current && (sideAb[current]||[]).indexOf('varcheck')>=0 && !varUsed[current]){ varDeny();
+      return; } if(bkGoalDenied('red')){ coin.y=NET_DEPTH+COIN_R+1;
+      coin.vy=Math.abs(coin.vy)*0.55+0.6; coin.vx*=0.6;
+      bkNoBasket=80; try{ sfxWhistle(); }catch(e){}
+      try{ spawnSparks(coin.x,NET_DEPTH+2,'red',10); }catch(e){}
       return; } scoring=true; scoringTeam='red';
       scoreFrames=0; spawnSparks(coin.x,NET_DEPTH,'red',18);
       return; }
@@ -2344,6 +2403,10 @@
       try{sfxBump(4);}catch(e){} return;
       } } if(shieldHit('red')) return;
       if('blue'!==current && (sideAb[current]||[]).indexOf('varcheck')>=0 && !varUsed[current]){ varDeny();
+      return; } if(bkGoalDenied('blue')){ coin.y=H-NET_DEPTH-COIN_R-1;
+      coin.vy=-(Math.abs(coin.vy)*0.55+0.6); coin.vx*=0.6;
+      bkNoBasket=80; try{ sfxWhistle(); }catch(e){}
+      try{ spawnSparks(coin.x,H-NET_DEPTH-2,'blue',10); }catch(e){}
       return; } scoring=true; scoringTeam='blue';
       scoreFrames=0; spawnSparks(coin.x,H-NET_DEPTH,'blue',18);
       return; }

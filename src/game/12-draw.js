@@ -472,7 +472,7 @@
     function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
     // the boards and the clock are standing furniture, so lay them out from the draw side too —
     // stepPhysics has not run yet at kickoff, and waiting for it left the court bare until first touch
-    if(!bkDribOn){ try{ initCourt(); }catch(e){} }
+    if(!bkOn){ try{ initCourt(); }catch(e){} }
     for(var i=0;i<bkBoards.length;i++){ var b=bkBoards[i];
     ctx.save(); ctx.lineCap='round';
     ctx.strokeStyle='rgba(20,12,4,0.35)'; ctx.lineWidth=7;
@@ -483,13 +483,51 @@
     ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
     ctx.restore(); }
     if(bkBoardFlash>0) bkBoardFlash--;
-    if(bkClockOn){ var f=Math.max(0,Math.min(1,bkClock/BK_CLOCK)), late=f<0.5;
-    ctx.save(); ctx.translate(W-WALL-11,H/2);
-    ctx.fillStyle='rgba(12,8,4,0.62)'; ctx.fillRect(-6,-11,12,22);
-    ctx.fillStyle=late?'#ff5a3c':'#ffd84a';
-    var hh=Math.round(20*f); ctx.fillRect(-4,11-hh-1,8,hh);
-    ctx.strokeStyle='rgba(255,240,210,0.5)'; ctx.lineWidth=1;
-    ctx.strokeRect(-6.5,-11.5,13,23); ctx.restore(); }
+    // trampolines — a springy pad with a hooped frame, flashing on a bad hop
+    for(var t=0;t<bkTramps.length;t++){ var tr=bkTramps[t], lit=tr.flash>0;
+    ctx.save(); ctx.translate(tr.x,tr.y);
+    ctx.fillStyle='rgba(16,10,4,0.28)'; ctx.beginPath();
+    ctx.ellipse(0,2.5,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.fillStyle=lit?'#3f6fd8':'#26407e'; ctx.beginPath();
+    ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.strokeStyle=lit?'#9fd0ff':'#6b8fd8'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.stroke();
+    ctx.strokeStyle='rgba(180,215,255,0.5)'; ctx.lineWidth=1;
+    for(var s=0;s<6;s++){ var a=s/6*6.283;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*tr.r*0.45,Math.sin(a)*tr.r*0.28);
+    ctx.lineTo(Math.cos(a)*tr.r,Math.sin(a)*tr.r*0.62); ctx.stroke(); }
+    ctx.restore(); }
+    // the hoops: an orange rim between two posts, with a net hanging under the mouth
+    for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0;
+    var px=-rm.fy, py=rm.fx;
+    var ax=rm.x+px*rm.half, ay=rm.y+py*rm.half, bx2=rm.x-px*rm.half, by2=rm.y-py*rm.half;
+    ctx.save();
+    ctx.strokeStyle='rgba(250,246,236,0.30)'; ctx.lineWidth=1;   // net, hung behind the mouth
+    for(var n=0;n<=4;n++){ var q=n/4, nx=ax+(bx2-ax)*q, ny=ay+(by2-ay)*q;
+    ctx.beginPath(); ctx.moveTo(nx,ny);
+    ctx.lineTo(nx-rm.fx*9+(0.5-Math.abs(q-0.5))*px*3,ny-rm.fy*9+(0.5-Math.abs(q-0.5))*py*3);
+    ctx.stroke(); }
+    ctx.strokeStyle='rgba(250,246,236,0.26)';
+    ctx.beginPath(); ctx.moveTo(ax-rm.fx*7,ay-rm.fy*7);
+    ctx.lineTo(bx2-rm.fx*7,by2-rm.fy*7); ctx.stroke();
+    ctx.lineCap='round'; ctx.strokeStyle='rgba(20,10,2,0.4)'; ctx.lineWidth=6;
+    ctx.beginPath(); ctx.moveTo(ax,ay+1.5); ctx.lineTo(bx2,by2+1.5); ctx.stroke();
+    ctx.strokeStyle=hot?'#ffd84a':'#e2622c'; ctx.lineWidth=4;    // the rim itself
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx2,by2); ctx.stroke();
+    ctx.strokeStyle=hot?'#fff2b8':'#ff9c58'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(ax,ay-1); ctx.lineTo(bx2,by2-1); ctx.stroke();
+    ctx.fillStyle=hot?'#fff2b8':'#f4efe0';                        // posts
+    ctx.beginPath(); ctx.arc(ax,ay,3,0,6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx2,by2,3,0,6.283); ctx.fill();
+    if(bkRimPass[rm.for]){ ctx.strokeStyle='rgba(169,201,75,0.85)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(rm.x,rm.y,rm.half+5,0,6.283); ctx.stroke(); }
+    ctx.restore(); }
+    if(bkNoBasket>0){ bkNoBasket--;
+    ctx.save(); ctx.globalAlpha=Math.min(1,bkNoBasket/22);
+    ctx.fillStyle='rgba(10,6,14,0.72)'; ctx.fillRect(W/2-46,H/2-11,92,22);
+    ctx.strokeStyle='#e05a4a'; ctx.lineWidth=1.5; ctx.strokeRect(W/2-46.5,H/2-11.5,93,23);
+    ctx.fillStyle='#ff8a72'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+    ctx.fillText('NO BASKET',W/2,H/2+3); ctx.restore(); }
     }
     // CASINO roulette wheel (spins; shows the winning number on a result)
     function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);

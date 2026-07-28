@@ -657,7 +657,10 @@
       if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
       if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
       if(typeof bkBoards!=='undefined'&&bkBoards) bkBoards.length=0;
-      bkDribT=0; bkClock=0; bkDribOn=false;
+      bkOn=false; bkRimOn=false; bkTrampOn=false;
+      if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
+      if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
+      bkLastScore=-1;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

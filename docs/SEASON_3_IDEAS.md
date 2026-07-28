@@ -98,24 +98,31 @@ impulse + tempo timer (the one new primitive); machine = moving-projectile famil
 Joystick trivializes the timing (fine — skill expression); Chip/Lob hops *over*
 the box and stray balls (the safe route); Wet Shot shrugs off machine deflections.
 
-### 2. 🏀 THE HARDWOOD — "BASKETBALL" (easy–med, ~d2)
+### 2. 🏀 THE HARDWOOD — "BASKETBALL" (easy–med, ~d2) — BUILT
 
-**Fantasy:** an indoor court — the ball *dribbles* (bounces), banks off backboards
-behind the goals, and the shot clock hurries you.
+**Fantasy:** an indoor court — bank a shot off the boards, mind the trampolines,
+and put it through the hoop.
 
-*New mechanic:* a **dribble / height-cycle ball** — blockable only on the
-down-beat; on the up-beat it sails over defenders. The season's standout new
-ball-feel. Scale the *cycle*, not the count, since it touches every shot.
+*New mechanic:* the **rim gates scoring** — the first arena where a goal is only
+a goal if the ball went through something first.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **Dribble** bounce height / cycle | shallow, slow, long predictable down-windows | normal | high, fast, tight down-window (long air-time) |
-| **Backboards** | flat wall | angled behind each goal | steeper + on side rails |
-| **Shot clock** speed-up | none | +15% as it runs down | +30% + visible countdown |
+| **Backboards** — angled boards outside each post, canted so a bank shot turns goalwards | on | on | on |
+| **Trampolines** — a *bad* hop: throws the ball up AND kicks it off its line, so you lose control | — | 3 pads | 3 pads |
+| **The rim** — a hoop guards each goal; only a shot threaded through it counts, and the hoops are re-thrown after every basket | — | — | on |
 
-*Reuse:* dribble = the Chip/Lob faked-height system driven on a loop + a
-"blockable only when grounded" test; backboards = angled bounce walls
-(bumper/wall); shot clock = the existing match timer read per possession.
+*Design notes:*
+- The **dribble** (a height-cycle ball) was cut. Going airborne skips every nail
+  collision in `collideStep` **including the goalie**, so a real dribble either
+  lobs the keeper at random or has to be fenced into midcourt — a half-measure
+  either way. The **shot clock** was cut with it.
+- The trampoline deliberately differs from Candy's jelly pad (a *helpful* hop
+  along your travel, which is spent): this one adds a random lateral kick, so it
+  costs control rather than granting a hop over defenders.
+- Rim placement avoids players, the ball and the other props, and its mouth
+  faces the goalie it guards. Clipping a post rims you out; a denied shot bounces
+  out of the goal with a **NO BASKET** flash (reusing the VAR-style denial path).
 
 ### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3)
 
