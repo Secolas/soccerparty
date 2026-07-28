@@ -486,18 +486,40 @@
     ctx.fillRect(WALL,ny-3.5,nx0-2-WALL,7); ctx.fillRect(nx1+2,ny-3.5,W-WALL-nx1-2,7);
     ctx.restore();
     for(var ri=0;ri<tnRackets.length;ri++){ var rk=tnRackets[ri], rl=rk.flash>0;
+    // green = live (lobs you over), red = dead (swats you back), amber = about to flip
+    var live=tnRackLive(rk), warn=tnRackWarn(rk);
+    var frameCol=rl?'#fff2b8':(live?(warn?'#ffc24a':'#4ad07a'):'#e0503c');
+    var stringCol=live?(warn?'rgba(255,226,160,0.85)':'rgba(190,255,214,0.8)'):'rgba(255,190,180,0.75)';
     ctx.save(); ctx.translate(rk.x,rk.y); ctx.rotate(rk.ang);
     ctx.fillStyle='rgba(12,20,10,0.26)'; ctx.beginPath();
     ctx.ellipse(0,2.5,rk.r*0.78,rk.r*0.95,0,0,6.283); ctx.fill();
-    ctx.strokeStyle=rl?'#ffe07a':'#2f3a4e'; ctx.lineWidth=2.4;    // frame
+    if(!live){ ctx.fillStyle='rgba(224,80,60,0.20)'; ctx.beginPath();
+    ctx.ellipse(0,-1,rk.r*0.72,rk.r*0.9,0,0,6.283); ctx.fill(); }
+    ctx.strokeStyle=frameCol; ctx.lineWidth=2.6;                  // frame
     ctx.beginPath(); ctx.ellipse(0,-1,rk.r*0.72,rk.r*0.9,0,0,6.283); ctx.stroke();
-    ctx.strokeStyle=rl?'rgba(255,246,200,0.9)':'rgba(240,246,255,0.55)'; ctx.lineWidth=0.8;
+    ctx.strokeStyle=stringCol; ctx.lineWidth=0.8;
     for(var g2=-2;g2<=2;g2++){ ctx.beginPath();
     ctx.moveTo(g2*rk.r*0.26,-1-rk.r*0.86); ctx.lineTo(g2*rk.r*0.26,-1+rk.r*0.86); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-rk.r*0.68,-1+g2*rk.r*0.32); ctx.lineTo(rk.r*0.68,-1+g2*rk.r*0.32); ctx.stroke(); }
     ctx.strokeStyle=rl?'#ffe07a':'#8a5a2a'; ctx.lineWidth=2.6;    // handle
     ctx.lineCap='round'; ctx.beginPath();
     ctx.moveTo(0,rk.r*0.9-1); ctx.lineTo(0,rk.r*1.7); ctx.stroke();
+    ctx.restore(); }
+    // volleyers: they only touch a ball in the air, so their reach ring is the tell
+    for(var vi=0;vi<tnVolleys.length;vi++){ var vo=tnVolleys[vi], vl=vo.flash>0;
+    ctx.save(); ctx.translate(vo.x,vo.y);
+    ctx.strokeStyle=vl?'rgba(255,232,140,0.85)':'rgba(255,255,255,0.22)';
+    ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.arc(0,0,vo.r,0,6.283); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(10,18,26,0.30)'; ctx.beginPath();
+    ctx.ellipse(0,4,5,2.4,0,0,6.283); ctx.fill();
+    ctx.fillStyle=vl?'#ffe07a':'#f2f5fa'; ctx.fillRect(-3.5,-5,7,8);        // shirt
+    ctx.fillStyle='#22304a'; ctx.fillRect(-3.5,3,7,3);                       // shorts
+    ctx.fillStyle='#f0c9a0'; ctx.beginPath(); ctx.arc(0,-7.5,2.8,0,6.283); ctx.fill();
+    ctx.strokeStyle=vl?'#ffe07a':'#2f3a4e'; ctx.lineWidth=1.6;               // raised racket
+    ctx.beginPath(); ctx.ellipse(5.5,-7,2.6,3.4,0.5,0,6.283); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4,-4.4); ctx.lineTo(2.5,-1.5); ctx.stroke();
     ctx.restore(); }
     }
     // BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the shot clock (hard)

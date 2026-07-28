@@ -1118,9 +1118,18 @@
     //   EASY: the NET across midfield plus the RACKETS. The net is solid to anything on the ground,
     //         however hard it is struck. The only ways across are in the air — run onto a racket and
     //         be lobbed over, or Chip — or round the open lanes at either end of the net.
-    //   MED / HARD: still to be designed.
-    var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[];
+    //   MED : the rackets FLIP on a loop — green lobs you over, red swats you back. Phases are
+    //         staggered so there is nearly always a live one, and an amber tell precedes each flip.
+    //   HARD: + volleyers patrolling either side of the net who smash a lob out of the air and drive
+    //         it back. They only touch an AIRBORNE ball, so the ground game and the lanes are clean.
+    var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[], tnFlipOn=false, tnVolleys=[], tnVolleyOn=false, tnT=0;
     var TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
+    var TN_FLIP=170, TN_GREEN=105, TN_VOL_R=12;
+    // a racket is live (green, lobs you over) for most of its cycle and dead (red, swats you back)
+    // for the rest. Phases are staggered so there is almost always a live one to run onto.
+    function tnRackLive(r){ return !tnFlipOn || (((tnT+r.off)%TN_FLIP)<TN_GREEN); }
+    function tnRackWarn(r){ if(!tnFlipOn) return false; var p=(tnT+r.off)%TN_FLIP;
+    return p<TN_GREEN && p>TN_GREEN-26; }   /* amber tell just before it goes red */
     // The net spans exactly the blue court and its posts stand on the sidelines, so the open lane
     // round each end is the green apron outside the court. A function (not a var) because the board
     // art in 03-boards.js calls it while painting, which happens before this file's vars are assigned.
@@ -1129,17 +1138,28 @@
     function tnApron(){ return 22; }
     function tnNetX0(){ return WALL+tnApron(); }
     function tnNetX1(){ return W-WALL-tnApron(); }
-    function initTennis(){
-    tnOn=true; tnNetFlash=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
+    function initTennis(){ var t=hzTier();
+    tnOn=true; tnNetFlash=0; tnT=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
+    tnFlipOn=(t>=1); tnVolleyOn=(t>=2);
     // rackets: two per half, sitting just short of the net so you can run onto one and be lobbed over
-    tnRackets=[]; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
-    tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s}); } }
+    tnRackets=[]; var n=0; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
+    tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s,off:n*Math.round(TN_FLIP/4)});
+    n++; } }
+    // volleyers: one just past the net on each side, patrolling across it. They only touch a ball in
+    // the AIR, so they contest the lob specifically and leave ground play alone.
+    tnVolleys=[]; if(tnVolleyOn){ tnVolleys.push({x:W*0.40,y:H/2-15,vx:0.7,r:TN_VOL_R,flash:0});
+    tnVolleys.push({x:W*0.60,y:H/2+15,vx:-0.7,r:TN_VOL_R,flash:0}); }
     }
     // ball-kids shuffle along their line from the draw loop so they move between shots
     function tennisTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
     if(tnNetFlash>0) tnNetFlash--;
-    for(var r=0;r<tnRackets.length;r++){ if(tnRackets[r].flash>0) tnRackets[r].flash--; } }
+    tnT++;
+    for(var r=0;r<tnRackets.length;r++){ if(tnRackets[r].flash>0) tnRackets[r].flash--; }
+    for(var v=0;v<tnVolleys.length;v++){ var vo=tnVolleys[v];
+    vo.x+=vo.vx; if(vo.x<tnNetX0()+10){ vo.x=tnNetX0()+10; vo.vx=Math.abs(vo.vx); }
+    if(vo.x>tnNetX1()-10){ vo.x=tnNetX1()-10; vo.vx=-Math.abs(vo.vx); }
+    if(vo.flash>0) vo.flash--; } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1938,20 +1958,46 @@
       // the way past without the Chip ability. Capped speed so the lob lands before the goal
       // (an airborne ball reaching the net is rejected as a goal, which would just read as broken).
       if(_tmov&&_tsp>0.8){ for(var _ri=0;_ri<tnRackets.length;_ri++){ var _rk=tnRackets[_ri];
-      if(Math.hypot(coin.x-_rk.x,coin.y-_rk.y)<_rk.r+COIN_R*0.6){ var _rs=Math.min(_tsp,TN_RACK_MAX)||1;
+      var _rdx=coin.x-_rk.x, _rdy=coin.y-_rk.y, _rd=Math.hypot(_rdx,_rdy);
+      if(_rd<_rk.r+COIN_R*0.6){
+      if(tnRackLive(_rk)){ var _rs=Math.min(_tsp,TN_RACK_MAX)||1;   // GREEN: lob it over the net
       var _ra=Math.atan2(coin.vy,coin.vx);
       coin.vx=Math.cos(_ra)*_rs; coin.vy=Math.sin(_ra)*_rs;
       coin.air=TN_RACK_AIR; coin.air0=TN_RACK_AIR;
       _tair=true; _tmov=false; _rk.flash=16;
       try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
       }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
-      }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
+      }catch(e){} try{ nsKick(4); }catch(e){}
+      } else { var _rl=_rd||1, _rux=_rdx/_rl, _ruy=_rdy/_rl;   // RED: swat it straight back
+      coin.x=_rk.x+_rux*(_rk.r+COIN_R*0.6+0.5); coin.y=_rk.y+_ruy*(_rk.r+COIN_R*0.6+0.5);
+      var _rsp=Math.max(1.6,Math.min(_tsp,5)*0.9);
+      coin.vx=_rux*_rsp; coin.vy=_ruy*_rsp;
+      _rk.flash=16; try{ if(typeof sfxBump==='function') sfxBump(6);
+      }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
+      }catch(e){} try{ shake=Math.max(shake||0,3); }catch(e){} }
+      break; } } }
+      // HARD volleyer: smash a lob out of the air and drive it back the way it came
+      if(coin.air>0&&_tsp>0.3){ for(var _vi=0;_vi<tnVolleys.length;_vi++){ var _vo=tnVolleys[_vi];
+      if(Math.hypot(coin.x-_vo.x,coin.y-_vo.y)<_vo.r+COIN_R){ coin.air=0; coin.air0=0;
+      var _vsp=Math.max(2.4,_tsp*1.05);
+      var _vdir=(coin.vy>=0?-1:1);                       // send it back over the way it came
+      coin.vy=Math.abs(_vsp)*_vdir*0.9;
+      coin.vx=coin.vx*0.5+(Math.random()-0.5)*1.2;
+      _vo.flash=18; _tair=false;
+      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_vo.x,_vo.y,current,12,true);
+      }catch(e){} try{ shake=Math.max(shake||0,4); }catch(e){} break; } } }
       var _ny=H/2, _was=tnPrevY-_ny, _now=coin.y-_ny;
       var _inNet=(coin.x>tnNetX0()&&coin.x<tnNetX1());   // the lanes either side are open
       // The net is SOLID to anything on the ground, however hard it is struck — there is no punching
       // through it. The only ways across are in the air (a racket lob or Chip) or round the open
       // lanes at either end, so no loadout is ever locked out of attacking.
-      if(moving&&_was*_now<0&&_inNet&&!_tair){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
+      // A kickoff sits the ball exactly ON the net line, so the opening flick would otherwise be
+      // knocked straight back. A ball leaving the centre spot is treated as a SERVE and allowed
+      // through; after that the net is absolute. (Do not lean on _was===0 for this — it only holds
+      // while the ball has not moved a single frame.)
+      var _serve=Math.abs(tnPrevY-_ny)<=2.5;
+      if(moving&&_was*_now<0&&_inNet&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
       coin.vy=-coin.vy*0.45; coin.vx*=0.6;
       tnNetFlash=14; try{ if(typeof sfxBump==='function') sfxBump(5);
       }catch(e){} try{ spawnSparks(coin.x,_ny,current,6,true); }catch(e){} }

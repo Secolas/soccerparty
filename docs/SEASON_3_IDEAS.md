@@ -160,8 +160,8 @@ cannot be beaten along the ground, paired with the launcher that beats it.
 | **The net** — spans the blue court, posts on the sidelines. NO ground shot passes it at any speed; it knocks the ball back | on | on | on |
 | **Rackets** — 2 per half; run onto one and it lobs the ball into the air, over the net | on | on | on |
 | **The side lanes** — the green apron outside the court stays open at each end of the net, to curl or thread a flick around | on | on | on |
-| *(medium hazard)* | — | TBD | TBD |
-| *(hard hazard)* | — | — | TBD |
+| **Racket flip** — the rackets cycle green (live, lobs you over) → amber (about to flip) → red (dead, swats you back), phases staggered | — | on | on |
+| **Volleyers** — one either side of the net, patrolling across it; they smash a lob out of the air and drive it back. Airborne balls only | — | — | 2 |
 
 *Design notes:*
 - The net is **solid to the ground at any speed**. An earlier version let a hard shot
@@ -175,6 +175,15 @@ cannot be beaten along the ground, paired with the launcher that beats it.
   the net physics and the net drawing, so they cannot drift apart.
 - The racket lob caps the ball's speed (a lob is slower) so it lands before reaching the
   goal — an airborne ball at the net is rejected as a goal and would just read as broken.
+- The flip cycle is 170 frames, 62% green / 38% red, with the four rackets a quarter-cycle
+  apart — so only one is red at a time and there is always a live one to run onto. An amber
+  frame precedes each flip as the tell, so going red is never a surprise.
+- The volleyers cover about **48% of the net width at any instant** (34px reach each against
+  a 142px span) and sweep it every ~174 frames. Contested, not sealed: time the lob for a gap,
+  or use a side lane. They touch **airborne balls only**, so ground play and the lanes are clean.
+- A kickoff sits the ball exactly ON the net line, which the net would otherwise knock straight
+  back. A ball leaving the centre spot is treated as a **serve** and allowed through; after that
+  the net is absolute.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 
