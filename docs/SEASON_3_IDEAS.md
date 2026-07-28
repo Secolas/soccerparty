@@ -110,7 +110,7 @@ a goal if the ball went through something first.
 |---|---|---|---|
 | **Backboards** — angled boards outside each post, canted so a bank shot turns goalwards | on | on | on |
 | **Trampolines** — a *bad* hop: throws the ball up AND kicks it off its line, so you lose control | — | 3 pads | 3 pads |
-| **The rim** — a hoop guards each goal; only a shot threaded through it counts, and the hoops are re-thrown after every basket | — | — | on |
+| **The rims** — THREE fixed hoops (left / centre / right) across each penalty area; only a shot threaded through one counts | — | — | on |
 
 *Design notes:*
 - The **dribble** (a height-cycle ball) was cut. Going airborne skips every nail
@@ -120,9 +120,14 @@ a goal if the ball went through something first.
 - The trampoline deliberately differs from Candy's jelly pad (a *helpful* hop
   along your travel, which is spent): this one adds a random lateral kick, so it
   costs control rather than granting a hop over defenders.
-- Rim placement avoids players, the ball and the other props, and its mouth
-  faces the goalie it guards. Clipping a post rims you out; a denied shot bounces
-  out of the goal with a **NO BASKET** flash (reusing the VAR-style denial path).
+- The rims are **fixed furniture inside the penalty area**, three per end, mirrored
+  — not re-thrown each goal. You learn the three lanes and pick one, and both teams
+  face the same layout. A single wide gate was considered and rejected: it is passed
+  almost every shot, so the rule stops biting.
+- The mouth is `BK_RIM_HALF*2` = 16px against a 10px ball — a bit over 1.5 balls
+  wide. Exactly coin-tight reads as a luck check once anything deflects.
+- A shot reaching the net without going through a hoop is bounced back out with a
+  **NO BASKET** flash (reusing the VAR-style denial path).
 
 ### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3)
 

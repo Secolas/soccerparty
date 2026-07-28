@@ -1059,7 +1059,9 @@
     var bkOn=false, bkBoards=[], bkBoardFlash=0, bkTramps=[], bkTrampOn=false;
     var bkRims=[], bkRimOn=false, bkRimPass={red:false,blue:false}, bkNoBasket=0, bkLastScore=-1;
     var bkPrev={x:0,y:0};
-    var BK_BOARD_R=4, BK_TRAMP_R=11, BK_HOP=16, BK_RIM_HALF=13, BK_POST_R=3;
+    /* BK_RIM_HALF: the hoop's half-gap. The ball is COIN_R=5 across the middle, so 8 gives a 16px
+       mouth — a bit over 1.5 balls wide. Coin-tight would be a luck check once anything deflects. */
+    var BK_BOARD_R=4, BK_TRAMP_R=11, BK_HOP=16, BK_RIM_HALF=8, BK_POST_R=2.4;
     // pick a spot that does not sit on a player, the ball, or another prop
     function _bkFree(x,y,r,extra){ try{ for(var i=0;i<nails.length;i++){ if(Math.hypot(x-nails[i].x,y-nails[i].y)<r+NAIL_R+7) return false; }
     }catch(e){} try{ if(coin&&Math.hypot(x-coin.x,y-coin.y)<r+COIN_R+9) return false; }catch(e){}
@@ -1069,19 +1071,17 @@
     for(var m=0;m<bkRims.length;m++){ if(Math.hypot(x-bkRims[m].x,y-bkRims[m].y)<r+BK_RIM_HALF+12) return false; }
     if(extra) for(var e=0;e<extra.length;e++){ if(Math.hypot(x-extra[e].x,y-extra[e].y)<r+extra[e].r) return false; }
     return true; }
-    // HARD rim: one hoop per goal, re-thrown after every goal. Its mouth faces that goal, and a shot
-    // only counts if it went THROUGH the hoop first — see bkGoalDenied in collideStep.
+    // HARD rims: THREE fixed hoops — left, centre and right — set across each penalty area, mouths
+    // facing that goal. A shot only counts if it went through one of them (see bkGoalDenied). They sit
+    // at fixed, mirrored spots rather than being re-thrown each goal: you learn the three lanes and
+    // pick one, and the layout stays symmetric for both teams.
     function bkSpawnRims(){ bkRims=[];
-    if(!bkRimOn) return; var ends=[{team:'red',gy:NET_DEPTH},{team:'blue',gy:H-NET_DEPTH}];
-    for(var e=0;e<ends.length;e++){ var en=ends[e], placed=null;
-    for(var tryN=0;tryN<80&&!placed;tryN++){
-    var y=(en.team==='red')?(NET_DEPTH+GOAL_AREA_D+14+Math.random()*(H*0.30)):(H-NET_DEPTH-GOAL_AREA_D-14-Math.random()*(H*0.30));
-    var x=WALL+26+Math.random()*(W-WALL*2-52);
-    if(_bkFree(x,y,BK_RIM_HALF+6)) placed={x:x,y:y}; }
-    if(!placed) placed={x:W/2,y:(en.team==='red')?(NET_DEPTH+GOAL_AREA_D+30):(H-NET_DEPTH-GOAL_AREA_D-30)};
-    // the mouth faces the goalie it guards, so shooting through it points you at the goal
-    var fx=(W/2)-placed.x, fy=en.gy-placed.y, fl=Math.hypot(fx,fy)||1;
-    bkRims.push({x:placed.x,y:placed.y,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } }
+    if(!bkRimOn) return;
+    // 'red' scores in the TOP goal, so its gates live in the top box (which is goalAreaRect('blue'))
+    var ends=[{team:'red',box:goalAreaRect('blue'),fy:-1,t:0.78},{team:'blue',box:goalAreaRect('red'),fy:1,t:0.22}];
+    for(var e=0;e<ends.length;e++){ var en=ends[e], bx=en.box, ry=bx.y+bx.h*en.t;
+    for(var s=0;s<3;s++){ var rx=bx.x+bx.w*(0.2+0.3*s);
+    bkRims.push({x:rx,y:ry,fx:0,fy:en.fy,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
     function initCourt(){ var t=hzTier();
     bkOn=true; bkTrampOn=(t>=1); bkRimOn=(t>=2);
     bkBoards=[]; bkTramps=[]; bkRims=[];
@@ -1855,10 +1855,7 @@
       if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
       } if((typeof boardKey!=='undefined')&&boardKey==='court'&&!scoring&&stadiumHazards()){ if(!bkOn) initCourt();
       var _ksp=Math.hypot(coin.vx,coin.vy), _kmov=(moving&&(!coin.air||coin.air<=0));
-      // re-throw the hoops after every goal, and clear the "went through it" flag between attempts
-      var _ktot=((score&&score.red)|0)+((score&&score.blue)|0);
-      if(_ktot!==bkLastScore){ bkLastScore=_ktot; bkSpawnRims();
-      bkRimPass.red=false; bkRimPass.blue=false; }
+      // the hoops are fixed furniture now; only the "went through one" flag resets between attempts
       if(!moving){ bkRimPass.red=false; bkRimPass.blue=false; }
       if(bkNoBasket>0) bkNoBasket--;
       // HARD rim: crossing the hoop mouth toward its goal arms that goal; the posts are solid, so

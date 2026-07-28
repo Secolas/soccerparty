@@ -497,30 +497,28 @@
     ctx.beginPath(); ctx.moveTo(Math.cos(a)*tr.r*0.45,Math.sin(a)*tr.r*0.28);
     ctx.lineTo(Math.cos(a)*tr.r,Math.sin(a)*tr.r*0.62); ctx.stroke(); }
     ctx.restore(); }
-    // the hoops: an orange rim between two posts, with a net hanging under the mouth
-    for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0;
-    var px=-rm.fy, py=rm.fx;
-    var ax=rm.x+px*rm.half, ay=rm.y+py*rm.half, bx2=rm.x-px*rm.half, by2=rm.y-py*rm.half;
-    ctx.save();
-    ctx.strokeStyle='rgba(250,246,236,0.30)'; ctx.lineWidth=1;   // net, hung behind the mouth
-    for(var n=0;n<=4;n++){ var q=n/4, nx=ax+(bx2-ax)*q, ny=ay+(by2-ay)*q;
-    ctx.beginPath(); ctx.moveTo(nx,ny);
-    ctx.lineTo(nx-rm.fx*9+(0.5-Math.abs(q-0.5))*px*3,ny-rm.fy*9+(0.5-Math.abs(q-0.5))*py*3);
-    ctx.stroke(); }
-    ctx.strokeStyle='rgba(250,246,236,0.26)';
-    ctx.beginPath(); ctx.moveTo(ax-rm.fx*7,ay-rm.fy*7);
-    ctx.lineTo(bx2-rm.fx*7,by2-rm.fy*7); ctx.stroke();
-    ctx.lineCap='round'; ctx.strokeStyle='rgba(20,10,2,0.4)'; ctx.lineWidth=6;
-    ctx.beginPath(); ctx.moveTo(ax,ay+1.5); ctx.lineTo(bx2,by2+1.5); ctx.stroke();
-    ctx.strokeStyle=hot?'#ffd84a':'#e2622c'; ctx.lineWidth=4;    // the rim itself
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx2,by2); ctx.stroke();
-    ctx.strokeStyle=hot?'#fff2b8':'#ff9c58'; ctx.lineWidth=1.4;
-    ctx.beginPath(); ctx.moveTo(ax,ay-1); ctx.lineTo(bx2,by2-1); ctx.stroke();
-    ctx.fillStyle=hot?'#fff2b8':'#f4efe0';                        // posts
-    ctx.beginPath(); ctx.arc(ax,ay,3,0,6.283); ctx.fill();
-    ctx.beginPath(); ctx.arc(bx2,by2,3,0,6.283); ctx.fill();
-    if(bkRimPass[rm.for]){ ctx.strokeStyle='rgba(169,201,75,0.85)'; ctx.lineWidth=1.4;
-    ctx.beginPath(); ctx.arc(rm.x,rm.y,rm.half+5,0,6.283); ctx.stroke(); }
+    // the hoops: a basketball rim seen from above — an orange ring with a net cinching below it, and
+    // a small backboard plate on the goal side. Drawn as a ring, not a bar, so it reads as a hoop.
+    for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0, armed=bkRimPass[rm.for];
+    var rx=rm.half, ry=rm.half*0.52, nd=rm.fy;   // nd: -1 = guards the top goal, +1 = the bottom
+    ctx.save(); ctx.translate(rm.x,rm.y);
+    ctx.fillStyle='rgba(24,14,4,0.30)';                                   // contact shadow
+    ctx.beginPath(); ctx.ellipse(0,2,rx,ry,0,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(246,240,224,0.85)';                               // backboard, behind the ring
+    ctx.fillRect(-rx*0.92,nd<0?-ry-4.5:ry+1.5,rx*1.84,3);
+    ctx.fillStyle='rgba(60,36,12,0.5)';
+    ctx.fillRect(-rx*0.92,nd<0?-ry-4.5:ry+4.2,rx*1.84,0.8);
+    ctx.strokeStyle='rgba(252,248,240,0.42)'; ctx.lineWidth=1;            // net, cinching to a throat
+    for(var n=0;n<7;n++){ var a=Math.PI*(n/6);
+    var sx=Math.cos(a)*rx, sy=Math.sin(a)*ry*(nd<0?1:-1);
+    ctx.beginPath(); ctx.moveTo(sx,sy);
+    ctx.quadraticCurveTo(sx*0.55,sy+nd*-3.5,sx*0.22,sy+nd*-7.5); ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(0,nd*7.5*-1,rx*0.34,ry*0.42,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=2.6;                                                     // the rim itself
+    ctx.strokeStyle=hot?'#ffe98a':(armed?'#9fe06a':'#e2622c');
+    ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=1; ctx.strokeStyle=hot?'#fffbe0':'rgba(255,190,120,0.85)';
+    ctx.beginPath(); ctx.ellipse(0,-0.7,rx*0.92,ry*0.72,0,Math.PI,Math.PI*2); ctx.stroke();
     ctx.restore(); }
     if(bkNoBasket>0){ bkNoBasket--;
     ctx.save(); ctx.globalAlpha=Math.min(1,bkNoBasket/22);
