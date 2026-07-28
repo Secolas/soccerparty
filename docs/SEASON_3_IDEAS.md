@@ -147,43 +147,36 @@ a goal if the ball went through something first.
 - A shot reaching the net without going through a hoop is bounced back out with a
   **NO BASKET** flash (reusing the VAR-style denial path).
 
-### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — BUILT
+### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — EASY BUILT, MED/HARD TBD
 
-**Fantasy:** a blue hard court split by a net — hit through the cord or lob it, run
-the fast tramlines down the flanks, and don't dawdle past the ball-kids.
+**Fantasy:** a blue hard court split by a net. Nothing on the ground gets through it —
+you go over it off a racket, chip it, or curl round the lanes at either end.
 
-*New mechanic:* a **speed-gated permeable barrier** — the first hazard that lets the
-ball through only if it is travelling hard enough.
+*New mechanic:* a **hard barrier with an aerial answer** — the first hazard that simply
+cannot be beaten along the ground, paired with the launcher that beats it.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **The net** — spans the SINGLES court only; a hard grounded shot punches through and loses pace off the cord, a soft roll is stopped dead, a lob sails over | on | on | on |
-| **Rackets** — 2 per half; run onto one and it lobs the ball into the air, carrying it over the net | on | on | on |
-| **The side lanes** — the net spans the blue court exactly, posts on the sidelines, leaving the green apron open at each end to curl or thread a flick around it | on | on | on |
-| **Tramlines** — the flank lanes carry the ball fast and lean it toward the sideline | — | on | on |
-| **Ball-kids** — two patrol the neutral third and swat a dawdling ball back to the middle | — | — | 2 |
+| **The net** — spans the blue court, posts on the sidelines. NO ground shot passes it at any speed; it knocks the ball back | on | on | on |
+| **Rackets** — 2 per half; run onto one and it lobs the ball into the air, over the net | on | on | on |
+| **The side lanes** — the green apron outside the court stays open at each end of the net, to curl or thread a flick around | on | on | on |
+| *(medium hazard)* | — | TBD | TBD |
+| *(hard hazard)* | — | — | TBD |
 
 *Design notes:*
-- The doc originally had grounded shots **rebound outright**, forcing a lob. That
-  would leave any loadout without Chip unable to attack at all, so the net is
-  **speed-gated** instead: hit it hard, or go over it. The verticality gate survives
-  (a lob is still the clean way through) without a loadout being able to lock you out.
-- There are now **three ways past the net**: punch through it with pace, run onto a
-  **racket** and be lobbed over, or curl round the open **alleys** at either end. That
-  removes the last of the lockout risk — no ability is required to attack — and each
-  route is a different skill (power / positioning / curve).
-- The net spans the blue court **exactly**, with its posts standing on the sidelines, so
-  the bypass lane is the green apron outside the court. The apron was widened to 22px for
-  this: it leaves roughly a 12px window for a 10px ball — threadable with a curve or a
-  placed flick, not free. At its original 14px the window was 4px, i.e. effectively shut.
-  The width lives in one place (`tnApron()`) that the board art, the net physics and the
-  net drawing all read, so they cannot drift apart.
+- The net is **solid to the ground at any speed**. An earlier version let a hard shot
+  punch through, as insurance against a loadout with no Chip being unable to attack —
+  the rackets and the side lanes remove that risk, so the net can be absolute.
+- Three ways across, each a different skill: **positioning** onto a racket, **an ability**
+  (Chip), or **curve** round the lane.
+- The net spans the blue court exactly, posts on the sidelines, so the lane is the green
+  apron outside. The apron is 22px, leaving about a 12px window for a 10px ball —
+  threadable, not free. The width lives in one helper (`tnApron()`) read by the board art,
+  the net physics and the net drawing, so they cannot drift apart.
 - The racket lob caps the ball's speed (a lob is slower) so it lands before reaching the
-  goal — an airborne ball at the net is rejected as a goal, which would just read as broken.
-- The ball-kids only act on a **moving** ball (speed 0.5–3.2), never a resting one, so
-  they can't shunt a settled ball and break the "ball at rest = your turn" contract.
-- Airborne goals are already rejected by the engine, so lobbing the net can never
-  turn into lobbing the keeper.
+  goal — an airborne ball at the net is rejected as a goal and would just read as broken.
+- **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
+  markings; they no longer do anything.
 
 ### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
 

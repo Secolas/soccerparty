@@ -64,7 +64,7 @@
       {name:'THE HARDWOOD',pitch:'court',ab:['volley',
       'chip','reflex'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
       {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
-      'sniper','curve'],d:3,blurb:'A tennis court split by a net that spans the singles court only — punch through it hard, run onto a racket to be lobbed over, or curl round the open alleys at either end (easy); the flank tramlines run fast and lean the ball to the sideline (medium); ball-kids patrol the neutral third and swat a dawdling ball back to the middle (hard).'}
+      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass, however hard you hit it — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end of the net.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

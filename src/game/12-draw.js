@@ -468,14 +468,10 @@
     for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
     var ang=b.swing?(b.start+b.dir*(b.swT/BB_SWING)*BB_ARC):b.rest;
     _drawBat(ctx,b.x,b.y,ang,b.swing); } }
-    // TENNIS (CENTRE COURT) — the net across midfield, flank tramlines (med), ball-kids (hard)
-    function drawTennis(ctx,now){ if(typeof tnKids==='undefined') return;
+    // TENNIS (CENTRE COURT) — the net across the blue court and the rackets that lob you over it
+    function drawTennis(ctx,now){ if(typeof tnRackets==='undefined') return;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
-    var ny=H/2, ix=WALL+tnApron(), iw=W-2*(WALL+tnApron()), lit=tnNetFlash>0;
-    if(tnTramOn){ ctx.save(); ctx.fillStyle='rgba(120,200,255,0.10)';
-    ctx.fillRect(ix,WALL,TN_TRAM,H-WALL*2);
-    ctx.fillRect(ix+iw-TN_TRAM,WALL,TN_TRAM,H-WALL*2);
-    ctx.restore(); }
+    var ny=H/2, lit=tnNetFlash>0;
     // the net spans the singles court only — the alleys either side stay open as a way round it
     var nx0=tnNetX0(), nx1=tnNetX1(), nw=nx1-nx0;
     ctx.save();
@@ -503,15 +499,7 @@
     ctx.lineCap='round'; ctx.beginPath();
     ctx.moveTo(0,rk.r*0.9-1); ctx.lineTo(0,rk.r*1.7); ctx.stroke();
     ctx.restore(); }
-    for(var i=0;i<tnKids.length;i++){ var k=tnKids[i], kl=k.flash>0;
-    ctx.save(); ctx.translate(k.x,k.y);
-    ctx.fillStyle='rgba(12,20,10,0.28)'; ctx.beginPath();
-    ctx.ellipse(0,3,k.r*0.8,k.r*0.4,0,0,6.283); ctx.fill();
-    ctx.fillStyle=kl?'#ffe07a':'#e8e4d6'; ctx.fillRect(-3,-5,6,7);   // shirt
-    ctx.fillStyle='#2f4a7a'; ctx.fillRect(-3,2,6,3);                  // shorts
-    ctx.fillStyle='#f0c9a0'; ctx.beginPath(); ctx.arc(0,-7,2.6,0,6.283); ctx.fill();
-    ctx.fillStyle='#c8ff4a'; ctx.beginPath(); ctx.arc(4,-1,1.8,0,6.283); ctx.fill();
-    ctx.restore(); } }
+    }
     // BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the shot clock (hard)
     function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
     // the boards and the clock are standing furniture, so lay them out from the draw side too —
