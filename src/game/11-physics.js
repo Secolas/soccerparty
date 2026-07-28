@@ -1120,11 +1120,21 @@
     //         be lobbed over, or Chip — or round the open lanes at either end of the net.
     //   MED : the rackets FLIP on a loop — green lobs you over, red swats you back. Phases are
     //         staggered so there is nearly always a live one, and an amber tell precedes each flip.
-    //   HARD: + volleyers patrolling either side of the net who smash a lob out of the air and drive
-    //         it back. They only touch an AIRBORNE ball, so the ground game and the lanes are clean.
-    var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[], tnFlipOn=false, tnVolleys=[], tnVolleyOn=false, tnT=0;
+    //   HARD: + sliding gates that shut the side lanes on a loop, extending from each net post out to
+    //         the wall. While a gate is out its lane is sealed to ground balls, so the way round the
+    //         net comes and goes. The two run in antiphase, so which lane is open keeps swapping.
+    var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[], tnFlipOn=false, tnDoors=[], tnDoorOn=false, tnT=0;
     var TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
-    var TN_FLIP=170, TN_GREEN=105, TN_VOL_R=12;
+    var TN_FLIP=170, TN_GREEN=105;
+    // sliding gates that shut the side lanes: open hold -> slide out -> closed hold -> slide back.
+    // The two run in antiphase, so one lane is nearly always open — which one keeps changing.
+    var TN_DOOR=210, TN_D_OPEN=70, TN_D_SLIDE=25, TN_D_SHUT=90;
+    function tnDoorExt(d){ if(!tnDoorOn) return 0;
+    var p=(tnT+d.off)%TN_DOOR;
+    if(p<TN_D_OPEN) return 0;
+    p-=TN_D_OPEN; if(p<TN_D_SLIDE) return p/TN_D_SLIDE;
+    p-=TN_D_SLIDE; if(p<TN_D_SHUT) return 1;
+    p-=TN_D_SHUT; return Math.max(0,1-p/TN_D_SLIDE); }
     // a racket is live (green, lobs you over) for most of its cycle and dead (red, swats you back)
     // for the rest. Phases are staggered so there is almost always a live one to run onto.
     function tnRackLive(r){ return !tnFlipOn || (((tnT+r.off)%TN_FLIP)<TN_GREEN); }
@@ -1140,15 +1150,14 @@
     function tnNetX1(){ return W-WALL-tnApron(); }
     function initTennis(){ var t=hzTier();
     tnOn=true; tnNetFlash=0; tnT=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
-    tnFlipOn=(t>=1); tnVolleyOn=(t>=2);
+    tnFlipOn=(t>=1); tnDoorOn=(t>=2);
     // rackets: two per half, sitting just short of the net so you can run onto one and be lobbed over
     tnRackets=[]; var n=0; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
     tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s,off:n*Math.round(TN_FLIP/4)});
     n++; } }
-    // volleyers: one just past the net on each side, patrolling across it. They only touch a ball in
-    // the AIR, so they contest the lob specifically and leave ground play alone.
-    tnVolleys=[]; if(tnVolleyOn){ tnVolleys.push({x:W*0.40,y:H/2-15,vx:0.7,r:TN_VOL_R,flash:0});
-    tnVolleys.push({x:W*0.60,y:H/2+15,vx:-0.7,r:TN_VOL_R,flash:0}); }
+    // sliding gates, one per side lane, extending from the net post out to the wall
+    tnDoors=[]; if(tnDoorOn){ tnDoors.push({side:-1,off:0,flash:0});
+    tnDoors.push({side:1,off:Math.round(TN_DOOR/2),flash:0}); }
     }
     // ball-kids shuffle along their line from the draw loop so they move between shots
     function tennisTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
@@ -1156,10 +1165,12 @@
     if(tnNetFlash>0) tnNetFlash--;
     tnT++;
     for(var r=0;r<tnRackets.length;r++){ if(tnRackets[r].flash>0) tnRackets[r].flash--; }
-    for(var v=0;v<tnVolleys.length;v++){ var vo=tnVolleys[v];
-    vo.x+=vo.vx; if(vo.x<tnNetX0()+10){ vo.x=tnNetX0()+10; vo.vx=Math.abs(vo.vx); }
-    if(vo.x>tnNetX1()-10){ vo.x=tnNetX1()-10; vo.vx=-Math.abs(vo.vx); }
-    if(vo.flash>0) vo.flash--; } }
+    for(var v=0;v<tnDoors.length;v++){ if(tnDoors[v].flash>0) tnDoors[v].flash--; } }
+    // the x range a gate currently covers, or null when it is open
+    function tnDoorSpan(d){ var e=tnDoorExt(d); if(e<=0.02) return null;
+    var lane=tnApron();
+    if(d.side<0){ var p0=tnNetX0(); return {x0:p0-e*lane,x1:p0}; }
+    var p1=tnNetX1(); return {x0:p1,x1:p1+e*lane}; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1976,17 +1987,6 @@
       }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
       }catch(e){} try{ shake=Math.max(shake||0,3); }catch(e){} }
       break; } } }
-      // HARD volleyer: smash a lob out of the air and drive it back the way it came
-      if(coin.air>0&&_tsp>0.3){ for(var _vi=0;_vi<tnVolleys.length;_vi++){ var _vo=tnVolleys[_vi];
-      if(Math.hypot(coin.x-_vo.x,coin.y-_vo.y)<_vo.r+COIN_R){ coin.air=0; coin.air0=0;
-      var _vsp=Math.max(2.4,_tsp*1.05);
-      var _vdir=(coin.vy>=0?-1:1);                       // send it back over the way it came
-      coin.vy=Math.abs(_vsp)*_vdir*0.9;
-      coin.vx=coin.vx*0.5+(Math.random()-0.5)*1.2;
-      _vo.flash=18; _tair=false;
-      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(_vo.x,_vo.y,current,12,true);
-      }catch(e){} try{ shake=Math.max(shake||0,4); }catch(e){} break; } } }
       var _ny=H/2, _was=tnPrevY-_ny, _now=coin.y-_ny;
       var _inNet=(coin.x>tnNetX0()&&coin.x<tnNetX1());   // the lanes either side are open
       // The net is SOLID to anything on the ground, however hard it is struck — there is no punching
@@ -1997,7 +1997,14 @@
       // through; after that the net is absolute. (Do not lean on _was===0 for this — it only holds
       // while the ball has not moved a single frame.)
       var _serve=Math.abs(tnPrevY-_ny)<=2.5;
-      if(moving&&_was*_now<0&&_inNet&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
+      // HARD gates: while a gate is out it seals its lane, so that crossing is blocked exactly like
+      // the net. Ground balls only — a lob still clears a gate, same as it clears the net.
+      var _inDoor=false;
+      for(var _di=0;_di<tnDoors.length;_di++){ var _sp=tnDoorSpan(tnDoors[_di]);
+      if(_sp&&coin.x>_sp.x0-COIN_R*0.4&&coin.x<_sp.x1+COIN_R*0.4){ _inDoor=true;
+      if(moving&&_was*_now<0&&!_tair&&!_serve) tnDoors[_di].flash=14;
+      break; } }
+      if(moving&&_was*_now<0&&(_inNet||_inDoor)&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
       coin.vy=-coin.vy*0.45; coin.vx*=0.6;
       tnNetFlash=14; try{ if(typeof sfxBump==='function') sfxBump(5);
       }catch(e){} try{ spawnSparks(coin.x,_ny,current,6,true); }catch(e){} }

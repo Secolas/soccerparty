@@ -690,8 +690,8 @@
       if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
       if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
       if(typeof tnRackets!=='undefined'&&tnRackets) tnRackets.length=0;
-      if(typeof tnVolleys!=='undefined'&&tnVolleys) tnVolleys.length=0;
-      tnFlipOn=false; tnVolleyOn=false; tnT=0;
+      if(typeof tnDoors!=='undefined'&&tnDoors) tnDoors.length=0;
+      tnFlipOn=false; tnDoorOn=false; tnT=0;
       tnOn=false; tnNetFlash=0;
       if(typeof bkBoards!=='undefined'&&bkBoards) bkBoards.length=0;
       bkOn=false; bkRimOn=false; bkTrampOn=false;
