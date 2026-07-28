@@ -161,7 +161,7 @@ cannot be beaten along the ground, paired with the launcher that beats it.
 | **Rackets** — 2 per half; run onto one and it lobs the ball into the air, over the net | on | on | on |
 | **The side lanes** — the green apron outside the court stays open at each end of the net, to curl or thread a flick around | on | on | on |
 | **Racket flip** — the rackets cycle green (live, lobs you over) → amber (about to flip) → red (dead, swats you back), phases staggered | — | on | on |
-| **Sliding gates** — a shutter runs out from each net post to the wall on a loop, sealing that side lane to ground balls. The two run in antiphase | — | — | 2 |
+| **Sliding gates** — shutters run out from both net posts to the walls on a loop, sealing BOTH side lanes together. While they are out the ground is shut completely | — | — | 2 |
 
 *Design notes:*
 - The net is **solid to the ground at any speed**. An earlier version let a hard shot
@@ -178,10 +178,13 @@ cannot be beaten along the ground, paired with the launcher that beats it.
 - The flip cycle is 170 frames, 62% green / 38% red, with the four rackets a quarter-cycle
   apart — so only one is red at a time and there is always a live one to run onto. An amber
   frame precedes each flip as the tell, so going red is never a surprise.
-- The gates run a 210-frame loop (open 70 / slide 25 / sealed 90 / slide 25) in antiphase, so
-  across a cycle **both lanes are never sealed at once** (0%), one is sealed 87% of the time and
-  both are open for 13%. The lane route therefore always exists — you just have to keep switching
-  sides. Ground balls only: a lob clears a gate exactly as it clears the net.
+- The gates run a 210-frame loop (open 70 / slide 25 / sealed 90 / slide 25) and share a phase, so
+  they **seal together**: 43% of the cycle the ground is shut wall-to-wall (left gate + net + right
+  gate, no gap), 34% both lanes are open, 23% mid-slide. Ground balls only — a lob clears a gate
+  exactly as it clears the net, so during a sealed window the only ways across are a **racket lob**
+  or **Chip**.
+- They were built in **antiphase** first, which guaranteed one lane was always open. That read as
+  "the gates do nothing" — you just switched sides. Sharing a phase is what makes the tier bite.
 - Volleyers (patrolling players who smashed a lob out of the air) were built first and replaced.
   The gates contest the **lane** rather than the air, which is the more interesting pressure: the
   air already has the racket flip taxing it at medium.

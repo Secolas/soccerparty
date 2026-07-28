@@ -1120,14 +1120,13 @@
     //         be lobbed over, or Chip — or round the open lanes at either end of the net.
     //   MED : the rackets FLIP on a loop — green lobs you over, red swats you back. Phases are
     //         staggered so there is nearly always a live one, and an amber tell precedes each flip.
-    //   HARD: + sliding gates that shut the side lanes on a loop, extending from each net post out to
-    //         the wall. While a gate is out its lane is sealed to ground balls, so the way round the
-    //         net comes and goes. The two run in antiphase, so which lane is open keeps swapping.
+    //   HARD: + sliding gates that shut BOTH side lanes on a loop, extending from each net post out
+    //         to the wall. While they are out the ground is shut completely and the only ways across
+    //         are a racket lob or Chip.
     var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[], tnFlipOn=false, tnDoors=[], tnDoorOn=false, tnT=0;
     var TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
     var TN_FLIP=170, TN_GREEN=105;
     // sliding gates that shut the side lanes: open hold -> slide out -> closed hold -> slide back.
-    // The two run in antiphase, so one lane is nearly always open — which one keeps changing.
     var TN_DOOR=210, TN_D_OPEN=70, TN_D_SLIDE=25, TN_D_SHUT=90;
     function tnDoorExt(d){ if(!tnDoorOn) return 0;
     var p=(tnT+d.off)%TN_DOOR;
@@ -1156,8 +1155,12 @@
     tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s,off:n*Math.round(TN_FLIP/4)});
     n++; } }
     // sliding gates, one per side lane, extending from the net post out to the wall
+    // Both gates share a phase so they seal TOGETHER. Antiphase was tried first and it guaranteed
+    // one lane was always open, which read as "the gates do nothing" — you could just switch sides.
+    // In phase there are real windows where the ground is shut and the only ways over are a racket
+    // lob or Chip, which is the point of the tier.
     tnDoors=[]; if(tnDoorOn){ tnDoors.push({side:-1,off:0,flash:0});
-    tnDoors.push({side:1,off:Math.round(TN_DOOR/2),flash:0}); }
+    tnDoors.push({side:1,off:0,flash:0}); }
     }
     // ball-kids shuffle along their line from the draw loop so they move between shots
     function tennisTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
@@ -1960,6 +1963,22 @@
       }catch(e){} try{ spawnSparks(_tr.x,_tr.y,current,9,true);
       }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
       else { for(var _tf=0;_tf<bkTramps.length;_tf++){ if(bkTramps[_tf].flash>0) bkTramps[_tf].flash--; } }
+      // EASY backboards: bank a shot off the angled board beside a post
+      if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
+      var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
+      var _kt=_kl2?((coin.x-_kb.x1)*_kdx+(coin.y-_kb.y1)*_kdy)/_kl2:0;
+      _kt=Math.max(0,Math.min(1,_kt));
+      var _kqx=_kb.x1+_kdx*_kt, _kqy=_kb.y1+_kdy*_kt, _kd=Math.hypot(coin.x-_kqx,coin.y-_kqy);
+      if(_kd<COIN_R+BK_BOARD_R&&_kd>0){ var _knx=-_kdy/Math.sqrt(_kl2), _kny=_kdx/Math.sqrt(_kl2);
+      if(coin.vx*_knx+coin.vy*_kny>0){ _knx=-_knx; _kny=-_kny; }   /* face the incoming ball */
+      var _kdot=coin.vx*_knx+coin.vy*_kny;
+      coin.vx-=2*_kdot*_knx; coin.vy-=2*_kdot*_kny;
+      coin.vx*=1.06; coin.vy*=1.06;
+      var _kpush=(COIN_R+BK_BOARD_R)-_kd;
+      coin.x+=(coin.x-_kqx)/_kd*_kpush; coin.y+=(coin.y-_kqy)/_kd*_kpush;
+      bkBoardFlash=10; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
+      }catch(e){} break; } } }
       bkPrev.x=coin.x; bkPrev.y=coin.y;
       } if((typeof boardKey!=='undefined')&&boardKey==='tennis'&&!scoring&&stadiumHazards()){ if(!tnOn) initTennis();
       var _tsp=Math.hypot(coin.vx,coin.vy), _tair=(coin.air>0), _tmov=(moving&&!_tair);
@@ -2004,27 +2023,17 @@
       if(_sp&&coin.x>_sp.x0-COIN_R*0.4&&coin.x<_sp.x1+COIN_R*0.4){ _inDoor=true;
       if(moving&&_was*_now<0&&!_tair&&!_serve) tnDoors[_di].flash=14;
       break; } }
-      if(moving&&_was*_now<0&&(_inNet||_inDoor)&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
+      var _blocked=(_inNet||_inDoor);
+      if(moving&&_was*_now<0&&_blocked&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
       coin.vy=-coin.vy*0.45; coin.vx*=0.6;
       tnNetFlash=14; try{ if(typeof sfxBump==='function') sfxBump(5);
       }catch(e){} try{ spawnSparks(coin.x,_ny,current,6,true); }catch(e){} }
+      // belt and braces: a grounded ball must never come to sit INSIDE a blocked band, or the next
+      // frame's crossing test has nothing to compare against and it slips through
+      else if(_blocked&&!_tair&&Math.abs(coin.y-_ny)<COIN_R+1.5&&!_serve){
+      var _side=(_was>=0?1:-1); coin.y=_ny+_side*(COIN_R+1.5);
+      if(coin.vy*_side<0) coin.vy=-coin.vy*0.45; }
       tnPrevY=coin.y;
-      // EASY backboards: bank a shot off the angled board beside a post
-      if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
-      var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
-      var _kt=_kl2?((coin.x-_kb.x1)*_kdx+(coin.y-_kb.y1)*_kdy)/_kl2:0;
-      _kt=Math.max(0,Math.min(1,_kt));
-      var _kqx=_kb.x1+_kdx*_kt, _kqy=_kb.y1+_kdy*_kt, _kd=Math.hypot(coin.x-_kqx,coin.y-_kqy);
-      if(_kd<COIN_R+BK_BOARD_R&&_kd>0){ var _knx=-_kdy/Math.sqrt(_kl2), _kny=_kdx/Math.sqrt(_kl2);
-      if(coin.vx*_knx+coin.vy*_kny>0){ _knx=-_knx; _kny=-_kny; }   /* face the incoming ball */
-      var _kdot=coin.vx*_knx+coin.vy*_kny;
-      coin.vx-=2*_kdot*_knx; coin.vy-=2*_kdot*_kny;
-      coin.vx*=1.06; coin.vy*=1.06;
-      var _kpush=(COIN_R+BK_BOARD_R)-_kd;
-      coin.x+=(coin.x-_kqx)/_kd*_kpush; coin.y+=(coin.y-_kqy)/_kd*_kpush;
-      bkBoardFlash=10; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
-      }catch(e){} break; } } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
