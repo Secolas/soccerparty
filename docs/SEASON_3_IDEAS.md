@@ -60,7 +60,7 @@ All numbers below are **starting values to tune**, not final.
 
 ## Royale ladder — Season 3 (the "Sports" run)
 
-### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1) — fully specced opener
+### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1) — BUILT
 
 **Fantasy:** a ballpark infield — the dirt diamond speeds you up, a batter takes
 swings by the plate, the pitching machine spits stray balls. Route your shot
@@ -147,7 +147,7 @@ a goal if the ball went through something first.
 - A shot reaching the net without going through a hoop is bounced back out with a
   **NO BASKET** flash (reusing the VAR-style denial path).
 
-### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — EASY BUILT, MED/HARD TBD
+### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — BUILT
 
 **Fantasy:** a blue hard court split by a net. Nothing on the ground gets through it —
 you go over it off a racket, chip it, or curl round the lanes at either end.
@@ -198,28 +198,90 @@ cannot be beaten along the ground, paired with the launcher that beats it.
   otherwise it aims down an **open side lane**, which its existing curve search then bends round toward
   goal; failing that it runs onto a **live racket** to be lobbed over. Lane openness is sampled across
   the ball's width, so a half-extended shutter is not mistaken for a gap.
-- On all three S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
+- On all four S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
   scoring on threading something, so a loose CPU shot is simply a wasted turn.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 
-### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
+### 4. ⛳ THE LINKS — "MINIGOLF" (medium, ~d4) — BUILT
 
-**Fantasy:** a links course — undulating greens curve your putts, sand bunkers
-bog you down, a mini-golf windmill guards a lane.
+**Fantasy:** one minigolf hole laid straight across midfield. Left to right:
 
-*New mechanic:* **patchy directional slope contours** — reward reading the green,
-distinct from Skatepark's whole-floor tilt.
+```
+  WINDMILL | BUNKER |  THE GREEN  | BUNKER | WINDMILL
+   tunnel     sand     flagstick     sand     tunnel
+```
+
+*New mechanic:* **a route choice, not an obstacle.** Every arena so far hazards the ball in flight.
+This one hazards the **decision**: the row seals midfield wall to wall (measured — the widest
+unclaimed gap is 2px against a 10px ball, and a shot fired down it slipped through 0/8 times), so the
+ball can only cross by one of three routes, and each one charges a different price. Nothing here is a
+wall you cannot beat.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **Green contours** | OFF (flat) | 2 gentle slopes curving slow balls to a low point | 4 stronger; some push *away* from goal (misreads punished) |
-| **Bunkers** (sand drag) | 1, mild | 3, moderate | 5, strong |
-| **Windmill** (rotating blocker) | OFF | 1, slow rotation, blocks one lane | 1 fast + a 2nd sail |
+| **Windmill tunnels** (both flanks) | open, sails still | **sails turn** — a sail across a doorway shuts it | ″ |
+| **Bunkers** (sand drag) | on | ″ | ″ |
+| **The green** (flagstick + boost apron) | on | ″ | + **the cup opens** |
 
-*Reuse:* contours = localized, speed-gated directional force-field (Storm wind /
-currents, masked to patches); bunkers = drag-patch family (puddle/caramel);
-windmill = rotating-obstacle family (gears).
+Additive, as with the other three: nothing gets faster or stronger between tiers, a hazard is *added*.
+Easy is the full row with the sails stopped, so the routes can be learned without a timing test.
+
+**The three routes**
+
+- **Windmill** — a stone round-house built into each wall with a tunnel straight through it (18px
+  mouth, 8px corridor for the ball centre, with a rail that pulls it to the middle so it does not
+  scrape the arch). Free passage, and it spits the ball out dead straight. Exits at x=36/174, well
+  outside the 72–139 goal mouth, so the tunnel gets you forward but never lines you up.
+- **Bunker** — sand, and *not* a blocker. It multiplies drag (`LK_SAND=0.70`, combined 0.689, so the
+  ball rolls v×2.21px), which makes how hard you struck it decide everything. Measured in-engine
+  entering from 40px out: a flick of 5 or 7 dies in it; 9 and a boosted 13.5 plough through. From
+  inside, 3 stays stuck and 5 climbs out. That is the user's "requires 100 to come out, or skip if it
+  is strong" falling out of drag rather than being special-cased — and because drag only ever removes
+  speed, sand can never stop the ball settling and the turn ending.
+- **The green** — the flagstick. Its post can knock a shot off line, but a ball that comes to **rest**
+  on the mown apron powers the next flick to 1.35×, past `FLICK_MAX`. That is the counterplay to the
+  bunkers: unboosted, a flick from range cannot carry 20px of sand; boosted, it can. Chipping over
+  works too — sand never touches an airborne ball.
+
+**MED — the sails turn.** Four sails per mill, one revolution every 300 frames (5s). A sail within
+0.30rad of the tunnel axis shuts the doorway; a mistimed entry is ejected clear of the mouth. The
+blade lying across the passage **is** the tell, so it needs no extra marking. Duty works out at 39%
+by construction — windows of 29 frames shut then 46 open, slow enough to read off the sails — and
+in-engine, firing straight up the tunnel axis 30 times, 11 were turned back: **37%**. Both mills turn
+mirrored but in phase, so neither side ever has the easier route.
+
+**HARD — the cup opens.** A ball that *dies* in the hole is dropped back where the flick was struck:
+a penalty stroke, so the shot achieved nothing and the turn is gone. A firm putt runs straight over
+the lip, which is the counterplay — do not arrive at the pin out of pace. The green stops being a free
+reward and becomes the one place you must not stop. The boost survives as the ring outside the cup
+(10–18px), so hard does not simply delete the tier below it.
+
+**The kickoff trap, and why the bookkeeping lives where it does.** The centre spot *is* the cup and
+*is* the pin, and a kickoff drops a brand-new ball right on it. Left alone, hard would hole every
+kickoff on the spot for ever, and the opening flick would bounce off a post it was already inside. So
+the centre arms on two conditions — the ball has been struck (`lkArm`) and has been clear of the hole
+at least once (`lkPinFree`) — and both disarm when a still ball is seen to have *jumped*, which is
+what a placement looks like. That check, and the boost, run from `linksTick()` (the draw loop) and not
+from `stepPhysics()`, **because `stepPhysics()` returns immediately while the ball is at rest** — by
+the time it runs again the flick has already gone. Written into the physics block first, both were
+silently dead.
+
+**AI plays the hole.** `lkAimPlan()` picks the nearest genuinely open gap — a tunnel with no sail
+across it, or the green either side of the pin — then aims at the point on the *goal line* whose
+straight line runs through that gap, so the flick is full length instead of a short one that dies in
+the row. The CPU gets the green's boost on the same terms the player does, applied outside the
+`FLICK_MAX` clamp. THE LINKS joins the other three S3 arenas in the 55% aim-spread cut.
+
+**Cut from the original spec:** *green contours* (Skatepark's whole-floor tilt with a golf skin, and a
+slope feeding a bunker takes away the very agency the lie mechanic exists to create) and the *windmill
+as a rotating blocker* (that is CENTRE COURT's gates in polar coordinates, one arena later). The
+windmill stayed, but as a **way through** rather than a thing in the way.
+
+*Test affordance:* `window.__spSim.probe()` / `.put()` were added to the `?sim=1` hook. Whether a
+tunnel actually passed the ball, or sand actually stopped it, cannot be told apart from the pixels —
+every number quoted above was measured through them. Still behind the same flag, and `smoke.mjs`
+still asserts the hook is absent without it.
 
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
 

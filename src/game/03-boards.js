@@ -531,6 +531,31 @@
         g.strokeRect(2,2,w-4,h-4);
         } },
 
+      links:{ name:'THE LINKS', surround:'#12351c', stand:'#1d5a2c', tier:'rgba(255,255,255,0.05)',
+        frame:'#2a6b33',frameHi:'#48a052',frameLo:'#17471d',post:'#f2f7ea',
+        line:'rgba(255,255,255,0.82)',line2:'rgba(255,255,255,0.56)',
+        netRecess:'#173d1f',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(10,34,16,0.44)',
+        surface(g){ g.fillStyle='#2f7d3c'; g.fillRect(0,0,W,H);              // fairway
+        for(var b=WALL;b<H-WALL;b+=20){ g.fillStyle='rgba(255,255,255,0.05)';  // mower stripes
+        g.fillRect(WALL,b,W-WALL*2,10); }
+        g.fillStyle='rgba(18,58,26,0.34)';                                    // rough down each flank
+        g.fillRect(WALL,WALL,11,H-WALL*2); g.fillRect(W-WALL-11,WALL,11,H-WALL*2);
+        g.fillStyle='rgba(150,205,120,0.16)';                                 // the putting green
+        g.beginPath(); g.arc(W/2,H/2,32,0,Math.PI*2); g.fill();
+        g.strokeStyle='rgba(190,225,160,0.24)'; g.lineWidth=1;
+        g.beginPath(); g.arc(W/2,H/2,32,0,Math.PI*2); g.stroke();
+        },
+        preview(g,w,h){ g.fillStyle='#2f7d3c'; g.fillRect(0,0,w,h);
+        for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
+        g.fillStyle='rgba(150,205,120,0.2)'; g.beginPath(); g.arc(w/2,h/2,h*0.2,0,Math.PI*2); g.fill();
+        g.fillStyle='#e6cf9a'; g.beginPath(); g.ellipse(w*0.3,h/2,w*0.09,h*0.05,0,0,Math.PI*2); g.fill();
+        g.beginPath(); g.ellipse(w*0.7,h/2,w*0.09,h*0.05,0,0,Math.PI*2); g.fill();
+        g.fillStyle='#e8ecf2'; g.fillRect(w/2-0.5,h/2-h*0.13,1,h*0.13);
+        g.fillStyle='#d64b3a'; g.beginPath(); g.moveTo(w/2,h/2-h*0.13);
+        g.lineTo(w/2+w*0.07,h/2-h*0.1); g.lineTo(w/2,h/2-h*0.07); g.fill();
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -666,7 +691,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', links:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -698,6 +723,11 @@
       if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
       if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
       bkLastScore=-1;
+      if(typeof lkMills!=='undefined'&&lkMills) lkMills.length=0;
+      if(typeof lkBunkers!=='undefined'&&lkBunkers) lkBunkers.length=0;
+      lkOn=false; lkT=0; lkFanOn=false; lkCupOn=false;
+      lkArm=false; lkPinFree=false; lkBoost=false;
+      lkCupFlash=0; lkPinFlash=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

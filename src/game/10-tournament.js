@@ -64,7 +64,9 @@
       {name:'THE HARDWOOD',pitch:'court',ab:['volley',
       'chip','reflex'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
       {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
-      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'}
+      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
+      {name:'THE LINKS',pitch:'links',ab:['cannon',
+      'chip','curve'],d:4,blurb:'A minigolf hole across midfield — windmill, bunker, the green, bunker, windmill. Pick a route every time you cross: a tunnel through a windmill, sand that only a near-full flick ploughs through, or the flagstick, where a ball left on the mown apron powers your next flick (easy); the sails turn, and one across a doorway swats a mistimed run straight back out (medium); the cup opens, and a ball that dies in the hole is dropped back where you struck it (hard).'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

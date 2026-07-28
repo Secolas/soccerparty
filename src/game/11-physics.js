@@ -1208,6 +1208,108 @@
     if(d<bd){ bd=d; best=rk; } }
     if(best) return {x:best.x,y:best.y,kind:'racket'};
     return null; }
+    // LINKS (THE LINKS, Season 3) — a minigolf row straight across midfield:
+    //     WINDMILL  BUNKER   [ THE GREEN ]   BUNKER  WINDMILL
+    // Every time the ball has to cross, the player picks a route, and each one costs something
+    // different. Nothing here is a wall you cannot beat; the choice is the hazard.
+    //   WINDMILL (one built into each wall) — a stone round-house with a tunnel straight through it.
+    //            Free passage and it spits the ball out dead straight, but the mouth is narrow.
+    //   BUNKER   (either side of the green) — sand. Not a blocker: it multiplies drag, so a near-full
+    //            flick still ploughs through and a chip flies over, while anything softer dies in it
+    //            and needs a real swing just to climb out.
+    //   THE GREEN (centre) — the flagstick. Its post can knock a shot off line, but a ball that comes
+    //            to REST on the mown apron gets a POWERED next flick, which is what lets you drive
+    //            clean over a bunker or the length of the pitch.
+    // ADDITIVE by difficulty — nothing gets faster or stronger, a hazard is ADDED:
+    //   EASY: the row as above with the sails STOPPED. Both tunnels are permanently open.
+    //   MED : the SAILS TURN. A sail across a doorway shuts it and swats a mistimed entry straight
+    //         back out, so the tunnel has to be timed. Both mills turn mirrored but in phase, so
+    //         neither side ever has the easier route.
+    //   HARD: + the CUP goes live. A ball that dies in the hole is dropped back where the flick was
+    //         struck — a penalty stroke. The green stops being a free reward and becomes the one
+    //         place you must not stop.
+    var lkOn=false, lkT=0, lkArm=false, lkPinFree=false, lkBoost=false, lkPx=0, lkPy=0;
+    var lkMills=[], lkBunkers=[], lkFanOn=false, lkCupOn=false, lkCupFlash=0, lkPinFlash=0;
+    var LK_MILL_R=24, LK_TUN=9, LK_HUB=8, LK_FAN=300, LK_BLADE=0.30;
+    var LK_BUN_RX=12, LK_BUN_RY=10, LK_BUN_X=73;
+    /* LK_SAND: extra per-frame drag inside a bunker. With FRICTION=0.984 the combined factor is
+       0.689, so a ball rolls v*2.21 px before it dies. A bunker is 2*LK_BUN_RY=20px deep, so a
+       full-power flick (FLICK_MAX=10) just carries through and anything under ~9 does not; from the
+       middle it is 10px to the edge, so climbing out needs about half power. Drag only ever REMOVES
+       speed, so sand can never stop the ball settling and the turn ending. */
+    var LK_SAND=0.70;
+    /* LK_CUP is the hole's claim radius and LK_POST the pin's collision radius. The ball is COIN_R=5,
+       so it can never get closer than LK_POST+COIN_R=8 to the pin — the cup has to be wider than that
+       or it could never be holed. LK_APRON leaves an 8px ring of green outside the cup that still
+       pays the boost, so hard does not simply delete the reward. */
+    var LK_APRON=18, LK_POST=3, LK_CUP=10, LK_CUP_V=1.6, LK_BOOST=1.35;
+    function initLinks(){ var t=hzTier();
+    lkOn=true; lkT=0; lkArm=false; lkPinFree=false; lkBoost=false;
+    lkCupFlash=0; lkPinFlash=0;
+    lkFanOn=(t>=1); lkCupOn=(t>=2);
+    lkMills=[{x:WALL+LK_MILL_R,y:H/2,dir:1,flash:0},{x:W-WALL-LK_MILL_R,y:H/2,dir:-1,flash:0}];
+    lkBunkers=[{x:LK_BUN_X,y:H/2,rx:LK_BUN_RX,ry:LK_BUN_RY},{x:W-LK_BUN_X,y:H/2,rx:LK_BUN_RX,ry:LK_BUN_RY}];
+    lkPx=(typeof coin!=='undefined'&&coin)?coin.x:W/2;
+    lkPy=(typeof coin!=='undefined'&&coin)?coin.y:H/2; }
+    function _lkWrap(a){ a=(a+Math.PI)%(Math.PI*2); if(a<0) a+=Math.PI*2; return a-Math.PI; }
+    function lkFanAng(m){ return lkFanOn?((lkT/LK_FAN)*Math.PI*2*m.dir):(0.62*m.dir); }
+    // The tunnel runs along y, so a sail shuts the doorway when it points up or down. Testing all four
+    // arms against +90 covers -90 too, because the arm opposite is 180 away. Duty comes out at
+    // 2*LK_BLADE/(pi/2) = 38%: about 0.5s shut then 0.8s open, slow enough to read off the sails.
+    function lkDoorShut(m){ if(!lkFanOn) return false;
+    var a=lkFanAng(m);
+    for(var i=0;i<4;i++){ if(Math.abs(_lkWrap(a+i*Math.PI/2-Math.PI/2))<LK_BLADE) return true; }
+    return false; }
+    function lkInTun(m,x,slack){ return Math.abs(x-m.x)<=LK_TUN-(slack||0); }
+    function lkSandAt(x,y){ for(var i=0;i<lkBunkers.length;i++){ var b=lkBunkers[i];
+    var dx=(x-b.x)/b.rx, dy=(y-b.y)/b.ry;
+    if(dx*dx+dy*dy<=1) return b; } return null; }
+    // the lie under a point: 'cup' | 'green' | 'sand' | 'grass'
+    function lkLie(x,y){ if(!lkOn) return 'grass';
+    var d=Math.hypot(x-W/2,y-H/2);
+    if(lkCupOn&&d<LK_CUP) return 'cup';
+    if(d<LK_APRON) return 'green';
+    return lkSandAt(x,y)?'sand':'grass'; }
+    // launch multiplier for the next flick — read by BOTH flick paths (13-input and 09-ai)
+    function lkPinMul(){ return (lkBoost&&(typeof boardKey!=='undefined')&&boardKey==='links'&&(typeof stadiumHazards==='function')&&stadiumHazards())?LK_BOOST:1; }
+    // Runs from the DRAW loop, so unlike stepPhysics (which returns the moment the ball stops) it also
+    // runs while the ball is at rest. Both of the centre's rules need that:
+    //   - the green's boost is a property of where the ball LIES, so it can only be decided at rest;
+    //   - a kickoff drops a brand-new ball on the centre spot, which is both the cup and the pin, and
+    //     that has to be spotted while the ball is still standing there. Watching for it from
+    //     stepPhysics could not work: by the time physics runs again the flick has already gone.
+    function linksTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='links'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
+    if(!lkOn){ try{ initLinks(); }catch(e){} }
+    lkT++; if(lkCupFlash>0) lkCupFlash--;
+    if(lkPinFlash>0) lkPinFlash--;
+    for(var i=0;i<lkMills.length;i++){ if(lkMills[i].flash>0) lkMills[i].flash--; }
+    if(typeof coin==='undefined'||!coin) return;
+    var mv=((typeof moving!=='undefined')&&moving), d=Math.hypot(coin.x-W/2,coin.y-H/2);
+    // a still ball that has jumped was PLACED there (kickoff, VAR, rewind) — disarm everything
+    if(!mv&&Math.hypot(coin.x-lkPx,coin.y-lkPy)>9){ lkArm=false; lkPinFree=false; lkBoost=false; }
+    if(mv) lkArm=true;
+    if(d>=LK_CUP) lkPinFree=true;
+    lkPx=coin.x; lkPy=coin.y;
+    if(!mv&&(!coin.air||coin.air<=0)){ var wasB=lkBoost;
+    lkBoost=(lkArm&&d<LK_APRON&&!(lkCupOn&&d<LK_CUP));
+    if(lkBoost&&!wasB){ try{ setStatus('ON THE GREEN — POWERED FLICK'); }catch(e){}
+    try{ if(typeof sfxPickup==='function') sfxPickup(); }catch(e){}
+    try{ spawnSparks(coin.x,coin.y,current,8,true); }catch(e){} } } }
+    // Where should the CPU aim on THE LINKS? The row has to be crossed, so pick the nearest gap that
+    // is actually open — a tunnel with no sail across it, or the green either side of the pin — and
+    // aim at the point on the goal line whose straight line THROUGH that gap. Aiming at the gap
+    // itself would only earn a short flick that dies in the row.
+    function lkAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='links'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    if(!lkOn){ try{ initLinks(); }catch(e){} }
+    var mid=H/2, gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
+    if((coin.y-mid)*(gy-mid)>=0) return null;            // already past the row
+    if(Math.abs(mid-coin.y)<10) return null;             // sitting in it: nothing to thread
+    var gaps=[{x:W/2-(LK_POST+COIN_R+4),k:'green'},{x:W/2+(LK_POST+COIN_R+4),k:'green'}];
+    for(var i=0;i<lkMills.length;i++){ if(!lkDoorShut(lkMills[i])) gaps.push({x:lkMills[i].x,k:'tunnel'}); }
+    gaps.sort(function(a,b){ return Math.abs(a.x-coin.x)-Math.abs(b.x-coin.x); });
+    var g=gaps[0], s=(gy-coin.y)/(mid-coin.y);
+    var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(g.x-coin.x)*s));
+    return {x:ax,y:gy,kind:g.k}; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2068,6 +2170,69 @@
       var _side=(_was>=0?1:-1); coin.y=_ny+_side*(COIN_R+1.5);
       if(coin.vy*_side<0) coin.vy=-coin.vy*0.45; }
       tnPrevY=coin.y;
+      } if((typeof boardKey!=='undefined')&&boardKey==='links'&&!scoring&&stadiumHazards()){ if(!lkOn) initLinks();
+      var _lsp=Math.hypot(coin.vx,coin.vy), _lgrd=(!coin.air||coin.air<=0);
+      var _lpd=Math.hypot(coin.x-W/2,coin.y-H/2);
+      // The hazards at the centre arm only once the ball has been struck (lkArm) and only once it has
+      // been clear of the hole at least once (lkPinFree), so a ball sitting ON the centre spot at
+      // kickoff is neither holed nor shoved off a post it is already inside. Disarming on a placed
+      // ball is done by linksTick, which — unlike this function — still runs while the ball is still.
+      if(moving) lkArm=true;
+      if(_lpd>=LK_CUP) lkPinFree=true;
+      lkPx=coin.x; lkPy=coin.y;
+      // BUNKERS: sand, not a wall — just extra drag, so how hard the ball was struck decides whether
+      // it crosses. See LK_SAND for the numbers. Never touches an airborne ball: a chip flies over.
+      if(_lgrd&&_lsp>0.01&&lkSandAt(coin.x,coin.y)){ coin.vx*=LK_SAND;
+      coin.vy*=LK_SAND; }
+      // THE FLAGSTICK: a hard post guarding the green behind it. Solid only once the ball has been
+      // outside the cup (see above), so a ball sitting on the centre spot is never shoved off it.
+      if(_lgrd&&lkPinFree&&_lpd<LK_POST+COIN_R){ var _pmn=LK_POST+COIN_R;
+      var _pux=(_lpd>0.001)?(coin.x-W/2)/_lpd:0, _puy=(_lpd>0.001)?(coin.y-H/2)/_lpd:1;
+      coin.x=W/2+_pux*_pmn; coin.y=H/2+_puy*_pmn;
+      var _pdot=coin.vx*_pux+coin.vy*_puy;
+      if(_pdot<0){ coin.vx-=1.7*_pdot*_pux;
+      coin.vy-=1.7*_pdot*_puy; lkPinFlash=12;
+      try{ if(typeof sfxBump==='function') sfxBump(6);
+      }catch(e){} try{ spawnSparks(W/2,H/2,current,6,true); }catch(e){} }
+      _lpd=Math.hypot(coin.x-W/2,coin.y-H/2); }
+      // HARD the CUP: a ball that DIES in the hole is dropped back where the flick was struck — a
+      // penalty stroke, so the shot achieved nothing and the turn is gone. A firm putt runs straight
+      // over the lip, which is the counterplay: do not arrive at the pin out of pace.
+      if(lkCupOn&&lkArm&&lkPinFree&&_lgrd&&_lsp<LK_CUP_V&&_lpd<LK_CUP){
+      var _lbk=((typeof _rwSnap!=='undefined')&&_rwSnap&&_rwSnap.team===current)?_rwSnap:null;
+      coin.x=_lbk?_lbk.x:(W/2);
+      coin.y=_lbk?_lbk.y:((current==='red')?(H-NET_DEPTH-GOAL_AREA_D-12):(NET_DEPTH+GOAL_AREA_D+12));
+      coin.vx=0; coin.vy=0; _lsp=0;
+      lkArm=false; lkPinFree=false; lkBoost=false;
+      lkCupFlash=32; lkPx=coin.x; lkPy=coin.y;
+      try{ setStatus('IN THE CUP — PLAY IT AGAIN'); }catch(e){}
+      try{ if(typeof sfxPortal==='function') sfxPortal(); }catch(e){}
+      try{ spawnSparks(W/2,H/2,current,12); }catch(e){}
+      try{ shake=Math.max(shake||0,4); }catch(e){} }
+      // (THE GREEN's boost is decided in linksTick — it is a property of where the ball comes to REST,
+      // and this function has already returned by then.)
+      // WINDMILLS: solid stone everywhere but the tunnel straight through the middle. MED+ a sail
+      // across a doorway shuts it and swats a mistimed entry back out the way it came; once the ball
+      // is past the sails (inside LK_HUB) it is committed and goes through.
+      if(_lgrd){ for(var _lmi=0;_lmi<lkMills.length;_lmi++){ var _lm=lkMills[_lmi];
+      var _mdx=coin.x-_lm.x, _mdy=coin.y-_lm.y, _mmn=LK_MILL_R+COIN_R;
+      if(Math.hypot(_mdx,_mdy)>=_mmn) continue;
+      var _mtun=lkInTun(_lm,coin.x,COIN_R*0.4), _mmouth=(Math.abs(_mdy)>LK_HUB);
+      if(_mtun&&!(lkDoorShut(_lm)&&_mmouth)){
+      coin.x+=(_lm.x-coin.x)*0.22; coin.vx*=0.80;   // rail it to the middle of the archway
+      continue; }
+      if(_mtun){ var _msg=(_mdy>=0?1:-1);           // swatted by a sail: ejected clear of the doorway
+      coin.y=_lm.y+_msg*_mmn; coin.vy=_msg*Math.abs(coin.vy)*0.55;
+      coin.vx*=0.6; _lm.flash=16;
+      try{ if(typeof sfxBump==='function') sfxBump(6); }catch(e){}
+      try{ spawnSparks(coin.x,coin.y,current,8,true); }catch(e){}
+      try{ shake=Math.max(shake||0,3); }catch(e){} continue; }
+      var _md=Math.hypot(_mdx,_mdy)||0.001, _mux=_mdx/_md, _muy=_mdy/_md;
+      coin.x=_lm.x+_mux*_mmn; coin.y=_lm.y+_muy*_mmn;
+      var _mdot=coin.vx*_mux+coin.vy*_muy;
+      if(_mdot<0){ coin.vx-=1.75*_mdot*_mux;
+      coin.vy-=1.75*_mdot*_muy; _lm.flash=10;
+      try{ if(typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
