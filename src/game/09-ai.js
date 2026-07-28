@@ -58,22 +58,14 @@
       var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
       if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
       goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
-      // THE LINKS: the row across midfield has to be crossed. Thread the nearest cheap route — a side
-      // lane between a fan and a bunker, or the green — rather than shooting into sand or a sail.
-      var _lkP=null; try{ if(typeof lkAimPlan==='function') _lkP=lkAimPlan(t); }catch(e){}
-      if(_lkP){ spread=Math.min(spread,_lkP.kind==='lane'?3.2:4.0);
-      goalX=_lkP.x+(Math.random()*2-1)*spread; goalY=_lkP.y; }
-      // These arenas gate scoring on threading something (a hoop, a lane, a racket, a gap in a row), so
-      // a loose CPU shot is simply wasted. Tighten its aim so the ratio of wasted turns stays sane.
-      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='links'); }catch(e){}
+      // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
+      // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
+      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'); }catch(e){}
       if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
       const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
-      // the CPU gets the green's powered flick on the same terms the player does — applied outside the
-      // FLICK_MAX clamp, because exceeding it is the whole point of standing on the green
-      try{ if(typeof lkPinMul==='function') speed*=lkPinMul(); }catch(e){}
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target

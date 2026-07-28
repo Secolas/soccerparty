@@ -99,9 +99,7 @@
       if(!aiming) return;
       const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,power=Math.min(Math.hypot(dx,dy),(pen&&pen.active)?32:(TAC.frozen?FLICK_POWER*0.5:FLICK_POWER));
       aiming=false; if(power<4){ aimStart=aimNow=null; return; }
-      // THE LINKS: a ball left on the mown green powers this flick past FLICK_MAX (see lkPinMul)
-      var _lkm=1; try{ if(typeof lkPinMul==='function') _lkm=lkPinMul(); }catch(e){}
-      const ang=Math.atan2(dy,dx),speed=power*(FLICK_MAX/FLICK_POWER)*TAC.power*staminaMul()*_lkm;
+      const ang=Math.atan2(dy,dx),speed=power*(FLICK_MAX/FLICK_POWER)*TAC.power*staminaMul();
       _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount};
       coin.vx=Math.cos(ang)*speed;
       coin.vy=Math.sin(ang)*speed;

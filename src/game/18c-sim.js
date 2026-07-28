@@ -58,31 +58,6 @@
             };
           } catch (e) { return { done: false, err: String(e) }; }
         },
-        // Read the live ball and board, and place the ball with a velocity. A stadium hazard is often
-        // impossible to check from the outside — whether a windmill tunnel actually passed the ball,
-        // or whether sand stopped it, cannot be told apart from the pixels. With these a test can put
-        // the ball on a hazard and read the result, instead of flicking blindly and hoping. Both are
-        // behind ?sim=1 like the rest of this hook, and smoke.mjs asserts the hook is absent without it.
-        probe: function(){
-          try {
-            return {
-              board: (typeof boardKey !== 'undefined') ? boardKey : null,
-              mode: mode, tier: (typeof hzTier === 'function') ? hzTier() : -1,
-              x: coin.x, y: coin.y, vx: coin.vx, vy: coin.vy,
-              air: coin.air || 0, moving: !!moving, phase: phase, turn: current
-            };
-          } catch (e) { return { err: String(e) }; }
-        },
-        put: function(o){
-          try {
-            o = o || {};
-            coin.x = o.x; coin.y = o.y;
-            coin.vx = o.vx || 0; coin.vy = o.vy || 0;
-            coin.air = o.air || 0; coin.spin = 0;
-            moving = !!(coin.vx || coin.vy);
-            return true;
-          } catch (e) { return String(e); }
-        },
         // Every ability id, so the runner never hardcodes a list that can rot.
         abilities: function(){
           try { return TACTICS.map(function(t){ return t.id; }); } catch (e) { return []; }

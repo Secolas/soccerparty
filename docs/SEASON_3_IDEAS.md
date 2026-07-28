@@ -60,7 +60,7 @@ All numbers below are **starting values to tune**, not final.
 
 ## Royale ladder — Season 3 (the "Sports" run)
 
-### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1) — BUILT
+### 1. ⚾ THE DIAMOND — "BASEBALL" (easy, ~d1) — fully specced opener
 
 **Fantasy:** a ballpark infield — the dirt diamond speeds you up, a batter takes
 swings by the plate, the pitching machine spits stray balls. Route your shot
@@ -147,7 +147,7 @@ a goal if the ball went through something first.
 - A shot reaching the net without going through a hoop is bounced back out with a
   **NO BASKET** flash (reusing the VAR-style denial path).
 
-### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — BUILT
+### 3. 🎾 CENTRE COURT — "TENNIS" (medium, ~d2–3) — EASY BUILT, MED/HARD TBD
 
 **Fantasy:** a blue hard court split by a net. Nothing on the ground gets through it —
 you go over it off a racket, chip it, or curl round the lanes at either end.
@@ -198,113 +198,28 @@ cannot be beaten along the ground, paired with the launcher that beats it.
   otherwise it aims down an **open side lane**, which its existing curve search then bends round toward
   goal; failing that it runs onto a **live racket** to be lobbed over. Lane openness is sampled across
   the ball's width, so a half-extended shutter is not mistaken for a gap.
-- On all four S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
+- On all three S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
   scoring on threading something, so a loose CPU shot is simply a wasted turn.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 
-### 4. ⛳ THE LINKS — "MINIGOLF" (medium, ~d4) — BUILT
+### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
 
-**Fantasy:** one minigolf hole laid straight across midfield.
+**Fantasy:** a links course — undulating greens curve your putts, sand bunkers
+bog you down, a mini-golf windmill guards a lane.
 
-```
-   FAN   |  BUNKER  |  THE GREEN  |  BUNKER  |   FAN
- sideline    sand      flagstick      sand     sideline
-```
-
-*New mechanic:* **a route choice, not an obstacle.** Every arena before this one hazards the ball in
-flight; this one hazards the **decision**. Crossing midfield always costs something, and the three
-routes charge different currencies: the bunker costs **pace**, the fan costs **your line**, and the
-green costs **a pin in the way** but pays a powered flick. Nothing here is a wall.
+*New mechanic:* **patchy directional slope contours** — reward reading the green,
+distinct from Skatepark's whole-floor tilt.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **Bunkers** (sand drag) | on | ″ | ″ |
-| **The green** (flagstick + boost apron) | on | ″ | pin **pulled**, cup opens |
-| **Sideline fans** | OFF | **on** — a blade shoves the ball off its line | ″ |
+| **Green contours** | OFF (flat) | 2 gentle slopes curving slow balls to a low point | 4 stronger; some push *away* from goal (misreads punished) |
+| **Bunkers** (sand drag) | 1, mild | 3, moderate | 5, strong |
+| **Windmill** (rotating blocker) | OFF | 1, slow rotation, blocks one lane | 1 fast + a 2nd sail |
 
-Additive, as with the other three: nothing gets faster or stronger between tiers, a hazard is *added*.
-
-**The routes**
-
-- **Bunker** — sand, and *not* a blocker. It multiplies drag (`LK_SAND=0.70`, combined 0.689, so the
-  ball rolls v×2.21px), which makes how hard you struck it decide everything. Measured in-engine
-  entering from 40px out: flicks of 5 and 7 die in it; 9 and a boosted 13.5 plough through. From
-  inside, 3 stays stuck and 5 climbs out. That is "requires 100 to come out, or skip if it is strong"
-  falling out of drag rather than being special-cased — and because drag only ever removes speed, sand
-  can never stop the ball settling and the turn ending.
-- **The green** — the flagstick. On easy and medium its post can knock a shot off line, but a ball that
-  comes to **rest** on the mown apron powers the next flick to 1.35×, past `FLICK_MAX`. That is the
-  counterplay to the bunkers: unboosted, a flick from range cannot carry 20px of sand; boosted, it can.
-  Chipping over works too — sand never touches an airborne ball.
-- **Side lane** — 24px of clear ground between each fan's reach and the bunker, so a 14px window for
-  the ball's centre. Wider than CENTRE COURT's side lanes, which play fine. This is what the flank is
-  *for*; the fan is what punishes a shot that strays onto the sideline — normally the safest rail in the
-  game.
-
-**Two things were built wrong first, and both are worth keeping written down.**
-
-*The windmill was a building with a tunnel through it.* An 18px doorway leaves an 8px corridor for the
-ball's centre, so getting in was a precision shot rather than a choice and the flank stopped being a
-route anybody would take. Removing the building and leaving a rotating cross in the ball's path was
-**worse**: swept over every crossing x and every fan phase, a straight crossing got through **0%** of
-the time, and in-engine it measured 0/24. The arithmetic says why — the clear arc between two blades 90°
-apart is (π/2)·r wide, and the ball plus the blade eat 16px of it, so at r=12 there are under 3px of
-daylight. *A rotating cross cannot be a gate at this ball size.* Paddle variants with an open middle
-only reached 6–21%. Two fixes together: the fan is **mounted on the sideline** with part of its sweep
-behind the wall, leaving a real lane beside it; and a blade **deflects rather than blocks** — an
-impulse, no reflection and no push-out, so forward speed survives. All four columns now clear the row
-16/16, and the sideline columns bend the line where the lanes do not.
-`LK_BAT` needed calibrating twice: an impulse buys ~1/(1−FRICTION) = 62px of drift per unit, so 2.2
-measured as **80px** of sideways travel — a catapult across the pitch. 0.5 is about 30px: enough to
-lose a scoring angle, not enough to lose the ball.
-
-*The cup punished simply passing through the middle.* `LK_POST=3` plus `COIN_R=5` means the ball's
-centre can never come within 8px of the pin, so the cup had to be ≥10px to be reachable at all — which
-made it claim any ball that merely came to rest leaning on the pin. That is not a hole, it is a trap
-ringed around a post. Fix: on hard the **pin is pulled** (`lkPinSolid=false`, exactly what a golfer
-does before a long putt) and the cup is a genuine 7px target. Measured after: rolling through the green
-at pace is holed 0–1 times in 10, while a ball deliberately trickled to a stop at the hole is holed
-6/6. On easy and medium there is no cup at all and the pin stays solid, so the middle still costs
-something.
-
-**HARD — the cup.** A ball that *dies* in the hole is dropped back where the flick was struck: a
-penalty stroke, so the shot achieved nothing and the turn is gone. A firm putt runs over the lip, which
-is the counterplay — do not arrive at the pin out of pace.
-
-**The kickoff trap, and why the bookkeeping lives where it does.** The centre spot *is* the cup and *is*
-the pin, and a kickoff drops a brand-new ball right on it. Left alone, hard would hole every kickoff on
-the spot for ever, and the opening flick would bounce off a post it was already inside. So the centre
-arms on two conditions — the ball has been struck (`lkArm`) and has been clear of the hole at least once
-(`lkPinFree`) — and both disarm when a still ball is seen to have *jumped*, which is what a placement
-looks like. That check, and the boost, run from `linksTick()` (the draw loop) and not from
-`stepPhysics()`, **because `stepPhysics()` returns immediately while the ball is at rest** — by the time
-it runs again the flick has already gone. Written into the physics block first, both were silently dead.
-
-**Bunkers are drawn as excavations, not stickers.** Two concentric ellipses read as something pasted on
-the pitch. What makes it a hollow is the order: a dark collar of scuffed grass, then the far lip
-overhanging and casting shade *inside* the sand, then sand lit from the near side, with rake lines
-curved to the bowl. The outline is a wobbled shape rather than an ellipse, and the *same* wobble drives
-`lkSandAt` and the drawing — an ellipse for physics and a wobble for looks would be a lie to the player.
-
-**AI plays the hole.** `lkAimPlan()` picks the nearest cheap route — a side lane, or the green — then
-aims at the point on the *goal line* whose straight line runs through that gap, so the flick is full
-length rather than a short one that dies in the row. The CPU gets the green's boost on the same terms as
-the player, applied outside the `FLICK_MAX` clamp. THE LINKS joins the other S3 arenas in the 55%
-aim-spread cut.
-
-**Cut from the original spec:** *green contours* (Skatepark's whole-floor tilt with a golf skin, and a
-slope feeding a bunker takes away the very agency the lie mechanic exists to create) and the *windmill
-as a rotating blocker* (that is CENTRE COURT's gates in polar coordinates, one arena later).
-
-*Test affordance:* `window.__spSim.probe()` / `.put()` were added to the `?sim=1` hook. Whether sand
-stopped the ball, or a sail bent its line, cannot be told apart from the pixels — every number above was
-measured through them. Two lessons about measuring, both of which cost a wrong conclusion first:
-sampling on a fixed cadence **aliases** against a periodic hazard (24 shots at a steady interval read a
-39% gate as 8%; random jitter read it as 37%), and because friction here is 0.984 every shot rolls the
-length of the pitch, so **where the ball settles measures the formation, not the hazard** — read it as
-it leaves the row instead. Both still behind the same flag, and `smoke.mjs` still asserts the hook is
-absent without it.
+*Reuse:* contours = localized, speed-gated directional force-field (Storm wind /
+currents, masked to patches); bunkers = drag-patch family (puddle/caramel);
+windmill = rotating-obstacle family (gears).
 
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
 
