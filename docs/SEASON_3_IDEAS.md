@@ -159,7 +159,7 @@ ball through only if it is travelling hard enough.
 |---|---|---|---|
 | **The net** — spans the SINGLES court only; a hard grounded shot punches through and loses pace off the cord, a soft roll is stopped dead, a lob sails over | on | on | on |
 | **Rackets** — 2 per half; run onto one and it lobs the ball into the air, carrying it over the net | on | on | on |
-| **The alleys** — the net stops short of the sidelines, leaving a lane at each end to curl or thread a flick around it | on | on | on |
+| **The side lanes** — the net spans the blue court exactly, posts on the sidelines, leaving the green apron open at each end to curl or thread a flick around it | on | on | on |
 | **Tramlines** — the flank lanes carry the ball fast and lean it toward the sideline | — | on | on |
 | **Ball-kids** — two patrol the neutral third and swat a dawdling ball back to the middle | — | — | 2 |
 
@@ -172,9 +172,12 @@ ball through only if it is travelling hard enough.
   **racket** and be lobbed over, or curl round the open **alleys** at either end. That
   removes the last of the lockout risk — no ability is required to attack — and each
   route is a different skill (power / positioning / curve).
-- The net is cut to the singles court on purpose, so the doubles alleys double as the
-  bypass lanes. The gap leaves roughly a 12px window for a 10px ball: threadable with a
-  curve or a well-placed flick, not free.
+- The net spans the blue court **exactly**, with its posts standing on the sidelines, so
+  the bypass lane is the green apron outside the court. The apron was widened to 22px for
+  this: it leaves roughly a 12px window for a 10px ball — threadable with a curve or a
+  placed flick, not free. At its original 14px the window was 4px, i.e. effectively shut.
+  The width lives in one place (`tnApron()`) that the board art, the net physics and the
+  net drawing all read, so they cannot drift apart.
 - The racket lob caps the ball's speed (a lob is slower) so it lands before reaching the
   goal — an airborne ball at the net is rejected as a goal, which would just read as broken.
 - The ball-kids only act on a **moving** ball (speed 0.5–3.2), never a resting one, so

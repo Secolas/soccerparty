@@ -507,7 +507,7 @@
         line:'rgba(255,255,255,0.92)',line2:'rgba(255,255,255,0.7)',
         netRecess:'#123c50',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(235,246,255,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,246,255,0.56)',netOverlay:'rgba(8,30,44,0.46)',
         surface(g){ g.fillStyle='#2f7a5a'; g.fillRect(0,0,W,H);            // green apron
-        var ix=WALL+14, iw=W-2*(WALL+14);
+        var ix=WALL+tnApron(), iw=W-2*(WALL+tnApron());   // court edge == the net posts (see tnNetX0)
         g.fillStyle='#2f6fae'; g.fillRect(ix,WALL,iw,H-WALL*2);            // blue court
         g.fillStyle='rgba(255,255,255,0.06)';
         for(var b=WALL;b<H-WALL;b+=22){ g.fillRect(ix,b,iw,11); }

@@ -471,7 +471,7 @@
     // TENNIS (CENTRE COURT) — the net across midfield, flank tramlines (med), ball-kids (hard)
     function drawTennis(ctx,now){ if(typeof tnKids==='undefined') return;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
-    var ny=H/2, ix=WALL+14, iw=W-2*(WALL+14), lit=tnNetFlash>0;
+    var ny=H/2, ix=WALL+tnApron(), iw=W-2*(WALL+tnApron()), lit=tnNetFlash>0;
     if(tnTramOn){ ctx.save(); ctx.fillStyle='rgba(120,200,255,0.10)';
     ctx.fillRect(ix,WALL,TN_TRAM,H-WALL*2);
     ctx.fillRect(ix+iw-TN_TRAM,WALL,TN_TRAM,H-WALL*2);

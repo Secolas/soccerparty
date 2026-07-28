@@ -1124,11 +1124,14 @@
     //   HARD: + ball-kids patrolling the neutral third who swat a dawdling ball back to the middle.
     var tnOn=false, tnTramOn=false, tnKidOn=false, tnKids=[], tnNetFlash=0, tnPrevY=0, tnRackets=[];
     var TN_NET_MIN=2.6, TN_TRAM=10, TN_KID_R=9, TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
-    // The net only spans the SINGLES court, inside the tramlines. That leaves the doubles alley open
-    // down each flank — a narrow lane you can curl or thread a flick through to go around the net
-    // instead of over it.
-    function tnNetX0(){ return WALL+14+TN_TRAM; }
-    function tnNetX1(){ return W-(WALL+14)-TN_TRAM; }
+    // The net spans exactly the blue court and its posts stand on the sidelines, so the open lane
+    // round each end is the green apron outside the court. A function (not a var) because the board
+    // art in 03-boards.js calls it while painting, which happens before this file's vars are assigned.
+    // The apron is 22px so the lane leaves roughly a 12px window for a 10px ball — threadable with a
+    // curve or a placed flick, not free. At the original 14px it was a 4px window: effectively shut.
+    function tnApron(){ return 22; }
+    function tnNetX0(){ return WALL+tnApron(); }
+    function tnNetX1(){ return W-WALL-tnApron(); }
     function initTennis(){ var t=hzTier();
     tnOn=true; tnTramOn=(t>=1); tnKidOn=(t>=2);
     tnKids=[]; tnNetFlash=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
