@@ -531,6 +531,34 @@
         g.strokeRect(2,2,w-4,h-4);
         } },
 
+      minigolf:{ name:'CRAZY GOLF', surround:'#0f3320', stand:'#1a5233', tier:'rgba(255,255,255,0.05)',
+        frame:'#8a5a2a',frameHi:'#c08a45',frameLo:'#5a3616',post:'#f4f8ea',   // timber course frame
+        line:'rgba(255,255,255,0.8)',line2:'rgba(255,255,255,0.52)',
+        netRecess:'#14401f',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
+        surface(g){ g.fillStyle='#2fa049'; g.fillRect(0,0,W,H);          // bright artificial turf
+        for(var b=WALL;b<H-WALL;b+=18){ g.fillStyle='rgba(255,255,255,0.05)';
+        g.fillRect(WALL,b,W-WALL*2,9); }
+        g.fillStyle='rgba(12,60,26,0.10)';                              // felt speckle
+        for(var sy=WALL;sy<H-WALL;sy+=3){ for(var sx=WALL+((sy/3)%2?0:2);sx<W-WALL;sx+=4) g.fillRect(sx,sy,1,1); }
+        g.fillStyle='#c9a06a';                                          // gravel edging inside the timber
+        g.fillRect(WALL,WALL,W-WALL*2,4); g.fillRect(WALL,H-WALL-4,W-WALL*2,4);
+        g.fillRect(WALL,WALL,4,H-WALL*2); g.fillRect(W-WALL-4,WALL,4,H-WALL*2);
+        g.fillStyle='rgba(120,86,44,0.35)';
+        for(var gx=WALL;gx<W-WALL;gx+=5){ g.fillRect(gx,WALL+1,2,1); g.fillRect(gx,H-WALL-2,2,1); }
+        },
+        preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
+        for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
+        g.strokeStyle='#c08a45'; g.lineWidth=2;                         // a corner bank rail
+        g.beginPath(); g.moveTo(1,h*0.3); g.lineTo(w*0.24,1);
+        g.moveTo(w-1,h*0.3); g.lineTo(w-w*0.24,1); g.stroke();
+        g.fillStyle='#12240f'; g.beginPath();                           // and a cup
+        g.arc(w*0.2,h*0.62,Math.max(2,h*0.075),0,Math.PI*2); g.fill();
+        g.fillStyle='rgba(255,255,255,0.5)'; g.fillRect(w*0.2-0.5,h*0.62-h*0.2,1,h*0.2);
+        g.fillStyle='#d64b3a'; g.beginPath(); g.moveTo(w*0.2,h*0.42);
+        g.lineTo(w*0.2+w*0.09,h*0.46); g.lineTo(w*0.2,h*0.5); g.fill();
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -666,7 +694,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -698,6 +726,11 @@
       if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
       if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
       bkLastScore=-1;
+      if(typeof cgRails!=='undefined'&&cgRails) cgRails.length=0;
+      if(typeof cgMills!=='undefined'&&cgMills) cgMills.length=0;
+      if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
+      cgOn=false; cgT=0; cgMillOn=false;
+      cgCupOn=false; cgRailFlash=0; cgHoled=null;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

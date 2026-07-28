@@ -64,7 +64,9 @@
       {name:'THE HARDWOOD',pitch:'court',ab:['volley',
       'chip','reflex'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
       {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
-      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'}
+      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
+      {name:'CRAZY GOLF',pitch:'minigolf',ab:['cannon',
+      'curve','sniper'],d:4,blurb:'A minigolf course where the furniture is on your side — timber banks cut the dead corners so a wall run comes back across the goal, and a rail outside each post turns a missed wing shot back into the mouth (easy); two windmills stand at midfield and a sail meeting your ball LAUNCHES it, harder than any flick — mistime it and you just roll past (medium); a cup opens in each attacking corner, and holing out wins a free shot from the spot (hard).'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

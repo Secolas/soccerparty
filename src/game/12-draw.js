@@ -522,6 +522,79 @@
     ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
     var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
     } ctx.restore(); } }
+    // CRAZY GOLF: timber bank rails, windmill launchers, and the cups. Drawn ABOVE the pitch markings
+    // like the other S3 props — the goal-box lines run straight through the funnel rails and the cups
+    // sit on the corner arcs, and underneath they came out with white lines painted across them.
+    function drawMinigolf(ctx,now){ if(typeof cgRails==='undefined') return;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    for(var ri=0;ri<cgRails.length;ri++){ var r=cgRails[ri], rl=(r.flash>0);
+    ctx.save(); ctx.lineCap='round';
+    ctx.strokeStyle='rgba(10,40,18,0.38)'; ctx.lineWidth=CG_RAIL_R*2+2;   // the rail's shadow on turf
+    ctx.beginPath(); ctx.moveTo(r.x1,r.y1+1.6); ctx.lineTo(r.x2,r.y2+1.6); ctx.stroke();
+    ctx.strokeStyle=rl?'#ffdca0':'#8a5a2a'; ctx.lineWidth=CG_RAIL_R*2;    // timber
+    ctx.beginPath(); ctx.moveTo(r.x1,r.y1); ctx.lineTo(r.x2,r.y2); ctx.stroke();
+    ctx.strokeStyle=rl?'#fff6d8':'#c08a45'; ctx.lineWidth=CG_RAIL_R*0.9;  // lit top edge of the plank
+    ctx.beginPath(); ctx.moveTo(r.x1,r.y1-1); ctx.lineTo(r.x2,r.y2-1); ctx.stroke();
+    var gl=Math.hypot(r.x2-r.x1,r.y2-r.y1)||1, ux=(r.x2-r.x1)/gl, uy=(r.y2-r.y1)/gl;
+    ctx.strokeStyle='rgba(70,42,16,0.5)'; ctx.lineWidth=1;                // plank joints
+    for(var g2=6;g2<gl-2;g2+=7){ var jx=r.x1+ux*g2, jy=r.y1+uy*g2;
+    ctx.beginPath(); ctx.moveTo(jx-uy*CG_RAIL_R,jy+ux*CG_RAIL_R);
+    ctx.lineTo(jx+uy*CG_RAIL_R,jy-ux*CG_RAIL_R); ctx.stroke(); }
+    ctx.restore(); }
+    for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
+    ctx.save();
+    if(live){ var pul=0.5+0.5*Math.sin((now||0)/240);                     // only the two you can use glow
+    var col=(cu['for']==='red')?'224,91,72':'91,143,232';
+    ctx.fillStyle='rgba('+col+','+(0.10+0.10*pul)+')';
+    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+7+2*pul,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba('+col+','+(0.45+0.35*pul)+')'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+5,0,6.283); ctx.stroke(); }
+    ctx.fillStyle='rgba(248,255,240,0.5)';                               // the cup's collar
+    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP,0,6.283); ctx.fill();
+    ctx.fillStyle=cf?('rgba(255,'+Math.round(225-125*cf)+',95,1)'):'#12240f';
+    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP*0.74,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath();
+    ctx.arc(cu.x,cu.y-0.7,CG_CUP*0.5,0,6.283); ctx.fill();
+    var sway=Math.sin((now||0)/430+ci)*1.5;                              // a pin in every hole
+    ctx.fillStyle='rgba(10,40,18,0.3)'; ctx.fillRect(cu.x-1,cu.y,9,2);
+    ctx.fillStyle='#eef3f8';
+    ctx.beginPath(); ctx.moveTo(cu.x-1.4,cu.y);
+    ctx.lineTo(cu.x-1.4+sway*0.5,cu.y-21); ctx.lineTo(cu.x+1.4+sway*0.5,cu.y-21);
+    ctx.lineTo(cu.x+1.4,cu.y); ctx.fill();
+    ctx.fillStyle=(cu['for']==='red')?'#e05b48':'#5b8fe8';
+    ctx.beginPath(); ctx.moveTo(cu.x+1+sway*0.5,cu.y-21);
+    ctx.lineTo(cu.x+11+sway,cu.y-17); ctx.lineTo(cu.x+1+sway*0.5,cu.y-13); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillRect(cu.x-1.4+sway*0.5,cu.y-21,1,20);
+    ctx.restore(); }
+    for(var mi=0;mi<cgMills.length;mi++){ var m=cgMills[mi], ml=(m.flash>0), fa=cgFanAng(m);
+    ctx.save(); ctx.translate(m.x,m.y);
+    ctx.fillStyle='rgba(140,205,120,0.12)'; ctx.beginPath();              // the ring the sails scrub
+    ctx.arc(0,0,CG_SAIL_L,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(10,40,18,0.34)'; ctx.beginPath();
+    ctx.arc(0,2.4,8.5,0,6.283); ctx.fill();
+    ctx.fillStyle='#8a5a2a'; ctx.beginPath();                            // the mill's timber base
+    ctx.arc(0,0,8,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.14)'; ctx.beginPath();
+    ctx.arc(-1.8,-2,5.6,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(60,34,12,0.5)'; ctx.lineWidth=1;
+    for(var by=-6;by<8;by+=4){ var bw=Math.sqrt(Math.max(0,64-by*by));
+    ctx.beginPath(); ctx.moveTo(-bw,by+0.5); ctx.lineTo(bw,by+0.5); ctx.stroke(); }
+    for(var sp=0;sp<4;sp++){ var a2=fa+sp*Math.PI/2, s0=CG_HUB_R+1, sl=CG_SAIL_L-s0;
+    ctx.save(); ctx.rotate(a2);
+    ctx.fillStyle='rgba(10,40,18,0.34)';                                 // sail shadow on the turf
+    ctx.fillRect(s0+1.6,-CG_SAIL_H+2,sl,CG_SAIL_H*2);
+    ctx.fillStyle=ml?'#ffe9b0':'#faf6ea';                                // canvas
+    ctx.fillRect(s0,-CG_SAIL_H,sl,CG_SAIL_H*2);
+    ctx.fillStyle='rgba(120,92,58,0.8)';                                 // lattice: spar + slats
+    ctx.fillRect(s0,-0.7,sl,1.4);
+    for(var sv=s0+3;sv<s0+sl-1;sv+=4) ctx.fillRect(sv,-CG_SAIL_H,1,CG_SAIL_H*2);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fillRect(s0,-CG_SAIL_H,sl,1);
+    ctx.fillStyle='#d64b3a'; ctx.fillRect(s0+sl-3,-CG_SAIL_H,3,CG_SAIL_H*2);   // red tip
+    ctx.restore(); }
+    ctx.fillStyle=ml?'#ffe07a':'#5a3616'; ctx.beginPath();               // hub
+    ctx.arc(0,0,CG_HUB_R,0,6.283); ctx.fill();
+    ctx.restore(); } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1082,6 +1155,8 @@
     }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
     }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
     site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
+    } if(boardKey==='minigolf'&&stadiumHazards()){ try{ minigolfTick();
+    }catch(e){} return;   /* the course furniture is drawn later, above the pitch lines */
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
@@ -1410,6 +1485,7 @@
       try{ if(boardKey==='baseball'&&stadiumHazards()) drawBaseball(ctx,now); }catch(e){}
       try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
       try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
+      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolf(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';

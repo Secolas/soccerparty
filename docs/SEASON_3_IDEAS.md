@@ -198,28 +198,74 @@ cannot be beaten along the ground, paired with the launcher that beats it.
   otherwise it aims down an **open side lane**, which its existing curve search then bends round toward
   goal; failing that it runs onto a **live racket** to be lobbed over. Lane openness is sampled across
   the ball's width, so a half-extended shutter is not mistaken for a gap.
-- On all three S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
+- On all four S3 arenas the CPU's aim spread and launch noise are cut to **55%**. These arenas gate
   scoring on threading something, so a loose CPU shot is simply a wasted turn.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 
-### 4. ⛳ THE LINKS — "GOLF" (medium, ~d3)
+### 4. ⛳ CRAZY GOLF — "MINIGOLF" (medium, ~d4) — BUILT
 
-**Fantasy:** a links course — undulating greens curve your putts, sand bunkers
-bog you down, a mini-golf windmill guards a lane.
+**Fantasy:** a minigolf course, where the furniture is **on your side**.
 
-*New mechanic:* **patchy directional slope contours** — reward reading the green,
-distinct from Skatepark's whole-floor tilt.
+*New mechanic:* **help, not hazard.** This is the one arena whose props exist to make shots *possible*
+rather than to make them harder — and that is not a soft option, it is the correct reading of minigolf.
+On a real course the banked rail is how you score; you aim *at* the bank. The windmill is the only
+"wait for the gap" element on a whole course, and it is the dullest hole on it.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **Green contours** | OFF (flat) | 2 gentle slopes curving slow balls to a low point | 4 stronger; some push *away* from goal (misreads punished) |
-| **Bunkers** (sand drag) | 1, mild | 3, moderate | 5, strong |
-| **Windmill** (rotating blocker) | OFF | 1, slow rotation, blocks one lane | 1 fast + a 2nd sail |
+| **Bank rails** (corners + funnels) | on | ″ | ″ |
+| **Windmill launchers** | OFF | **on** — a sail throws the ball harder than a flick | ″ |
+| **Cups** (hole out for a free shot) | OFF | OFF | **on** |
 
-*Reuse:* contours = localized, speed-gated directional force-field (Storm wind /
-currents, masked to patches); bunkers = drag-patch family (puddle/caramel);
-windmill = rotating-obstacle family (gears).
+**The furniture**
+
+- **Corner banks** — a 45° timber chamfer across each corner. A ball running up a side wall used to die
+  in the corner; now it leaves along the **end** wall. Traced in-engine: a shot up the left wall arrives
+  at `(26,46)` travelling `v=(6.0, 0.0)` and runs clean across the face of the goal at x = 66 → 181
+  before the far corner keeps it alive again. 6/6 turned, median sideways speed 6.0. That is a genuinely
+  new attacking shot, made out of dead space.
+- **Funnel rails** — a rail just **outside** each post, angled to turn a missed wing shot back across the
+  mouth. They sit outside the posts *by construction*, so they can never block a shot that was on
+  target — they only ever act on one that had already missed. 6/6 wing shots turned back inside the near
+  post.
+- **Windmill launchers (med)** — two mills at midfield. A sail meeting a moving ball throws it along the
+  sweep at `CG_LAUNCH`, and it never blocks or pushes back. 17/18 launched at a peak of 13.3 against a
+  `FLICK_MAX` of 10, 1/18 rolled through untouched for free, and of the launches 12 went goalward to 5
+  back — so even an unread arrival is better than even, and reading the sails is what makes it a tool.
+- **Cups (hard)** — hole out and you keep the turn and get a **free shot from the penalty spot**. 6/6
+  holed and 6/6 paid out at the spot; a firm putt skips the lip 6/6; and a cup is live only for the side
+  attacking that end, so putting into the wrong cup paid out 0/5. Missing costs nothing — you roll past.
+
+**Why the fence had to go.** Three passes at THE LINKS all failed for one reason: a row of obstacles
+laid **across** midfield is a fence, and this pitch already has ten player pegs and a keeper on it.
+Things-in-the-way is the one thing it is not short of. Every piece of feedback — the tunnel is hard to
+get into, the cup punishes an ordinary trip up the middle, the sand looks bolted on — was a symptom of
+the same thing, so a fourth round of tuning could not have fixed it. Two ideas from the wreckage were
+worth keeping, both **inverted**: the windmill became a launcher instead of a gate, and the cup became a
+payout instead of a penalty.
+
+The rotating-cross arithmetic is worth keeping written down, because it is what makes the launcher work:
+the clear arc between two blades 90° apart is (π/2)·r wide and the ball plus the blade eat 16px of it,
+so at r=12 there are under 3px of daylight. A four-sail mill therefore **cannot** be a gate at this ball
+size — measured, a crossing got through 0% of the time. The same density that made it useless as a gate
+makes it reliable as a **bat**: roll in and you are nearly always caught, so timing does not decide
+*whether* you are hit, it decides *which way* you are thrown.
+
+**AI.** The rails need no AI at all — they help whoever banks off them, which is the whole dividend of
+building help instead of hazards. Only two things needed teaching: a live cup within 58px is worth a turn
+(it pays a free shot), and a mill sitting on the line to goal is a coin flip the CPU cannot time, so it
+aims past the edge. The cup putt needs a soft flick, and since the roll here is v/(1−FRICTION) = 62.5·v,
+the speed that dies on the hole is dist/62.5 — far under the CPU's usual 5.0 speed floor, so the plan
+carries `soft:true` and `aiFlick` lowers the floor for it.
+
+*Test affordance:* `window.__spSim.probe()` / `.put()` on the `?sim=1` hook. Whether a rail turned the
+ball back into play, or a sail launched it, cannot be told apart from the pixels. Three harness lessons,
+each of which reported a **working** feature as dead before being fixed: poll every frame, because a
+launch lasts about five frames and a 33ms cadence sampled either side of it; jitter the interval, because
+a fixed cadence aliases against a rotating hazard; and put the order-sensitive checks first, because a
+13.5 launch scores goals and the match state moves on underneath you. When an aggregate reads exactly
+zero, trace one shot before believing it.
 
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
 

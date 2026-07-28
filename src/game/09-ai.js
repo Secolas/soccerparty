@@ -58,14 +58,24 @@
       var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
       if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
       goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
+      // CRAZY GOLF: the rails need no AI — they help whoever banks off them, which is the whole point
+      // of building help instead of hazards. Only two things to teach: a close live cup is worth a turn
+      // (it pays a free shot from the spot), and a mill on the line to goal is a coin flip the CPU
+      // cannot time, so go round it.
+      var _cgP=null; try{ if(typeof cgAimPlan==='function') _cgP=cgAimPlan(t); }catch(e){}
+      if(_cgP){ spread=Math.min(spread,_cgP.soft?2.2:4.0);
+      goalX=_cgP.x+(Math.random()*2-1)*spread; goalY=_cgP.y; }
       // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
       // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
-      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'); }catch(e){}
+      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='minigolf'); }catch(e){}
       if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
       const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
+      // A putt at a cup has to ARRIVE dying or it skips the lip, and the roll here is v/(1-FRICTION) =
+      // 62.5*v, so the speed that stops on the hole is dist/62.5 — far below the 5.0 floor above.
+      if(_cgP&&_cgP.soft) speed=Math.max(1.0,Math.min(speed,(dist+10)/62.5));
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
