@@ -504,11 +504,12 @@
     if(bkRims.length){ ctx.save();
     ctx.strokeStyle='rgba(255,252,242,0.52)'; ctx.lineWidth=1.2;
     ctx.setLineDash([4,3]);
-    for(var ei=0;ei<2;ei++){ var gy=ei?H-NET_DEPTH:NET_DEPTH, into=ei?-1:1;
-    for(var di=-1;di<=1;di+=2){ var a=0.5*di*into;
-    var sx2=W/2-Math.sin(a)*9*into, sy2=gy+Math.cos(a)*9*into;
-    var ex=W/2-Math.sin(a)*44*into, ey=gy+Math.cos(a)*44*into;
-    ctx.beginPath(); ctx.moveTo(sx2,sy2); ctx.lineTo(ex,ey); ctx.stroke(); } }
+    for(var ei=0;ei<2;ei++){ var team=ei?'blue':'red', gy=ei?H-NET_DEPTH:NET_DEPTH;
+    var row=bkRims.filter(function(r){return r.for===team;}).sort(function(a,b){return a.x-b.x;});
+    for(var di=0;di+1<row.length;di++){ var mx=(row[di].x+row[di+1].x)/2, my=(row[di].y+row[di+1].y)/2;
+    var vx=mx-W/2, vy=my-gy, vl=Math.hypot(vx,vy)||1;   // goal mouth -> gap, run a little past it
+    ctx.beginPath(); ctx.moveTo(W/2+vx/vl*9,gy+vy/vl*9);
+    ctx.lineTo(W/2+vx/vl*(vl+7),gy+vy/vl*(vl+7)); ctx.stroke(); } }
     ctx.setLineDash([]); ctx.restore(); }
     // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the
     // GOAL side is -Y: the net hangs that way (the ball drops through and out toward the goal) with
@@ -525,10 +526,6 @@
     ctx.beginPath(); ctx.moveTo(sx,sy);
     ctx.quadraticCurveTo(sx*0.55,-3.2,sx*0.20,-6.6); ctx.stroke(); }
     ctx.beginPath(); ctx.ellipse(0,-6.6,rx*0.30,ry*0.36,0,0,6.283); ctx.stroke();
-    ctx.fillStyle='rgba(246,240,224,0.9)';                                // backboard, beyond the net
-    ctx.fillRect(-rx*0.95,-ry-7.5,rx*1.9,2.6);
-    ctx.fillStyle='rgba(60,36,12,0.55)';
-    ctx.fillRect(-rx*0.95,-ry-5.2,rx*1.9,0.9);
     ctx.lineWidth=2.6;                                                     // the rim itself
     ctx.strokeStyle=hot?'#ffe98a':(armed?'#9fe06a':'#e2622c');
     ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.283); ctx.stroke();

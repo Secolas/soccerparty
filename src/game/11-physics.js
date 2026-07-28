@@ -1075,16 +1075,16 @@
     // facing that goal. A shot only counts if it went through one of them (see bkGoalDenied). They sit
     // at fixed, mirrored spots rather than being re-thrown each goal: you learn the three lanes and
     // pick one, and the layout stays symmetric for both teams.
-    // Laid out on an ARC in front of each goal rather than a flat row: every hoop sits the same
-    // distance from the goal mouth and each one FACES the goal centre, so the outer two are angled
-    // diagonally — you shoot through them from the wing, the way the approach actually comes in.
+    // The three hoops stand ON the penalty-area border — the line the box closes with, furthest from
+    // goal — spread across its width. Each still FACES the goal centre, so the two wing hoops are
+    // angled diagonally while the centre one squares up.
     function bkSpawnRims(){ bkRims=[];
     if(!bkRimOn) return;
-    var ends=[{team:'red',gy:NET_DEPTH,into:1},{team:'blue',gy:H-NET_DEPTH,into:-1}];
-    var R=27, angs=[-1.0,0,1.0];   /* wide enough that the three hoops stand clearly apart */
+    var ends=[{team:'red',gy:NET_DEPTH,box:goalAreaRect('blue'),into:1},
+    {team:'blue',gy:H-NET_DEPTH,box:goalAreaRect('red'),into:-1}];
     for(var e=0;e<ends.length;e++){ var en=ends[e], gx=W/2, gy=en.gy;
-    for(var s=0;s<angs.length;s++){ var a=angs[s]*en.into;
-    var px=gx-Math.sin(a)*R*en.into, py=gy+Math.cos(a)*R*en.into;
+    var by=gy+GOAL_AREA_D*en.into;              // the border line of the box
+    for(var s=0;s<3;s++){ var px=en.box.x+en.box.w*(0.2+0.3*s), py=by;
     var fx=gx-px, fy=gy-py, fl=Math.hypot(fx,fy)||1;
     bkRims.push({x:px,y:py,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
     // the hoop the AI should shoot through: the one closest to its natural line at goal

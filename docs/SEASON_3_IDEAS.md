@@ -124,10 +124,12 @@ a goal if the ball went through something first.
   — not re-thrown each goal. You learn the three lanes and pick one, and both teams
   face the same layout. A single wide gate was considered and rejected: it is passed
   almost every shot, so the rule stops biting.
-- They sit on an **arc** in front of the goal, each facing the goal centre, so the two
-  wing hoops are **angled diagonally** — you shoot through them from the wing, the way
-  the approach actually arrives. The net hangs on the goal side (the ball drops through
-  and out toward the goal) with the backboard beyond it.
+- They stand **on the penalty-area border** — the line the box closes with, furthest from
+  goal — spread across its width (27px apart against a 16px mouth). Each faces the goal
+  centre, so the two wing hoops are **angled diagonally** while the centre one squares up.
+  You thread a hoop at the edge of the box, then still have the keeper to beat.
+- The net hangs on the goal side (the ball drops through and out toward the goal). There
+  is no backboard plate behind the ring — it read as a barrier sitting behind each hoop.
 - Dashed **lane dividers** fan out of the goal mouth between the hoops, so each hoop
   owns a visible slice of the box.
 - The "white line behind the net" was three cosmetic markings stacked on the goal
