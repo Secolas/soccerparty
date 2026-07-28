@@ -1122,11 +1122,19 @@
     //         all, so the net is speed-gated instead: hit it hard, or go over it.
     //   MED : + tramlines down each flank that carry the ball fast and pull it toward the sideline.
     //   HARD: + ball-kids patrolling the neutral third who swat a dawdling ball back to the middle.
-    var tnOn=false, tnTramOn=false, tnKidOn=false, tnKids=[], tnNetFlash=0, tnPrevY=0;
-    var TN_NET_MIN=2.6, TN_TRAM=10, TN_KID_R=9;
+    var tnOn=false, tnTramOn=false, tnKidOn=false, tnKids=[], tnNetFlash=0, tnPrevY=0, tnRackets=[];
+    var TN_NET_MIN=2.6, TN_TRAM=10, TN_KID_R=9, TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
+    // The net only spans the SINGLES court, inside the tramlines. That leaves the doubles alley open
+    // down each flank — a narrow lane you can curl or thread a flick through to go around the net
+    // instead of over it.
+    function tnNetX0(){ return WALL+14+TN_TRAM; }
+    function tnNetX1(){ return W-(WALL+14)-TN_TRAM; }
     function initTennis(){ var t=hzTier();
     tnOn=true; tnTramOn=(t>=1); tnKidOn=(t>=2);
     tnKids=[]; tnNetFlash=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
+    // rackets: two per half, sitting just short of the net so you can run onto one and be lobbed over
+    tnRackets=[]; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
+    tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s}); } }
     if(tnKidOn){ tnKids.push({x:W*0.32,y:H/2-42,vx:0.55,r:TN_KID_R,flash:0});
     tnKids.push({x:W*0.68,y:H/2+42,vx:-0.55,r:TN_KID_R,flash:0}); } }
     // ball-kids shuffle along their line from the draw loop so they move between shots
@@ -1136,7 +1144,8 @@
     for(var i=0;i<tnKids.length;i++){ var k=tnKids[i];
     k.x+=k.vx; if(k.x<WALL+18){ k.x=WALL+18; k.vx=Math.abs(k.vx); }
     if(k.x>W-WALL-18){ k.x=W-WALL-18; k.vx=-Math.abs(k.vx); }
-    if(k.flash>0) k.flash--; } }
+    if(k.flash>0) k.flash--; }
+    for(var r=0;r<tnRackets.length;r++){ if(tnRackets[r].flash>0) tnRackets[r].flash--; } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -1931,8 +1940,21 @@
       var _tsp=Math.hypot(coin.vx,coin.vy), _tair=(coin.air>0), _tmov=(moving&&!_tair);
       // EASY the net: a lob clears it; a hard grounded shot punches through and loses pace off the
       // cord; anything slower is stopped at the net and knocked back the way it came
+      // EASY rackets: run onto one and it lobs the ball into the air, carrying it over the net —
+      // the way past without the Chip ability. Capped speed so the lob lands before the goal
+      // (an airborne ball reaching the net is rejected as a goal, which would just read as broken).
+      if(_tmov&&_tsp>0.8){ for(var _ri=0;_ri<tnRackets.length;_ri++){ var _rk=tnRackets[_ri];
+      if(Math.hypot(coin.x-_rk.x,coin.y-_rk.y)<_rk.r+COIN_R*0.6){ var _rs=Math.min(_tsp,TN_RACK_MAX)||1;
+      var _ra=Math.atan2(coin.vy,coin.vx);
+      coin.vx=Math.cos(_ra)*_rs; coin.vy=Math.sin(_ra)*_rs;
+      coin.air=TN_RACK_AIR; coin.air0=TN_RACK_AIR;
+      _tair=true; _tmov=false; _rk.flash=16;
+      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
+      }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
       var _ny=H/2, _was=tnPrevY-_ny, _now=coin.y-_ny;
-      if(moving&&_was*_now<0){ if(!_tair){
+      var _inNet=(coin.x>tnNetX0()&&coin.x<tnNetX1());   // the alleys either side are open
+      if(moving&&_was*_now<0&&_inNet){ if(!_tair){
       if(_tsp>=TN_NET_MIN){ coin.vx=coin.vx*0.74+(Math.random()-0.5)*0.5;
       coin.vy*=0.74; tnNetFlash=10;
       try{ if(typeof sfxBump==='function') sfxBump(3); }catch(e){}

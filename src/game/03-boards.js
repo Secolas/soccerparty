@@ -690,6 +690,7 @@
       if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
       if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
       if(typeof tnKids!=='undefined'&&tnKids) tnKids.length=0;
+      if(typeof tnRackets!=='undefined'&&tnRackets) tnRackets.length=0;
       tnOn=false; tnNetFlash=0;
       if(typeof bkBoards!=='undefined'&&bkBoards) bkBoards.length=0;
       bkOn=false; bkRimOn=false; bkTrampOn=false;

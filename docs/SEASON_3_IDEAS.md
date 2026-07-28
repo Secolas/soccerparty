@@ -157,7 +157,9 @@ ball through only if it is travelling hard enough.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **The net** across midfield — a hard grounded shot punches through and loses pace off the cord; a soft roll is stopped dead and knocked back; a lob (Chip air) sails over untouched | on | on | on |
+| **The net** — spans the SINGLES court only; a hard grounded shot punches through and loses pace off the cord, a soft roll is stopped dead, a lob sails over | on | on | on |
+| **Rackets** — 2 per half; run onto one and it lobs the ball into the air, carrying it over the net | on | on | on |
+| **The alleys** — the net stops short of the sidelines, leaving a lane at each end to curl or thread a flick around it | on | on | on |
 | **Tramlines** — the flank lanes carry the ball fast and lean it toward the sideline | — | on | on |
 | **Ball-kids** — two patrol the neutral third and swat a dawdling ball back to the middle | — | — | 2 |
 
@@ -166,6 +168,15 @@ ball through only if it is travelling hard enough.
   would leave any loadout without Chip unable to attack at all, so the net is
   **speed-gated** instead: hit it hard, or go over it. The verticality gate survives
   (a lob is still the clean way through) without a loadout being able to lock you out.
+- There are now **three ways past the net**: punch through it with pace, run onto a
+  **racket** and be lobbed over, or curl round the open **alleys** at either end. That
+  removes the last of the lockout risk — no ability is required to attack — and each
+  route is a different skill (power / positioning / curve).
+- The net is cut to the singles court on purpose, so the doubles alleys double as the
+  bypass lanes. The gap leaves roughly a 12px window for a 10px ball: threadable with a
+  curve or a well-placed flick, not free.
+- The racket lob caps the ball's speed (a lob is slower) so it lands before reaching the
+  goal — an airborne ball at the net is rejected as a goal, which would just read as broken.
 - The ball-kids only act on a **moving** ball (speed 0.5–3.2), never a resting one, so
   they can't shunt a settled ball and break the "ball at rest = your turn" contract.
 - Airborne goals are already rejected by the engine, so lobbing the net can never

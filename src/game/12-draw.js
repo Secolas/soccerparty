@@ -476,15 +476,33 @@
     ctx.fillRect(ix,WALL,TN_TRAM,H-WALL*2);
     ctx.fillRect(ix+iw-TN_TRAM,WALL,TN_TRAM,H-WALL*2);
     ctx.restore(); }
-    ctx.save();                                                  // the net: mesh band + white cord
-    ctx.fillStyle='rgba(14,22,30,0.32)'; ctx.fillRect(WALL,ny-3.5,W-WALL*2,7);
+    // the net spans the singles court only — the alleys either side stay open as a way round it
+    var nx0=tnNetX0(), nx1=tnNetX1(), nw=nx1-nx0;
+    ctx.save();
+    ctx.fillStyle='rgba(14,22,30,0.32)'; ctx.fillRect(nx0,ny-3.5,nw,7);
     ctx.strokeStyle='rgba(228,240,252,0.34)'; ctx.lineWidth=1;
-    for(var x=WALL;x<W-WALL;x+=3){ ctx.beginPath(); ctx.moveTo(x+0.5,ny-3.5); ctx.lineTo(x+0.5,ny+3.5); ctx.stroke(); }
-    ctx.beginPath(); ctx.moveTo(WALL,ny-3.5); ctx.lineTo(W-WALL,ny-3.5);
-    ctx.moveTo(WALL,ny+3.5); ctx.lineTo(W-WALL,ny+3.5); ctx.stroke();
-    ctx.fillStyle=lit?'#ffe98a':'#f2f7ff'; ctx.fillRect(WALL,ny-4.5,W-WALL*2,2);
-    ctx.fillStyle='#cfd8e6'; ctx.fillRect(WALL-1,ny-6,2,12); ctx.fillRect(W-WALL-1,ny-6,2,12);
+    for(var x=nx0;x<nx1;x+=3){ ctx.beginPath(); ctx.moveTo(x+0.5,ny-3.5); ctx.lineTo(x+0.5,ny+3.5); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(nx0,ny-3.5); ctx.lineTo(nx1,ny-3.5);
+    ctx.moveTo(nx0,ny+3.5); ctx.lineTo(nx1,ny+3.5); ctx.stroke();
+    ctx.fillStyle=lit?'#ffe98a':'#f2f7ff'; ctx.fillRect(nx0,ny-4.5,nw,2);
+    ctx.fillStyle='#e8eef8'; ctx.fillRect(nx0-2,ny-7,3,14); ctx.fillRect(nx1-1,ny-7,3,14);   // posts
+    ctx.fillStyle='rgba(200,255,120,0.22)';                       // the open alleys, faintly marked
+    ctx.fillRect(WALL,ny-3.5,nx0-2-WALL,7); ctx.fillRect(nx1+2,ny-3.5,W-WALL-nx1-2,7);
     ctx.restore();
+    for(var ri=0;ri<tnRackets.length;ri++){ var rk=tnRackets[ri], rl=rk.flash>0;
+    ctx.save(); ctx.translate(rk.x,rk.y); ctx.rotate(rk.ang);
+    ctx.fillStyle='rgba(12,20,10,0.26)'; ctx.beginPath();
+    ctx.ellipse(0,2.5,rk.r*0.78,rk.r*0.95,0,0,6.283); ctx.fill();
+    ctx.strokeStyle=rl?'#ffe07a':'#2f3a4e'; ctx.lineWidth=2.4;    // frame
+    ctx.beginPath(); ctx.ellipse(0,-1,rk.r*0.72,rk.r*0.9,0,0,6.283); ctx.stroke();
+    ctx.strokeStyle=rl?'rgba(255,246,200,0.9)':'rgba(240,246,255,0.55)'; ctx.lineWidth=0.8;
+    for(var g2=-2;g2<=2;g2++){ ctx.beginPath();
+    ctx.moveTo(g2*rk.r*0.26,-1-rk.r*0.86); ctx.lineTo(g2*rk.r*0.26,-1+rk.r*0.86); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-rk.r*0.68,-1+g2*rk.r*0.32); ctx.lineTo(rk.r*0.68,-1+g2*rk.r*0.32); ctx.stroke(); }
+    ctx.strokeStyle=rl?'#ffe07a':'#8a5a2a'; ctx.lineWidth=2.6;    // handle
+    ctx.lineCap='round'; ctx.beginPath();
+    ctx.moveTo(0,rk.r*0.9-1); ctx.lineTo(0,rk.r*1.7); ctx.stroke();
+    ctx.restore(); }
     for(var i=0;i<tnKids.length;i++){ var k=tnKids[i], kl=k.flash>0;
     ctx.save(); ctx.translate(k.x,k.y);
     ctx.fillStyle='rgba(12,20,10,0.28)'; ctx.beginPath();
