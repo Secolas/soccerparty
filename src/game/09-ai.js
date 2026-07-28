@@ -58,13 +58,13 @@
       var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
       if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
       goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
-      // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
-      // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
-      // THE LINKS: the row across midfield has to be crossed. Thread the nearest OPEN gap — a tunnel
-      // with no sail over it, or the green either side of the pin — rather than shooting into sand.
+      // THE LINKS: the row across midfield has to be crossed. Thread the nearest cheap route — a side
+      // lane between a fan and a bunker, or the green — rather than shooting into sand or a sail.
       var _lkP=null; try{ if(typeof lkAimPlan==='function') _lkP=lkAimPlan(t); }catch(e){}
-      if(_lkP){ spread=Math.min(spread,_lkP.kind==='tunnel'?2.6:4.0);
+      if(_lkP){ spread=Math.min(spread,_lkP.kind==='lane'?3.2:4.0);
       goalX=_lkP.x+(Math.random()*2-1)*spread; goalY=_lkP.y; }
+      // These arenas gate scoring on threading something (a hoop, a lane, a racket, a gap in a row), so
+      // a loose CPU shot is simply wasted. Tighten its aim so the ratio of wasted turns stays sane.
       var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='links'); }catch(e){}
       if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;

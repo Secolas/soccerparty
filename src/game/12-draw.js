@@ -522,106 +522,117 @@
     ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
     var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
     } ctx.restore(); } }
-    // THE LINKS: windmill / bunker / green / bunker / windmill, straight across midfield. Drawn ABOVE
+    // THE LINKS: fan / bunker / green / bunker / fan, straight across midfield. Drawn ABOVE
     // the pitch markings for the same reason the ballpark props are — the halfway line runs right
     // through the row, and underneath it was painted across the sand and the flagstick.
     function drawLinks(ctx,now){ if(typeof lkMills==='undefined') return;
     if(!lkOn){ try{ initLinks(); }catch(e){} }
     var mid=H/2;
+    // A bunker is EXCAVATED, so it has to sit in the pitch rather than on it. Two concentric ellipses
+    // read as a sticker; what makes it a hollow is the order: a dark collar of scuffed grass, then a
+    // grass lip overhanging the far side (a cast shadow INSIDE the sand, not around it), then the sand
+    // itself lit from the near side. The outline is the same wobbled shape lkSandAt tests against, so
+    // the sand that is drawn is exactly the sand that drags.
+    var _lkPath=function(g,b,k){ g.beginPath();
+    for(var t=0;t<=28;t++){ var a2=t/28*Math.PI*2, r=lkWob(b,a2)*k;
+    var px=Math.cos(a2)*b.rx*r, py=Math.sin(a2)*b.ry*r;
+    if(t===0) g.moveTo(px,py); else g.lineTo(px,py); }
+    g.closePath(); };
     for(var bi=0;bi<lkBunkers.length;bi++){ var b=lkBunkers[bi];
     ctx.save(); ctx.translate(b.x,b.y);
-    ctx.fillStyle='rgba(12,34,16,0.30)';                          // hollow the sand sits in
-    ctx.beginPath(); ctx.ellipse(0,1.8,b.rx+1.6,b.ry+1.4,0,0,6.283); ctx.fill();
-    ctx.fillStyle='#dcbc7c'; ctx.beginPath();
-    ctx.ellipse(0,0,b.rx,b.ry,0,0,6.283); ctx.fill();
-    ctx.fillStyle='#c8a463'; ctx.beginPath();                     // deeper, softer middle
-    ctx.ellipse(0,0.8,b.rx*0.7,b.ry*0.66,0,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba(132,98,48,0.6)'; ctx.lineWidth=0.9;     // rake lines
-    for(var rk2=-2;rk2<=2;rk2++){ var ry2=rk2*(b.ry*0.34);
-    var hw=b.rx*Math.sqrt(Math.max(0,1-(ry2/b.ry)*(ry2/b.ry)))*0.9;
-    ctx.beginPath(); ctx.moveTo(-hw,ry2); ctx.lineTo(hw,ry2); ctx.stroke(); }
-    ctx.strokeStyle='rgba(255,248,222,0.75)'; ctx.lineWidth=1.2;  // lip, catching the light
-    ctx.beginPath(); ctx.ellipse(0,-0.4,b.rx,b.ry,0,0,6.283); ctx.stroke();
+    ctx.fillStyle='rgba(28,74,34,0.55)';                          // scuffed grass collar, dug through
+    _lkPath(ctx,b,1.16); ctx.fill();
+    ctx.fillStyle='rgba(16,48,22,0.34)';
+    _lkPath(ctx,b,1.07); ctx.fill();
+    ctx.save(); _lkPath(ctx,b,1.0); ctx.clip();                   // everything below stays in the hole
+    ctx.fillStyle='#cfa964'; ctx.fillRect(-b.rx*2,-b.ry*2,b.rx*4,b.ry*4);
+    ctx.fillStyle='#dfbd7d';                                      // sand lit from the near side
+    ctx.beginPath(); ctx.ellipse(0,b.ry*0.34,b.rx*1.05,b.ry*0.92,0,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(74,52,20,0.42)';                          // the far lip overhangs and casts in
+    ctx.beginPath(); ctx.ellipse(0,-b.ry*1.06,b.rx*1.25,b.ry*0.62,0,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(150,112,54,0.42)'; ctx.lineWidth=0.8;   // rake lines follow the hollow
+    for(var rk2=-2;rk2<=2;rk2++){ var ry2=rk2*(b.ry*0.36);
+    ctx.beginPath(); ctx.moveTo(-b.rx,ry2+0.5);
+    ctx.quadraticCurveTo(0,ry2+1.6,b.rx,ry2+0.5); ctx.stroke(); }
+    ctx.restore();
+    ctx.strokeStyle='rgba(196,158,88,0.55)'; ctx.lineWidth=1;     // sand meets grass, no hard white
+    _lkPath(ctx,b,1.0); ctx.stroke();
     ctx.restore(); }
-    // the green: a mown apron that powers the next flick, with the cup at its middle on hard
+    // The green: a mown apron that powers the next flick. On hard the PIN IS PULLED and planted on the
+    // fringe, leaving the hole open — which is both what a golfer actually does and the only way the
+    // cup can be a real 7px target instead of a trap ringed around a solid post.
     var lit=(typeof lkBoost!=='undefined'&&lkBoost), cf=(lkCupFlash>0)?lkCupFlash/32:0;
+    var pinX=lkPinSolid?(W/2):(W/2+LK_APRON-3), pinY=mid;
     ctx.save();
     ctx.fillStyle=lit?'rgba(190,255,150,0.26)':'rgba(170,225,140,0.16)';
     ctx.beginPath(); ctx.arc(W/2,mid,LK_APRON,0,6.283); ctx.fill();
     ctx.strokeStyle=lit?'rgba(226,255,170,0.85)':'rgba(200,235,165,0.4)';
     ctx.lineWidth=lit?1.6:1;
     ctx.beginPath(); ctx.arc(W/2,mid,LK_APRON,0,6.283); ctx.stroke();
-    if(lkCupOn){ ctx.fillStyle='rgba(255,255,255,0.30)';          // the cup's white collar
-    ctx.beginPath(); ctx.arc(W/2,mid,LK_CUP*0.78,0,6.283); ctx.fill();
-    ctx.fillStyle=cf?('rgba('+Math.round(255)+','+Math.round(220-120*cf)+',90,1)'):'#14210f';
-    ctx.beginPath(); ctx.arc(W/2,mid,LK_CUP*0.62,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.beginPath();
-    ctx.arc(W/2,mid-0.5,LK_CUP*0.44,0,6.283); ctx.fill(); }
-    var sway=Math.sin((now||0)/420)*1.6, pf=(lkPinFlash>0);       // flagstick, leaning in the breeze
+    if(lkCupOn){ ctx.fillStyle='rgba(248,255,240,0.42)';          // the cup's white collar
+    ctx.beginPath(); ctx.arc(W/2,mid,LK_CUP,0,6.283); ctx.fill();
+    ctx.fillStyle=cf?('rgba(255,'+Math.round(220-120*cf)+',90,1)'):'#16240f';
+    ctx.beginPath(); ctx.arc(W/2,mid,LK_CUP*0.74,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath();             // depth, lit from the near side
+    ctx.arc(W/2,mid-0.7,LK_CUP*0.52,0,6.283); ctx.fill(); }
+    var sway=Math.sin((now||0)/420)*1.6, pf=(lkPinFlash>0);       // the flagstick, leaning in the breeze
     ctx.fillStyle='rgba(12,34,16,0.28)';
-    ctx.fillRect(W/2-1,mid,10,2);
+    ctx.fillRect(pinX-1,pinY,10,2);
     ctx.fillStyle=pf?'#ffe07a':'#eef3f8';
-    ctx.beginPath(); ctx.moveTo(W/2-1.5,mid+1);
-    ctx.lineTo(W/2-1.5+sway*0.5,mid-25); ctx.lineTo(W/2+1.5+sway*0.5,mid-25);
-    ctx.lineTo(W/2+1.5,mid+1); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pinX-1.5,pinY+1);
+    ctx.lineTo(pinX-1.5+sway*0.5,pinY-25); ctx.lineTo(pinX+1.5+sway*0.5,pinY-25);
+    ctx.lineTo(pinX+1.5,pinY+1); ctx.fill();
     ctx.fillStyle='rgba(10,26,12,0.30)';                          // the flag's own shadow on the green
-    ctx.beginPath(); ctx.moveTo(W/2+2+sway*0.5,mid-23.5);
-    ctx.lineTo(W/2+14+sway,mid-18.5); ctx.lineTo(W/2+2+sway*0.5,mid-13.5); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pinX+2+sway*0.5,pinY-23.5);
+    ctx.lineTo(pinX+14+sway,pinY-18.5); ctx.lineTo(pinX+2+sway*0.5,pinY-13.5); ctx.fill();
     ctx.fillStyle=pf?'#fff2b8':'#d64b3a';
-    ctx.beginPath(); ctx.moveTo(W/2+1+sway*0.5,mid-25);
-    ctx.lineTo(W/2+13+sway,mid-20); ctx.lineTo(W/2+1+sway*0.5,mid-15); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pinX+1+sway*0.5,pinY-25);
+    ctx.lineTo(pinX+13+sway,pinY-20); ctx.lineTo(pinX+1+sway*0.5,pinY-15); ctx.fill();
     ctx.fillStyle=pf?'#fff9dd':'#f07a62';                         // lit edge along the top of the flag
-    ctx.beginPath(); ctx.moveTo(W/2+1+sway*0.5,mid-25);
-    ctx.lineTo(W/2+13+sway,mid-20); ctx.lineTo(W/2+9+sway,mid-21.4); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pinX+1+sway*0.5,pinY-25);
+    ctx.lineTo(pinX+13+sway,pinY-20); ctx.lineTo(pinX+9+sway,pinY-21.4); ctx.fill();
     ctx.fillStyle='rgba(255,255,255,0.40)';
-    ctx.fillRect(W/2-1.5+sway*0.5,mid-25,1,24);
+    ctx.fillRect(pinX-1.5+sway*0.5,pinY-25,1,24);
     ctx.restore();
-    // windmills: a stone round-house built into each wall with a tunnel straight through it
-    for(var mi=0;mi<lkMills.length;mi++){ var m=lkMills[mi], R=LK_MILL_R;
-    var shut=lkDoorShut(m), ml=(m.flash>0);
-    ctx.save(); ctx.translate(m.x,m.y);
-    ctx.fillStyle='rgba(10,28,14,0.34)'; ctx.beginPath();
-    ctx.arc(0,2.5,R+1.5,0,6.283); ctx.fill();
-    ctx.fillStyle=ml?'#b39d86':'#71624f'; ctx.beginPath();        // stone wall, kept DARK so the pale
-    ctx.arc(0,0,R,0,6.283); ctx.fill();                           // sails and the green tunnel both pop
+    // The fans: four sails on each sideline, no building. Mounted at the edge with part of the sweep
+    // behind the wall, so there is a clear lane between the blades and the bunker — that lane is the
+    // route, and the fan is what punishes a shot that strays onto the sideline. The drawing only has to
+    // make the sweep legible; ground shadows do that better than the sails alone.
+    for(var mi=0;mi<lkMills.length;mi++){ var m=lkMills[mi], ml=(m.flash>0), fa=lkFanAng(m);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(WALL,WALL,W-WALL*2,H-WALL*2); ctx.clip();   // the mill stands ON the
+    ctx.translate(m.x,m.y);                                              // sideline: clip off the part
+
+    ctx.fillStyle='rgba(140,190,120,0.10)'; ctx.beginPath();       // the ring the sails scrub bare
+    ctx.arc(0,0,LK_SAIL_L,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(10,28,14,0.34)'; ctx.beginPath();          // the mill's stone base, so the
+    ctx.arc(0,2.5,8.5,0,6.283); ctx.fill();                        // sails read as mounted, not loose
+    ctx.fillStyle='#71624f'; ctx.beginPath();
+    ctx.arc(0,0,8,0,6.283); ctx.fill();
     ctx.fillStyle='rgba(255,255,255,0.13)'; ctx.beginPath();
-    ctx.arc(-R*0.22,-R*0.26,R*0.72,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba(34,26,18,0.40)'; ctx.lineWidth=1;       // coursed stonework
-    for(var sy=-R+5;sy<R;sy+=6){ var sw=Math.sqrt(Math.max(0,R*R-sy*sy));
-    ctx.beginPath(); ctx.moveTo(-sw,sy+0.5); ctx.lineTo(sw,sy+0.5); ctx.stroke(); }
-    ctx.strokeStyle='rgba(48,38,30,0.55)'; ctx.lineWidth=1.4;
-    ctx.beginPath(); ctx.arc(0,0,R-0.7,0,6.283); ctx.stroke();
-    // The tunnel is the way through, so it has to read as one at a glance: a pale gravel path with
-    // dark arch jambs either side, clipped to the house so it does not square off the wall. A sail
-    // lying along it IS the shut tell — no extra marking needed, the blade is visibly in the way.
-    ctx.save(); ctx.beginPath(); ctx.arc(0,0,R-0.7,0,6.283); ctx.clip();
-    ctx.fillStyle='#2d6b38'; ctx.fillRect(-LK_TUN,-R,LK_TUN*2,R*2);   // fairway, seen straight through
-    ctx.fillStyle='rgba(0,0,0,0.20)';                                 // the arch shades the middle
-    ctx.fillRect(-LK_TUN,-LK_HUB-5,LK_TUN*2,(LK_HUB+5)*2);
-    ctx.fillStyle='rgba(16,10,4,0.72)';                               // arch jambs, hard black edges
-    ctx.fillRect(-LK_TUN-1,-R,3,R*2); ctx.fillRect(LK_TUN-2,-R,3,R*2);
-    ctx.fillStyle=shut?'#e0503c':'#9be86a';                           // threshold marks at each mouth
-    ctx.fillRect(-LK_TUN+2,-R+1.5,LK_TUN*2-4,2.5); ctx.fillRect(-LK_TUN+2,R-4,LK_TUN*2-4,2.5);
-    ctx.restore();
-    var fa=lkFanAng(m);                                            // four sails over the doorway
-    for(var s2=0;s2<4;s2++){ var a2=fa+s2*Math.PI/2;
+    ctx.arc(-1.8,-2,5.6,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(34,26,18,0.45)'; ctx.lineWidth=1;
+    for(var by=-6;by<8;by+=4){ var bw=Math.sqrt(Math.max(0,64-by*by));
+    ctx.beginPath(); ctx.moveTo(-bw,by+0.5); ctx.lineTo(bw,by+0.5); ctx.stroke(); }
+    for(var sp=0;sp<4;sp++){ var a2=fa+sp*Math.PI/2;
     ctx.save(); ctx.rotate(a2);
-    var s0=LK_HUB*0.55, sl=R-s0-0.5;
-    ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.fillRect(s0+1.2,-2.6,sl,5.2);   // sail shadow on the roof
-    ctx.fillStyle=(ml||shut)?'#ffe9b0':'#faf6ea';                          // canvas
-    ctx.fillRect(s0,-3,sl,6);
-    ctx.fillStyle='rgba(120,92,58,0.75)';                                  // lattice: spar + slats
-    ctx.fillRect(s0,-0.6,sl,1.2);
-    for(var sv=s0+3;sv<s0+sl-1;sv+=4) ctx.fillRect(sv,-3,1,6);
-    ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fillRect(s0,-3,sl,1);
-    ctx.fillStyle='#d64b3a'; ctx.fillRect(s0+sl-3.5,-3,3.5,6);             // red tip
+    var s0=LK_HUB_R+0.5, sl=LK_SAIL_L-s0;
+    ctx.fillStyle='rgba(12,34,16,0.34)';                            // sail shadow on the grass
+    ctx.fillRect(s0+1.6,-LK_SAIL_H+2,sl,LK_SAIL_H*2);
+    ctx.fillStyle=ml?'#ffe9b0':'#faf6ea';                           // canvas
+    ctx.fillRect(s0,-LK_SAIL_H,sl,LK_SAIL_H*2);
+    ctx.fillStyle='rgba(120,92,58,0.8)';                            // lattice: spar + slats
+    ctx.fillRect(s0,-0.7,sl,1.4);
+    for(var sv=s0+3;sv<s0+sl-1;sv+=4) ctx.fillRect(sv,-LK_SAIL_H,1,LK_SAIL_H*2);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fillRect(s0,-LK_SAIL_H,sl,1);
+    ctx.fillStyle='#d64b3a'; ctx.fillRect(s0+sl-3.5,-LK_SAIL_H,3.5,LK_SAIL_H*2);   // red tip
     ctx.restore(); }
-    ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.beginPath();
-    ctx.arc(0,1.2,LK_HUB*0.62,0,6.283); ctx.fill();
-    ctx.fillStyle=ml?'#ffe07a':'#6d5c4c'; ctx.beginPath();         // hub
-    ctx.arc(0,0,LK_HUB*0.6,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.beginPath();
-    ctx.arc(-1,-1,LK_HUB*0.3,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(10,28,14,0.4)'; ctx.beginPath();
+    ctx.arc(0,1.6,LK_HUB_R+1,0,6.283); ctx.fill();
+    ctx.fillStyle=ml?'#ffe07a':'#6d5c4c'; ctx.beginPath();          // the post they turn on
+    ctx.arc(0,0,LK_HUB_R,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.beginPath();
+    ctx.arc(-0.9,-0.9,LK_HUB_R*0.45,0,6.283); ctx.fill();
     ctx.restore(); } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;

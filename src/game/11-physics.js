@@ -1209,11 +1209,11 @@
     if(best) return {x:best.x,y:best.y,kind:'racket'};
     return null; }
     // LINKS (THE LINKS, Season 3) — a minigolf row straight across midfield:
-    //     WINDMILL  BUNKER   [ THE GREEN ]   BUNKER  WINDMILL
+    //       FAN     BUNKER   [ THE GREEN ]   BUNKER     FAN
     // Every time the ball has to cross, the player picks a route, and each one costs something
     // different. Nothing here is a wall you cannot beat; the choice is the hazard.
-    //   WINDMILL (one built into each wall) — a stone round-house with a tunnel straight through it.
-    //            Free passage and it spits the ball out dead straight, but the mouth is narrow.
+    //   FAN      (one on each flank) — four sails sweeping open ground. Always crossable; what a
+    //            blade takes is your LINE and your pace, so the flank is fast but imprecise.
     //   BUNKER   (either side of the green) — sand. Not a blocker: it multiplies drag, so a near-full
     //            flick still ploughs through and a chip flies over, while anything softer dies in it
     //            and needs a real swing just to climb out.
@@ -1221,16 +1221,29 @@
     //            to REST on the mown apron gets a POWERED next flick, which is what lets you drive
     //            clean over a bunker or the length of the pitch.
     // ADDITIVE by difficulty — nothing gets faster or stronger, a hazard is ADDED:
-    //   EASY: the row as above with the sails STOPPED. Both tunnels are permanently open.
-    //   MED : the SAILS TURN. A sail across a doorway shuts it and swats a mistimed entry straight
-    //         back out, so the tunnel has to be timed. Both mills turn mirrored but in phase, so
-    //         neither side ever has the easier route.
-    //   HARD: + the CUP goes live. A ball that dies in the hole is dropped back where the flick was
-    //         struck — a penalty stroke. The green stops being a free reward and becomes the one
-    //         place you must not stop.
+    //   EASY: bunkers and the green. Two priced routes, and the flanks wide open.
+    //   MED : + the FANS. Four sails sweep each flank; meet one and it shoves the ball off its line.
+    //   HARD: + the CUP opens, and the pin is pulled so the hole can actually be holed.
+    //
+    // The mills were first built as round-houses with a tunnel THROUGH them, and that was wrong: an
+    // 18px doorway leaves an 8px corridor for the ball's centre, so getting in was a precision shot
+    // rather than a choice, and the flank stopped being a route anybody would take. The building is
+    // gone; only the sails remain, and they deflect rather than block (see the fan block in
+    // stepPhysics for why a rotating cross cannot be a gate at this ball size).
     var lkOn=false, lkT=0, lkArm=false, lkPinFree=false, lkBoost=false, lkPx=0, lkPy=0;
     var lkMills=[], lkBunkers=[], lkFanOn=false, lkCupOn=false, lkCupFlash=0, lkPinFlash=0;
-    var LK_MILL_R=24, LK_TUN=9, LK_HUB=8, LK_FAN=300, LK_BLADE=0.30;
+    /* THE FANS. A rotating cross cannot sit in the middle of a route: the clear arc between two blades
+       90 apart is (pi/2)*r wide and the ball plus blade eat 16px of it, so at r=12 there are under 3px
+       of daylight. Swept over every crossing x and every fan phase, a centred fan let a crossing
+       through 0% of the time — and in-engine it measured 0/24 whether a blade blocked the ball or only
+       shoved it. So the fan is MOUNTED ON THE SIDELINE, part of it behind the wall, leaving a real lane
+       between its reach and the bunker: 24px of it, see lkLaneX/lkLaneW. */
+    /* LK_BAT is a velocity impulse, and on a rolling ball an impulse buys a LOT of travel: with
+       FRICTION=0.984 a sideways kick of dv drifts roughly dv/(1-0.984) = 62*dv px before it dies. At
+       2.2 that measured as 80px of drift — a catapult across the pitch, not a knock. 0.5 is about 30px:
+       enough to lose a line and a scoring angle, not enough to lose the ball. */
+    var LK_SAIL_L=17, LK_SAIL_H=2.5, LK_HUB_R=3.5, LK_FAN=300, LK_BAT=0.5, LK_BAT_MIN=1.5;
+    var LK_MILL_X=WALL+8;
     var LK_BUN_RX=12, LK_BUN_RY=10, LK_BUN_X=73;
     /* LK_SAND: extra per-frame drag inside a bunker. With FRICTION=0.984 the combined factor is
        0.689, so a ball rolls v*2.21 px before it dies. A bunker is 2*LK_BUN_RY=20px deep, so a
@@ -1238,32 +1251,46 @@
        middle it is 10px to the edge, so climbing out needs about half power. Drag only ever REMOVES
        speed, so sand can never stop the ball settling and the turn ending. */
     var LK_SAND=0.70;
-    /* LK_CUP is the hole's claim radius and LK_POST the pin's collision radius. The ball is COIN_R=5,
-       so it can never get closer than LK_POST+COIN_R=8 to the pin — the cup has to be wider than that
-       or it could never be holed. LK_APRON leaves an 8px ring of green outside the cup that still
-       pays the boost, so hard does not simply delete the reward. */
-    var LK_APRON=18, LK_POST=3, LK_CUP=10, LK_CUP_V=1.6, LK_BOOST=1.35;
+    /* THE PIN AND THE CUP, and why they cannot both be solid.
+       LK_POST is the pin's collision radius, so with COIN_R=5 the ball's centre can never come closer
+       than 8px to it. A cup has to be WIDER than that to be reachable at all — which is how the first
+       cut ended up claiming any ball that merely came to rest leaning on the pin, i.e. punishing every
+       ordinary trip through the middle. That is not a hole, it is a trap around a post.
+       So on hard the PIN IS PULLED (lkPinSolid=false — exactly what a golfer does before a long putt)
+       and the cup is a genuine 7px target the ball rolls right over unless it is dying. On easy and
+       medium there is no cup and the pin stays solid, so the middle still costs something. */
+    var lkPinSolid=true;
+    var LK_APRON=18, LK_POST=3, LK_CUP=7, LK_CUP_V=1.4, LK_BOOST=1.35;
     function initLinks(){ var t=hzTier();
     lkOn=true; lkT=0; lkArm=false; lkPinFree=false; lkBoost=false;
     lkCupFlash=0; lkPinFlash=0;
-    lkFanOn=(t>=1); lkCupOn=(t>=2);
-    lkMills=[{x:WALL+LK_MILL_R,y:H/2,dir:1,flash:0},{x:W-WALL-LK_MILL_R,y:H/2,dir:-1,flash:0}];
-    lkBunkers=[{x:LK_BUN_X,y:H/2,rx:LK_BUN_RX,ry:LK_BUN_RY},{x:W-LK_BUN_X,y:H/2,rx:LK_BUN_RX,ry:LK_BUN_RY}];
+    lkFanOn=(t>=1); lkCupOn=(t>=2); lkPinSolid=!lkCupOn;
+    lkMills=lkFanOn?[{x:LK_MILL_X,y:H/2,dir:1,flash:0,cd:0},{x:W-LK_MILL_X,y:H/2,dir:-1,flash:0,cd:0}]:[];
+    lkBunkers=[];
+    for(var bs=-1;bs<=1;bs+=2){ var wob=[];
+    // A bunker is dug, not stamped: each one gets a wobbled outline so it does not read as a pasted
+    // ellipse. The SAME wobble drives lkSandAt and the drawing, so the sand you can see is exactly the
+    // sand that drags — an ellipse for physics and a wobble for looks would be a lie to the player.
+    for(var wi=0;wi<12;wi++) wob.push(0.9+Math.random()*0.2);
+    lkBunkers.push({x:(bs<0)?LK_BUN_X:(W-LK_BUN_X),y:H/2,rx:LK_BUN_RX,ry:LK_BUN_RY,w:wob}); }
     lkPx=(typeof coin!=='undefined'&&coin)?coin.x:W/2;
     lkPy=(typeof coin!=='undefined'&&coin)?coin.y:H/2; }
-    function _lkWrap(a){ a=(a+Math.PI)%(Math.PI*2); if(a<0) a+=Math.PI*2; return a-Math.PI; }
-    function lkFanAng(m){ return lkFanOn?((lkT/LK_FAN)*Math.PI*2*m.dir):(0.62*m.dir); }
-    // The tunnel runs along y, so a sail shuts the doorway when it points up or down. Testing all four
-    // arms against +90 covers -90 too, because the arm opposite is 180 away. Duty comes out at
-    // 2*LK_BLADE/(pi/2) = 38%: about 0.5s shut then 0.8s open, slow enough to read off the sails.
-    function lkDoorShut(m){ if(!lkFanOn) return false;
-    var a=lkFanAng(m);
-    for(var i=0;i<4;i++){ if(Math.abs(_lkWrap(a+i*Math.PI/2-Math.PI/2))<LK_BLADE) return true; }
-    return false; }
-    function lkInTun(m,x,slack){ return Math.abs(x-m.x)<=LK_TUN-(slack||0); }
+    function lkFanAng(m){ return (lkT/LK_FAN)*Math.PI*2*m.dir; }
+    /* The lane between the fan's reach and the bunker. 24px of ground for a 10px ball leaves a 14px
+       window for its centre — wider than CENTRE COURT's side lanes, which play fine. This is the route
+       the flank is FOR; the fan only punishes a shot that strays onto the sideline, which is normally
+       the safest rail in the game. */
+    function lkLaneX(side){ var edge=LK_MILL_X+LK_SAIL_L, bun=LK_BUN_X-LK_BUN_RX;
+    return (side<0)?((edge+bun)/2):(W-(edge+bun)/2); }
+    function lkLaneW(){ return (LK_BUN_X-LK_BUN_RX)-(LK_MILL_X+LK_SAIL_L); }
+    // the bunker's outline radius at an angle, smoothstepped between wobble points so it has no corners
+    function lkWob(b,a){ if(!b.w||!b.w.length) return 1;
+    var n=b.w.length, t=(((a/(Math.PI*2))%1)+1)%1*n, i=Math.floor(t), f=t-i;
+    var v0=b.w[i%n], v1=b.w[(i+1)%n];
+    return v0+(v1-v0)*(f*f*(3-2*f)); }
     function lkSandAt(x,y){ for(var i=0;i<lkBunkers.length;i++){ var b=lkBunkers[i];
-    var dx=(x-b.x)/b.rx, dy=(y-b.y)/b.ry;
-    if(dx*dx+dy*dy<=1) return b; } return null; }
+    var dx=(x-b.x)/b.rx, dy=(y-b.y)/b.ry, k=lkWob(b,Math.atan2(dy,dx));
+    if(dx*dx+dy*dy<=k*k) return b; } return null; }
     // the lie under a point: 'cup' | 'green' | 'sand' | 'grass'
     function lkLie(x,y){ if(!lkOn) return 'grass';
     var d=Math.hypot(x-W/2,y-H/2);
@@ -1304,8 +1331,9 @@
     var mid=H/2, gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
     if((coin.y-mid)*(gy-mid)>=0) return null;            // already past the row
     if(Math.abs(mid-coin.y)<10) return null;             // sitting in it: nothing to thread
-    var gaps=[{x:W/2-(LK_POST+COIN_R+4),k:'green'},{x:W/2+(LK_POST+COIN_R+4),k:'green'}];
-    for(var i=0;i<lkMills.length;i++){ if(!lkDoorShut(lkMills[i])) gaps.push({x:lkMills[i].x,k:'tunnel'}); }
+    var gaps=lkPinSolid?[{x:W/2-(LK_POST+COIN_R+4),k:'green'},{x:W/2+(LK_POST+COIN_R+4),k:'green'}]
+                       :[{x:W/2,k:'green'}];      // pin pulled: the middle of the green is clear
+    gaps.push({x:lkLaneX(-1),k:'lane'}); gaps.push({x:lkLaneX(1),k:'lane'});
     gaps.sort(function(a,b){ return Math.abs(a.x-coin.x)-Math.abs(b.x-coin.x); });
     var g=gaps[0], s=(gy-coin.y)/(mid-coin.y);
     var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(g.x-coin.x)*s));
@@ -2184,9 +2212,10 @@
       // it crosses. See LK_SAND for the numbers. Never touches an airborne ball: a chip flies over.
       if(_lgrd&&_lsp>0.01&&lkSandAt(coin.x,coin.y)){ coin.vx*=LK_SAND;
       coin.vy*=LK_SAND; }
-      // THE FLAGSTICK: a hard post guarding the green behind it. Solid only once the ball has been
-      // outside the cup (see above), so a ball sitting on the centre spot is never shoved off it.
-      if(_lgrd&&lkPinFree&&_lpd<LK_POST+COIN_R){ var _pmn=LK_POST+COIN_R;
+      // THE FLAGSTICK: a hard post guarding the green behind it, so the middle is not a free lane.
+      // Solid only once the ball has been outside the cup (see above), so a ball sitting on the centre
+      // spot is never shoved off it — and not solid at all on hard, where the pin has been pulled.
+      if(_lgrd&&lkPinSolid&&lkPinFree&&_lpd<LK_POST+COIN_R){ var _pmn=LK_POST+COIN_R;
       var _pux=(_lpd>0.001)?(coin.x-W/2)/_lpd:0, _puy=(_lpd>0.001)?(coin.y-H/2)/_lpd:1;
       coin.x=W/2+_pux*_pmn; coin.y=H/2+_puy*_pmn;
       var _pdot=coin.vx*_pux+coin.vy*_puy;
@@ -2211,28 +2240,37 @@
       try{ shake=Math.max(shake||0,4); }catch(e){} }
       // (THE GREEN's boost is decided in linksTick — it is a property of where the ball comes to REST,
       // and this function has already returned by then.)
-      // WINDMILLS: solid stone everywhere but the tunnel straight through the middle. MED+ a sail
-      // across a doorway shuts it and swats a mistimed entry back out the way it came; once the ball
-      // is past the sails (inside LK_HUB) it is committed and goes through.
-      if(_lgrd){ for(var _lmi=0;_lmi<lkMills.length;_lmi++){ var _lm=lkMills[_lmi];
-      var _mdx=coin.x-_lm.x, _mdy=coin.y-_lm.y, _mmn=LK_MILL_R+COIN_R;
-      if(Math.hypot(_mdx,_mdy)>=_mmn) continue;
-      var _mtun=lkInTun(_lm,coin.x,COIN_R*0.4), _mmouth=(Math.abs(_mdy)>LK_HUB);
-      if(_mtun&&!(lkDoorShut(_lm)&&_mmouth)){
-      coin.x+=(_lm.x-coin.x)*0.22; coin.vx*=0.80;   // rail it to the middle of the archway
-      continue; }
-      if(_mtun){ var _msg=(_mdy>=0?1:-1);           // swatted by a sail: ejected clear of the doorway
-      coin.y=_lm.y+_msg*_mmn; coin.vy=_msg*Math.abs(coin.vy)*0.55;
-      coin.vx*=0.6; _lm.flash=16;
+      // THE FANS (MED+): four sails sweeping open ground on each flank.
+      //
+      // A sail DEFLECTS, it does not block, and that is the whole design. Worked out on paper first:
+      // the clear arc between two blades 90 apart is only (pi/2)*r wide, and the ball plus the blade
+      // eat 16px of it, so at r=12 there are under 3px of daylight. A rotating cross the width of the
+      // flank is therefore a WALL at this ball size, not a timing test — swept over every crossing x
+      // and every fan phase, a straight crossing got through 0% of the time. Paddles with an open
+      // middle only reached 6-21%. That is worse than the round-house it replaced.
+      // So a blade hit is an IMPULSE, never a collision: no reflection and no push-out, which means
+      // the ball's forward speed survives and the flank is always crossable. What the fan takes is
+      // your LINE (a shove along the sail's sweep) and your PACE. One strike per pass via a cooldown,
+      // and nothing below LK_BAT_MIN is touched at all, so a dying ball always settles and the turn
+      // always ends.
+      if(_lgrd&&moving&&_lsp>LK_BAT_MIN){ for(var _lmi=0;_lmi<lkMills.length;_lmi++){ var _lm=lkMills[_lmi];
+      if(_lm.cd>0){ _lm.cd--; continue; }
+      var _mdx=coin.x-_lm.x, _mdy=coin.y-_lm.y;
+      if(Math.hypot(_mdx,_mdy)>LK_SAIL_L+COIN_R) continue;
+      var _fa=lkFanAng(_lm);
+      for(var _bk=0;_bk<4;_bk++){ var _ba=_fa+_bk*Math.PI/2;
+      var _ct=Math.cos(_ba), _st=Math.sin(_ba);
+      var _al=_mdx*_ct+_mdy*_st, _pp=-_mdx*_st+_mdy*_ct;
+      if(_al<=LK_HUB_R||_al>=LK_SAIL_L) continue;
+      if(Math.abs(_pp)>=LK_SAIL_H+COIN_R) continue;
+      var _sw=(_lm.dir>0?1:-1);                     // shoved the way the sail is travelling
+      coin.vx+=-_st*_sw*LK_BAT; coin.vy+=_ct*_sw*LK_BAT;
+      coin.vx*=0.88; coin.vy*=0.88;                 // and it costs pace
+      _lm.cd=20; _lm.flash=14;
       try{ if(typeof sfxBump==='function') sfxBump(6); }catch(e){}
       try{ spawnSparks(coin.x,coin.y,current,8,true); }catch(e){}
-      try{ shake=Math.max(shake||0,3); }catch(e){} continue; }
-      var _md=Math.hypot(_mdx,_mdy)||0.001, _mux=_mdx/_md, _muy=_mdy/_md;
-      coin.x=_lm.x+_mux*_mmn; coin.y=_lm.y+_muy*_mmn;
-      var _mdot=coin.vx*_mux+coin.vy*_muy;
-      if(_mdot<0){ coin.vx-=1.75*_mdot*_mux;
-      coin.vy-=1.75*_mdot*_muy; _lm.flash=10;
-      try{ if(typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
+      try{ shake=Math.max(shake||0,3); }catch(e){}
+      break; } } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];

@@ -726,7 +726,7 @@
       if(typeof lkMills!=='undefined'&&lkMills) lkMills.length=0;
       if(typeof lkBunkers!=='undefined'&&lkBunkers) lkBunkers.length=0;
       lkOn=false; lkT=0; lkFanOn=false; lkCupOn=false;
-      lkArm=false; lkPinFree=false; lkBoost=false;
+      lkArm=false; lkPinFree=false; lkBoost=false; lkPinSolid=true;
       lkCupFlash=0; lkPinFlash=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
