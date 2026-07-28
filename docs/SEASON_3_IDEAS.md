@@ -129,9 +129,13 @@ a goal if the ball went through something first.
   the approach actually arrives. The net hangs on the goal side (the ball drops through
   and out toward the goal) with the backboard beyond it.
 - Dashed **lane dividers** fan out of the goal mouth between the hoops, so each hoop
-  owns a visible slice of the box. The court also drops its goal-mouth line and the
-  goal-side edge of the painted key — both sat on the goal line and read as a stray
-  white line behind the net. All three are cosmetic; physics is untouched.
+  owns a visible slice of the box.
+- The "white line behind the net" was three cosmetic markings stacked on the goal
+  line: the goal-mouth line, the goal-side edge of the painted key, and — the real
+  culprit — the penalty and 6-yard boxes, which `drawEndMarks` closes with
+  `strokeRect` and double-strokes. On the court all three are dropped and the boxes
+  are drawn three-sided, genuinely "open to goal" as that function's comment intends.
+  Cosmetic only; physics untouched, and other pitches keep their markings.
 - **The AI aims through them** (`bkAimTarget` + the shot branch in `09-ai.js`): it picks
   the hoop closest to its natural line at goal — wing hoop from the wing, centre hoop
   from central — and tightens its spread to the hoop mouth. Without this the CPU keeps

@@ -434,10 +434,21 @@
       const spotY = top ? gLine+Math.round(r.h*0.62) : gLine-Math.round(r.h*0.62);
       const arcR=12;
       // double-stroke so the lines stay solid where they cross the dark goal net
+      // The boxes are meant to be "open to goal", but strokeRect closes them, leaving an edge lying
+      // along the goal line — double-stroked, so on the hardwood it read as a white band strung
+      // behind the net. There, draw them three-sided and leave the goal line clear.
+      const _openEnd=((typeof boardKey!=='undefined')&&boardKey==='court');
+      const _box3=(bx,bw,near,depth)=>{ const y0=near+(top?depth:-depth);
+      g.beginPath(); g.moveTo(bx+0.5,near); g.lineTo(bx+0.5,y0+0.5);
+      g.lineTo(bx+bw+0.5,y0+0.5); g.lineTo(bx+bw+0.5,near); g.stroke(); };
       for(let pass=0;pass<2;pass++){
         g.strokeStyle=board.line;
+        if(_openEnd){ _box3(Math.round(r.x), Math.round(r.w), Math.round(gLine), Math.round(boxH));
+        _box3(Math.round(bl), Math.round(gbW), Math.round(gLine), Math.round(gbD));
+        } else {
         g.strokeRect(Math.round(r.x)+0.5, Math.round(boxY)+0.5, Math.round(r.w), Math.round(boxH));           // penalty box
         g.strokeRect(Math.round(bl)+0.5, Math.round(Math.min(gLine,bfar))+0.5, Math.round(gbW), Math.round(gbD)); // 6-yard box
+        }
         g.beginPath(); if(top) g.arc(cx,far,arcR,0,Math.PI); else g.arc(cx,far,arcR,Math.PI,2*Math.PI); g.stroke(); // arc
         g.fillStyle=board.line; g.fillRect(Math.round(cx)-1,Math.round(spotY)-1,2,2);                          // penalty spot
       }

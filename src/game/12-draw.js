@@ -505,9 +505,9 @@
     ctx.strokeStyle='rgba(255,252,242,0.52)'; ctx.lineWidth=1.2;
     ctx.setLineDash([4,3]);
     for(var ei=0;ei<2;ei++){ var gy=ei?H-NET_DEPTH:NET_DEPTH, into=ei?-1:1;
-    for(var di=-1;di<=1;di+=2){ var a=0.365*di*into;
+    for(var di=-1;di<=1;di+=2){ var a=0.5*di*into;
     var sx2=W/2-Math.sin(a)*9*into, sy2=gy+Math.cos(a)*9*into;
-    var ex=W/2-Math.sin(a)*42*into, ey=gy+Math.cos(a)*42*into;
+    var ex=W/2-Math.sin(a)*44*into, ey=gy+Math.cos(a)*44*into;
     ctx.beginPath(); ctx.moveTo(sx2,sy2); ctx.lineTo(ex,ey); ctx.stroke(); } }
     ctx.setLineDash([]); ctx.restore(); }
     // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the

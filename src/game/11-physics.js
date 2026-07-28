@@ -1081,7 +1081,7 @@
     function bkSpawnRims(){ bkRims=[];
     if(!bkRimOn) return;
     var ends=[{team:'red',gy:NET_DEPTH,into:1},{team:'blue',gy:H-NET_DEPTH,into:-1}];
-    var R=25, angs=[-0.73,0,0.73];
+    var R=27, angs=[-1.0,0,1.0];   /* wide enough that the three hoops stand clearly apart */
     for(var e=0;e<ends.length;e++){ var en=ends[e], gx=W/2, gy=en.gy;
     for(var s=0;s<angs.length;s++){ var a=angs[s]*en.into;
     var px=gx-Math.sin(a)*R*en.into, py=gy+Math.cos(a)*R*en.into;
