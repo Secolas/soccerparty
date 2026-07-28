@@ -203,69 +203,65 @@ cannot be beaten along the ground, paired with the launcher that beats it.
 - **Cut:** tramlines (flank speed lanes) and ball-kids. The painted tramlines stay as court
   markings; they no longer do anything.
 
-### 4. ⛳ CRAZY GOLF — "MINIGOLF" (medium, ~d4) — BUILT
+### 4. ⛳ CRAZY GOLF — "MINIGOLF" (medium, ~d4) — IN PROGRESS
 
-**Fantasy:** a minigolf course, where the furniture is **on your side**.
-
-*New mechanic:* **help, not hazard.** This is the one arena whose props exist to make shots *possible*
-rather than to make them harder — and that is not a soft option, it is the correct reading of minigolf.
-On a real course the banked rail is how you score; you aim *at* the bank. The windmill is the only
-"wait for the gap" element on a whole course, and it is the dullest hole on it.
+**Fantasy:** a minigolf course. *New mechanic:* **things you aim at.**
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
-| **Bank rails** (corners + funnels) | on | ″ | ″ |
-| **Windmill launchers** | OFF | **on** — a sail throws the ball harder than a flick | ″ |
-| **Cups** (hole out for a free shot) | OFF | OFF | **on** |
+| **Windmill launchers** | on | ″ | ″ |
+| *(open slot — obstacle being designed)* | — | ? | ? |
+| **Cups** (hole out → one more flick) | OFF | OFF | **on** |
 
-**The furniture**
+- **Windmill launchers** — two mills at midfield. A sail meeting a moving ball throws it along the sweep
+  at `CG_LAUNCH`, and it never blocks or pushes back. Measured: 16/18 launched at a peak of 13.3 against
+  a `FLICK_MAX` of 10, 2/18 rolled through untouched for free, and of the launches 12 went goalward to 4
+  back. So even an unread arrival beats even money, and reading the sails is what makes it a tool.
+- **Cups** — hole out and you get **one more flick, played from the hole**. Measured 6/6 paid, turn kept
+  6/6, ball left in the hole 6/6. A firm putt skips the lip 6/6. A cup is live only for the side
+  attacking that end, so putting into the wrong one paid 0/5. `cgBonus` caps it at one per possession:
+  without it, an extra flick played from inside the hole could drop straight back in and hand out turns
+  for ever — verified at 0/6.
 
-- **Corner banks** — a 45° timber chamfer across each corner. A ball running up a side wall used to die
-  in the corner; now it leaves along the **end** wall. Traced in-engine: a shot up the left wall arrives
-  at `(26,46)` travelling `v=(6.0, 0.0)` and runs clean across the face of the goal at x = 66 → 181
-  before the far corner keeps it alive again. 6/6 turned, median sideways speed 6.0. That is a genuinely
-  new attacking shot, made out of dead space.
-- **Funnel rails** — a rail just **outside** each post, angled to turn a missed wing shot back across the
-  mouth. They sit outside the posts *by construction*, so they can never block a shot that was on
-  target — they only ever act on one that had already missed. 6/6 wing shots turned back inside the near
-  post.
-- **Windmill launchers (med)** — two mills at midfield. A sail meeting a moving ball throws it along the
-  sweep at `CG_LAUNCH`, and it never blocks or pushes back. 17/18 launched at a peak of 13.3 against a
-  `FLICK_MAX` of 10, 1/18 rolled through untouched for free, and of the launches 12 went goalward to 5
-  back — so even an unread arrival is better than even, and reading the sails is what makes it a tool.
-- **Cups (hard)** — hole out and you keep the turn and get a **free shot from the penalty spot**. 6/6
-  holed and 6/6 paid out at the spot; a firm putt skips the lip 6/6; and a cup is live only for the side
-  attacking that end, so putting into the wrong cup paid out 0/5. Missing costs nothing — you roll past.
+**Three things have now been cut, and the pattern in them is the useful part.**
 
-**Why the fence had to go.** Three passes at THE LINKS all failed for one reason: a row of obstacles
-laid **across** midfield is a fence, and this pitch already has ten player pegs and a keeper on it.
-Things-in-the-way is the one thing it is not short of. Every piece of feedback — the tunnel is hard to
-get into, the cup punishes an ordinary trip up the middle, the sand looks bolted on — was a symptom of
-the same thing, so a fourth round of tuning could not have fixed it. Two ideas from the wreckage were
-worth keeping, both **inverted**: the windmill became a launcher instead of a gate, and the cup became a
-payout instead of a penalty.
+1. *The fence* (windmill/bunker/green/bunker/windmill across midfield). A row of obstacles across
+   midfield is a fence, and this pitch already has ten player pegs and a keeper on it — things-in-the-way
+   is the one thing it is not short of.
+2. *The punishing cup* (a ball that died in the hole was dropped back where it was struck). Ordinary play
+   through the middle got punished for it.
+3. *The springy bank rails* (corner chamfers and funnels outside the posts). These measured perfectly —
+   6/6 corner turns, 6/6 missed wing shots turned back inside the near post — and were still wrong. **A
+   deflector is a deflector.** The ball ends up where the geometry chose rather than where the player
+   chose, which is the same complaint the fence earned in a friendlier costume.
 
-The rotating-cross arithmetic is worth keeping written down, because it is what makes the launcher work:
-the clear arc between two blades 90° apart is (π/2)·r wide and the ball plus the blade eat 16px of it,
-so at r=12 there are under 3px of daylight. A four-sail mill therefore **cannot** be a gate at this ball
-size — measured, a crossing got through 0% of the time. The same density that made it useless as a gate
-makes it reliable as a **bat**: roll in and you are nearly always caught, so timing does not decide
-*whether* you are hit, it decides *which way* you are thrown.
+So the bar for anything added here: **the player must aim at it on purpose, and get back what they aimed
+for.** Bouncing off it, being redirected by it, or being punished by it all fail that bar. A launcher
+passes (you aim at the mill and choose your moment). A cup passes (you aim at a 7px target and get paid).
 
-**AI.** The rails need no AI at all — they help whoever banks off them, which is the whole dividend of
-building help instead of hazards. Only two things needed teaching: a live cup within 58px is worth a turn
-(it pays a free shot), and a mill sitting on the line to goal is a coin flip the CPU cannot time, so it
-aims past the edge. The cup putt needs a soft flick, and since the roll here is v/(1−FRICTION) = 62.5·v,
-the speed that dies on the hole is dist/62.5 — far under the CPU's usual 5.0 speed floor, so the plan
-carries `soft:true` and `aiFlick` lowers the floor for it.
+**Obstacle candidates for the open slot** — all classic minigolf, all aim-at rather than bounce-off:
 
-*Test affordance:* `window.__spSim.probe()` / `.put()` on the `?sim=1` hook. Whether a rail turned the
-ball back into play, or a sail launched it, cannot be told apart from the pixels. Three harness lessons,
-each of which reported a **working** feature as dead before being fixed: poll every frame, because a
-launch lasts about five frames and a 33ms cadence sampled either side of it; jitter the interval, because
-a fixed cadence aliases against a rotating hazard; and put the order-sensitive checks first, because a
-13.5 launch scores goals and the match state moves on underneath you. When an aggregate reads exactly
-zero, trace one shot before believing it.
+| Obstacle | Mechanic | Fits? |
+|---|---|---|
+| **Pipe / tunnel** | enter one mouth, pop out the other, keeping pace — a shortcut up the pitch | Strong. Precision reward, missing costs nothing |
+| **Loop-the-loop** | a speed gate: enough pace and it carries you round and spits you out fast; too soft and you come back out | Strong. A pure power test, and the counterplay is obvious |
+| **Ramp / hump** | the ball goes airborne over it — a chip you did not pay for, useful for clearing player pegs | Strong, and it reuses `coin.air`. Note an airborne ball skips ALL nail collisions including the keeper, and an airborne shot at goal is rejected, so it is a positioning tool not a scoring one |
+| **Bell / target** | strike a standing target for a bonus — the same payout family as the cup | Good, pairs with the hole-out rule |
+| **Turntable** | roll on and it carries you round, releasing you on a new heading with pace intact | Interesting but close to a deflector |
+| **Volcano / mound** | ball rolls off the peak away from centre | Fails the bar — pure deflector |
+| **Water hazard** | in the water, replay the stroke | Fails the bar — it is the punishing cup again |
+
+**AI.** The CPU learns that a live cup within 58px is worth a turn, and that a mill on its line to goal is
+a coin flip it cannot time, so it aims past the edge. A cup putt needs a soft flick, and since the roll
+here is v/(1−FRICTION) = 62.5·v, the speed that dies on the hole is dist/62.5 — far under the CPU's usual
+5.0 floor, so the plan carries `soft:true` and `aiFlick` lowers the floor for it.
+
+*Test affordance:* `window.__spSim.probe()` / `.put()` on the `?sim=1` hook. Three harness lessons, each
+of which reported a **working** feature as dead before being fixed: poll every frame, because a launch
+lasts about five frames and a 33ms cadence sampled either side of it; jitter the interval, because a
+fixed cadence aliases against a rotating hazard; and run order-sensitive checks first, because a 13.5
+launch scores goals and the match state moves on underneath you. When an aggregate reads exactly zero,
+trace one shot before believing it.
 
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
 

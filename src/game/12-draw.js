@@ -522,25 +522,10 @@
     ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
     var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
     } ctx.restore(); } }
-    // CRAZY GOLF: timber bank rails, windmill launchers, and the cups. Drawn ABOVE the pitch markings
-    // like the other S3 props — the goal-box lines run straight through the funnel rails and the cups
-    // sit on the corner arcs, and underneath they came out with white lines painted across them.
-    function drawMinigolf(ctx,now){ if(typeof cgRails==='undefined') return;
+    // CRAZY GOLF: windmill launchers and the cups. Drawn ABOVE the pitch markings like the other S3
+    // props — the cups sit on the corner arcs, and underneath they came out with lines across them.
+    function drawMinigolf(ctx,now){ if(typeof cgCups==='undefined') return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
-    for(var ri=0;ri<cgRails.length;ri++){ var r=cgRails[ri], rl=(r.flash>0);
-    ctx.save(); ctx.lineCap='round';
-    ctx.strokeStyle='rgba(10,40,18,0.38)'; ctx.lineWidth=CG_RAIL_R*2+2;   // the rail's shadow on turf
-    ctx.beginPath(); ctx.moveTo(r.x1,r.y1+1.6); ctx.lineTo(r.x2,r.y2+1.6); ctx.stroke();
-    ctx.strokeStyle=rl?'#ffdca0':'#8a5a2a'; ctx.lineWidth=CG_RAIL_R*2;    // timber
-    ctx.beginPath(); ctx.moveTo(r.x1,r.y1); ctx.lineTo(r.x2,r.y2); ctx.stroke();
-    ctx.strokeStyle=rl?'#fff6d8':'#c08a45'; ctx.lineWidth=CG_RAIL_R*0.9;  // lit top edge of the plank
-    ctx.beginPath(); ctx.moveTo(r.x1,r.y1-1); ctx.lineTo(r.x2,r.y2-1); ctx.stroke();
-    var gl=Math.hypot(r.x2-r.x1,r.y2-r.y1)||1, ux=(r.x2-r.x1)/gl, uy=(r.y2-r.y1)/gl;
-    ctx.strokeStyle='rgba(70,42,16,0.5)'; ctx.lineWidth=1;                // plank joints
-    for(var g2=6;g2<gl-2;g2+=7){ var jx=r.x1+ux*g2, jy=r.y1+uy*g2;
-    ctx.beginPath(); ctx.moveTo(jx-uy*CG_RAIL_R,jy+ux*CG_RAIL_R);
-    ctx.lineTo(jx+uy*CG_RAIL_R,jy-ux*CG_RAIL_R); ctx.stroke(); }
-    ctx.restore(); }
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
     ctx.save();
     if(live){ var pul=0.5+0.5*Math.sin((now||0)/240);                     // only the two you can use glow

@@ -548,10 +548,7 @@
         },
         preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
         for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
-        g.strokeStyle='#c08a45'; g.lineWidth=2;                         // a corner bank rail
-        g.beginPath(); g.moveTo(1,h*0.3); g.lineTo(w*0.24,1);
-        g.moveTo(w-1,h*0.3); g.lineTo(w-w*0.24,1); g.stroke();
-        g.fillStyle='#12240f'; g.beginPath();                           // and a cup
+        g.fillStyle='#12240f'; g.beginPath();                           // a cup
         g.arc(w*0.2,h*0.62,Math.max(2,h*0.075),0,Math.PI*2); g.fill();
         g.fillStyle='rgba(255,255,255,0.5)'; g.fillRect(w*0.2-0.5,h*0.62-h*0.2,1,h*0.2);
         g.fillStyle='#d64b3a'; g.beginPath(); g.moveTo(w*0.2,h*0.42);
@@ -726,11 +723,10 @@
       if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
       if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
       bkLastScore=-1;
-      if(typeof cgRails!=='undefined'&&cgRails) cgRails.length=0;
       if(typeof cgMills!=='undefined'&&cgMills) cgMills.length=0;
       if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
       cgOn=false; cgT=0; cgMillOn=false;
-      cgCupOn=false; cgRailFlash=0; cgHoled=null;
+      cgCupOn=false; cgHoled=null; cgBonus=false;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

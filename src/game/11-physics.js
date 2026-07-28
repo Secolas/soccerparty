@@ -1215,10 +1215,11 @@
     // already has ten player pegs and a keeper on it; things-in-the-way is the one thing it is not
     // short of. Real minigolf is the opposite: the banked rail is how you SCORE, not what stops you.
     // You aim at the bank. So every piece of furniture here either helps or is optional:
-    //   RAILS (easy)   — timber banks, and they sit only where a shot was already wasted: across the
-    //                    dead corners, and outside the posts where the shot has ALREADY missed. They
-    //                    can never take a goal away, only give one back. Springy, so a bank keeps pace.
-    //   MILLS (med)    — windmill LAUNCHERS. A sail meeting a moving ball throws it along the sweep at
+    // The springy bank rails that were here first are GONE. They worked exactly as measured, but a
+    // deflector is still a deflector: the ball ends up somewhere the geometry chose rather than
+    // somewhere the player did, which is the same complaint the fence earned. What is left, and what
+    // gets added, has to be something you AIM AT.
+    //   MILLS (easy+)  — windmill LAUNCHERS. A sail meeting a moving ball throws it along the sweep at
     //                    CG_LAUNCH, harder than any flick can. It never blocks and never pushes back,
     //                    so the worst case is being thrown somewhere you did not want. Measured, a ball
     //                    rolled into a mill is caught essentially every time (four sails cover the disc
@@ -1226,12 +1227,13 @@
     //                    as a GATE makes it reliable as a BAT). So the timing does not decide whether
     //                    you get hit, it decides WHICH WAY you are thrown: that is the read, and it is
     //                    legible because the sails are right there turning in front of you.
-    //   CUPS (hard)    — hole out and you get a free shot from the penalty spot. Pure upside: missing
-    //                    costs nothing at all, you just roll past. This is deliberately the inverse of
-    //                    the cup that got cut, which punished you for an ordinary trip up the middle.
-    var cgOn=false, cgT=0, cgRails=[], cgMills=[], cgCups=[], cgMillOn=false, cgCupOn=false;
-    var cgRailFlash=0, cgHoled=null;
-    var CG_RAIL_R=3, CG_CH=30, CG_BOUNCE=1.06, CG_FUNNEL=18;
+    //   CUPS (hard)    — hole out and you get ONE MORE FLICK, played from the hole. Pure upside: missing
+    //                    costs nothing at all, you just roll past. Deliberately the inverse of the cup
+    //                    that got cut, which punished an ordinary trip up the middle. The reward used to
+    //                    be a free shot from the penalty spot; an extra flick from where the ball
+    //                    actually lies is the same idea without teleporting the ball across the pitch.
+    var cgOn=false, cgT=0, cgMills=[], cgCups=[], cgMillOn=false, cgCupOn=false;
+    var cgHoled=null, cgBonus=false;
     /* CG_LAUNCH has to BEAT a flick or the mill is not a reward: FLICK_MAX is 10, and the first cut at 9.5
        measured as a peak of 9.3, i.e. slightly worse than just shooting. 13.5 is about a Cannon strike,
        which is the point — the mill is the one place you can out-hit your own thumb. */
@@ -1241,21 +1243,8 @@
        CG_CUP_V keeps it a skill target: a firm putt skips the lip, only a dying ball drops. */
     var CG_CUP=7, CG_CUP_V=2.6;
     function initMinigolf(){ var t=hzTier();
-    cgOn=true; cgT=0; cgRailFlash=0; cgHoled=null;
-    cgMillOn=(t>=1); cgCupOn=(t>=2);
-    cgRails=[];
-    // corner banks: a 45 chamfer across each corner. A ball running up a side wall leaves along the
-    // END wall instead of dying in the corner — straight across the face of the goal, past the keeper.
-    cgRails.push({x1:WALL,y1:WALL+CG_CH,x2:WALL+CG_CH,y2:WALL,kind:'corner',flash:0});
-    cgRails.push({x1:W-WALL,y1:WALL+CG_CH,x2:W-WALL-CG_CH,y2:WALL,kind:'corner',flash:0});
-    cgRails.push({x1:WALL,y1:H-WALL-CG_CH,x2:WALL+CG_CH,y2:H-WALL,kind:'corner',flash:0});
-    cgRails.push({x1:W-WALL,y1:H-WALL-CG_CH,x2:W-WALL-CG_CH,y2:H-WALL,kind:'corner',flash:0});
-    // funnels: a rail just OUTSIDE each post, angled so a wing shot that had already missed is turned
-    // back across the mouth. Outside the posts by construction, so they never block a shot on target.
-    var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), fo=3, fd=CG_FUNNEL;
-    for(var e=0;e<2;e++){ var ey=e?(H-NET_DEPTH-1):(NET_DEPTH+1), into=e?-1:1;
-    cgRails.push({x1:gL-fo,y1:ey,x2:gL-fo-fd,y2:ey+fd*into,kind:'funnel',flash:0});
-    cgRails.push({x1:gR+fo,y1:ey,x2:gR+fo+fd,y2:ey+fd*into,kind:'funnel',flash:0}); }
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false;
+    cgMillOn=true; cgCupOn=(t>=2);   /* the medium slot is open — see the doc, it is being designed */
     cgMills=cgMillOn?[{x:W/2-CG_MILL_X,y:H/2,dir:1,flash:0,cd:0},{x:W/2+CG_MILL_X,y:H/2,dir:-1,flash:0,cd:0}]:[];
     // cups sit in the corner pockets the chamfers feed, outside the goal box and clear of the rail
     cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
@@ -1266,12 +1255,10 @@
     function cgCupLive(cup){ return cup['for']===current; }
     function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
-    cgT++; if(cgRailFlash>0) cgRailFlash--;
-    for(var i=0;i<cgRails.length;i++){ if(cgRails[i].flash>0) cgRails[i].flash--; }
+    cgT++;
     for(var m=0;m<cgMills.length;m++){ if(cgMills[m].flash>0) cgMills[m].flash--; }
     for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; } }
-    /* What the CPU should do here. The rails need no AI at all — they help whoever hits them, which is
-       the point of building help instead of hazards. So there are only two things to teach:
+    /* What the CPU should do here. Two things to teach:
          - a live cup that is CLOSE is worth a turn, because the payoff is a free shot from the spot.
            It needs a soft flick (CG_CUP_V skips the lip), which is below the CPU's usual speed floor,
            so the plan carries soft:true and aiFlick lowers the floor for it.
@@ -2156,25 +2143,7 @@
       tnPrevY=coin.y;
       } if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
-      // RAILS: springy timber banks. Same segment maths as THE HARDWOOD's backboards, and the same
-      // reason — a bank that keeps its pace is a shot you can plan, not a dead end you avoid.
-      if(_ggr&&moving&&_gsp>0.5){ for(var _gri=0;_gri<cgRails.length;_gri++){ var _gr=cgRails[_gri];
-      var _rdx=_gr.x2-_gr.x1, _rdy=_gr.y2-_gr.y1, _rl2=_rdx*_rdx+_rdy*_rdy;
-      var _rt=_rl2?((coin.x-_gr.x1)*_rdx+(coin.y-_gr.y1)*_rdy)/_rl2:0;
-      _rt=Math.max(0,Math.min(1,_rt));
-      var _rqx=_gr.x1+_rdx*_rt, _rqy=_gr.y1+_rdy*_rt, _rd=Math.hypot(coin.x-_rqx,coin.y-_rqy);
-      if(_rd<COIN_R+CG_RAIL_R&&_rd>0){ var _rnx=-_rdy/Math.sqrt(_rl2), _rny=_rdx/Math.sqrt(_rl2);
-      if(coin.vx*_rnx+coin.vy*_rny>0){ _rnx=-_rnx; _rny=-_rny; }
-      var _rdot=coin.vx*_rnx+coin.vy*_rny;
-      coin.vx-=2*_rdot*_rnx; coin.vy-=2*_rdot*_rny;
-      coin.vx*=CG_BOUNCE; coin.vy*=CG_BOUNCE;
-      var _rp=(COIN_R+CG_RAIL_R)-_rd;
-      coin.x+=(coin.x-_rqx)/_rd*_rp; coin.y+=(coin.y-_rqy)/_rd*_rp;
-      _gr.flash=12; cgRailFlash=10;
-      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(_rqx,_rqy,current,7,true);
-      }catch(e){} break; } } }
-      // MILLS (MED+): a sail meeting a moving ball LAUNCHES it along the sweep, above what a flick can
+      // MILLS: a sail meeting a moving ball LAUNCHES it along the sweep, above what a flick can
       // reach. It never blocks and never pushes back, which is what makes this a tool rather than the
       // gate that failed. Which way you are thrown depends on which side of the hub you meet the sail,
       // so one mill serves both directions — read the sails and pick your moment.
@@ -2197,9 +2166,11 @@
       }catch(e){} try{ shake=Math.max(shake||0,4);
       }catch(e){} try{ nsKick(6); }catch(e){}
       break; } } }
-      // CUPS (HARD): hole out for a free shot from the spot. Claims only a DYING ball, so a firm putt
-      // skips the lip, and only in the end this side is attacking. Missing costs nothing.
-      if(cgCupOn&&_ggr&&!cgHoled&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ for(var _gci=0;_gci<cgCups.length;_gci++){ var _gc=cgCups[_gci];
+      // CUPS (HARD): hole out for ONE MORE FLICK. Claims only a DYING ball, so a firm putt skips the
+      // lip, and only in the end this side is attacking. Missing costs nothing.
+      // cgBonus caps it at one per possession: without that, an extra flick played from inside the hole
+      // could drop straight back in and hand out turns for ever.
+      if(cgCupOn&&_ggr&&!cgHoled&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ for(var _gci=0;_gci<cgCups.length;_gci++){ var _gc=cgCups[_gci];
       if(!cgCupLive(_gc)) continue;
       if(Math.hypot(coin.x-_gc.x,coin.y-_gc.y)>=CG_CUP) continue;
       cgHoled=current; coin.x=_gc.x; coin.y=_gc.y;
@@ -2885,15 +2856,14 @@
     }catch(e){} flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } var _fcap=(debuffActive(current,'injury')?2:FLICK_CAP);
-    // CRAZY GOLF: holed out. The payoff is a free shot from the penalty spot with the turn kept — the
-    // reward for a small target, and the reason the cup can be pure upside. Deliberately ahead of the
-    // FLICK_CAP branches below: this was earned by sinking a 7px hole, not by running down a clock.
+    // CRAZY GOLF: holed out. The payoff is ONE MORE FLICK, played from the hole the ball is sitting in.
+    // Deliberately ahead of the FLICK_CAP branches below: this was earned by sinking a 7px target, not
+    // by running down a clock, so the flick cap must not be able to swallow it.
     if((typeof cgHoled!=='undefined')&&cgHoled){ var _cgw=cgHoled;
-    cgHoled=null; current=_cgw;
-    coin.x=W/2; coin.y=(_cgw==='red')?(NET_DEPTH+GOAL_AREA_D+8):(H-NET_DEPTH-GOAL_AREA_D-8);
+    cgHoled=null; cgBonus=true; current=_cgw;
     coin.vx=0; coin.vy=0; coin.air=0;
     flickCount=0; hitOwn=false; struck=false;
-    turnFlash=24; setStatus('HOLED OUT — FREE SHOT!');
+    turnFlash=24; setStatus('HOLED OUT — ONE MORE FLICK!');
     try{ sfxCheer(); }catch(e){} try{ spawnSparks(coin.x,coin.y,current,16,true);
     }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     applyTactics(); updateHUD(); return; }
@@ -2911,6 +2881,7 @@
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     } else { try{ tutHook('lose');
     }catch(e){} current=current==='red'?'blue':'red';
+    if(typeof cgBonus!=='undefined') cgBonus=false;   /* CRAZY GOLF: one hole-out bonus per possession */
     turnFlash=24; sfxTurn();
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;
     try{stopAnthem();}catch(e){} } }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
