@@ -517,8 +517,12 @@
         g.fillRect(WALL,y,W-WALL*2,1); }
         g.strokeStyle='rgba(252,248,236,0.5)'; g.lineWidth=1.4;
         var kw=Math.round(GOAL_W*1.5), kh=32, kx=Math.round((W-kw)/2);
-        g.strokeRect(kx,NET_DEPTH,kw,kh);                 // the painted key at each end
-        g.strokeRect(kx,H-NET_DEPTH-kh,kw,kh);
+        // the painted key at each end, drawn WITHOUT its goal-side edge — that edge sat right on the
+        // goal line and read as a stray white line stretched behind the net
+        g.beginPath(); g.moveTo(kx,NET_DEPTH); g.lineTo(kx,NET_DEPTH+kh);
+        g.lineTo(kx+kw,NET_DEPTH+kh); g.lineTo(kx+kw,NET_DEPTH); g.stroke();
+        g.beginPath(); g.moveTo(kx,H-NET_DEPTH); g.lineTo(kx,H-NET_DEPTH-kh);
+        g.lineTo(kx+kw,H-NET_DEPTH-kh); g.lineTo(kx+kw,H-NET_DEPTH); g.stroke();
         g.fillStyle='rgba(214,120,60,0.20)'; g.fillRect(kx+1,NET_DEPTH+1,kw-2,kh-2);
         g.fillRect(kx+1,H-NET_DEPTH-kh+1,kw-2,kh-2);
         g.beginPath(); g.arc(W/2,NET_DEPTH+kh,13,0,Math.PI); g.stroke();

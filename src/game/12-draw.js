@@ -499,6 +499,17 @@
     ctx.restore(); }
     // the hoops: a basketball rim seen from above — an orange ring with a net cinching below it, and
     // a small backboard plate on the goal side. Drawn as a ring, not a bar, so it reads as a hoop.
+    // Lane dividers: chalk lines fanning out of the goal mouth between the hoops, so each hoop owns
+    // a visible slice of the penalty area and you can see which lane you are shooting down.
+    if(bkRims.length){ ctx.save();
+    ctx.strokeStyle='rgba(255,252,242,0.52)'; ctx.lineWidth=1.2;
+    ctx.setLineDash([4,3]);
+    for(var ei=0;ei<2;ei++){ var gy=ei?H-NET_DEPTH:NET_DEPTH, into=ei?-1:1;
+    for(var di=-1;di<=1;di+=2){ var a=0.365*di*into;
+    var sx2=W/2-Math.sin(a)*9*into, sy2=gy+Math.cos(a)*9*into;
+    var ex=W/2-Math.sin(a)*42*into, ey=gy+Math.cos(a)*42*into;
+    ctx.beginPath(); ctx.moveTo(sx2,sy2); ctx.lineTo(ex,ey); ctx.stroke(); } }
+    ctx.setLineDash([]); ctx.restore(); }
     // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the
     // GOAL side is -Y: the net hangs that way (the ball drops through and out toward the goal) with
     // the backboard beyond it, which is the way round a hoop actually reads.
@@ -1444,8 +1455,12 @@
       ctx.fillStyle=board.line; ctx.fillRect(Math.round(W/2)-1,Math.round(H/2)-1,2,2);   // centre spot
       const gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
       ctx.strokeStyle=board.line2;
+      // the court leaves its goal-mouth line off: with the key and the hoops already marking the
+      // area it just read as a white line strung behind the net. Purely cosmetic either way.
+      if(boardKey!=='court'){
       ctx.beginPath(); ctx.moveTo(gL,NET_DEPTH+0.5); ctx.lineTo(gR,NET_DEPTH+0.5); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(gL,H-NET_DEPTH-0.5); ctx.lineTo(gR,H-NET_DEPTH-0.5); ctx.stroke();
+      }
       for(const team of ['red','blue']){
         const r=goalAreaRect(team);
         if(phase==='setup'){ const cnt=countInGoalArea(team,dragNail);
