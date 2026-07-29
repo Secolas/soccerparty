@@ -585,19 +585,27 @@
     _cgFill(ctx,p,6,'#3d95d6',0.2,0.7);               // shallow water catching the sky
     _cgDither(ctx,p,'#1c5f96',wi*11.3,80);
     _cgDither(ctx,p,'#2a6b34',wi*11.3+2.7,60);
-    ctx.fillStyle='rgba(220,242,255,0.42)';           // one soft static sheen, upper-left
-    var sy0=Math.round(p.y-p.ry*0.42);
-    for(var sh=0;sh<3;sh++){ var shy=sy0+sh*2, ss=cgSpan(p,shy); if(!ss) continue;
-    var shw=Math.round((ss.l)*0.5); ctx.fillRect(Math.round(p.x-ss.l*0.7),shy,shw,1); } }
-    // ---- CUPS: white collar, black hole, a golf-yellow pin, and a STATIC dashed ring marking it as a
-    // sinkable hole. Every cup is usable now (see cgCupLive), so the ring is a neutral gold rather than a
-    // team colour — it says "you can hole out here", not "this one is yours".
-    for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
+    // ANIMATED SURFACE — restored, but as gentle TWINKLING GLINTS rather than the drifting horizontal
+    // lines that read as crawling scanlines. Each glint sits at a fixed spot (hashed off its index so it
+    // never wanders) and fades in and out on its own slow phase, so the pond shimmers in place. Plus a
+    // couple of short highlight dashes that ride a slow sine so there is a little surface motion.
+    for(var gl=0;gl<12;gl++){ var ga=0.5+0.5*Math.sin((now||0)/380+gl*1.7);   // per-glint twinkle
+    if(ga<0.25) continue;
+    var gy2=Math.round(p.y+(_cgRnd(wi*13+gl)-0.5)*p.ry*1.7);
+    var gs=cgSpan(p,gy2); if(!gs) continue;
+    var gx2=Math.round(p.x-gs.l+3+_cgRnd(wi*13+gl+0.5)*(gs.l+gs.r-6));
+    ctx.fillStyle='rgba(226,246,255,'+(0.55*ga)+')';
+    ctx.fillRect(gx2,gy2,1,1); if(ga>0.7) ctx.fillRect(gx2+1,gy2,1,1); }
+    ctx.fillStyle='rgba(210,238,255,0.4)';            // two drifting highlight dashes, gentle sine
+    for(var hd=0;hd<2;hd++){ var hy=Math.round(p.y+(hd?-1:1)*p.ry*0.3);
+    var hs=cgSpan(p,hy); if(!hs) continue;
+    var hw=Math.round((hs.l+hs.r)*0.3), hx=Math.round(p.x-hw/2+Math.sin((now||0)/1100+hd*2.1)*(hs.l+hs.r)*0.12);
+    ctx.fillRect(hx,hy,hw,1); } }
+    // ---- CUPS: white collar, black hole, a golf-yellow pin. No ring — the dashed gold ring round each
+    // cup read as scattered dots in the corners; the pin already marks the hole, and every cup is
+    // sinkable now so there is nothing a ring needs to say.
+    for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], cf=(cu.flash>0)?cu.flash/34:0;
     var cx=Math.round(cu.x), cy=Math.round(cu.y);
-    if(live){ ctx.fillStyle='#ffd94a';
-    for(var dd=0;dd<12;dd++){ if((dd%2)===0) continue;
-    var an=dd/12*Math.PI*2;
-    ctx.fillRect(cx+Math.round(Math.cos(an)*(CG_CUP+4)),cy+Math.round(Math.sin(an)*(CG_CUP+4)),1,1); } }
     _cgDisc(ctx,cx,cy,CG_CUP,'#e8f4dc');              // the cut collar of the hole
     _cgDisc(ctx,cx,cy,CG_CUP-1.5,cf?'#ffd35a':'#0d1a0a');
     _cgDisc(ctx,cx,cy-1,CG_CUP-3.5,cf?'#fff0a8':'#000000');
