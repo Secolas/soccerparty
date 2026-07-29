@@ -404,6 +404,17 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
+**THE "MISALIGNMENT" WAS THE DARK ROUGH LENS.** A clean A/B settled it: `?nohz=1` (bare pitch) looked
+right, the hazard version looked wrong, and the only shared element that could differ was the surface. The
+surface had shaded a dark "rough" dead-zone down the middle of each half to show the route — but the central
+pond already shows the route, and with hazards drawn on top the dark lens read as a muddy, off-centre
+discolouration. Every geometric measurement said the pitch was dead centre (halfway line midpoint → board
+x=105.00, pond art on its collision to 0.1px, keepers at 105, pegs mirror-symmetric); the lens was a
+*shading* illusion, not a position error. Fixed by removing the lens: the pitch is now a plain even fairway
+with faint mower stripes and a light apron ring at each green, and the hazards carry all the visual
+structure. `?flat=1` was the diagnostic that confirmed it — the flat surface with hazards read clean and
+symmetric immediately.
+
 **The hazards are SMALLER and SYMMETRIC now, which is the real "alignment" fix.** With `?nohz=1` the bare
 pitch measured square, so the skew was never the pitch — it was the hazard *layout*. The first version put a
 big pond on one flank and a bunker on the other and rotated that 180° for the far half, so the dark rough sat

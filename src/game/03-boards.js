@@ -551,60 +551,27 @@
         g.fillStyle='rgba(255,255,255,0.05)';
         for(var fx=WALL;fx<W-WALL;fx+=10) g.fillRect(fx,WALL,5,H-WALL*2);
         return; }
-        /* A GOLF HOLE HAS TO SHOW ITS SHAPE. The first cut painted flat bright turf, so the hazards
-           floated on a featureless field and you could not see where the route was. On a real course the
-           mown fairway IS the route and the rough is dark, so that is what gets painted: three tones of
-           grass — rough at the edges, fairway down the two lanes and across midfield, and a lighter
-           apron around each green — with vertical mower stripes over the lot.
-           Everything here is drawn on integer pixels with 1x1 stipple for the transitions, matching how
-           the rest of the game's art is built (see the beach's sand). The hazard positions come from the
-           CG_* constants in 11-physics so the art cannot drift from the collision shapes; surface() runs
-           at buildBoard time, long after that file has executed, which is the same trick tnApron uses. */
-        /* ROUGH is deliberately dark, but at the PERIMETER that backfired: the corner arcs, the touchlines
-           and the goal-box lines were being drawn on a 7-unit band of near-black green right against the
-           brown timber, so they read as markings floating on the FRAME rather than on the pitch — which is
-           exactly what "the pitch looks badly aligned" turned out to be. The perimeter rough is now 3 units
-           instead of 7 and a shade lighter, so every line sits on grass that reads as pitch. The dark rough
-           that matters is the lens around each half's hazards, which is untouched. */
-        var ROUGH='#277933', ROUGH2='#20692b', FAIR='#2c8f3c', FAIR2='#26a043', APRON='#3fae4d';
-        g.fillStyle=ROUGH; g.fillRect(0,0,W,H);
-        for(var n=0;n<2200;n++){ g.fillStyle=(Math.random()>0.5)?ROUGH2:'rgba(255,255,255,0.04)';
+        /* A PLAIN, EVEN FAIRWAY — no dark "rough lens". The earlier surface shaded a dark dead-zone down
+           the middle of each half to "show the route", but the central pond already shows the route, and
+           with the hazards sitting on top of it the dark lens read as a muddy, off-centre discolouration —
+           which is what kept making the pitch look misaligned even though it measures dead centre (the
+           ?nohz=1 bare pitch looked right, the shaded one did not). So the pitch is now clean, bright and
+           uniform: one green, faint mower stripes, and a slightly lighter apron ring at each green. The
+           hazards provide all the visual structure the hole needs. */
+        var FAIR='#2c9a41', FAIR2='#279038', APRON='#3fae4d';
+        g.fillStyle=FAIR; g.fillRect(0,0,W,H);
+        for(var n=0;n<1600;n++){ g.fillStyle=(Math.random()>0.5)?FAIR2:'rgba(255,255,255,0.05)';
         g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
-        /* THE FAIRWAY IS DRAWN SCANLINE BY SCANLINE, not as rectangles. Painted as boxes it came out
-           looking like a layer cake — you could see straight horizontal seams across the pitch, and a
-           fairway on a real course curves. So for each row of pixels the dead middle opens and closes
-           with a smoothstep: full width at midfield and at each green, splitting into two lanes where
-           the pond and bunker sit. One expression, and the edges come out curved for free. */
-        var mid=H/2, half=H/2-NET_DEPTH;
-        var smooth=function(u){ u=Math.max(0,Math.min(1,u)); return u*u*(3-2*u); };
-        for(var y=WALL;y<H-WALL;y++){
-        var dm=Math.abs(y-mid)/half;                        // 0 at midfield, 1 at the goal line
-        // the middle is dead through the hazard belt (roughly 0.28..0.78 of the way out) and open either side
-        var open=smooth((dm-0.24)/0.16)*(1-smooth((dm-0.72)/0.14));
-        var gap=Math.round(open*62), lx=W/2-gap, rx=W/2+gap;
-        var apron=(dm>0.80);
-        /* The fairway stops SHORT of the boards, leaving a genuine strip of rough down each side. The first
-           cut ran it to WALL+2 and then dithered that edge — but there was no rough there to dither into,
-           so all it did was scatter a vertical dotted line of dark specks along both touchlines, right
-           where the ball runs. Only real material boundaries get dithered now. */
-        var edge=WALL+3;
-        g.fillStyle=apron?APRON:FAIR;
-        if(gap<=2){ g.fillRect(edge,y,W-edge*2,1); }
-        else { g.fillRect(edge,y,lx-edge,1); g.fillRect(rx,y,W-edge-rx,1); }
-        for(var d2=0;d2<2;d2++){ g.fillStyle=(Math.random()>0.5)?(apron?APRON:FAIR):ROUGH2;
-        g.fillRect(edge-1+(Math.random()*3|0),y,1,1);
-        g.fillRect(W-edge-1+(Math.random()*3|0),y,1,1);
-        if(gap>2){ g.fillRect(lx-1-(Math.random()*3|0),y,1,1);
-        g.fillRect(rx+(Math.random()*3|0),y,1,1); } } }
-        for(var sp3=0;sp3<1400;sp3++){ g.fillStyle=(Math.random()>0.5)?FAIR2:'rgba(255,255,255,0.05)';
-        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
-        g.fillStyle='rgba(255,255,255,0.05)';                 // mower stripes, integer-aligned so they stay crisp
+        g.fillStyle=APRON;                                    // a mown apron ring at each green
+        for(var ai=0;ai<2;ai++){ var acy=ai?(H-NET_DEPTH-18):(NET_DEPTH+18);
+        for(var ay=acy-16;ay<=acy+16;ay++){ var aw=Math.round(Math.sqrt(Math.max(0,256-(ay-acy)*(ay-acy)))*2.0);
+        if(aw>0) g.fillRect(W/2-aw,ay,aw*2,1); } }
+        for(var sp3=0;sp3<500;sp3++){ g.fillStyle=(Math.random()>0.5)?FAIR:APRON;
+        g.fillRect(W/2-30+Math.random()*60|0,(Math.random()>0.5?NET_DEPTH+2:H-NET_DEPTH-34)+Math.random()*34|0,1,1); }
+        g.fillStyle='rgba(255,255,255,0.05)';                 // faint mower stripes, integer-aligned
         for(var mx=WALL;mx<W-WALL;mx+=10) g.fillRect(mx,WALL,5,H-WALL*2);
-        g.fillStyle='rgba(0,0,0,0.06)';
+        g.fillStyle='rgba(0,0,0,0.05)';
         for(var mx2=WALL+5;mx2<W-WALL;mx2+=10) g.fillRect(mx2,WALL,5,H-WALL*2);
-        /* No gravel border. A tan path stippled along the inside of the timber was scattering hundreds of
-           1px specks around the edge of the play area, and on a pitch that reads as dirt, not as a course
-           feature — the grass texture below is all the edge needs. */
         },
         preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
         for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
