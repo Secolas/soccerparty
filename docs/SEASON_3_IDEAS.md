@@ -706,11 +706,29 @@ wind-up with no meter. The CPU's `power` is the inverse of the guide's `v0` form
 launch speed equals the real shot's speed.
 
 The wind-up plays out like a human taking the shot, not an instant snap: (1) a **think beat** — a pulse
-ringing the ball for the first ~14% of the delay; (2) a **drag+point** — the aim line pulls back and grows
-as `power` ramps `0.30→1.0×` over a smoothstep, while a small angle waver (`(1-dragE)·sin·0.10`) settles to
-zero so it looks like a hand adjusting onto target and locking; (3) a brief **locked hold** at full power;
-then the **fast flick** fires at release. Because the waver decays to zero by the lock, the final drawn line
-is the true shot. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas and modes). Verified
-in-engine: the guide renders as a stamina-coloured arrow + pull-back marker along the CPU's shot line and
-grows through the wind-up (guide-pixel count climbs 209→312 as the drag extends), matching the player's guide.
+ringing the ball for the first ~16% of the delay; (2) a **drag+point** — the aim line pulls back and grows
+as `power` ramps `0.30→1.0×` over a smoothstep (spread over `tp 0.16→0.78`, so it reads slowly and clearly),
+while a small angle waver (`(1-dragE)·sin·0.10`) settles to zero so it looks like a hand adjusting onto
+target and locking; (3) a longer **locked hold** at full power; then the **fast flick** fires at release.
+The think delay was lengthened to ~1.2–1.85s so the drag is easy to follow. Because the waver decays to zero
+by the lock, the final drawn line is the true shot. Gated by `CPU_AIM_TELEGRAPH` (on for review; **game-wide,
+every mode** — `maybeAI` runs from the main tick loop regardless of mode, so exhibition, cup, royale and
+practice all telegraph identically). Verified in-engine: the guide renders as a stamina-coloured arrow +
+pull-back marker along the CPU's shot line and grows through the wind-up, matching the player's guide.
+
+## CPU shot smarts (own-goal guard + CRAZY GOLF routing)
+
+**Own-goal guard (all arenas).** `aiClearFront()` nudges the CPU's aim off any token sitting right in front
+of the ball — a near head-on hit is a wasted flick at best and, when the bounce comes back at our own net,
+an auto own-goal. It finds the nearest token that is just ahead (≤30px) and within `COIN_R+NAIL_R` of the
+shot line, then rotates the aim (≤0.42 rad) to the side the token is *not* on. Runs in `aiComputeShot` right
+after the aim angle is picked, before the curveball search re-optimises, and is skipped for soft cup putts
+(the cup was already chosen with a clear line). Read-only w.r.t. game state.
+
+**CRAZY GOLF routing.** `cgLineBlocked(x0,y0,x1,y1)` traces a segment for water (drown), trees (dead stop)
+**and now sand** (heavy drag) — the CPU avoids the bunker as well as the pond. `cgAimPlan` uses it two ways:
+it only commits to a **cup** whose approach line is clear (so it actually reaches the hole instead of putting
+into a hazard), and when the straight line to goal is blocked it tries **both** flank lanes and takes the
+first whose routed line is clear. Cup-seeking is more decisive now (take-a-live-cup probability raised to
+0.4 / 0.65 / 0.9 by tier), and any cup counts, not just this side's.
 

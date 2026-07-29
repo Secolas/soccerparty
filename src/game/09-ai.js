@@ -66,7 +66,12 @@
       if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
-      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
+      let ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
+      // OWN-GOAL GUARD: don't fire straight into a token sitting right in front of the ball — a near
+      // head-on hit deflects the ball back toward our own net (an auto own-goal). Slide the aim to the
+      // token's open side. Skipped for soft cup putts (cgAimPlan already chose a clear-line cup, and a
+      // dodge would nudge the ball off the hole).
+      if(!(_cgP&&_cgP.soft)){ try{ ang=aiClearFront(t,ang); }catch(e){} }
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
       // A putt at a cup has to ARRIVE dying or it skips the lip, and the roll here is v/(1-FRICTION) =
       // 62.5*v, so the speed that stops on the hole is dist/62.5 — far below the 5.0 floor above.
@@ -139,6 +144,25 @@
       }catch(e){} turnFlash=Math.max(turnFlash,10);
     }
     function aiFlick(){ aiApplyShot(aiComputeShot()); }
+    /* Nudge an aim so it does not smack a token sitting right in front of the ball. Such a hit is a wasted
+       flick at best and an own-goal at worst (a near head-on bounce sends the ball back at our own net).
+       Finds the nearest token that is just ahead (within ~30px) and close to the shot line, then rotates
+       the aim by the small angle that clears it, to the side the token is NOT on. Returns ang unchanged
+       when the lane ahead is clear. Read-only; used only to pick the launch angle. */
+    function aiClearFront(t,ang){
+      if(!nails||!nails.length) return ang;
+      var ux=Math.cos(ang), uy=Math.sin(ang), near=null, nd=1e9, nc=0;
+      for(var i=0;i<nails.length;i++){ var n=nails[i];
+      var rx=n.x-coin.x, ry=n.y-coin.y, proj=rx*ux+ry*uy;
+      if(proj<=COIN_R+1 || proj>30) continue;                 // only a token just ahead
+      var cross=ux*ry-uy*rx;                                   // signed perpendicular offset from the line
+      if(Math.abs(cross)>COIN_R+NAIL_R) continue;              // not actually blocking the shot line
+      if(proj<nd){ nd=proj; near=n; nc=cross; } }
+      if(!near) return ang;
+      var clear=COIN_R+NAIL_R+2, off=Math.min(0.42, Math.atan2(clear-Math.abs(nc), Math.max(10,nd)));
+      if(off<=0) return ang;
+      return ang - (nc>=0?1:-1)*off;                           // steer to the token's open side
+    }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
     function aiUtility(){ var t=current; if(!(aiEnabled&&aiEnabled[t])) return; var ab=sideAb[t]||[];
       // REWIND: undo the CPU's own last flick if it clearly worsened the ball's position
@@ -201,7 +225,7 @@
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
       if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; aiShot=null; return; }
       if(!aiEnabled[current]) return;
-      if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; aiThink0=aiDelay;
+      if(!aiPending){ aiPending=true; aiDelay=1200+Math.random()*650; aiThink0=aiDelay;
       try{ aiUtility(); }catch(e){}
       // Lock in the exact shot now (not at release) so the telegraph draws the real thing. Penalties keep
       // computing at release — pen.dive can change during the wind-up, so a precomputed pen shot could go stale.

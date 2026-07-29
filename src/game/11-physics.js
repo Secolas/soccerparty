@@ -1436,28 +1436,40 @@
            lane itself only earns a short flick that dies in it — learned the hard way on THE LINKS);
          - a live cup within 58px is worth a turn, since it pays an extra flick. That needs a soft putt,
            which is below the CPU's speed floor, so the plan carries soft:true and aiFlick lowers it. */
+    // Trace a segment for the hazards that ruin a shot: water (drown) and trees (dead stop) are fatal,
+    // and sand (heavy drag) is worth dodging too. Used to reject a blocked line to goal and to confirm a
+    // cup is actually reachable before committing a putt to it.
+    function cgLineBlocked(x0,y0,x1,y1){ var dx=x1-x0, dy=y1-y0;
+    for(var st=1;st<=24;st++){ var px=x0+dx*st/24, py=y0+dy*st/24;
+    if(cgWaterAt(px,py)) return true;
+    if(cgSandAt(px,py)) return true;
+    for(var tr=0;tr<cgTrees.length;tr++){ if(Math.hypot(px-cgTrees[tr].x,py-cgTrees[tr].y)<cgTrees[tr].r+COIN_R) return true; } }
+    return false; }
     function cgAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
-    if(cgCupOn&&Math.random()<0.3){ var bc=null,bd=1e9;
+    // REACH THE HOLE: a live cup within putt range whose line is clear pays a bonus flick, so it is
+    // usually the best turn on offer. Commit to it more readily on the harder tiers; any cup counts now
+    // (cgCupLive), not just this side's. Skip a cup whose approach crosses water/sand/trees.
+    if(cgCupOn){ var bc=null,bd=1e9;
     for(var i=0;i<cgCups.length;i++){ var cu=cgCups[i];
-    if(cu['for']!==team) continue;
     var d=Math.hypot(cu.x-coin.x,cu.y-coin.y);
-    if(d<58&&d>14&&d<bd){ bd=d; bc=cu; } }
-    if(bc) return {x:bc.x,y:bc.y,soft:true,kind:'cup'}; }
-    // walk the straight line to goal and see whether it drowns or hits a tree
-    var dx=W/2-coin.x, dy=gy-coin.y, blocked=false;
-    for(var st=1;st<=24&&!blocked;st++){ var px=coin.x+dx*st/24, py=coin.y+dy*st/24;
-    if(cgWaterAt(px,py)) blocked=true;
-    for(var tr=0;tr<cgTrees.length&&!blocked;tr++){ if(Math.hypot(px-cgTrees[tr].x,py-cgTrees[tr].y)<cgTrees[tr].r+COIN_R) blocked=true; } }
-    if(!blocked) return null;
+    if(d<64&&d>12&&d<bd&&!cgLineBlocked(coin.x,coin.y,cu.x,cu.y)){ bd=d; bc=cu; } }
+    var pTake=(aiLevel==='hard')?0.9:(aiLevel==='med'?0.65:0.4);
+    if(bc&&Math.random()<pTake) return {x:bc.x,y:bc.y,soft:true,kind:'cup'}; }
+    // AVOID WATER/SAND/TREES: if the straight line to goal is clear, shoot it. If it is blocked, route
+    // through an open flank lane, aiming at the point on the GOAL LINE whose straight line runs through
+    // that lane (aiming at the lane itself only earns a short flick that dies in it).
+    if(!cgLineBlocked(coin.x,coin.y,W/2,gy)) return null;
     var mid=(coin.y+gy)/2;
     if(Math.abs(mid-coin.y)<10) return null;
     var lanes=[cgLaneX(-1),cgLaneX(1)];
     lanes.sort(function(a,b){ return Math.abs(a-coin.x)-Math.abs(b-coin.x); });
-    var sc=(gy-coin.y)/(mid-coin.y);
-    var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(lanes[0]-coin.x)*sc));
-    return {x:ax,y:gy,soft:false,kind:'lane'}; }
+    var sc=(gy-coin.y)/(mid-coin.y), chosen=null, first=null;
+    for(var li=0;li<lanes.length;li++){ var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(lanes[li]-coin.x)*sc));
+    if(first===null) first=ax;
+    if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
+    return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

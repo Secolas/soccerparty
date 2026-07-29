@@ -1768,7 +1768,7 @@
       // Invert the guide's v0 = power*staminaMul*(FLICK_MAX/FLICK_POWER)*TAC.power so the drawn line's
       // launch speed equals the shot's real speed, then clamp into the guide's power range.
       var _cpowFull=Math.min(TAC.frozen?35:70,_cspd/((staminaMul()||1)*(TAC.power||1))*(FLICK_POWER/FLICK_MAX));
-      var _drag=Math.max(0,Math.min(1,(_tp-0.14)/0.74)), _dragE=_drag*_drag*(3-2*_drag);   // smoothstep: pull back, ease into the lock
+      var _drag=Math.max(0,Math.min(1,(_tp-0.16)/0.62)), _dragE=_drag*_drag*(3-2*_drag);   // smoothstep: pull back slowly, ease into the lock, then a longer hold
       var _wob=(1-_dragE)*Math.sin((now||0)/85)*0.10;                 // aim waver that settles to 0 as it locks (true angle at release)
       var _cpow=_cpowFull*(0.30+0.70*_dragE);                         // power builds as the drag extends
       drawAimGuide(_cang+_wob,_cpow,_cpow,0.6+0.4*_dragE,false);
