@@ -404,6 +404,29 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
+**"The pitch is badly aligned" — it was not, but three real things were making it look that way.** Measured
+on the canvas itself, CRAZY GOLF's margins are left 41.0 / right 42.0 and top 39.0 / bottom 39.0, and the
+pitch centre is off by 0.5px in x and 0.0px in y. The calibration is trustworthy because the derived scale
+comes out at exactly 404/234. So the pitch is centred; what was wrong was everything drawn *around* it:
+
+1. **Corner arcs half on the frame.** Each arc is centred exactly ON the pitch's inner corner with radius 8,
+   so half of every stroke falls outside the playing area and onto the surround. That has always been true of
+   every board and the frame tone normally hides it — but CRAZY GOLF's frame is bright timber, so the stray
+   half read as a white curve floating on the woodwork, at all four corners. The arcs are now clipped to the
+   pitch rect, which is what a pitch marking always meant. Measured after: three of four corners have zero
+   light pixels outside the pitch, down from 28 in the top-left alone.
+2. **Birds drawn on the timber.** The ambience formula, copied from the safari case, computes bird y as
+   `3+Math.random()*(OY-14)` — and `OY` is 10, so that range is **negative** and every bird lands at y 0..3,
+   drawn as a pale curved wing stroke on top of the frame. The formula is wrong wherever it appears; birds are
+   not worth having on a 10-unit band, so this arena has none.
+3. **Markings on near-black rough.** The perimeter rough was 7 units of very dark green pressed against the
+   timber, so the touchlines, goal-box lines and corner arcs sat on grass that read as *frame*. It is now 3
+   units and a shade lighter, so every line reads as a pitch marking. The dark rough that matters — the lens
+   framing each half's hazards — is untouched.
+
+*(The one pale curve left on the left rail is the Brazil flag's ribbon on the perimeter ad-boards, rotated
+90° by `drawTurnBoards`. That is intended art and appears on every pitch.)*
+
 **Is the pitch off-centre? No — measured.** Calibrating off the halfway line, whose board coordinates are
 known exactly (y=165, x=12..198), it spans image x 49..370 and its midpoint maps to board **x=105.00**, which
 is also the canvas centre. The frame, the markings, the hazards and the pegs all come off the same transform

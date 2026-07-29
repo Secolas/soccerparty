@@ -545,7 +545,13 @@
            the rest of the game's art is built (see the beach's sand). The hazard positions come from the
            CG_* constants in 11-physics so the art cannot drift from the collision shapes; surface() runs
            at buildBoard time, long after that file has executed, which is the same trick tnApron uses. */
-        var ROUGH='#1f6b2c', ROUGH2='#1a5c26', FAIR='#2c8f3c', FAIR2='#26a043', APRON='#3fae4d';
+        /* ROUGH is deliberately dark, but at the PERIMETER that backfired: the corner arcs, the touchlines
+           and the goal-box lines were being drawn on a 7-unit band of near-black green right against the
+           brown timber, so they read as markings floating on the FRAME rather than on the pitch — which is
+           exactly what "the pitch looks badly aligned" turned out to be. The perimeter rough is now 3 units
+           instead of 7 and a shade lighter, so every line sits on grass that reads as pitch. The dark rough
+           that matters is the lens around each half's hazards, which is untouched. */
+        var ROUGH='#277933', ROUGH2='#20692b', FAIR='#2c8f3c', FAIR2='#26a043', APRON='#3fae4d';
         var _px=(typeof CG_POND_X!=='undefined')?CG_POND_X:75, _pr=(typeof CG_POND_RX!=='undefined')?CG_POND_RX:34;
         var _sx=(typeof CG_SAND_X!=='undefined')?CG_SAND_X:140, _sr=(typeof CG_SAND_RX!=='undefined')?CG_SAND_RX:26;
         var laneL=Math.round(_px-_pr)+2, laneR=Math.round(_sx+_sr)-2;   // the two routes, from the hazards
@@ -569,7 +575,7 @@
            cut ran it to WALL+2 and then dithered that edge — but there was no rough there to dither into,
            so all it did was scatter a vertical dotted line of dark specks along both touchlines, right
            where the ball runs. Only real material boundaries get dithered now. */
-        var edge=WALL+7;
+        var edge=WALL+3;
         g.fillStyle=apron?APRON:FAIR;
         if(gap<=2){ g.fillRect(edge,y,W-edge*2,1); }
         else { g.fillRect(edge,y,lx-edge,1); g.fillRect(rx,y,W-edge-rx,1); }

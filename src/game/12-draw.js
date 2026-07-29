@@ -1560,12 +1560,20 @@
       else ctx.fillRect(WALL,WALL,W-WALL*2,H/2-WALL);
       }
 
+      /* Corner arcs are centred ON the pitch's inner corner with radius cr, so HALF of each one falls
+         outside the playing area and onto the surrounding frame. That has always been true and on most
+         pitches the frame tone hides it — but on CRAZY GOLF the frame is bright timber, and the stray half
+         reads as a white curve floating on the woodwork, which is what made that pitch look misdrawn.
+         Clipping the arcs to the pitch rect is what they always meant: a corner arc is a pitch marking. */
       const cr=8;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(WALL,WALL,W-WALL*2,H-WALL*2); ctx.clip();
       ctx.strokeStyle=board.line2;
       ctx.beginPath(); ctx.arc(WALL,WALL,cr,0,Math.PI/2); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,WALL,cr,Math.PI/2,Math.PI); ctx.stroke();
       ctx.beginPath(); ctx.arc(WALL,H-WALL,cr,-Math.PI/2,0); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,H-WALL,cr,Math.PI,Math.PI*1.5); ctx.stroke();
+      ctx.restore();
 
       try{drawEco(now);}catch(e){} try{drawWalls();
       }catch(e){} try{drawMud(now);

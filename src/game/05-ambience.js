@@ -85,7 +85,11 @@
         sz:9+Math.random()*5, f:Math.floor(Math.random()*4)}); } } }
         if(CG_TREELINE) for(var _gx=3;_gx<CW-2;_gx+=9){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
         ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:CH-OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)}); }
-        for(var _gb=0;_gb<3;_gb++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.10+Math.random()*0.14, phase:Math.random()*6.28});
+        /* No birds here. The y in the copied formula is `3+Math.random()*(OY-14)`, and OY is 10 — so the
+           range is NEGATIVE and every bird is placed at y 0..3, drawn as a pale curved wing stroke right
+           on top of the timber frame. Four of those, one per corner region, is what read as "the pitch has
+           stray curves in the corners". The formula is wrong wherever it appears (see the safari case); it
+           is simply not worth having birds on a 10-unit-tall band, so this arena has none. */
       } else if(t==='aquarium'){
         // the sea life lives only UNDER the crystal pitch; the surround is just tank water with rising bubbles
         for(var i=0;i<10;i++) ambient.push({kind:'tankbub', x:Math.random()*CW, y:Math.random()*CH, vy:0.1+Math.random()*0.22, sz:Math.random()<0.4?2:1, drift:Math.random()*6.28});
