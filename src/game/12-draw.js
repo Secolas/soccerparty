@@ -662,6 +662,31 @@
     _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
     _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); }     ctx.restore(); } }
 
+    var _dbgAlignOn=null;
+    function _dbgAlign(){ if(_dbgAlignOn===null){ try{ _dbgAlignOn=/[?&]dbg=1/.test((location&&location.search)||''); }catch(e){ _dbgAlignOn=false; } } return _dbgAlignOn; }
+    function _dbgCross(g,x,y,col,r){ g.fillStyle=col;
+    g.fillRect(Math.round(x)-r,Math.round(y),r*2+1,1);
+    g.fillRect(Math.round(x),Math.round(y)-r,1,r*2+1); }
+    function drawAlignDebug(g){
+    g.save();
+    // the geometric truths: pitch centre lines, the goal mouth edges, and the four pitch corners
+    g.fillStyle='rgba(0,255,255,0.75)';
+    g.fillRect(Math.round(W/2),0,1,H);                         // x = W/2 = 105
+    g.fillRect(0,Math.round(H/2),W,1);                         // y = H/2 = 165
+    g.fillStyle='rgba(255,230,0,0.9)';
+    var gl=Math.round((W-GOAL_W)/2), gr=Math.round((W+GOAL_W)/2);
+    g.fillRect(gl,0,1,H); g.fillRect(gr,0,1,H);                // the goal mouth edges, full height
+    g.fillStyle='rgba(255,0,255,0.9)';                         // the pitch rect corners
+    var cs=[[WALL,WALL],[W-WALL,WALL],[WALL,H-WALL],[W-WALL,H-WALL]];
+    for(var c=0;c<cs.length;c++) _dbgCross(g,cs[c][0],cs[c][1],'rgba(255,0,255,0.95)',4);
+    // every peg's DATA position: white cross for an outfield piece, red for a keeper
+    try{ for(var i=0;i<nails.length;i++){ var n=nails[i];
+    _dbgCross(g,n.x,n.y,n.goalie?'rgba(255,40,40,1)':'rgba(255,255,255,1)',6); } }catch(e){}
+    // the ball
+    try{ _dbgCross(g,coin.x,coin.y,'rgba(0,255,0,1)',6); }catch(e){}
+    // and CRAZY GOLF's cups
+    try{ if(typeof cgCups!=='undefined'&&cgCups) for(var k=0;k<cgCups.length;k++) _dbgCross(g,cgCups[k].x,cgCups[k].y,'rgba(255,140,0,1)',6); }catch(e){}
+    g.restore(); }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1666,9 +1691,22 @@
       // ball and the coiled snake both disappear INTO the foliage
       try{drawSerp(now);}catch(e){}
       try{drawBushes(now);}catch(e){}
-      // CRAZY GOLF's trees ride the same pass, for the same reason: a ball that finishes in one should
-      // disappear into the foliage rather than sit on top of it
-      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolfTrees(ctx,now); }catch(e){}
+      /* CRAZY GOLF's trees ride the same pass, for the same reason: a ball that finishes in one should
+         disappear into the foliage rather than sit on top of it. But this pass runs WITHOUT the pitch's
+         translate(OX,OY), so board coordinates used here land (OX,OY) up-and-left of where the rest of the
+         art puts them — the canopies were being drawn 12 units left and 10 units up from the trees the ball
+         actually collides with, which is what made the whole pitch look misaligned. Apply the translate
+         explicitly rather than moving the call back into the pitch pass, which would put the trees under
+         the ball again. Verified with the ?dbg=1 overlay: markers land on their data positions. */
+      try{ if(boardKey==='minigolf'&&stadiumHazards()){ ctx.save(); ctx.translate(OX,OY);
+      drawMinigolfTrees(ctx,now); ctx.restore(); } }catch(e){}
+      // ================= ALIGNMENT DEBUG OVERLAY (?dbg=1) =================
+      // Draws a marker at the DATA position of every object, in the same transform the art uses. If a
+      // marker and its sprite sit apart, the drawing is offset from the data and the amount is visible; if
+      // they sit together, that object is where it says it is. Built because "the keeper looks off-centre"
+      // could not be settled from screenshots — reading positions out of a scaled PNG produced a different
+      // wrong answer every time (ponds, sand, ad-boards and net mesh all got mistaken for pegs).
+      try{ if(_dbgAlign()){ ctx.save(); ctx.translate(OX,OY); drawAlignDebug(ctx); ctx.restore(); } }catch(e){}
       // cacti stand over the ball (it disappears behind them); dust-devil towers over everything
       try{drawCacti(now);}catch(e){}
       try{drawDevil(now);}catch(e){}
