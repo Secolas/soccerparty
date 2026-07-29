@@ -70,6 +70,19 @@
       } else if(t==='safari'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14});
+      } else if(t==='golf'){
+        /* CRAZY GOLF is cut out of woodland, so the surround is a TREELINE rather than a stand. Two dense
+           staggered rows down each side band plus a thin row along the top and bottom, drawn with the
+           THE THICKET bush sprites so the scenery is the same art the game already ships rather than a
+           second style. Sizes and offsets are jittered per tree, otherwise a row of identical sprites
+           reads as wallpaper. */
+        for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX*0.46):(CW-OX*0.46);
+        for(var _gy=6;_gy<CH-4;_gy+=13){ for(var _gc=0;_gc<2;_gc++){
+        ambient.push({kind:'gtree', x:_bx+(_gc?OX*0.3:-OX*0.28)+(Math.random()-0.5)*5, y:_gy+(_gc?6:0)+(Math.random()-0.5)*4,
+        sz:12+Math.random()*9, f:Math.floor(Math.random()*4)}); } } }
+        for(var _gx=4;_gx<CW-2;_gx+=14){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*5, y:OY*0.34+(Math.random()-0.5)*6, sz:11+Math.random()*8, f:Math.floor(Math.random()*4)});
+        ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*5, y:CH-OY*0.32+(Math.random()-0.5)*6, sz:11+Math.random()*8, f:Math.floor(Math.random()*4)}); }
+        for(var _gb=0;_gb<3;_gb++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.10+Math.random()*0.14, phase:Math.random()*6.28});
       } else if(t==='aquarium'){
         // the sea life lives only UNDER the crystal pitch; the surround is just tank water with rising bubbles
         for(var i=0;i<10;i++) ambient.push({kind:'tankbub', x:Math.random()*CW, y:Math.random()*CH, vy:0.1+Math.random()*0.22, sz:Math.random()<0.4?2:1, drift:Math.random()*6.28});
@@ -407,6 +420,16 @@
         if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4;
         drawAntelope(Math.round(a.x),Math.round(a.y),a.vx<0,now);
         }
+        else if(a.kind==='gtree'){ var _gi=(typeof NS_BUSH!=='undefined'&&NS_BUSH.length)?NS_BUSH[a.f%NS_BUSH.length]:null;
+        var _gz=a.sz, _gx2=Math.round(a.x-_gz/2), _gy2=Math.round(a.y-_gz*0.6);
+        ctx.fillStyle='rgba(4,16,8,0.5)';
+        ctx.fillRect(_gx2+2,_gy2+Math.round(_gz*0.72),Math.round(_gz)-4,2);
+        if(_gi&&_gi.complete&&_gi.naturalWidth){ ctx.fillStyle='rgba(6,22,10,0.85)';   // dark rim, so the
+        ctx.fillRect(_gx2-1,_gy2+1,Math.round(_gz)+2,Math.round(_gz)-2);               // canopy reads at size
+        ctx.drawImage(_gi,_gx2,_gy2,_gz,_gz);
+        } else { ctx.fillStyle='#1c5a24';
+        ctx.fillRect(_gx2+1,_gy2+2,Math.round(_gz)-2,Math.round(_gz)-4);
+        ctx.fillStyle='#2d7f36'; ctx.fillRect(_gx2+2,_gy2+3,Math.round(_gz)-6,Math.round(_gz)-8); } }
         else if(a.kind==='bgfish'){ a.x+=a.vx;
         a.y+=Math.sin(now*0.002+a.phase)*0.12;
         if(a.x>CW+a.sz*2)a.x=-a.sz*2;

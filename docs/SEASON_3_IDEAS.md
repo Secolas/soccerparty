@@ -299,6 +299,26 @@ complaint, not the colours. Four things changed:
   thing on the course, dark with a hard near-black rim, and there are three of them in a copse rather
   than one stray blob.
 
+**The surround is a TREELINE, not a stand.** The board was originally mapped to the `jungle` ambience,
+which nothing handles — so `buildAmbient` produced no scenery and the crowd builder fell through to its
+default 0.76 skip, keeping 24% of the fans. Sparse fans do not read as a crowd; they read as isolated
+coloured dots scattered down both sides, which is exactly what they looked like. A golf course has no
+stand anyway. There is now a `golf` ambience type with **no spectators at all** (`skip=1`) and two dense
+staggered rows of trees down each side band plus a thin row top and bottom, so the hole reads as cut out
+of woodland the way a real one does. Sizes and offsets are jittered per tree — a row of identical sprites
+reads as wallpaper.
+
+**The trees are THE THICKET's bushes** (`assets/generated/sprite-bush-*.png`), on the pitch and in the
+surround. Reusing art the game already ships beats a second hand-rolled style, it is already pixel art at
+roughly the right scale, and it ties Season 3's golf hole back to Season 1's savanna. A dark disc goes down
+first so the canopy keeps a hard rim against bright turf, and the procedural canopy stays as the fallback
+for the frames before the image loads — the same pattern the ballpark props use.
+
+Two more details that were shouting: the pond's hazard stakes were drawn every 4px, which read as piping on
+a cushion rather than as stakes, so they are now 1px marks every 11px down the flanks only; and the
+bunkers' dither halo was dense enough to look furry, so it is thinner and the grass specks match the
+collar instead of the rough.
+
 **AI.** Unlike the prop arenas there is exactly one real lesson, and it is a big one: **do not shoot into
 the pond.** Left to itself the CPU fires at the goal centre every turn, which on this layout is the middle
 of the water — it would drown its own possession over and over and the arena would read as broken rather

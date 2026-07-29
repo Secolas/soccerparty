@@ -562,8 +562,8 @@
     _cgFill(ctx,b,1,'#c79f57',0.18,1);
     _cgFill(ctx,b,2,'#dcbb79',0.34,1);                // lit from the near side
     _cgFill(ctx,b,4,'#eed9a4',0.62,0.94);
-    _cgDither(ctx,b,'#dcbb79',si*7.1,90);
-    _cgDither(ctx,b,'#15501f',si*7.1+3.3,70);
+    _cgDither(ctx,b,'#dcbb79',si*7.1,60);
+    _cgDither(ctx,b,'#2a6b34',si*7.1+3.3,34);
     ctx.fillStyle='rgba(120,88,40,0.55)';             // rake marks: short dashes, never long stripes
     for(var rk=0;rk<34;rk++){ var ry=Math.round(b.y-b.ry+_cgRnd(si*3+rk)*b.ry*2);
     var sp=cgSpan(b,ry); if(!sp) continue;
@@ -595,9 +595,13 @@
     ctx.fillRect(Math.round(p.x-s4.l+4+_cgRnd(wi*9+sk+0.6)*(s4.l+s4.r-8)),sy,1,1); }
     var stake=wf?'#ffe07a':'#d8382c';                 // the hazard stake line
     var y0=Math.round(p.y-p.ry), y1=Math.round(p.y+p.ry);
-    for(var y2=y0;y2<=y1;y2+=4){ var s5=cgSpan(p,y2); if(!s5) continue;
+    // Stakes every 4px read as a loud dotted ring round the pond, like piping on a cushion. A course
+    // plants them every few metres, so: sparse, 1px, and only down the flanks where they matter.
+    for(var y2=y0+3;y2<=y1-3;y2+=11){ var s5=cgSpan(p,y2); if(!s5) continue;
     ctx.fillStyle=stake;
-    ctx.fillRect(Math.round(p.x-s5.l)-3,y2,2,2); ctx.fillRect(Math.round(p.x+s5.r)+2,y2,2,2); } }
+    ctx.fillRect(Math.round(p.x-s5.l)-3,y2-1,1,3); ctx.fillRect(Math.round(p.x+s5.r)+2,y2-1,1,3);
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillRect(Math.round(p.x-s5.l)-3,y2-1,1,1); ctx.fillRect(Math.round(p.x+s5.r)+2,y2-1,1,1); } }
     // ---- CUPS: white collar, black hole, and a DASHED pixel ring on the two you can use (a soft radial
     // glow was the last vector artefact left on the board).
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
@@ -618,23 +622,27 @@
     for(var fy=0;fy<7;fy++){ var fw=9-Math.abs(fy-3)*2;             // a pennant, in flat pixel rows
     ctx.fillStyle=(fy<3)?fh:fc;
     ctx.fillRect(cx+1+(fy<3?0:0)+sway*(fy>3?1:0),cy-22+fy,fw,1); } }
-    // ---- TREES: chunky canopies with a hard near-black rim, so the thing that kills your ball is the
-    // most legible object on the course. The first cut was mid-green on bright turf and nearly invisible.
+    // ---- TREES: the SAME bush sprites THE THICKET uses (assets/generated/sprite-bush-*.png). Reusing
+    // the art the game already ships beats a second hand-rolled style, and it is already pixel art at the
+    // right scale. A dark disc goes down first so the canopy keeps a hard rim against bright turf — the
+    // thing that kills your ball has to be the most legible object on the course. The procedural canopy
+    // stays as the fallback for the frames before the image has loaded, same as the ballpark props.
     for(var ti=0;ti<cgTrees.length;ti++){ var t=cgTrees[ti], tl=(t.flash>0), r=t.r;
     var tx=Math.round(t.x), ty=Math.round(t.y);
-    ctx.fillStyle='rgba(6,26,10,0.4)';
-    ctx.fillRect(tx-r+1,ty+Math.round(r*0.5),r*2-2,3);              // ground shadow
+    ctx.fillStyle='rgba(6,26,10,0.42)';
+    ctx.fillRect(tx-r+1,ty+Math.round(r*0.55),r*2-2,3);
+    var _tim=(typeof NS_BUSH!=='undefined'&&NS_BUSH.length)?NS_BUSH[tl?(Math.floor((now||0)/60)%NS_BUSH.length):1]:null;
+    if(_tim&&_tim.complete&&_tim.naturalWidth){ var tz=r*2.4;
+    _cgDisc(ctx,tx,ty-1,r+1.5,'#06180a');
+    ctx.drawImage(_tim,Math.round(tx-tz/2),Math.round(ty-tz*0.62),tz,tz);
+    if(tl){ ctx.fillStyle='rgba(255,246,190,0.3)';
+    ctx.fillRect(Math.round(tx-tz/2),Math.round(ty-tz*0.62),Math.round(tz),Math.round(tz)); }
+    } else {
     ctx.fillStyle='#4a3116'; ctx.fillRect(tx-2,ty-1,4,Math.round(r*0.95));
-    ctx.fillStyle='#2b1c0c'; ctx.fillRect(tx-2,ty-1,1,Math.round(r*0.95));
-    _cgDisc(ctx,tx,ty-2,r+1,'#06180a');                             // hard rim
+    _cgDisc(ctx,tx,ty-2,r+1,'#06180a');
     _cgDisc(ctx,tx,ty-2,r,tl?'#cbe86a':'#17491d');
     _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
-    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127');
-    _cgDisc(ctx,tx-r*0.34,ty-2-r*0.5,r*0.3,tl?'#f6ffd2':'#2d7f36'); // sun catch
-    ctx.fillStyle='rgba(6,24,10,0.3)';                              // foliage speckle
-    for(var lf=0;lf<Math.round(r*1.6);lf++){ var lx=tx+Math.round((_cgRnd(ti*13+lf)-0.5)*r*1.6);
-    var ly=ty-2+Math.round((_cgRnd(ti*13+lf+0.5)-0.4)*r*1.6);
-    if(Math.hypot(lx-tx,ly-(ty-2))<r-1) ctx.fillRect(lx,ly,1,1); } }
+    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); } }
     if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
     var sr=Math.round(4+16*(1-sa));
     ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
