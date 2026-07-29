@@ -442,7 +442,7 @@
     slowPhase=0; trapFx=null;
     shieldFx=null; strategistArm=null;
     pmDrag=false; aiPending=false;
-    aiDelay=0; aiAim=null; shotTrail=[];
+    aiDelay=0; aiAim=null; aiShot=null; shotTrail=[];
     hitSparks=[]; turnFlash=0;
     struck=false; stickyUsed=false;
     ghosting=false; serpentPhase=0;

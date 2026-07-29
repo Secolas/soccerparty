@@ -17,7 +17,7 @@
     /* CPU AIM TELEGRAPH — a "thinking, then aiming" arrow shown while the CPU winds up, so its turn reads
        as deliberate instead of an instant snap. aiAim is the point it is lining up on, aiThink0 the full
        think time (to animate progress). CPU_AIM_TELEGRAPH is the game-wide on/off (ON for review). */
-    var CPU_AIM_TELEGRAPH=true, aiAim=null, aiThink0=1;
+    var CPU_AIM_TELEGRAPH=true, aiAim=null, aiThink0=1, aiShot=null;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='easy';
     let exhWin=5, exhTimer=0;
     let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null;

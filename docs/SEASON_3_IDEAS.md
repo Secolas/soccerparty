@@ -687,10 +687,24 @@ Golf greens & Tennis).
 ## CPU aim telegraph (game-wide, under review)
 
 A "thinking, then aiming" cue shown while the CPU winds up, so its turn reads as deliberate rather than an
-instant snap. During the CPU's think delay (~0.95–1.5s) it draws, from the ball toward the point it is
-lining up on: a soft "thinking" pulse round the ball early, then an aim arrow that grows and brightens as
-it locks on, with a pull-back marker that retracts at release. The target is `aiTargetCenter()` — the same
-goal/arena-plan point aiFlick chooses, minus the random spread, so the arrow shows intent not jitter; it is
-read-only and cannot change the shot. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas and
-modes). Verified in-engine that the arrow renders along the real ball→target line during wind-up.
+instant snap. **The telegraph is now the SAME aim guide the player sees** — same 3-colour stamina power line,
+same predicted bounce path, same ability trajectory (curve/serpent/wet/backspin). If the CPU has Curveball or
+Banana equipped, its telegraph bends exactly like a human's aim guide would.
+
+How it stays honest: `aiFlick` was split into `aiComputeShot()` (works out the target, angle, speed, curve
+spin and any drunk jitter, with no side effects — returns a plain shot object) and `aiApplyShot()` (writes it
+to the ball and fires the one-time effects: curve sound, full-flick spend, rewind snapshot, per-flick flag
+resets). At think-start `maybeAI` calls `aiComputeShot()` once and stores it in `aiShot`; the telegraph draws
+*that* shot, and at release `aiApplyShot(aiShot)` fires the very same shot — so the line drawn is the shot
+taken, jitter included. `aiFlick()` is now just `aiApplyShot(aiComputeShot())`, so any standalone call (and
+the balance harness) is unchanged. Penalties still compute at release (`pen.dive` can change mid-wind-up), so
+they are never precomputed and never telegraphed.
+
+Rendering: the player's aim-guide body in `12-draw.js` was extracted into `drawAimGuide(angD,power,rawP,
+gAlpha,showMeter)`. The player calls it at full alpha with the power meter; the CPU calls it during the
+wind-up, fading it in (`gAlpha = 0.35→0.9` over the think time) with a soft "thinking" pulse round the ball
+early and no power meter. The CPU's `power` is the inverse of the guide's `v0` formula so the drawn line's
+launch speed equals the real shot's speed. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas
+and modes). Verified in-engine: 305 stamina-coloured guide pixels render along the CPU's shot line during a
+wind-up, matching the player's guide.
 

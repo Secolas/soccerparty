@@ -17,10 +17,12 @@
     if(abOff[sd].indexOf(other)<0) abOff[sd].push(other);
     try{ applyTactics(); }catch(e){} try{ syncSlots();
     }catch(e){} }
-    function aiFlick(){
+    // Compute the CPU's shot (target, angle, speed, curve spin, drunk jitter) WITHOUT touching the ball,
+    // and return it as a plain object. Split out so the aim telegraph can lock the shot in at think-start
+    // and render the very shot that will be released. aiPickShotMod runs here (it decides curve vs serpent).
+    function aiComputeShot(){
       try{ aiPickShotMod(); }catch(e){}
       const t=current;
-      coin.spin=0; // clear residual curve from a previous curveball shot, same as a human flick does
       if(pen&&pen.active){ var _Z=['L',
       'C','R']; var _kp=pen.dive;
       var _sp=aiLevel==='hard'?0.9:(aiLevel==='med'?0.6:0.3);
@@ -35,14 +37,7 @@
       var _gy=t==='red'?NET_DEPTH+COIN_R+1:H-NET_DEPTH-COIN_R-1;
       var _dx=_gx-coin.x,_dy=_gy-coin.y,_di=Math.hypot(_dx,_dy),_ang=Math.atan2(_dy,_dx);
       var _spd=Math.min(5.1,Math.max(4.2,_di*0.05+3.0));
-      coin.vx=Math.cos(_ang)*_spd;
-      coin.vy=Math.sin(_ang)*_spd;
-      flickCount++; _achBounces=0;
-      hitOwn=false; moving=true;
-      ghostUsed=false; ghosting=false;
-      portalUsed=false; ricochetUsed=false;
-      serpentPhase=0; turnFlash=Math.max(turnFlash,10);
-      return; }
+      return {pen:true, vx:Math.cos(_ang)*_spd, vy:Math.sin(_ang)*_spd}; }
       let goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
       let spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
       let goalX=W/2+(Math.random()*2-1)*spread;
@@ -78,7 +73,8 @@
       if(_cgP&&_cgP.soft) speed=Math.max(1.0,Math.min(speed,(dist+10)/62.5));
       // The CPU gets the hole-out reward on the same terms the player does. Applied LAST so the soft-putt
       // cap above cannot quietly throw the free full-power flick away.
-      try{ if((typeof cgFullFlick==='function')&&cgFullFlick()){ speed=FLICK_MAX*(TAC.power||1)*staminaMul(); cgSpendFullFlick(); } }catch(e){}
+      var _fullFlick=false;
+      try{ if((typeof cgFullFlick==='function')&&cgFullFlick()){ speed=FLICK_MAX*(TAC.power||1)*staminaMul(); _fullFlick=true; } }catch(e){}
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
@@ -106,11 +102,27 @@
       } if(_md<_bestD){ _bestD=_md;
       _bestA=_ca; } } ang2=_bestA;
       }
-      _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
-      if(TAC.curve && speed>=1.9){ var _hx2=-coin.vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hd2*((coin.vy<0)?1:-1)*1.9; try{sfxCurl();}catch(e){} }
-      if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc;
-      coin.vx=_djx; coin.vy=_djy;
-      } flickCount++; _achBounces=0;
+      var _vx=Math.cos(ang2)*speed, _vy=Math.sin(ang2)*speed, _spin=0, _curveSfx=false;
+      if(TAC.curve && speed>=1.9){ var _hx2=-_vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); _spin=_hd2*((_vy<0)?1:-1)*1.9; _curveSfx=true; }
+      if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=_vx*_djc-_vy*_djs,_djy=_vx*_djs+_vy*_djc;
+      _vx=_djx; _vy=_djy; }
+      return {pen:false, vx:_vx, vy:_vy, spin:_spin, curveSfx:_curveSfx, fullFlick:_fullFlick};
+    }
+    // Apply a shot from aiComputeShot to the ball and fire the one-time side effects (curve sound, full-
+    // flick spend, rewind snapshot, per-flick flag resets). Kept separate from compute so the telegraph
+    // can render the locked-in shot during the wind-up, then release exactly it without recomputing.
+    function aiApplyShot(shot){
+      coin.spin=0; // clear residual curve from a previous curveball shot, same as a human flick does
+      if(!shot) return;
+      if(shot.pen){ coin.vx=shot.vx; coin.vy=shot.vy;
+      flickCount++; _achBounces=0; hitOwn=false; moving=true;
+      ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false;
+      serpentPhase=0; turnFlash=Math.max(turnFlash,10); return; }
+      if(shot.fullFlick){ try{ cgSpendFullFlick(); }catch(e){} }
+      _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount};
+      coin.vx=shot.vx; coin.vy=shot.vy;
+      if(shot.spin){ coin.spin=shot.spin; if(shot.curveSfx){ try{sfxCurl();}catch(e){} } }
+      flickCount++; _achBounces=0;
       hitOwn=false; moving=true;
       ghostUsed=false; ghosting=false;
       portalUsed=false; ricochetUsed=false;
@@ -125,8 +137,8 @@
       steerHold=null; try{ ecoFlickStart();
       }catch(e){} try{ trioReset();
       }catch(e){} turnFlash=Math.max(turnFlash,10);
-      
     }
+    function aiFlick(){ aiApplyShot(aiComputeShot()); }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
     function aiUtility(){ var t=current; if(!(aiEnabled&&aiEnabled[t])) return; var ab=sideAb[t]||[];
       // REWIND: undo the CPU's own last flick if it clearly worsened the ball's position
@@ -187,13 +199,16 @@
       if(pen&&pen.active&&pen.step!=='aim'){ aiPending=false; return; }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.guided&&steerBudget>0){ steerHold=aiSteerTarget(); }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
-      if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; return; }
+      if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; aiShot=null; return; }
       if(!aiEnabled[current]) return;
       if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; aiThink0=aiDelay;
       try{ aiUtility(); }catch(e){}
+      // Lock in the exact shot now (not at release) so the telegraph draws the real thing. Penalties keep
+      // computing at release — pen.dive can change during the wind-up, so a precomputed pen shot could go stale.
+      try{ aiShot=(CPU_AIM_TELEGRAPH && !(pen&&pen.active))?aiComputeShot():null; }catch(e){ aiShot=null; }
       try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
       return; }
-      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiAim=null; aiFlick(); }
+      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiAim=null; if(aiShot){ aiApplyShot(aiShot); aiShot=null; } else { aiFlick(); } }
     }
     /* The point the CPU is lining up on, WITHOUT the random spread aiFlick adds — so the telegraph arrow
        shows its intent, not the jittered result. Mirrors the target-selection at the top of aiFlick
