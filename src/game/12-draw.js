@@ -522,25 +522,65 @@
     ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
     var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
     } ctx.restore(); } }
-    // CRAZY GOLF: windmill launchers and the cups. Drawn ABOVE the pitch markings like the other S3
-    // props — the cups sit on the corner arcs, and underneath they came out with lines across them.
-    function drawMinigolf(ctx,now){ if(typeof cgCups==='undefined') return;
+    // CRAZY GOLF: the hole itself — water, sand, trees, cups. Drawn ABOVE the pitch markings like the
+    // other S3 props, because the goal-box lines and the centre circle run straight through the hazards
+    // and underneath they came out with white lines painted across the pond.
+    function drawMinigolf(ctx,now){ if(typeof cgWater==='undefined') return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    // SAND first: a dug hollow, not a sticker. The order is what sells it — a dark collar of scuffed
+    // grass, then the far lip overhanging and casting shade INSIDE the sand, then sand lit from the near
+    // side, with rake lines curved to the bowl.
+    for(var si=0;si<cgSand.length;si++){ var b=cgSand[si];
+    ctx.save(); ctx.translate(b.x,b.y);
+    ctx.fillStyle='rgba(24,80,34,0.5)'; ctx.beginPath();
+    ctx.ellipse(0,0.5,b.rx+2.4,b.ry+2.2,0,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(14,52,22,0.32)'; ctx.beginPath();
+    ctx.ellipse(0,0.5,b.rx+1,b.ry+1,0,0,6.283); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.ellipse(0,0,b.rx,b.ry,0,0,6.283); ctx.clip();
+    ctx.fillStyle='#cfa964'; ctx.fillRect(-b.rx,-b.ry,b.rx*2,b.ry*2);
+    ctx.fillStyle='#e3c286'; ctx.beginPath();
+    ctx.ellipse(0,b.ry*0.34,b.rx*1.05,b.ry*0.92,0,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(74,52,20,0.4)'; ctx.beginPath();
+    ctx.ellipse(0,-b.ry*1.05,b.rx*1.25,b.ry*0.6,0,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(150,112,54,0.4)'; ctx.lineWidth=0.9;
+    for(var rk=-3;rk<=3;rk++){ var ry=rk*(b.ry*0.26);
+    ctx.beginPath(); ctx.moveTo(-b.rx,ry+0.5);
+    ctx.quadraticCurveTo(0,ry+2,b.rx,ry+0.5); ctx.stroke(); }
+    ctx.restore();
+    ctx.strokeStyle='rgba(206,168,98,0.6)'; ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.ellipse(0,0,b.rx,b.ry,0,0,6.283); ctx.stroke();
+    ctx.restore(); }
+    // WATER: a pond with a red hazard margin, exactly as a course marks one — the ring IS the warning,
+    // so nobody can claim they were not told where the ball dies.
+    for(var wi=0;wi<cgWater.length;wi++){ var p=cgWater[wi], wf=(p.flash>0)?p.flash/26:0;
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.strokeStyle='rgba(224,60,46,'+(0.75+0.25*wf)+')'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.ellipse(0,0,p.rx+1.6,p.ry+1.6,0,0,6.283); ctx.stroke();
+    ctx.fillStyle='#1c5f96'; ctx.beginPath();
+    ctx.ellipse(0,0,p.rx,p.ry,0,0,6.283); ctx.fill();
+    ctx.fillStyle='#2a7cbe'; ctx.beginPath();
+    ctx.ellipse(0,-p.ry*0.12,p.rx*0.9,p.ry*0.78,0,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(190,232,255,'+(0.34+0.4*wf)+')'; ctx.lineWidth=1;
+    for(var rr=0;rr<3;rr++){ var ph=((now||0)/900+rr*0.33)%1;   // slow ripples
+    ctx.beginPath(); ctx.ellipse(0,0,p.rx*(0.3+0.6*ph),p.ry*(0.3+0.6*ph),0,0,6.283); ctx.stroke(); }
+    ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.beginPath();
+    ctx.ellipse(-p.rx*0.3,-p.ry*0.42,p.rx*0.26,p.ry*0.14,-0.3,0,6.283); ctx.fill();
+    ctx.restore(); }
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
     ctx.save();
-    if(live){ var pul=0.5+0.5*Math.sin((now||0)/240);                     // only the two you can use glow
+    if(live){ var pul=0.5+0.5*Math.sin((now||0)/240);              // only the two you can use glow
     var col=(cu['for']==='red')?'224,91,72':'91,143,232';
     ctx.fillStyle='rgba('+col+','+(0.10+0.10*pul)+')';
     ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+7+2*pul,0,6.283); ctx.fill();
     ctx.strokeStyle='rgba('+col+','+(0.45+0.35*pul)+')'; ctx.lineWidth=1.2;
     ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+5,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='rgba(248,255,240,0.5)';                               // the cup's collar
+    ctx.fillStyle='rgba(248,255,240,0.5)';
     ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP,0,6.283); ctx.fill();
     ctx.fillStyle=cf?('rgba(255,'+Math.round(225-125*cf)+',95,1)'):'#12240f';
     ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP*0.74,0,6.283); ctx.fill();
     ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath();
     ctx.arc(cu.x,cu.y-0.7,CG_CUP*0.5,0,6.283); ctx.fill();
-    var sway=Math.sin((now||0)/430+ci)*1.5;                              // a pin in every hole
+    var sway=Math.sin((now||0)/430+ci)*1.5;
     ctx.fillStyle='rgba(10,40,18,0.3)'; ctx.fillRect(cu.x-1,cu.y,9,2);
     ctx.fillStyle='#eef3f8';
     ctx.beginPath(); ctx.moveTo(cu.x-1.4,cu.y);
@@ -552,33 +592,31 @@
     ctx.fillStyle='rgba(255,255,255,0.4)';
     ctx.fillRect(cu.x-1.4+sway*0.5,cu.y-21,1,20);
     ctx.restore(); }
-    for(var mi=0;mi<cgMills.length;mi++){ var m=cgMills[mi], ml=(m.flash>0), fa=cgFanAng(m);
-    ctx.save(); ctx.translate(m.x,m.y);
-    ctx.fillStyle='rgba(140,205,120,0.12)'; ctx.beginPath();              // the ring the sails scrub
-    ctx.arc(0,0,CG_SAIL_L,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(10,40,18,0.34)'; ctx.beginPath();
-    ctx.arc(0,2.4,8.5,0,6.283); ctx.fill();
-    ctx.fillStyle='#8a5a2a'; ctx.beginPath();                            // the mill's timber base
-    ctx.arc(0,0,8,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.14)'; ctx.beginPath();
-    ctx.arc(-1.8,-2,5.6,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba(60,34,12,0.5)'; ctx.lineWidth=1;
-    for(var by=-6;by<8;by+=4){ var bw=Math.sqrt(Math.max(0,64-by*by));
-    ctx.beginPath(); ctx.moveTo(-bw,by+0.5); ctx.lineTo(bw,by+0.5); ctx.stroke(); }
-    for(var sp=0;sp<4;sp++){ var a2=fa+sp*Math.PI/2, s0=CG_HUB_R+1, sl=CG_SAIL_L-s0;
-    ctx.save(); ctx.rotate(a2);
-    ctx.fillStyle='rgba(10,40,18,0.34)';                                 // sail shadow on the turf
-    ctx.fillRect(s0+1.6,-CG_SAIL_H+2,sl,CG_SAIL_H*2);
-    ctx.fillStyle=ml?'#ffe9b0':'#faf6ea';                                // canvas
-    ctx.fillRect(s0,-CG_SAIL_H,sl,CG_SAIL_H*2);
-    ctx.fillStyle='rgba(120,92,58,0.8)';                                 // lattice: spar + slats
-    ctx.fillRect(s0,-0.7,sl,1.4);
-    for(var sv=s0+3;sv<s0+sl-1;sv+=4) ctx.fillRect(sv,-CG_SAIL_H,1,CG_SAIL_H*2);
-    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fillRect(s0,-CG_SAIL_H,sl,1);
-    ctx.fillStyle='#d64b3a'; ctx.fillRect(s0+sl-3,-CG_SAIL_H,3,CG_SAIL_H*2);   // red tip
+    // TREES last, so they sit over everything — they are the tallest thing on the course. Drawn DARK
+    // with a hard rim: the first cut used a mid-green canopy on bright turf and the tree that kills your
+    // ball was practically invisible, which is the worst possible thing for it to be.
+    for(var ti=0;ti<cgTrees.length;ti++){ var t=cgTrees[ti], tl=(t.flash>0), r=t.r;
+    ctx.save(); ctx.translate(t.x,t.y);
+    ctx.fillStyle='rgba(6,26,10,0.42)'; ctx.beginPath();          // shadow on the turf
+    ctx.ellipse(2.8,r*0.62,r*1.15,r*0.55,0,0,6.283); ctx.fill();
+    ctx.fillStyle='#4a3116'; ctx.fillRect(-2.2,-1,4.4,r*0.95);    // trunk
+    ctx.fillStyle='#2b1c0c'; ctx.fillRect(-2.2,-1,1.4,r*0.95);
+    ctx.fillStyle='rgba(4,20,8,0.85)'; ctx.beginPath();           // hard dark rim, so it reads on turf
+    ctx.arc(0,-1.5,r+1.2,0,6.283); ctx.fill();
+    var cl=tl?'#d8f27a':'#14401c', cm=tl?'#eaf9a8':'#1d5a26', ch=tl?'#f6ffd2':'#2c7a33';
+    ctx.fillStyle=cl; ctx.beginPath(); ctx.arc(0,-1.5,r,0,6.283); ctx.fill();
+    ctx.fillStyle=cm; ctx.beginPath();                            // two canopy lobes
+    ctx.arc(-r*0.3,-r*0.42,r*0.6,0,6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(r*0.36,-r*0.06,r*0.5,0,6.283); ctx.fill();
+    ctx.fillStyle=ch; ctx.beginPath();                            // sun catch
+    ctx.arc(-r*0.36,-r*0.56,r*0.32,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(4,20,8,0.34)'; ctx.beginPath();           // shaded underside
+    ctx.arc(r*0.22,r*0.4,r*0.42,0,6.283); ctx.fill();
     ctx.restore(); }
-    ctx.fillStyle=ml?'#ffe07a':'#5a3616'; ctx.beginPath();               // hub
-    ctx.arc(0,0,CG_HUB_R,0,6.283); ctx.fill();
+    if(cgSplash>0){ var sa=cgSplash/26;                            // splash ring where the ball drowned
+    ctx.save(); ctx.strokeStyle='rgba(200,238,255,'+(0.7*sa)+')';
+    ctx.lineWidth=1.6; ctx.beginPath();
+    ctx.arc(coin.x,coin.y,4+18*(1-sa),0,6.283); ctx.stroke();
     ctx.restore(); } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;

@@ -691,7 +691,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'stadium' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'jungle' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -723,10 +723,12 @@
       if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
       if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
       bkLastScore=-1;
-      if(typeof cgMills!=='undefined'&&cgMills) cgMills.length=0;
+      if(typeof cgWater!=='undefined'&&cgWater) cgWater.length=0;
+      if(typeof cgSand!=='undefined'&&cgSand) cgSand.length=0;
+      if(typeof cgTrees!=='undefined'&&cgTrees) cgTrees.length=0;
       if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
-      cgOn=false; cgT=0; cgMillOn=false;
-      cgCupOn=false; cgHoled=null; cgBonus=false;
+      cgOn=false; cgT=0; cgFairOn=false;
+      cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

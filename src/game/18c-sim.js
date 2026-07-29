@@ -79,7 +79,7 @@
             o = o || {};
             coin.x = o.x; coin.y = o.y;
             coin.vx = o.vx || 0; coin.vy = o.vy || 0;
-            coin.air = o.air || 0; coin.spin = 0;
+            coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
             if (o.turn) current = o.turn;
             moving = !!(coin.vx || coin.vy);
             return true;

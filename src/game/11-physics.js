@@ -1208,79 +1208,128 @@
     if(d<bd){ bd=d; best=rk; } }
     if(best) return {x:best.x,y:best.y,kind:'racket'};
     return null; }
-    // CRAZY GOLF (Season 3) — the arena where the furniture WORKS FOR YOU.
+    // CRAZY GOLF (Season 3) — FOOTGOLF: a golf hole whose cup is a goal.
     //
-    // The first attempt at a golf arena was a row of obstacles laid ACROSS midfield, and it failed
-    // three times over because a row across midfield is a FENCE — something to survive. This pitch
-    // already has ten player pegs and a keeper on it; things-in-the-way is the one thing it is not
-    // short of. Real minigolf is the opposite: the banked rail is how you SCORE, not what stops you.
-    // You aim at the bank. So every piece of furniture here either helps or is optional:
-    // The springy bank rails that were here first are GONE. They worked exactly as measured, but a
-    // deflector is still a deflector: the ball ends up somewhere the geometry chose rather than
-    // somewhere the player did, which is the same complaint the fence earned. What is left, and what
-    // gets added, has to be something you AIM AT.
-    //   MILLS (easy+)  — windmill LAUNCHERS. A sail meeting a moving ball throws it along the sweep at
-    //                    CG_LAUNCH, harder than any flick can. It never blocks and never pushes back,
-    //                    so the worst case is being thrown somewhere you did not want. Measured, a ball
-    //                    rolled into a mill is caught essentially every time (four sails cover the disc
-    //                    densely near the hub — the same geometry that made a rotating cross unusable
-    //                    as a GATE makes it reliable as a BAT). So the timing does not decide whether
-    //                    you get hit, it decides WHICH WAY you are thrown: that is the read, and it is
-    //                    legible because the sails are right there turning in front of you.
-    //   CUPS (hard)    — hole out and you get ONE MORE FLICK, played from the hole. Pure upside: missing
-    //                    costs nothing at all, you just roll past. Deliberately the inverse of the cup
-    //                    that got cut, which punished an ordinary trip up the middle. The reward used to
-    //                    be a free shot from the penalty spot; an extra flick from where the ball
-    //                    actually lies is the same idea without teleporting the ball across the pitch.
-    var cgOn=false, cgT=0, cgMills=[], cgCups=[], cgMillOn=false, cgCupOn=false;
-    var cgHoled=null, cgBonus=false;
-    /* CG_LAUNCH has to BEAT a flick or the mill is not a reward: FLICK_MAX is 10, and the first cut at 9.5
-       measured as a peak of 9.3, i.e. slightly worse than just shooting. 13.5 is about a Cannon strike,
-       which is the point — the mill is the one place you can out-hit your own thumb. */
-    var CG_SAIL_L=20, CG_SAIL_H=2.5, CG_HUB_R=4, CG_FAN=260, CG_LAUNCH=13.5, CG_MILL_X=44;
-    /* A cup has no pin in it, so the whole 7px is reachable (the mistake last time was a solid post
-       keeping the ball 8px away, which forced the cup wider than the thing it was meant to catch).
+    // This is the fourth design for arena 4 and the first that is not a pile of props. The three that
+    // failed all made the same mistake in different costumes — a row of obstacles ACROSS midfield (a
+    // fence, something to survive), a cup that punished ordinary play, and springy bank rails (which
+    // measured perfectly and were still wrong, because a deflector puts the ball where the GEOMETRY
+    // chose rather than where the PLAYER chose). What none of them had was a SHAPE.
+    //
+    // A golf hole is not obstacles scattered on a fairway. It is a shape: hazards placed so the direct
+    // line is dead, leaving routes that curve. The skill is choosing a line, not surviving a barrier —
+    // and crucially the hazards are landmarks you steer BY, not things that push you around. So:
+    //   WATER  — your shot dies at the bank. Never redirects, never teleports you: it just ends there,
+    //            and it is a big obvious blue thing you had every chance to avoid. Sits dead centre of
+    //            each approach, which is what kills the straight line to goal.
+    //   SAND   — extra drag, not a wall. A firm strike ploughs through and a chip flies over, while a
+    //            soft one dies in it. So the bunker is a SHORTCUT you can buy with power.
+    //   TREES  — a tree kills the ball. No bounce, no deflection: golf's oldest joke is that a tree is
+    //            90% air and you always hit it. One guards each goal so the last shot has to come from
+    //            an angle rather than straight down the middle.
+    //   CUPS   — hole out for one more flick (hard). The two flank routes end at them, so running the
+    //            long way round pays.
+    // Every one of these only ever REMOVES energy, so none of them can stop the ball settling and the
+    // turn ending — the invariant that every earlier arena needed special-casing to keep.
+    //
+    // The layout is 180-degree ROTATIONALLY symmetric, not mirrored: rotating the top half about the
+    // centre spot gives the bottom half, so both sides face the identical hole with water on the same
+    // hand. A reflection would have handed one side the easier approach.
+    var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
+    var cgFairOn=false, cgCupOn=false, cgSplash=0, cgHoled=null, cgBonus=false;
+    /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
+       The two flank lanes are what makes this a hole rather than a wall, so their width is the number
+       that matters: WALL(12) to the pond's left edge is 29px, and the bunker's right edge to the far
+       wall is 32px. A ball is 10px across, so that is an 19-22px window for its centre — wider than
+       CENTRE COURT's side lanes, which play fine. */
+    var CG_POND_X=75, CG_POND_Y=95, CG_POND_RX=34, CG_POND_RY=26;
+    var CG_SAND_X=140, CG_SAND_Y=96, CG_SAND_RX=26, CG_SAND_RY=20;
+    var CG_TREE_X=105, CG_TREE_Y=72, CG_TREE_R=9;
+    var CG_FAIR_X=26, CG_FAIR_Y=120, CG_FAIR_RX=14, CG_FAIR_RY=12;
+    /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
+       measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
+       with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,
+       which splits the outcomes the way a bunker should:
+         - landing in it costs you the shot, and you play OUT of it next turn (escaping the ~20px to the
+           lip needs only v>3.6, about a third of a flick — golf-true: you chop out and lose distance);
+         - carrying clean through the full 40px needs to enter at v>7.3, i.e. a near-max strike from
+           close range. Possible, rare, and worth going for.
+       Drag can only ever remove speed, so sand can never stop the ball settling and the turn ending. */
+    var CG_SAND_DRAG=0.86, CG_TREE_KILL=0.10;
+    /* A cup has no pin in it, so the whole 7px is reachable (the mistake in the cut version was a solid
+       post keeping the ball 8px away, forcing the cup wider than the thing it was meant to catch).
        CG_CUP_V keeps it a skill target: a firm putt skips the lip, only a dying ball drops. */
     var CG_CUP=7, CG_CUP_V=2.6;
     function initMinigolf(){ var t=hzTier();
-    cgOn=true; cgT=0; cgHoled=null; cgBonus=false;
-    cgMillOn=true; cgCupOn=(t>=2);   /* the medium slot is open — see the doc, it is being designed */
-    cgMills=cgMillOn?[{x:W/2-CG_MILL_X,y:H/2,dir:1,flash:0,cd:0},{x:W/2+CG_MILL_X,y:H/2,dir:-1,flash:0,cd:0}]:[];
-    // cups sit in the corner pockets the chamfers feed, outside the goal box and clear of the rail
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0;
+    /* Water, sand and trees are ALL on from easy: they are not difficulty, they are the hole. Take the
+       pond away and the straight line to goal opens up, and this stops being the arena the layout is
+       for. What the tiers add is a fairway bunker (med) and the cups (hard). */
+    cgFairOn=(t>=1); cgCupOn=(t>=2);
+    // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
+    var rot=function(x,y){ return {x:W-x,y:H-y}; };
+    cgSand=[{x:CG_SAND_X,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY}];
+    cgTrees=[{x:CG_TREE_X,y:CG_TREE_Y,r:CG_TREE_R,flash:0}];
+    cgWater=[{x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0}];
+    var rs=rot(CG_SAND_X,CG_SAND_Y), rt=rot(CG_TREE_X,CG_TREE_Y), rw=rot(CG_POND_X,CG_POND_Y);
+    cgSand.push({x:rs.x,y:rs.y,rx:CG_SAND_RX,ry:CG_SAND_RY});
+    cgTrees.push({x:rt.x,y:rt.y,r:CG_TREE_R,flash:0});
+    cgWater.push({x:rw.x,y:rw.y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0});
+    /* MED, the fairway bunker: one per half, sitting in the LEFT-hand lane as each side sees it (the
+       rotation puts it in the same hand for both). It makes the two routes genuinely different rather
+       than interchangeable — left is the short way but you pay a toll in sand, right is clean but long.
+       Sand is passable with power, so this narrows the choice without closing it. */
+    if(cgFairOn){ cgSand.push({x:CG_FAIR_X,y:CG_FAIR_Y,rx:CG_FAIR_RX,ry:CG_FAIR_RY});
+    var rf=rot(CG_FAIR_X,CG_FAIR_Y);
+    cgSand.push({x:rf.x,y:rf.y,rx:CG_FAIR_RX,ry:CG_FAIR_RY}); }
+    // the cups sit at the far end of each flank route, so taking the long way round is what pays
     cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
     cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0});
     cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0}); } } }
-    function cgFanAng(m){ return (cgT/CG_FAN)*Math.PI*2*m.dir; }
+    function cgIn(e,x,y){ var dx=(x-e.x)/e.rx, dy=(y-e.y)/e.ry; return dx*dx+dy*dy<=1; }
+    function cgSandAt(x,y){ for(var i=0;i<cgSand.length;i++){ if(cgIn(cgSand[i],x,y)) return cgSand[i]; } return null; }
+    function cgWaterAt(x,y){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return cgWater[i]; } return null; }
     // a cup is live only for the side attacking that end, so you can never hole out into your own half
     function cgCupLive(cup){ return cup['for']===current; }
+    // the two flank lanes: WALL to the pond's edge, and the bunker's edge to the far wall
+    function cgLaneX(side){ return (side<0)?((WALL+(CG_POND_X-CG_POND_RX))/2):(W-(WALL+(CG_POND_X-CG_POND_RX))/2); }
     function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
-    cgT++;
-    for(var m=0;m<cgMills.length;m++){ if(cgMills[m].flash>0) cgMills[m].flash--; }
+    cgT++; if(cgSplash>0) cgSplash--;
+    for(var i=0;i<cgTrees.length;i++){ if(cgTrees[i].flash>0) cgTrees[i].flash--; }
+    for(var w=0;w<cgWater.length;w++){ if(cgWater[w].flash>0) cgWater[w].flash--; }
     for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; } }
-    /* What the CPU should do here. Two things to teach:
-         - a live cup that is CLOSE is worth a turn, because the payoff is a free shot from the spot.
-           It needs a soft flick (CG_CUP_V skips the lip), which is below the CPU's usual speed floor,
-           so the plan carries soft:true and aiFlick lowers the floor for it.
-         - a mill sitting on the line to goal is a coin flip the CPU cannot time, so nudge around it. */
+    /* What the CPU has to learn here. Unlike the arenas built out of props, the hazards are landmarks,
+       so there is exactly one real lesson: DO NOT SHOOT INTO THE POND. Left to itself the CPU fires at
+       the goal centre every turn, which on this layout is the middle of the water — it would drown its
+       own possession over and over and the arena would read as broken rather than hard.
+         - if the line to goal crosses water or a tree, aim through the nearer open flank lane instead,
+           picking the point on the GOAL LINE whose straight line runs through that lane (aiming at the
+           lane itself only earns a short flick that dies in it — learned the hard way on THE LINKS);
+         - a live cup within 58px is worth a turn, since it pays an extra flick. That needs a soft putt,
+           which is below the CPU's speed floor, so the plan carries soft:true and aiFlick lowers it. */
     function cgAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
-    if(cgCupOn&&Math.random()<0.35){ var best=null,bd=1e9;
+    if(cgCupOn&&Math.random()<0.3){ var bc=null,bd=1e9;
     for(var i=0;i<cgCups.length;i++){ var cu=cgCups[i];
     if(cu['for']!==team) continue;
     var d=Math.hypot(cu.x-coin.x,cu.y-coin.y);
-    if(d<58&&d>14&&d<bd){ bd=d; best=cu; } }
-    if(best) return {x:best.x,y:best.y,soft:true,kind:'cup'}; }
-    // does the straight line to goal run through a mill? if so aim past its edge
-    var gx=W/2, dx=gx-coin.x, dy=gy-coin.y, seg=(dx*dx+dy*dy)||1;
-    for(var mi=0;mi<cgMills.length;mi++){ var mm=cgMills[mi];
-    var tt=Math.max(0,Math.min(1,((mm.x-coin.x)*dx+(mm.y-coin.y)*dy)/seg));
-    var qx=coin.x+tt*dx, qy=coin.y+tt*dy;
-    if(Math.hypot(mm.x-qx,mm.y-qy)<CG_SAIL_L+COIN_R+2){
-    var away=(mm.x<=W/2)?1:-1, nx=Math.max(WALL+COIN_R+2,Math.min(W-WALL-COIN_R-2,mm.x+away*(CG_SAIL_L+COIN_R+9)));
-    return {x:nx,y:gy,soft:false,kind:'past-mill'}; } }
-    return null; }
+    if(d<58&&d>14&&d<bd){ bd=d; bc=cu; } }
+    if(bc) return {x:bc.x,y:bc.y,soft:true,kind:'cup'}; }
+    // walk the straight line to goal and see whether it drowns or hits a tree
+    var dx=W/2-coin.x, dy=gy-coin.y, blocked=false;
+    for(var st=1;st<=24&&!blocked;st++){ var px=coin.x+dx*st/24, py=coin.y+dy*st/24;
+    if(cgWaterAt(px,py)) blocked=true;
+    for(var tr=0;tr<cgTrees.length&&!blocked;tr++){ if(Math.hypot(px-cgTrees[tr].x,py-cgTrees[tr].y)<cgTrees[tr].r+COIN_R) blocked=true; } }
+    if(!blocked) return null;
+    var mid=(coin.y+gy)/2;
+    if(Math.abs(mid-coin.y)<10) return null;
+    var lanes=[cgLaneX(-1),cgLaneX(1)];
+    lanes.sort(function(a,b){ return Math.abs(a-coin.x)-Math.abs(b-coin.x); });
+    var sc=(gy-coin.y)/(mid-coin.y);
+    var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(lanes[0]-coin.x)*sc));
+    return {x:ax,y:gy,soft:false,kind:'lane'}; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2143,29 +2192,37 @@
       tnPrevY=coin.y;
       } if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
-      // MILLS: a sail meeting a moving ball LAUNCHES it along the sweep, above what a flick can
-      // reach. It never blocks and never pushes back, which is what makes this a tool rather than the
-      // gate that failed. Which way you are thrown depends on which side of the hub you meet the sail,
-      // so one mill serves both directions — read the sails and pick your moment.
-      if(_ggr&&moving&&_gsp>0.4){ for(var _gmi=0;_gmi<cgMills.length;_gmi++){ var _gm=cgMills[_gmi];
-      if(_gm.cd>0){ _gm.cd--; continue; }
-      var _mdx=coin.x-_gm.x, _mdy=coin.y-_gm.y;
-      if(Math.hypot(_mdx,_mdy)>CG_SAIL_L+COIN_R) continue;
-      var _fa=cgFanAng(_gm);
-      for(var _sb=0;_sb<4;_sb++){ var _ba=_fa+_sb*Math.PI/2;
-      var _ct=Math.cos(_ba), _st=Math.sin(_ba);
-      var _al=_mdx*_ct+_mdy*_st, _pp=-_mdx*_st+_mdy*_ct;
-      if(_al<=CG_HUB_R||_al>=CG_SAIL_L) continue;
-      if(Math.abs(_pp)>=CG_SAIL_H+COIN_R) continue;
-      var _sw=(_gm.dir>0?1:-1), _tvx=-_st*_sw, _tvy=_ct*_sw;
-      coin.x+=_tvx*2.5; coin.y+=_tvy*2.5;
-      coin.vx=_tvx*CG_LAUNCH; coin.vy=_tvy*CG_LAUNCH;
-      _gm.cd=26; _gm.flash=18;
-      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
-      }catch(e){} try{ spawnSparks(coin.x,coin.y,current,14,true);
-      }catch(e){} try{ shake=Math.max(shake||0,4);
-      }catch(e){} try{ nsKick(6); }catch(e){}
-      break; } } }
+      // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
+      // turn; a near-max strike from close range carries clean through, and a chip flies over. See
+      // CG_SAND_DRAG for the numbers and for what the first value got wrong.
+      if(_ggr&&_gsp>0.01&&cgSandAt(coin.x,coin.y)){ coin.vx*=CG_SAND_DRAG;
+      coin.vy*=CG_SAND_DRAG; }
+      // TREES: a tree KILLS the ball. Deliberately not a bounce — a deflector puts the ball where the
+      // geometry chose, and that is the mistake the bank rails made. This just ends the shot on the spot,
+      // which is both what a tree does on a real course and completely predictable.
+      if(_ggr&&moving&&_gsp>0.3){ for(var _gti=0;_gti<cgTrees.length;_gti++){ var _gt=cgTrees[_gti];
+      var _tdx=coin.x-_gt.x, _tdy=coin.y-_gt.y, _td=Math.hypot(_tdx,_tdy), _tmn=_gt.r+COIN_R;
+      if(_td<_tmn&&_td>0.001){ coin.x=_gt.x+(_tdx/_td)*_tmn;
+      coin.y=_gt.y+(_tdy/_td)*_tmn;
+      coin.vx*=CG_TREE_KILL; coin.vy*=CG_TREE_KILL;
+      _gt.flash=16; try{ if(typeof sfxBump==='function') sfxBump(7);
+      }catch(e){} try{ spawnSparks(coin.x,coin.y,current,9);
+      }catch(e){} try{ shake=Math.max(shake||0,3);
+      }catch(e){} break; } } }
+      // WATER: the shot dies at the bank. It never redirects and never teleports the ball across the
+      // pitch — the ball is set down on the shore it crossed and that is the end of the turn. Airborne
+      // balls carry clean over, so Chip is a real answer to the pond, exactly as it is in golf.
+      if(_ggr&&moving&&_gsp>0.05){ for(var _gwi=0;_gwi<cgWater.length;_gwi++){ var _gw=cgWater[_gwi];
+      if(!cgIn(_gw,coin.x,coin.y)) continue;
+      var _wnx=(coin.x-_gw.x)/_gw.rx, _wny=(coin.y-_gw.y)/_gw.ry, _wnl=Math.hypot(_wnx,_wny)||0.0001;
+      coin.x=_gw.x+(_wnx/_wnl)*_gw.rx*1.06;      // set it down just outside the bank it crossed
+      coin.y=_gw.y+(_wny/_wnl)*_gw.ry*1.06;
+      coin.vx=0; coin.vy=0; _gsp=0;
+      _gw.flash=26; cgSplash=26;
+      try{ setStatus('IN THE WATER'); }catch(e){}
+      try{ if(typeof sfxSplash==='function') sfxSplash(); }catch(e){}
+      try{ spawnSparks(coin.x,coin.y,null,12); }catch(e){}
+      break; } }
       // CUPS (HARD): hole out for ONE MORE FLICK. Claims only a DYING ball, so a firm putt skips the
       // lip, and only in the end this side is attacking. Missing costs nothing.
       // cgBonus caps it at one per possession: without that, an extra flick played from inside the hole
