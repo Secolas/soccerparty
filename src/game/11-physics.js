@@ -1279,6 +1279,7 @@
     cgFairOn=(t>=1); cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
+    if(cgNoHz()){ cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[]; return; }   // ?nohz=1 — bare pitch
     cgSand=[{x:CG_SAND_X,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}];
     /* A COPSE, not one blob. Three trees read as a stand of trees; one reads as a stray bush. The two
        small ones sit either side of the big one, deep in the central dead zone — clear of both flank
