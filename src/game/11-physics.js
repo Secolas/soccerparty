@@ -1243,10 +1243,16 @@
        that matters: WALL(12) to the pond's left edge is 29px, and the bunker's right edge to the far
        wall is 32px. A ball is 10px across, so that is an 19-22px window for its centre — wider than
        CENTRE COURT's side lanes, which play fine. */
-    var CG_POND_X=75, CG_POND_Y=95, CG_POND_RX=34, CG_POND_RY=26;
-    var CG_SAND_X=140, CG_SAND_Y=96, CG_SAND_RX=26, CG_SAND_RY=20;
-    var CG_TREE_X=105, CG_TREE_Y=72, CG_TREE_R=9;
-    var CG_FAIR_X=26, CG_FAIR_Y=120, CG_FAIR_RX=14, CG_FAIR_RY=12;
+    /* SMALLER AND SYMMETRIC. The first layout put a big pond on one flank and a bunker on the other, then
+       ROTATED it 180 for the far half — so the dark rough sat left-of-centre up top and right-of-centre
+       below, and the whole pitch read as skewed even though it was perfectly centred (confirmed with
+       ?nohz=1: the bare pitch is square). The hole is now built SYMMETRIC about the centre line: a single
+       central pond per half, a matched pair of flank bunkers, and a tree pair either side of the goal.
+       Everything is smaller too. Because each piece is symmetric about W/2, the 180 rotation to the far
+       half is identical to a vertical mirror, so the pitch is balanced on BOTH axes. */
+    var CG_POND_X=105, CG_POND_Y=88, CG_POND_RX=24, CG_POND_RY=18;   // central pond, blocks the direct line
+    var CG_SAND_DX=57, CG_SAND_Y=104, CG_SAND_RX=13, CG_SAND_RY=11;  // MED: a bunker in each flank lane
+    var CG_TREE_DX=18, CG_TREE_Y=60, CG_TREE_R=7;                    // a tree pair guarding the goal mouth
     /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
        measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
        with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,
@@ -1280,27 +1286,24 @@
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
     if(cgNoHz()){ cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[]; return; }   // ?nohz=1 — bare pitch
-    cgSand=[{x:CG_SAND_X,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}];
-    /* A COPSE, not one blob. Three trees read as a stand of trees; one reads as a stray bush. The two
-       small ones sit either side of the big one, deep in the central dead zone — clear of both flank
-       lanes and clear of the penalty spot, so they tighten the middle without touching either route. */
-    cgTrees=[{x:CG_TREE_X,y:CG_TREE_Y,r:CG_TREE_R,flash:0},
-    {x:CG_TREE_X-14,y:CG_TREE_Y-11,r:6,flash:0},
-    {x:CG_TREE_X+14,y:CG_TREE_Y-9,r:6,flash:0}];
-    cgWater=[{x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()}];
-    var rs=rot(CG_SAND_X,CG_SAND_Y), rt=rot(CG_TREE_X,CG_TREE_Y), rw=rot(CG_POND_X,CG_POND_Y);
-    cgSand.push({x:rs.x,y:rs.y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
-    cgTrees.push({x:rt.x,y:rt.y,r:CG_TREE_R,flash:0});
-    cgTrees.push({x:W-(CG_TREE_X-14),y:H-(CG_TREE_Y-11),r:6,flash:0});
-    cgTrees.push({x:W-(CG_TREE_X+14),y:H-(CG_TREE_Y-9),r:6,flash:0});
-    cgWater.push({x:rw.x,y:rw.y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
-    /* MED, the fairway bunker: one per half, sitting in the LEFT-hand lane as each side sees it (the
-       rotation puts it in the same hand for both). It makes the two routes genuinely different rather
-       than interchangeable — left is the short way but you pay a toll in sand, right is clean but long.
-       Sand is passable with power, so this narrows the choice without closing it. */
-    if(cgFairOn){ cgSand.push({x:CG_FAIR_X,y:CG_FAIR_Y,rx:CG_FAIR_RX,ry:CG_FAIR_RY,pl:cgProfile(),pr:cgProfile()});
-    var rf=rot(CG_FAIR_X,CG_FAIR_Y);
-    cgSand.push({x:rf.x,y:rf.y,rx:CG_FAIR_RX,ry:CG_FAIR_RY,pl:cgProfile(),pr:cgProfile()}); }
+    cgWater=[]; cgSand=[]; cgTrees=[];
+    // EASY: a central pond blocks the straight line to goal, and a tree pair guards the mouth. Both are
+    // symmetric about W/2, so the top half looks the same on the left and the right.
+    cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
+    cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    // MED: a bunker in each flank lane, a matched pair, so both routes carry the same toll.
+    if(cgFairOn){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
+    cgSand.push({x:CG_POND_X+CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}); }
+    // Mirror the whole top-half set to the bottom. Every piece above is symmetric about W/2, so the 180
+    // rotation and a vertical mirror give the same result — the pitch ends up balanced on both axes.
+    var _wN=cgWater.length, _sN=cgSand.length, _tN=cgTrees.length;
+    for(var _wi=0;_wi<_wN;_wi++){ var _w=cgWater[_wi], _rw=rot(_w.x,_w.y);
+    cgWater.push({x:_rw.x,y:_rw.y,rx:_w.rx,ry:_w.ry,flash:0,pl:cgProfile(),pr:cgProfile()}); }
+    for(var _si=0;_si<_sN;_si++){ var _s=cgSand[_si], _rs=rot(_s.x,_s.y);
+    cgSand.push({x:_rs.x,y:_rs.y,rx:_s.rx,ry:_s.ry,pl:cgProfile(),pr:cgProfile()}); }
+    for(var _ti=0;_ti<_tN;_ti++){ var _t=cgTrees[_ti], _rt=rot(_t.x,_t.y);
+    cgTrees.push({x:_rt.x,y:_rt.y,r:_t.r,flash:0}); }
     // the cups sit at the far end of each flank route, so taking the long way round is what pays
     cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
     cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0,armed:true});

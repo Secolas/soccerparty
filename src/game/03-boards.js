@@ -567,9 +567,6 @@
            instead of 7 and a shade lighter, so every line sits on grass that reads as pitch. The dark rough
            that matters is the lens around each half's hazards, which is untouched. */
         var ROUGH='#277933', ROUGH2='#20692b', FAIR='#2c8f3c', FAIR2='#26a043', APRON='#3fae4d';
-        var _px=(typeof CG_POND_X!=='undefined')?CG_POND_X:75, _pr=(typeof CG_POND_RX!=='undefined')?CG_POND_RX:34;
-        var _sx=(typeof CG_SAND_X!=='undefined')?CG_SAND_X:140, _sr=(typeof CG_SAND_RX!=='undefined')?CG_SAND_RX:26;
-        var laneL=Math.round(_px-_pr)+2, laneR=Math.round(_sx+_sr)-2;   // the two routes, from the hazards
         g.fillStyle=ROUGH; g.fillRect(0,0,W,H);
         for(var n=0;n<2200;n++){ g.fillStyle=(Math.random()>0.5)?ROUGH2:'rgba(255,255,255,0.04)';
         g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }

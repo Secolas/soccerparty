@@ -404,6 +404,16 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
+**The hazards are SMALLER and SYMMETRIC now, which is the real "alignment" fix.** With `?nohz=1` the bare
+pitch measured square, so the skew was never the pitch — it was the hazard *layout*. The first version put a
+big pond on one flank and a bunker on the other and rotated that 180° for the far half, so the dark rough sat
+left-of-centre up top and right-of-centre below and the whole thing read as lopsided. The hole is now built
+**symmetric about the centre line**: one smaller central pond per half (blocks the straight shot by sitting on
+it), a matched pair of flank bunkers (med), and a tree pair either side of the goal. Because every piece is
+symmetric about `W/2`, the 180° rotation to the far half equals a vertical mirror, so the pitch is balanced on
+both axes. Measured: 0 of 23 grid columns have a straight line to goal from your own half or midfield; the
+left-right hazard mask is identical bar the sub-pixel edge wobble; keepers dead centre.
+
 **Alignment: what is actually true, and a correction.** An earlier pass through this concluded the tree
 canopies were drawn `(OX,OY)` off and "fixed" it by adding an explicit `ctx.translate(OX,OY)` at the late draw
 pass. **That conclusion was wrong and the fix made it worse** — the late pass already carries the pitch
