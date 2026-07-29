@@ -1283,9 +1283,10 @@
     /* The payoff for holing out is ONE FULL-POWER FLICK: aim only, the power is given to you. An ordinary
        extra flick was too quiet a reward for a target this small. */
     var cgFullFlick_=false;
-    /* Which hazard types are on by default, while we re-introduce them one at a time (see cgActive). Set
-       to 'tree' for now; bump to 'tree,water' etc. as each type is signed off, then 'all' when done. */
-    var CG_DEFAULT_HZ='tree';
+    /* All hazard types on by default. They were re-introduced one at a time to isolate a bug, which turned
+       out to be a stray ctx.restore() in the cup draw loop corrupting the transform (see 12-draw.js) —
+       fixed, so the full set works. The ?hz= selector stays for future spot-checks. */
+    var CG_DEFAULT_HZ='all';
     /* INCREMENTAL HAZARD BUILD-UP. We are re-introducing the hazards one type at a time to isolate what
        makes the pitch read as broken, so which types are active is selectable:
          ?hz=tree              trees only          (the current default while we verify each type)

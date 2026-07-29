@@ -404,6 +404,22 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
+**THE ROOT CAUSE OF THE WHOLE "PITCH IS BROKEN" SAGA: a stray `ctx.restore()` in the cup draw loop.** The
+cup loop in `drawMinigolf` ended each iteration with `ctx.restore()` but opened no `ctx.save()`. It runs
+once per cup, so with the four cups present it popped the canvas transform stack four times — including the
+pitch's own `translate(OX,OY)` — so everything drawn AFTER the cups (the pegs, the ball, later overlays)
+rendered in a corrupted transform, shifted off the pitch. That is why:
+- every hard-tier screenshot showed the keeper and tokens "moved" and the pitch looking misaligned (cups are
+  the hard-tier hazard);
+- `?nohz=1` looked correct (it removed the cups, so the loop never ran and the stack stayed balanced);
+- `?hz=tree,water,sand` looked correct (no cups) but `?hz=all` broke (cups);
+- and — the trap that hid it for so long — the debug overlay ran even later, in the SAME corrupted
+  transform, so its markers were shifted by the same amount as the sprites and appeared to sit right on
+  them. Two things both offset by the same transform look aligned to each other.
+Removing the stray `restore()` fixed it. Verified with cups on: the cyan centre line and the keeper marker
+both land at canvas centre (x=202 of 404). The `?hz=` selector (`cgActive`) that isolated it is kept for
+future spot-checks; the default is `all`.
+
 **THE "MISALIGNMENT" WAS THE DARK ROUGH LENS.** A clean A/B settled it: `?nohz=1` (bare pitch) looked
 right, the hazard version looked wrong, and the only shared element that could differ was the surface. The
 surface had shaded a dark "rough" dead-zone down the middle of each half to show the route — but the central

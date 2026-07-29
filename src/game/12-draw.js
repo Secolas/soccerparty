@@ -627,7 +627,10 @@
     ctx.fillStyle=(fy<3)?'#ffd94a':'#e0a520';
     ctx.fillRect(cx+1+sway*(fy>3?1:0),cy-22+fy,fw,1); }
     ctx.fillStyle='#fff3b0'; ctx.fillRect(cx+1,cy-22,4,1);           // lit top edge
-    ctx.restore(); }
+    }   /* NB: no ctx.restore() here — this loop opens no ctx.save(). It used to, and that stray restore
+           ran once per cup, popping the pitch's own translate(OX,OY) off the stack. With cups present
+           everything drawn after them rendered in a corrupted transform — THE reason ?hz=all broke while
+           trees+water+sand (no cups, loop never runs) was fine. */
     if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
     var sr=Math.round(4+16*(1-sa));
     ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
