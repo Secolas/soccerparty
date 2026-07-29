@@ -271,6 +271,34 @@ the bunker was not a hazard with a price, it was a second pond. At 0.86 the roll
 split the way a bunker should. And the tree's kill factor had to be a kill, not a bounce: `CG_TREE_KILL=0.10`
 leaves the ball on the spot.
 
+**Art direction, and what the first pass got wrong.** The hazards were originally drawn with
+`ctx.ellipse` and soft alpha gradients, and next to this game's chunky crowd sprites, dithered kits and
+hard-edged flags they read as **vector clip-art pasted onto a pixel-art board**. That was the real
+complaint, not the colours. Four things changed:
+
+- **Pixel-art idiom throughout.** Integer coordinates, flat colour bands, hard 1px edges, and 1×1 stipple
+  where one material meets another instead of a gradient — the way the beach's sand is built. `_cgFill`
+  walks a shape scanline by scanline so stacking calls at increasing insets gives flat bands with crisp
+  edges; `_cgDither` stipples the outermost pixels into whatever is behind. The stipple uses a fixed hash
+  rather than `Math.random`, because a shoreline that re-rolls every frame shimmers.
+- **Irregular outlines.** A perfect ellipse is programmer art. Every pond and bunker carries two edge
+  profiles, left and right, sampled smoothly down its height — and **both the collision test and the
+  drawing read the same profiles**, so the water you can see is exactly the water that drowns you.
+  Profiles are capped at 1.0 so the wobbled shape always sits inside its base ellipse, which is what
+  keeps the water push-out (which normalises in ellipse space) safe.
+- **The pitch shows its shape.** Flat turf left the hazards floating on a featureless field with no
+  indication of where the route was. There is now rough at the edges, fairway down the two lanes, and a
+  lighter apron at each green — and it is painted **scanline by scanline**, not as rectangles: the dead
+  middle opens and closes with a smoothstep, so the fairway edges come out curved instead of leaving
+  straight horizontal seams across the pitch like a layer cake.
+- **Details that were lying about the material.** The bunkers' long horizontal stripes read as wood
+  grain, so they are now short rake dashes and grain speckle. The pond's fat smooth red ring looked like
+  a rubber tyre, so it is a thin dashed **stake line**, which is how a course actually marks a hazard.
+  The cups' soft radial glow became a dashed pixel ring, and the pins got proper pennants. The trees were
+  mid-green on bright turf and nearly invisible — the object that kills your ball is now the most legible
+  thing on the course, dark with a hard near-black rim, and there are three of them in a copse rather
+  than one stray blob.
+
 **AI.** Unlike the prop arenas there is exactly one real lesson, and it is a big one: **do not shoot into
 the pond.** Left to itself the CPU fires at the goal centre every turn, which on this layout is the middle
 of the water — it would drown its own possession over and over and the arena would read as broken rather

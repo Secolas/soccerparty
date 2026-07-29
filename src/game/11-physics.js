@@ -1268,25 +1268,48 @@
     cgFairOn=(t>=1); cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
-    cgSand=[{x:CG_SAND_X,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY}];
-    cgTrees=[{x:CG_TREE_X,y:CG_TREE_Y,r:CG_TREE_R,flash:0}];
-    cgWater=[{x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0}];
+    cgSand=[{x:CG_SAND_X,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}];
+    /* A COPSE, not one blob. Three trees read as a stand of trees; one reads as a stray bush. The two
+       small ones sit either side of the big one, deep in the central dead zone — clear of both flank
+       lanes and clear of the penalty spot, so they tighten the middle without touching either route. */
+    cgTrees=[{x:CG_TREE_X,y:CG_TREE_Y,r:CG_TREE_R,flash:0},
+    {x:CG_TREE_X-14,y:CG_TREE_Y-11,r:6,flash:0},
+    {x:CG_TREE_X+14,y:CG_TREE_Y-9,r:6,flash:0}];
+    cgWater=[{x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()}];
     var rs=rot(CG_SAND_X,CG_SAND_Y), rt=rot(CG_TREE_X,CG_TREE_Y), rw=rot(CG_POND_X,CG_POND_Y);
-    cgSand.push({x:rs.x,y:rs.y,rx:CG_SAND_RX,ry:CG_SAND_RY});
+    cgSand.push({x:rs.x,y:rs.y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
     cgTrees.push({x:rt.x,y:rt.y,r:CG_TREE_R,flash:0});
-    cgWater.push({x:rw.x,y:rw.y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0});
+    cgTrees.push({x:W-(CG_TREE_X-14),y:H-(CG_TREE_Y-11),r:6,flash:0});
+    cgTrees.push({x:W-(CG_TREE_X+14),y:H-(CG_TREE_Y-9),r:6,flash:0});
+    cgWater.push({x:rw.x,y:rw.y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
     /* MED, the fairway bunker: one per half, sitting in the LEFT-hand lane as each side sees it (the
        rotation puts it in the same hand for both). It makes the two routes genuinely different rather
        than interchangeable — left is the short way but you pay a toll in sand, right is clean but long.
        Sand is passable with power, so this narrows the choice without closing it. */
-    if(cgFairOn){ cgSand.push({x:CG_FAIR_X,y:CG_FAIR_Y,rx:CG_FAIR_RX,ry:CG_FAIR_RY});
+    if(cgFairOn){ cgSand.push({x:CG_FAIR_X,y:CG_FAIR_Y,rx:CG_FAIR_RX,ry:CG_FAIR_RY,pl:cgProfile(),pr:cgProfile()});
     var rf=rot(CG_FAIR_X,CG_FAIR_Y);
-    cgSand.push({x:rf.x,y:rf.y,rx:CG_FAIR_RX,ry:CG_FAIR_RY}); }
+    cgSand.push({x:rf.x,y:rf.y,rx:CG_FAIR_RX,ry:CG_FAIR_RY,pl:cgProfile(),pr:cgProfile()}); }
     // the cups sit at the far end of each flank route, so taking the long way round is what pays
     cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
     cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0});
     cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0}); } } }
-    function cgIn(e,x,y){ var dx=(x-e.x)/e.rx, dy=(y-e.y)/e.ry; return dx*dx+dy*dy<=1; }
+    /* IRREGULAR OUTLINES. A perfect ellipse reads as programmer art, and a pond or bunker on a real
+       course is a wobbly organic shape. Each hazard therefore carries two edge profiles — one for its
+       left side, one for its right — sampled smoothly down its height, and BOTH the collision test and
+       the drawing read the same profiles, so the water that is visible is exactly the water that drowns
+       you. Profile values are capped at 1.0 so the wobbled shape always sits INSIDE its base ellipse,
+       which is what lets the water push-out (which normalises in ellipse space) stay safe. */
+    function cgProfile(){ var a=[]; for(var i=0;i<7;i++) a.push(0.84+Math.random()*0.16); a.push(a[0]); return a; }
+    function cgEdge(pr,t){ if(!pr||!pr.length) return 1;
+    var n=pr.length, u=Math.max(0,Math.min(1,t))*(n-1), i=Math.floor(u), f=u-i;
+    var p0=pr[Math.min(i,n-1)], p1=pr[Math.min(i+1,n-1)];
+    return p0+(p1-p0)*(f*f*(3-2*f)); }
+    // the shape's left and right half-widths at this y, or null when y is outside it
+    function cgSpan(e,y){ var ny=(y-e.y)/e.ry; if(ny<-1||ny>1) return null;
+    var sq=Math.sqrt(Math.max(0,1-ny*ny)), t=(ny+1)/2;
+    return {l:e.rx*sq*cgEdge(e.pl,t), r:e.rx*sq*cgEdge(e.pr,t)}; }
+    function cgIn(e,x,y){ var sp=cgSpan(e,y); if(!sp) return false;
+    var dx=x-e.x; return (dx<0)?(-dx<=sp.l):(dx<=sp.r); }
     function cgSandAt(x,y){ for(var i=0;i<cgSand.length;i++){ if(cgIn(cgSand[i],x,y)) return cgSand[i]; } return null; }
     function cgWaterAt(x,y){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return cgWater[i]; } return null; }
     // a cup is live only for the side attacking that end, so you can never hole out into your own half

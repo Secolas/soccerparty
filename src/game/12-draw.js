@@ -522,102 +522,124 @@
     ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
     var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
     } ctx.restore(); } }
-    // CRAZY GOLF: the hole itself — water, sand, trees, cups. Drawn ABOVE the pitch markings like the
-    // other S3 props, because the goal-box lines and the centre circle run straight through the hazards
-    // and underneath they came out with white lines painted across the pond.
+    /* CRAZY GOLF, drawn as PIXEL ART. The first cut used ctx.ellipse with soft alpha gradients, and next
+       to the game's chunky crowd sprites, dithered kits and hard-edged flags it read as vector clip-art
+       pasted onto the board. Everything below is built the way the rest of the art is built: integer
+       coordinates, flat colour bands, hard 1px edges, and 1x1 stipple where one material meets another
+       instead of a gradient. The shapes come from cgSpan, the same profiles the collision test reads, so
+       what you can see is exactly what you can hit.
+       _cgFill walks the shape scanline by scanline; inset shrinks it, so stacking calls at increasing
+       insets gives flat bands with hard edges. rnd is a fixed hash rather than Math.random so the stipple
+       does not crawl from frame to frame — a shimmering shoreline was the first thing that went wrong. */
+    function _cgRnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    function _cgFill(g,e,inset,col,fromT,toT){
+    var y0=Math.round(e.y-e.ry), y1=Math.round(e.y+e.ry);
+    for(var y=y0;y<=y1;y++){ var t=(y-y0)/((y1-y0)||1);
+    if(fromT!=null&&(t<fromT||t>toT)) continue;
+    var sp=cgSpan(e,y); if(!sp) continue;
+    var xa=Math.round(e.x-sp.l)+inset, xb=Math.round(e.x+sp.r)-inset;
+    if(xb>xa){ g.fillStyle=col; g.fillRect(xa,y,xb-xa,1); } } }
+    // stipple the outermost pixels of a shape into whatever is behind it, so materials meet by dithering
+    function _cgDither(g,e,col,seed,n){
+    var y0=Math.round(e.y-e.ry), y1=Math.round(e.y+e.ry);
+    for(var k=0;k<n;k++){ var y=y0+Math.floor(_cgRnd(seed+k)*(y1-y0+1));
+    var sp=cgSpan(e,y); if(!sp) continue;
+    var side=_cgRnd(seed+k+0.5)>0.5, d=Math.floor(_cgRnd(seed+k+0.25)*3);
+    g.fillStyle=col;
+    g.fillRect(side?Math.round(e.x-sp.l)-1+d:Math.round(e.x+sp.r)+1-d,y,1,1); } }
+    // a hard-edged pixel disc, for tree canopies
+    function _cgDisc(g,cx,cy,r,col){ g.fillStyle=col;
+    for(var y=Math.round(cy-r);y<=Math.round(cy+r);y++){ var dy=(y-cy)/r;
+    if(dy<-1||dy>1) continue; var hw=Math.round(r*Math.sqrt(Math.max(0,1-dy*dy)));
+    if(hw>0) g.fillRect(Math.round(cx)-hw,y,hw*2,1); } }
     function drawMinigolf(ctx,now){ if(typeof cgWater==='undefined') return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
-    // SAND first: a dug hollow, not a sticker. The order is what sells it — a dark collar of scuffed
-    // grass, then the far lip overhanging and casting shade INSIDE the sand, then sand lit from the near
-    // side, with rake lines curved to the bowl.
+    // ---- SAND: a dug hollow. Dark grass collar, shaded overhanging lip at the top, lit sand below.
     for(var si=0;si<cgSand.length;si++){ var b=cgSand[si];
-    ctx.save(); ctx.translate(b.x,b.y);
-    ctx.fillStyle='rgba(24,80,34,0.5)'; ctx.beginPath();
-    ctx.ellipse(0,0.5,b.rx+2.4,b.ry+2.2,0,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(14,52,22,0.32)'; ctx.beginPath();
-    ctx.ellipse(0,0.5,b.rx+1,b.ry+1,0,0,6.283); ctx.fill();
-    ctx.save(); ctx.beginPath(); ctx.ellipse(0,0,b.rx,b.ry,0,0,6.283); ctx.clip();
-    ctx.fillStyle='#cfa964'; ctx.fillRect(-b.rx,-b.ry,b.rx*2,b.ry*2);
-    ctx.fillStyle='#e3c286'; ctx.beginPath();
-    ctx.ellipse(0,b.ry*0.34,b.rx*1.05,b.ry*0.92,0,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(74,52,20,0.4)'; ctx.beginPath();
-    ctx.ellipse(0,-b.ry*1.05,b.rx*1.25,b.ry*0.6,0,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba(150,112,54,0.4)'; ctx.lineWidth=0.9;
-    for(var rk=-3;rk<=3;rk++){ var ry=rk*(b.ry*0.26);
-    ctx.beginPath(); ctx.moveTo(-b.rx,ry+0.5);
-    ctx.quadraticCurveTo(0,ry+2,b.rx,ry+0.5); ctx.stroke(); }
-    ctx.restore();
-    ctx.strokeStyle='rgba(206,168,98,0.6)'; ctx.lineWidth=1.1;
-    ctx.beginPath(); ctx.ellipse(0,0,b.rx,b.ry,0,0,6.283); ctx.stroke();
-    ctx.restore(); }
-    // WATER: a pond with a red hazard margin, exactly as a course marks one — the ring IS the warning,
-    // so nobody can claim they were not told where the ball dies.
+    _cgFill(ctx,b,-2,'#15501f');                      // collar of scuffed grass, dug through
+    _cgFill(ctx,b,-1,'#3b2f14');                      // the lip's shadow ring
+    _cgFill(ctx,b,0,'#a8813f');                       // sand, shaded
+    _cgFill(ctx,b,1,'#c79f57',0.18,1);
+    _cgFill(ctx,b,2,'#dcbb79',0.34,1);                // lit from the near side
+    _cgFill(ctx,b,4,'#eed9a4',0.62,0.94);
+    _cgDither(ctx,b,'#dcbb79',si*7.1,90);
+    _cgDither(ctx,b,'#15501f',si*7.1+3.3,70);
+    ctx.fillStyle='rgba(120,88,40,0.55)';             // rake marks: short dashes, never long stripes
+    for(var rk=0;rk<34;rk++){ var ry=Math.round(b.y-b.ry+_cgRnd(si*3+rk)*b.ry*2);
+    var sp=cgSpan(b,ry); if(!sp) continue;
+    var rx=Math.round(b.x-sp.l+3+_cgRnd(si*3+rk+0.7)*(sp.l+sp.r-6));
+    ctx.fillRect(rx,ry,2,1); }
+    ctx.fillStyle='#f6ead0';                          // grains catching the light
+    for(var gr=0;gr<18;gr++){ var gy=Math.round(b.y+(_cgRnd(si*5+gr)-0.35)*b.ry*1.4);
+    var s2=cgSpan(b,gy); if(!s2) continue;
+    ctx.fillRect(Math.round(b.x-s2.l+4+_cgRnd(si*5+gr+0.4)*(s2.l+s2.r-8)),gy,1,1); } }
+    // ---- WATER: flat blue bands with a hard shoreline, and a RED STAKE LINE rather than a fat ring.
+    // A course marks a hazard with stakes, and a thin dashed line is both truer and far less ugly than
+    // the smooth red tyre the first version drew round the pond.
     for(var wi=0;wi<cgWater.length;wi++){ var p=cgWater[wi], wf=(p.flash>0)?p.flash/26:0;
-    ctx.save(); ctx.translate(p.x,p.y);
-    ctx.strokeStyle='rgba(224,60,46,'+(0.75+0.25*wf)+')'; ctx.lineWidth=2.4;
-    ctx.beginPath(); ctx.ellipse(0,0,p.rx+1.6,p.ry+1.6,0,0,6.283); ctx.stroke();
-    ctx.fillStyle='#1c5f96'; ctx.beginPath();
-    ctx.ellipse(0,0,p.rx,p.ry,0,0,6.283); ctx.fill();
-    ctx.fillStyle='#2a7cbe'; ctx.beginPath();
-    ctx.ellipse(0,-p.ry*0.12,p.rx*0.9,p.ry*0.78,0,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba(190,232,255,'+(0.34+0.4*wf)+')'; ctx.lineWidth=1;
-    for(var rr=0;rr<3;rr++){ var ph=((now||0)/900+rr*0.33)%1;   // slow ripples
-    ctx.beginPath(); ctx.ellipse(0,0,p.rx*(0.3+0.6*ph),p.ry*(0.3+0.6*ph),0,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.beginPath();
-    ctx.ellipse(-p.rx*0.3,-p.ry*0.42,p.rx*0.26,p.ry*0.14,-0.3,0,6.283); ctx.fill();
-    ctx.restore(); }
+    _cgFill(ctx,p,-1,'#2a6b34');                      // damp grass at the margin
+    _cgFill(ctx,p,0,'#123f63');                       // shoreline
+    _cgFill(ctx,p,1,'#1c5f96');
+    _cgFill(ctx,p,3,'#2a7cbe',0.1,0.96);
+    _cgFill(ctx,p,6,'#3d95d6',0.2,0.7);               // shallow water catching the sky
+    _cgDither(ctx,p,'#1c5f96',wi*11.3,80);
+    _cgDither(ctx,p,'#2a6b34',wi*11.3+2.7,60);
+    ctx.fillStyle='rgba(210,240,255,0.5)';            // ripple lines, 1px and level
+    for(var rp=0;rp<5;rp++){ var yy=Math.round(p.y+(rp-2)*p.ry*0.34+Math.sin((now||0)/700+rp)*0.6);
+    var s3=cgSpan(p,yy); if(!s3) continue;
+    var w2=Math.round((s3.l+s3.r)*0.34);
+    ctx.fillRect(Math.round(p.x-w2/2+Math.sin((now||0)/900+rp*2)*3),yy,w2,1); }
+    ctx.fillStyle=wf?'#fff6d0':'#eaf7ff';             // sparkles, fixed so they do not crawl
+    for(var sk=0;sk<9;sk++){ var sy=Math.round(p.y+(_cgRnd(wi*9+sk)-0.5)*p.ry*1.5);
+    var s4=cgSpan(p,sy); if(!s4) continue;
+    ctx.fillRect(Math.round(p.x-s4.l+4+_cgRnd(wi*9+sk+0.6)*(s4.l+s4.r-8)),sy,1,1); }
+    var stake=wf?'#ffe07a':'#d8382c';                 // the hazard stake line
+    var y0=Math.round(p.y-p.ry), y1=Math.round(p.y+p.ry);
+    for(var y2=y0;y2<=y1;y2+=4){ var s5=cgSpan(p,y2); if(!s5) continue;
+    ctx.fillStyle=stake;
+    ctx.fillRect(Math.round(p.x-s5.l)-3,y2,2,2); ctx.fillRect(Math.round(p.x+s5.r)+2,y2,2,2); } }
+    // ---- CUPS: white collar, black hole, and a DASHED pixel ring on the two you can use (a soft radial
+    // glow was the last vector artefact left on the board).
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
-    ctx.save();
-    if(live){ var pul=0.5+0.5*Math.sin((now||0)/240);              // only the two you can use glow
-    var col=(cu['for']==='red')?'224,91,72':'91,143,232';
-    ctx.fillStyle='rgba('+col+','+(0.10+0.10*pul)+')';
-    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+7+2*pul,0,6.283); ctx.fill();
-    ctx.strokeStyle='rgba('+col+','+(0.45+0.35*pul)+')'; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP+5,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='rgba(248,255,240,0.5)';
-    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP,0,6.283); ctx.fill();
-    ctx.fillStyle=cf?('rgba(255,'+Math.round(225-125*cf)+',95,1)'):'#12240f';
-    ctx.beginPath(); ctx.arc(cu.x,cu.y,CG_CUP*0.74,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath();
-    ctx.arc(cu.x,cu.y-0.7,CG_CUP*0.5,0,6.283); ctx.fill();
-    var sway=Math.sin((now||0)/430+ci)*1.5;
-    ctx.fillStyle='rgba(10,40,18,0.3)'; ctx.fillRect(cu.x-1,cu.y,9,2);
-    ctx.fillStyle='#eef3f8';
-    ctx.beginPath(); ctx.moveTo(cu.x-1.4,cu.y);
-    ctx.lineTo(cu.x-1.4+sway*0.5,cu.y-21); ctx.lineTo(cu.x+1.4+sway*0.5,cu.y-21);
-    ctx.lineTo(cu.x+1.4,cu.y); ctx.fill();
+    var cx=Math.round(cu.x), cy=Math.round(cu.y);
+    if(live){ var ph=Math.floor((now||0)/110)%8;
     ctx.fillStyle=(cu['for']==='red')?'#e05b48':'#5b8fe8';
-    ctx.beginPath(); ctx.moveTo(cu.x+1+sway*0.5,cu.y-21);
-    ctx.lineTo(cu.x+11+sway,cu.y-17); ctx.lineTo(cu.x+1+sway*0.5,cu.y-13); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.4)';
-    ctx.fillRect(cu.x-1.4+sway*0.5,cu.y-21,1,20);
-    ctx.restore(); }
-    // TREES last, so they sit over everything — they are the tallest thing on the course. Drawn DARK
-    // with a hard rim: the first cut used a mid-green canopy on bright turf and the tree that kills your
-    // ball was practically invisible, which is the worst possible thing for it to be.
+    for(var dd=0;dd<8;dd++){ if(((dd+ph)%2)===0) continue;
+    var an=dd/8*Math.PI*2;
+    ctx.fillRect(cx+Math.round(Math.cos(an)*(CG_CUP+5))-1,cy+Math.round(Math.sin(an)*(CG_CUP+5))-1,2,2); } }
+    _cgDisc(ctx,cx,cy,CG_CUP,'#e8f4dc');              // the cut collar of the hole
+    _cgDisc(ctx,cx,cy,CG_CUP-1.5,cf?'#ffd35a':'#0d1a0a');
+    _cgDisc(ctx,cx,cy-1,CG_CUP-3.5,cf?'#fff0a8':'#000000');
+    var sway=Math.round(Math.sin((now||0)/430+ci)*1.5);
+    ctx.fillStyle='rgba(8,32,14,0.34)'; ctx.fillRect(cx+1,cy-1,10,2);
+    ctx.fillStyle='#c9d4dc'; ctx.fillRect(cx-1,cy-22,2,22);          // pin
+    ctx.fillStyle='#f2f8ff'; ctx.fillRect(cx-1,cy-22,1,22);
+    var fc=(cu['for']==='red')?'#e05b48':'#5b8fe8', fh=(cu['for']==='red')?'#f5836f':'#86b0f2';
+    for(var fy=0;fy<7;fy++){ var fw=9-Math.abs(fy-3)*2;             // a pennant, in flat pixel rows
+    ctx.fillStyle=(fy<3)?fh:fc;
+    ctx.fillRect(cx+1+(fy<3?0:0)+sway*(fy>3?1:0),cy-22+fy,fw,1); } }
+    // ---- TREES: chunky canopies with a hard near-black rim, so the thing that kills your ball is the
+    // most legible object on the course. The first cut was mid-green on bright turf and nearly invisible.
     for(var ti=0;ti<cgTrees.length;ti++){ var t=cgTrees[ti], tl=(t.flash>0), r=t.r;
-    ctx.save(); ctx.translate(t.x,t.y);
-    ctx.fillStyle='rgba(6,26,10,0.42)'; ctx.beginPath();          // shadow on the turf
-    ctx.ellipse(2.8,r*0.62,r*1.15,r*0.55,0,0,6.283); ctx.fill();
-    ctx.fillStyle='#4a3116'; ctx.fillRect(-2.2,-1,4.4,r*0.95);    // trunk
-    ctx.fillStyle='#2b1c0c'; ctx.fillRect(-2.2,-1,1.4,r*0.95);
-    ctx.fillStyle='rgba(4,20,8,0.85)'; ctx.beginPath();           // hard dark rim, so it reads on turf
-    ctx.arc(0,-1.5,r+1.2,0,6.283); ctx.fill();
-    var cl=tl?'#d8f27a':'#14401c', cm=tl?'#eaf9a8':'#1d5a26', ch=tl?'#f6ffd2':'#2c7a33';
-    ctx.fillStyle=cl; ctx.beginPath(); ctx.arc(0,-1.5,r,0,6.283); ctx.fill();
-    ctx.fillStyle=cm; ctx.beginPath();                            // two canopy lobes
-    ctx.arc(-r*0.3,-r*0.42,r*0.6,0,6.283); ctx.fill();
-    ctx.beginPath(); ctx.arc(r*0.36,-r*0.06,r*0.5,0,6.283); ctx.fill();
-    ctx.fillStyle=ch; ctx.beginPath();                            // sun catch
-    ctx.arc(-r*0.36,-r*0.56,r*0.32,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(4,20,8,0.34)'; ctx.beginPath();           // shaded underside
-    ctx.arc(r*0.22,r*0.4,r*0.42,0,6.283); ctx.fill();
-    ctx.restore(); }
-    if(cgSplash>0){ var sa=cgSplash/26;                            // splash ring where the ball drowned
-    ctx.save(); ctx.strokeStyle='rgba(200,238,255,'+(0.7*sa)+')';
-    ctx.lineWidth=1.6; ctx.beginPath();
-    ctx.arc(coin.x,coin.y,4+18*(1-sa),0,6.283); ctx.stroke();
-    ctx.restore(); } }
+    var tx=Math.round(t.x), ty=Math.round(t.y);
+    ctx.fillStyle='rgba(6,26,10,0.4)';
+    ctx.fillRect(tx-r+1,ty+Math.round(r*0.5),r*2-2,3);              // ground shadow
+    ctx.fillStyle='#4a3116'; ctx.fillRect(tx-2,ty-1,4,Math.round(r*0.95));
+    ctx.fillStyle='#2b1c0c'; ctx.fillRect(tx-2,ty-1,1,Math.round(r*0.95));
+    _cgDisc(ctx,tx,ty-2,r+1,'#06180a');                             // hard rim
+    _cgDisc(ctx,tx,ty-2,r,tl?'#cbe86a':'#17491d');
+    _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
+    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127');
+    _cgDisc(ctx,tx-r*0.34,ty-2-r*0.5,r*0.3,tl?'#f6ffd2':'#2d7f36'); // sun catch
+    ctx.fillStyle='rgba(6,24,10,0.3)';                              // foliage speckle
+    for(var lf=0;lf<Math.round(r*1.6);lf++){ var lx=tx+Math.round((_cgRnd(ti*13+lf)-0.5)*r*1.6);
+    var ly=ty-2+Math.round((_cgRnd(ti*13+lf+0.5)-0.4)*r*1.6);
+    if(Math.hypot(lx-tx,ly-(ty-2))<r-1) ctx.fillRect(lx,ly,1,1); } }
+    if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
+    var sr=Math.round(4+16*(1-sa));
+    ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
+    for(var sp2=0;sp2<12;sp2++){ var a3=sp2/12*Math.PI*2;
+    ctx.fillRect(Math.round(coin.x+Math.cos(a3)*sr),Math.round(coin.y+Math.sin(a3)*sr),1,1); } } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);

@@ -535,16 +535,58 @@
         frame:'#8a5a2a',frameHi:'#c08a45',frameLo:'#5a3616',post:'#f4f8ea',   // timber course frame
         line:'rgba(255,255,255,0.8)',line2:'rgba(255,255,255,0.52)',
         netRecess:'#14401f',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
-        surface(g){ g.fillStyle='#2fa049'; g.fillRect(0,0,W,H);          // bright artificial turf
-        for(var b=WALL;b<H-WALL;b+=18){ g.fillStyle='rgba(255,255,255,0.05)';
-        g.fillRect(WALL,b,W-WALL*2,9); }
-        g.fillStyle='rgba(12,60,26,0.10)';                              // felt speckle
-        for(var sy=WALL;sy<H-WALL;sy+=3){ for(var sx=WALL+((sy/3)%2?0:2);sx<W-WALL;sx+=4) g.fillRect(sx,sy,1,1); }
-        g.fillStyle='#c9a06a';                                          // gravel edging inside the timber
-        g.fillRect(WALL,WALL,W-WALL*2,4); g.fillRect(WALL,H-WALL-4,W-WALL*2,4);
-        g.fillRect(WALL,WALL,4,H-WALL*2); g.fillRect(W-WALL-4,WALL,4,H-WALL*2);
-        g.fillStyle='rgba(120,86,44,0.35)';
-        for(var gx=WALL;gx<W-WALL;gx+=5){ g.fillRect(gx,WALL+1,2,1); g.fillRect(gx,H-WALL-2,2,1); }
+        surface(g){
+        /* A GOLF HOLE HAS TO SHOW ITS SHAPE. The first cut painted flat bright turf, so the hazards
+           floated on a featureless field and you could not see where the route was. On a real course the
+           mown fairway IS the route and the rough is dark, so that is what gets painted: three tones of
+           grass — rough at the edges, fairway down the two lanes and across midfield, and a lighter
+           apron around each green — with vertical mower stripes over the lot.
+           Everything here is drawn on integer pixels with 1x1 stipple for the transitions, matching how
+           the rest of the game's art is built (see the beach's sand). The hazard positions come from the
+           CG_* constants in 11-physics so the art cannot drift from the collision shapes; surface() runs
+           at buildBoard time, long after that file has executed, which is the same trick tnApron uses. */
+        var ROUGH='#1f6b2c', ROUGH2='#1a5c26', FAIR='#2c8f3c', FAIR2='#26a043', APRON='#3fae4d';
+        var _px=(typeof CG_POND_X!=='undefined')?CG_POND_X:75, _pr=(typeof CG_POND_RX!=='undefined')?CG_POND_RX:34;
+        var _sx=(typeof CG_SAND_X!=='undefined')?CG_SAND_X:140, _sr=(typeof CG_SAND_RX!=='undefined')?CG_SAND_RX:26;
+        var laneL=Math.round(_px-_pr)+2, laneR=Math.round(_sx+_sr)-2;   // the two routes, from the hazards
+        g.fillStyle=ROUGH; g.fillRect(0,0,W,H);
+        for(var n=0;n<2200;n++){ g.fillStyle=(Math.random()>0.5)?ROUGH2:'rgba(255,255,255,0.04)';
+        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+        /* THE FAIRWAY IS DRAWN SCANLINE BY SCANLINE, not as rectangles. Painted as boxes it came out
+           looking like a layer cake — you could see straight horizontal seams across the pitch, and a
+           fairway on a real course curves. So for each row of pixels the dead middle opens and closes
+           with a smoothstep: full width at midfield and at each green, splitting into two lanes where
+           the pond and bunker sit. One expression, and the edges come out curved for free. */
+        var mid=H/2, half=H/2-NET_DEPTH;
+        var smooth=function(u){ u=Math.max(0,Math.min(1,u)); return u*u*(3-2*u); };
+        for(var y=WALL;y<H-WALL;y++){
+        var dm=Math.abs(y-mid)/half;                        // 0 at midfield, 1 at the goal line
+        // the middle is dead through the hazard belt (roughly 0.28..0.78 of the way out) and open either side
+        var open=smooth((dm-0.24)/0.16)*(1-smooth((dm-0.72)/0.14));
+        var gap=Math.round(open*62), lx=W/2-gap, rx=W/2+gap;
+        var apron=(dm>0.80);
+        g.fillStyle=apron?APRON:FAIR;
+        if(gap<=2){ g.fillRect(WALL+2,y,W-WALL*2-4,1); }
+        else { g.fillRect(WALL+2,y,lx-WALL-2,1); g.fillRect(rx,y,W-WALL-2-rx,1); }
+        // dither both edges of every run so grass meets grass by stipple, never by a hard seam
+        for(var d2=0;d2<3;d2++){ g.fillStyle=(Math.random()>0.5)?(apron?APRON:FAIR):ROUGH2;
+        g.fillRect(WALL+2+(Math.random()*4|0),y,1,1);
+        g.fillRect(W-WALL-3-(Math.random()*4|0),y,1,1);
+        if(gap>2){ g.fillRect(lx-1-(Math.random()*4|0),y,1,1);
+        g.fillRect(rx+(Math.random()*4|0),y,1,1); } } }
+        for(var sp3=0;sp3<1400;sp3++){ g.fillStyle=(Math.random()>0.5)?FAIR2:'rgba(255,255,255,0.05)';
+        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+        g.fillStyle='rgba(255,255,255,0.05)';                 // mower stripes, integer-aligned so they stay crisp
+        for(var mx=WALL;mx<W-WALL;mx+=10) g.fillRect(mx,WALL,5,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.06)';
+        for(var mx2=WALL+5;mx2<W-WALL;mx2+=10) g.fillRect(mx2,WALL,5,H-WALL*2);
+        g.fillStyle='#b8945c';                                // sandy course path just inside the timber
+        g.fillRect(WALL,WALL,W-WALL*2,3); g.fillRect(WALL,H-WALL-3,W-WALL*2,3);
+        g.fillRect(WALL,WALL,3,H-WALL*2); g.fillRect(W-WALL-3,WALL,3,H-WALL*2);
+        for(var gp=0;gp<700;gp++){ g.fillStyle=(Math.random()>0.5)?'#cda874':'#96754a';
+        var s1=Math.random()<0.5, gx2=WALL+Math.random()*(W-WALL*2)|0, gy2=WALL+Math.random()*(H-WALL*2)|0;
+        if(s1) g.fillRect(gx2,(Math.random()<0.5?WALL:H-WALL-3)+(Math.random()*3|0),1,1);
+        else g.fillRect((Math.random()<0.5?WALL:W-WALL-3)+(Math.random()*3|0),gy2,1,1); }
         },
         preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
         for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
