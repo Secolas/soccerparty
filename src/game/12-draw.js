@@ -1752,6 +1752,34 @@
 
       // aim — pull-back guide + predicted bounce path + power meter
       if(pen&&pen.active) drawPenaltyHUD();
+      // CPU AIM TELEGRAPH: while the CPU is winding up (aiPending), show it lining up on its target so
+      // its turn feels deliberate. Early on, a soft "thinking" pulse round the ball; then an aim arrow
+      // that extends and brightens as it locks on, with a pull-back marker that retracts at release.
+      if(typeof CPU_AIM_TELEGRAPH!=='undefined'&&CPU_AIM_TELEGRAPH&&aiPending&&aiEnabled&&aiEnabled[current]&&aiAim&&!moving&&!scoring&&phase==='play'&&!winner){
+      var _tp=1-Math.max(0,aiDelay)/Math.max(1,aiThink0);        // 0 -> 1 through the think time
+      var _adx=aiAim.x-coin.x, _ady=aiAim.y-coin.y, _ad=Math.hypot(_adx,_ady)||1, _aux=_adx/_ad, _auy=_ady/_ad;
+      var _acol=(current==='red')?'224,91,72':'91,143,232', _aang=Math.atan2(_auy,_aux);
+      ctx.save();
+      if(_tp<0.55){ var _pr=Math.sin((now||0)/120)*1.6;           // "thinking" pulse, fades as it locks on
+      ctx.strokeStyle='rgba('+_acol+','+(0.34*(1-_tp/0.55))+')'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(coin.x,coin.y,COIN_R+3+_pr,0,6.283); ctx.stroke(); }
+      var _pull=9*(1-_tp);                                        // wind-up pull-back, retracts to 0
+      ctx.strokeStyle='rgba('+_acol+',0.5)'; ctx.lineWidth=1.4; ctx.setLineDash([2,2]);
+      ctx.beginPath(); ctx.moveTo(coin.x-_aux*_pull,coin.y-_auy*_pull); ctx.lineTo(coin.x,coin.y); ctx.stroke();
+      ctx.setLineDash([]);
+      var _len=14+32*_tp, _tx=coin.x+_aux*_len, _ty=coin.y+_auy*_len;   // aim line grows + brightens
+      ctx.strokeStyle='rgba(255,255,255,'+(0.25+0.35*_tp)+')'; ctx.lineWidth=3;   // white underlay for contrast
+      ctx.beginPath(); ctx.moveTo(coin.x,coin.y); ctx.lineTo(_tx,_ty); ctx.stroke();
+      ctx.strokeStyle='rgba('+_acol+','+(0.55+0.45*_tp)+')'; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.moveTo(coin.x,coin.y); ctx.lineTo(_tx,_ty); ctx.stroke();
+      var _ah=5+2*_tp;                                            // arrowhead
+      ctx.fillStyle='rgba('+_acol+',1)';
+      ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(_tx+Math.cos(_aang)*_ah,_ty+Math.sin(_aang)*_ah);
+      ctx.lineTo(_tx+Math.cos(_aang+2.5)*_ah,_ty+Math.sin(_aang+2.5)*_ah);
+      ctx.lineTo(_tx+Math.cos(_aang-2.5)*_ah,_ty+Math.sin(_aang-2.5)*_ah); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      }
       if(aiming&&aimStart&&aimNow&&debuffActive(current,'fog')){ ctx.save();
       for(var _fp=0;_fp<7;_fp++){ var _fa=_fp*(Math.PI*2/7);
       ctx.globalAlpha=0.16; ctx.fillStyle='#c9d0d8';

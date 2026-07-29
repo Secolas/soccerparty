@@ -14,6 +14,10 @@
     // Shared flick tuning: full-power ball speed for BOTH player and CPU. Cannon x2, Freeze x0.5 derive from it.
     const FLICK_MAX=10, FLICK_POWER=70;
     let aiPending=false, aiDelay=0;
+    /* CPU AIM TELEGRAPH — a "thinking, then aiming" arrow shown while the CPU winds up, so its turn reads
+       as deliberate instead of an instant snap. aiAim is the point it is lining up on, aiThink0 the full
+       think time (to animate progress). CPU_AIM_TELEGRAPH is the game-wide on/off (ON for review). */
+    var CPU_AIM_TELEGRAPH=true, aiAim=null, aiThink0=1;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='easy';
     let exhWin=5, exhTimer=0;
     let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null;

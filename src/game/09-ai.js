@@ -189,7 +189,18 @@
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
       if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; return; }
       if(!aiEnabled[current]) return;
-      if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; try{ aiUtility(); }catch(e){} return; }
-      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiFlick(); }
+      if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; aiThink0=aiDelay;
+      try{ aiUtility(); }catch(e){}
+      try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
+      return; }
+      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiAim=null; aiFlick(); }
     }
+    /* The point the CPU is lining up on, WITHOUT the random spread aiFlick adds — so the telegraph arrow
+       shows its intent, not the jittered result. Mirrors the target-selection at the top of aiFlick
+       (goal centre, or whichever arena aim-plan applies); read-only, so it cannot affect the shot. */
+    function aiTargetCenter(t){ var gy=(t==='red')?(NET_DEPTH+COIN_R+1):(H-NET_DEPTH-COIN_R-1), gx=W/2;
+    try{ var r=(typeof bkAimTarget==='function')?bkAimTarget(t):null; if(r){ gx=r.x; gy=r.y; } }catch(e){}
+    try{ var tn=(typeof tnAimPlan==='function')?tnAimPlan(t):null; if(tn){ gx=tn.x; gy=tn.y; } }catch(e){}
+    try{ var cg=(typeof cgAimPlan==='function')?cgAimPlan(t):null; if(cg){ gx=cg.x; gy=cg.y; } }catch(e){}
+    return {x:gx,y:gy}; }
 

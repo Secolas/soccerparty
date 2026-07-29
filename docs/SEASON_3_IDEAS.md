@@ -683,3 +683,14 @@ Golf greens & Tennis).
 - The one genuinely new engine primitive the season needs is the **beat/timing
   clock** (bat, speed-bag) — build it once in Baseball and reuse it in Boxing and
   the Podium medley.
+
+## CPU aim telegraph (game-wide, under review)
+
+A "thinking, then aiming" cue shown while the CPU winds up, so its turn reads as deliberate rather than an
+instant snap. During the CPU's think delay (~0.95–1.5s) it draws, from the ball toward the point it is
+lining up on: a soft "thinking" pulse round the ball early, then an aim arrow that grows and brightens as
+it locks on, with a pull-back marker that retracts at release. The target is `aiTargetCenter()` — the same
+goal/arena-plan point aiFlick chooses, minus the random spread, so the arrow shows intent not jitter; it is
+read-only and cannot change the shot. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas and
+modes). Verified in-engine that the arrow renders along the real ball→target line during wind-up.
+
