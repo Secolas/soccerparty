@@ -1752,21 +1752,27 @@
 
       // aim — pull-back guide + predicted bounce path + power meter
       if(pen&&pen.active) drawPenaltyHUD();
-      // CPU AIM TELEGRAPH: while the CPU winds up (aiPending) it has already locked in its shot (aiShot),
-      // so draw the SAME aim guide the player gets — same stamina-coloured line, same ability trajectory
-      // (curve/serpent/wet/backspin) — for the very shot it is about to release. It fades in as the CPU
-      // locks on, with a soft "thinking" pulse ringing the ball early to sell the deliberation.
+      // CPU AIM TELEGRAPH: the CPU has already locked in its shot (aiShot); the wind-up plays it out the
+      // way a human would — a beat of "thinking", then a DRAG where the aim line pulls back and grows while
+      // the angle wavers and settles onto target (a hand adjusting), then a brief locked hold before the
+      // fast flick fires at release. Same aim guide the player gets — stamina-coloured line, ability
+      // trajectory (curve/serpent/wet/backspin) — so the shot drawn is the shot taken.
       if(typeof CPU_AIM_TELEGRAPH!=='undefined'&&CPU_AIM_TELEGRAPH&&aiPending&&aiEnabled&&aiEnabled[current]&&aiShot&&!aiShot.pen&&!moving&&!scoring&&phase==='play'&&!winner&&!debuffActive(current,'fog')){
       var _tp=1-Math.max(0,aiDelay)/Math.max(1,aiThink0);            // 0 -> 1 through the think time
-      if(_tp<0.55){ ctx.save(); var _pr=Math.sin((now||0)/120)*1.6;   // "thinking" pulse, fades as it locks on
       var _acol=(current==='red')?'224,91,72':'91,143,232';
-      ctx.strokeStyle='rgba('+_acol+','+(0.34*(1-_tp/0.55))+')'; ctx.lineWidth=1;
+      if(_tp<0.45){ ctx.save(); var _pr=Math.sin((now||0)/110)*1.7;   // "thinking" beat — a pulse ringing the ball, fades as the drag begins
+      ctx.strokeStyle='rgba('+_acol+','+(0.36*(1-_tp/0.45))+')'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.arc(coin.x,coin.y,COIN_R+3+_pr,0,6.283); ctx.stroke(); ctx.restore(); }
+      if(_tp>=0.14){                                                  // after the beat, drag + point onto target
       var _cang=Math.atan2(aiShot.vy,aiShot.vx), _cspd=Math.hypot(aiShot.vx,aiShot.vy);
       // Invert the guide's v0 = power*staminaMul*(FLICK_MAX/FLICK_POWER)*TAC.power so the drawn line's
       // launch speed equals the shot's real speed, then clamp into the guide's power range.
-      var _cpow=Math.min(TAC.frozen?35:70,_cspd/((staminaMul()||1)*(TAC.power||1))*(FLICK_POWER/FLICK_MAX));
-      drawAimGuide(_cang,_cpow,_cpow,0.35+0.55*_tp,false);
+      var _cpowFull=Math.min(TAC.frozen?35:70,_cspd/((staminaMul()||1)*(TAC.power||1))*(FLICK_POWER/FLICK_MAX));
+      var _drag=Math.max(0,Math.min(1,(_tp-0.14)/0.74)), _dragE=_drag*_drag*(3-2*_drag);   // smoothstep: pull back, ease into the lock
+      var _wob=(1-_dragE)*Math.sin((now||0)/85)*0.10;                 // aim waver that settles to 0 as it locks (true angle at release)
+      var _cpow=_cpowFull*(0.30+0.70*_dragE);                         // power builds as the drag extends
+      drawAimGuide(_cang+_wob,_cpow,_cpow,0.6+0.4*_dragE,false);
+      }
       }
       if(aiming&&aimStart&&aimNow&&debuffActive(current,'fog')){ ctx.save();
       for(var _fp=0;_fp<7;_fp++){ var _fa=_fp*(Math.PI*2/7);

@@ -702,9 +702,15 @@ they are never precomputed and never telegraphed.
 
 Rendering: the player's aim-guide body in `12-draw.js` was extracted into `drawAimGuide(angD,power,rawP,
 gAlpha,showMeter)`. The player calls it at full alpha with the power meter; the CPU calls it during the
-wind-up, fading it in (`gAlpha = 0.35→0.9` over the think time) with a soft "thinking" pulse round the ball
-early and no power meter. The CPU's `power` is the inverse of the guide's `v0` formula so the drawn line's
-launch speed equals the real shot's speed. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas
-and modes). Verified in-engine: 305 stamina-coloured guide pixels render along the CPU's shot line during a
-wind-up, matching the player's guide.
+wind-up with no meter. The CPU's `power` is the inverse of the guide's `v0` formula so the drawn line's
+launch speed equals the real shot's speed.
+
+The wind-up plays out like a human taking the shot, not an instant snap: (1) a **think beat** — a pulse
+ringing the ball for the first ~14% of the delay; (2) a **drag+point** — the aim line pulls back and grows
+as `power` ramps `0.30→1.0×` over a smoothstep, while a small angle waver (`(1-dragE)·sin·0.10`) settles to
+zero so it looks like a hand adjusting onto target and locking; (3) a brief **locked hold** at full power;
+then the **fast flick** fires at release. Because the waver decays to zero by the lock, the final drawn line
+is the true shot. Gated by `CPU_AIM_TELEGRAPH` (on for review; game-wide, all arenas and modes). Verified
+in-engine: the guide renders as a stamina-coloured arrow + pull-back marker along the CPU's shot line and
+grows through the wind-up (guide-pixel count climbs 209→312 as the drag extends), matching the player's guide.
 
