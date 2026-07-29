@@ -615,19 +615,35 @@
     _cgDisc(ctx,cx,cy,CG_CUP-1.5,cf?'#ffd35a':'#0d1a0a');
     _cgDisc(ctx,cx,cy-1,CG_CUP-3.5,cf?'#fff0a8':'#000000');
     var sway=Math.round(Math.sin((now||0)/430+ci)*1.5);
+    /* The pennant is GOLF YELLOW on every cup. Colouring it by team made the course look like it was
+       flying two nations' flags, and it was redundant anyway: which cups are yours is already said by the
+       dashed ring, which only ever appears on the two you can actually use. */
     ctx.fillStyle='rgba(8,32,14,0.34)'; ctx.fillRect(cx+1,cy-1,10,2);
-    ctx.fillStyle='#c9d4dc'; ctx.fillRect(cx-1,cy-22,2,22);          // pin
-    ctx.fillStyle='#f2f8ff'; ctx.fillRect(cx-1,cy-22,1,22);
-    var fc=(cu['for']==='red')?'#e05b48':'#5b8fe8', fh=(cu['for']==='red')?'#f5836f':'#86b0f2';
-    for(var fy=0;fy<7;fy++){ var fw=9-Math.abs(fy-3)*2;             // a pennant, in flat pixel rows
-    ctx.fillStyle=(fy<3)?fh:fc;
-    ctx.fillRect(cx+1+(fy<3?0:0)+sway*(fy>3?1:0),cy-22+fy,fw,1); } }
-    // ---- TREES: the SAME bush sprites THE THICKET uses (assets/generated/sprite-bush-*.png). Reusing
+    ctx.fillStyle='#8f9aa4'; ctx.fillRect(cx-1,cy-22,2,22);          // pin
+    ctx.fillStyle='#e8eef4'; ctx.fillRect(cx-1,cy-22,1,22);
+    for(var fy=0;fy<7;fy++){ var fw=9-Math.abs(fy-3)*2;              // a pennant, in flat pixel rows
+    ctx.fillStyle=(fy<3)?'#ffd94a':'#e0a520';
+    ctx.fillRect(cx+1+sway*(fy>3?1:0),cy-22+fy,fw,1); }
+    ctx.fillStyle='#fff3b0'; ctx.fillRect(cx+1,cy-22,4,1);           // lit top edge
+    ctx.restore(); }
+    if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
+    var sr=Math.round(4+16*(1-sa));
+    ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
+    for(var sp2=0;sp2<12;sp2++){ var a3=sp2/12*Math.PI*2;
+    ctx.fillRect(Math.round(coin.x+Math.cos(a3)*sr),Math.round(coin.y+Math.sin(a3)*sr),1,1); } } }
+    /* The trees are drawn in their OWN pass, from the same call site as THE THICKET's bushes — which runs
+       AFTER the ball. So a ball that finishes in a tree disappears INTO the foliage instead of sitting on
+       top of it, and the canopy goes part-transparent while the ball is inside so you can still see where
+       it went. That is Season 1's behaviour and it is the right one: the tree is taller than the ball. */
+    function drawMinigolfTrees(ctx,now){ if(typeof cgTrees==='undefined'||!cgOn) return;
+    // The SAME bush sprites THE THICKET uses (assets/generated/sprite-bush-*.png). Reusing
     // the art the game already ships beats a second hand-rolled style, and it is already pixel art at the
     // right scale. A dark disc goes down first so the canopy keeps a hard rim against bright turf — the
     // thing that kills your ball has to be the most legible object on the course. The procedural canopy
     // stays as the fallback for the frames before the image has loaded, same as the ballpark props.
     for(var ti=0;ti<cgTrees.length;ti++){ var t=cgTrees[ti], tl=(t.flash>0), r=t.r;
+    var inBush=(typeof coin!=='undefined'&&coin)&&Math.hypot(coin.x-t.x,coin.y-t.y)<r+COIN_R+1;
+    ctx.save(); ctx.globalAlpha=inBush?0.62:1;
     var tx=Math.round(t.x), ty=Math.round(t.y);
     ctx.fillStyle='rgba(6,26,10,0.42)';
     ctx.fillRect(tx-r+1,ty+Math.round(r*0.55),r*2-2,3);
@@ -642,12 +658,8 @@
     _cgDisc(ctx,tx,ty-2,r+1,'#06180a');
     _cgDisc(ctx,tx,ty-2,r,tl?'#cbe86a':'#17491d');
     _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
-    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); } }
-    if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
-    var sr=Math.round(4+16*(1-sa));
-    ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
-    for(var sp2=0;sp2<12;sp2++){ var a3=sp2/12*Math.PI*2;
-    ctx.fillRect(Math.round(coin.x+Math.cos(a3)*sr),Math.round(coin.y+Math.sin(a3)*sr),1,1); } } }
+    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); }     ctx.restore(); } }
+
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1644,6 +1656,9 @@
       // ball and the coiled snake both disappear INTO the foliage
       try{drawSerp(now);}catch(e){}
       try{drawBushes(now);}catch(e){}
+      // CRAZY GOLF's trees ride the same pass, for the same reason: a ball that finishes in one should
+      // disappear into the foliage rather than sit on top of it
+      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolfTrees(ctx,now); }catch(e){}
       // cacti stand over the ball (it disappears behind them); dust-devil towers over everything
       try{drawCacti(now);}catch(e){}
       try{drawDevil(now);}catch(e){}

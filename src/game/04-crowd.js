@@ -13,10 +13,7 @@
       const t=ambType();
       const beachy=t==='beach';
       // only the grass stadium is packed; every other pitch has just a few onlookers
-      // A golf course has no stand. Leaving it on the default 0.76 skip kept 24% of the fans, which read
-      // as isolated coloured dots scattered down both sides rather than as a crowd — the surround for
-      // CRAZY GOLF is a treeline instead (see the 'golf' case in buildAmbient).
-      const skip = (t==='stadium'||t==='arena') ? 0 : (beachy ? 0.62 : (t==='fiesta'||t==='lisbon') ? 0.5 : (t==='golf' ? 1 : 0.76));
+      const skip = (t==='stadium'||t==='arena') ? 0 : (beachy ? 0.62 : (t==='fiesta'||t==='lisbon') ? 0.5 : 0.76);
       function band(x0,y0,bw,bh,side,cols,rows){
         for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
           if(skip && Math.random()<skip) continue;

@@ -580,13 +580,9 @@
         for(var mx=WALL;mx<W-WALL;mx+=10) g.fillRect(mx,WALL,5,H-WALL*2);
         g.fillStyle='rgba(0,0,0,0.06)';
         for(var mx2=WALL+5;mx2<W-WALL;mx2+=10) g.fillRect(mx2,WALL,5,H-WALL*2);
-        g.fillStyle='#b8945c';                                // sandy course path just inside the timber
-        g.fillRect(WALL,WALL,W-WALL*2,3); g.fillRect(WALL,H-WALL-3,W-WALL*2,3);
-        g.fillRect(WALL,WALL,3,H-WALL*2); g.fillRect(W-WALL-3,WALL,3,H-WALL*2);
-        for(var gp=0;gp<700;gp++){ g.fillStyle=(Math.random()>0.5)?'#cda874':'#96754a';
-        var s1=Math.random()<0.5, gx2=WALL+Math.random()*(W-WALL*2)|0, gy2=WALL+Math.random()*(H-WALL*2)|0;
-        if(s1) g.fillRect(gx2,(Math.random()<0.5?WALL:H-WALL-3)+(Math.random()*3|0),1,1);
-        else g.fillRect((Math.random()<0.5?WALL:W-WALL-3)+(Math.random()*3|0),gy2,1,1); }
+        /* No gravel border. A tan path stippled along the inside of the timber was scattering hundreds of
+           1px specks around the edge of the play area, and on a pitch that reads as dirt, not as a course
+           feature — the grass texture below is all the edge needs. */
         },
         preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
         for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }

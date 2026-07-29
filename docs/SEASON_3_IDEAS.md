@@ -299,14 +299,25 @@ complaint, not the colours. Four things changed:
   thing on the course, dark with a hard near-black rim, and there are three of them in a copse rather
   than one stray blob.
 
-**The surround is a TREELINE, not a stand.** The board was originally mapped to the `jungle` ambience,
-which nothing handles — so `buildAmbient` produced no scenery and the crowd builder fell through to its
-default 0.76 skip, keeping 24% of the fans. Sparse fans do not read as a crowd; they read as isolated
-coloured dots scattered down both sides, which is exactly what they looked like. A golf course has no
-stand anyway. There is now a `golf` ambience type with **no spectators at all** (`skip=1`) and two dense
-staggered rows of trees down each side band plus a thin row top and bottom, so the hole reads as cut out
-of woodland the way a real one does. Sizes and offsets are jittered per tree — a row of identical sprites
-reads as wallpaper.
+**The surround is a treeline AND a gallery.** The board was originally mapped to the `jungle` ambience,
+which nothing handles, so no scenery was built at all. There is now a `golf` ambience type with two dense
+staggered rows of trees down each side band plus a thin row top and bottom, so the hole reads as cut out of
+woodland the way a real one does — with the spectators still in front of them. Sizes and offsets are
+jittered per tree; a row of identical sprites reads as wallpaper.
+
+**The dots were mine, and they were on the PITCH.** A "sandy course path" stippled along the inside of the
+timber was scattering hundreds of 1px tan specks around the edge of the play area. On grass that reads as
+dirt, not as a course feature, and it sat right where the ball runs. Deleted — the grass texture is all the
+edge needs.
+
+**The pins are golf yellow on every cup.** Colouring the pennants by team made the course look like it was
+flying two nations' flags, and it was redundant: which cups are yours is already said by the dashed ring,
+which only ever appears on the two you can use.
+
+**A ball that finishes in a tree disappears INTO it.** The trees are drawn in their own pass from the same
+call site as THE THICKET's bushes — which runs *after* the ball — so the canopy covers a ball that stops in
+it rather than the ball sitting on top of a tree taller than itself, and it drops to 62% alpha while the
+ball is inside so you can still see where it went. Season 1's behaviour, and the right one.
 
 **The trees are THE THICKET's bushes** (`assets/generated/sprite-bush-*.png`), on the pitch and in the
 surround. Reusing art the game already ships beats a second hand-rolled style, it is already pixel art at
