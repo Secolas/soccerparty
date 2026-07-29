@@ -1250,15 +1250,16 @@
        central pond per half, a matched pair of flank bunkers, and a tree pair either side of the goal.
        Everything is smaller too. Because each piece is symmetric about W/2, the 180 rotation to the far
        half is identical to a vertical mirror, so the pitch is balanced on BOTH axes. */
-    /* PLACEMENT: contest ADVANCING, not SCORING. The hazards used to sit at y=88, right in front of each
-       goal — the box ends at y=47 and the pond started at ~70, so the attacking third was walled off and
-       there was nowhere to shoot from ("I can't score"). The whole cluster is now pushed back toward
-       midfield (y=128), which leaves the attacking third (y 13..108) OPEN — once you have worked the ball
-       up past the hazards you have a clear shot — while still blocking the full-pitch straight line, since
-       a shot from your own half must cross the belt. The centre spot (y=165) stays clear for kickoff. */
-    var CG_POND_X=105, CG_POND_Y=128, CG_POND_RX=24, CG_POND_RY=18;  // pond in the middle third, not the box
-    var CG_SAND_DX=57, CG_SAND_Y=128, CG_SAND_RX=13, CG_SAND_RY=11;  // MED: a bunker each side of the pond
-    var CG_TREE_DX=46, CG_TREE_Y=124, CG_TREE_R=6;                   // trees flanking, out toward the touchlines
+    /* PLACEMENT: one hazard cluster per half, in the middle of that half — NOT at midfield. The midfield
+       version left the attacking third open (scoreable) but sat right where both teams' formations meet,
+       so the peg-clearing squeezed every outfield token into the centre and the setup looked clustered.
+       A cluster per half (y=92, mirrored to y=238) keeps midfield clear so the formation spreads normally,
+       and keeps the centre spot clear for kickoff. It is closer to the goal than the midfield belt, so the
+       attacking approach is tighter — the pond does not cover the goalmouth, so a shot from the side of it
+       still scores, but it is a real golf hole again rather than an open midfield. */
+    var CG_POND_X=105, CG_POND_Y=92, CG_POND_RX=24, CG_POND_RY=18;   // pond in the middle of each half
+    var CG_SAND_DX=57, CG_SAND_Y=100, CG_SAND_RX=13, CG_SAND_RY=11;  // bunkers flanking, just below the pond
+    var CG_TREE_DX=46, CG_TREE_Y=88, CG_TREE_R=6;                    // trees at the pond's shoulders
     /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
        measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
        with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,
