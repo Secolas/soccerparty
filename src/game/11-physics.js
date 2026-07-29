@@ -1283,23 +1283,34 @@
     /* The payoff for holing out is ONE FULL-POWER FLICK: aim only, the power is given to you. An ordinary
        extra flick was too quiet a reward for a target this small. */
     var cgFullFlick_=false;
+    /* Which hazard types are on by default, while we re-introduce them one at a time (see cgActive). Set
+       to 'tree' for now; bump to 'tree,water' etc. as each type is signed off, then 'all' when done. */
+    var CG_DEFAULT_HZ='tree';
+    /* INCREMENTAL HAZARD BUILD-UP. We are re-introducing the hazards one type at a time to isolate what
+       makes the pitch read as broken, so which types are active is selectable:
+         ?hz=tree              trees only          (the current default while we verify each type)
+         ?hz=tree,water        trees + water
+         ?hz=tree,water,sand   + bunkers
+         ?hz=all               everything, incl. cups
+         ?nohz=1               nothing (bare pitch)
+       Once a set is signed off, CG_DEFAULT_HZ becomes that set. */
+    function cgActive(kind){ if(cgNoHz()) return false;
+    var q; try{ var m=(location.search||'').match(/[?&]hz=([a-z,]+)/i); q=m?m[1].toLowerCase():CG_DEFAULT_HZ; }catch(e){ q=CG_DEFAULT_HZ; }
+    return q==='all' || q.split(',').indexOf(kind)>=0; }
     function initMinigolf(){ var t=hzTier();
     cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false;
-    /* Water, sand and trees are ALL on from easy: they are not difficulty, they are the hole. Take the
-       pond away and the straight line to goal opens up, and this stops being the arena the layout is
-       for. What the tiers add is a fairway bunker (med) and the cups (hard). */
     cgFairOn=(t>=1); cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
-    if(cgNoHz()){ cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[]; return; }   // ?nohz=1 — bare pitch
-    cgWater=[]; cgSand=[]; cgTrees=[];
-    // EASY: a central pond blocks the straight line to goal, and a tree pair guards the mouth. Both are
-    // symmetric about W/2, so the top half looks the same on the left and the right.
-    cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
-    cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
-    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
-    // MED: a bunker in each flank lane, a matched pair, so both routes carry the same toll.
-    if(cgFairOn){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
+    cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[];
+    if(cgNoHz()){ return; }   // ?nohz=1 — bare pitch
+    // TREES: a symmetric pair flanking the midfield belt (see cgActive for the ?hz= selector).
+    if(cgActive('tree')){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0}); }
+    // WATER: a central pond in the midfield belt.
+    if(cgActive('water')){ cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()}); }
+    // SAND: a matched pair of bunkers flanking the pond.
+    if(cgActive('sand')){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
     cgSand.push({x:CG_POND_X+CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}); }
     // Mirror the whole top-half set to the bottom. Every piece above is symmetric about W/2, so the 180
     // rotation and a vertical mirror give the same result — the pitch ends up balanced on both axes.
@@ -1310,8 +1321,8 @@
     cgSand.push({x:_rs.x,y:_rs.y,rx:_s.rx,ry:_s.ry,pl:cgProfile(),pr:cgProfile()}); }
     for(var _ti=0;_ti<_tN;_ti++){ var _t=cgTrees[_ti], _rt=rot(_t.x,_t.y);
     cgTrees.push({x:_rt.x,y:_rt.y,r:_t.r,flash:0}); }
-    // the cups sit at the far end of each flank route, so taking the long way round is what pays
-    cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
+    // CUPS: the far corners of each attacking third — hole out for a free full-power flick (hard tier).
+    if(cgActive('cup')&&cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
     cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0,armed:true});
     cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0,armed:true}); } } }
     /* IRREGULAR OUTLINES. A perfect ellipse reads as programmer art, and a pond or bunker on a real
