@@ -1505,6 +1505,8 @@
     if(m===dl) x=x0; else if(m===dr) x=x1;
     else if(m===dt) y=y0; else y=y1;
     } } return {x:x,y:y}; } function resolveSpot(px,py,self){ let x=px,y=py;
+    // CRAZY GOLF: a dragged piece cannot be parked in the water or a bunker either
+    try{ var _rcg=cgClearSpot(x,y,NAIL_R); if(_rcg){ x=_rcg.x; y=_rcg.y; } }catch(e){}
     for(let it=0;it<16;it++){ var _wp=wallPush(x,y);
     x=_wp.x; y=_wp.y; const hit=overlapsAny(x,y,self);
     if(!hit) break; let dx=x-hit.x,dy=y-hit.y,d=Math.hypot(dx,dy);

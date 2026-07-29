@@ -1310,6 +1310,45 @@
     return {l:e.rx*sq*cgEdge(e.pl,t), r:e.rx*sq*cgEdge(e.pr,t)}; }
     function cgIn(e,x,y){ var sp=cgSpan(e,y); if(!sp) return false;
     var dx=x-e.x; return (dx<0)?(-dx<=sp.l):(dx<=sp.r); }
+    /* Nudge a PLAYER off a hazard. The formation lays pieces out on a grid that knows nothing about this
+       board, so pieces were being placed standing in the pond and on the bunkers — which looks broken and
+       is unfair on whoever drew that spot. Pushes radially clear of whichever hazard the piece is on and
+       re-checks, since shoving a piece out of the water can land it in a bunker. Goalies are left alone:
+       the green measures 100% clear, so a keeper on its line is never on a hazard. */
+    function cgClearSpot(x,y,rad){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    var R=rad||NAIL_R, lists=[cgWater,cgSand];
+    for(var pass=0;pass<4;pass++){ var moved=false;
+    for(var L=0;L<lists.length;L++){ for(var i=0;i<lists[L].length;i++){ var e=lists[L][i];
+    if(!cgIn(e,x,y)) continue;
+    var dx=x-e.x, dy=y-e.y, d=Math.hypot(dx,dy);
+    if(d<0.001){ dx=1; dy=0; d=1; }
+    var k=Math.max(e.rx,e.ry)+R+2;
+    x=e.x+(dx/d)*k; y=e.y+(dy/d)*k; moved=true; } }
+    for(var t=0;t<cgTrees.length;t++){ var tr=cgTrees[t];
+    var tdx=x-tr.x, tdy=y-tr.y, td=Math.hypot(tdx,tdy);
+    if(td>=tr.r+R+2) continue;
+    if(td<0.001){ tdx=1; tdy=0; td=1; }
+    x=tr.x+(tdx/td)*(tr.r+R+2); y=tr.y+(tdy/td)*(tr.r+R+2); moved=true; }
+    if(!moved) break; }
+    x=Math.max(WALL+R,Math.min(W-WALL-R,x));
+    y=Math.max(WALL+R,Math.min(H-WALL-R,y));
+    /* Pushing radially is not enough on its own. The pond's right edge is at x=109 and the bunker's left
+       edge at x=114, so a peg shoved out of the water lands in the sand, gets shoved back into the water,
+       and the loop above just runs out of passes leaving it standing in the pond — which is exactly the
+       one peg that survived the first version. So if it is still on a hazard, search outward from where it
+       started and take the nearest point that is genuinely clear of everything. */
+    if(cgHazardAt(x,y,R)){ var found=null;
+    for(var rad=R+3;rad<=70&&!found;rad+=4){ for(var a=0;a<16&&!found;a++){
+    var an=a/16*Math.PI*2, tx2=x+Math.cos(an)*rad, ty2=y+Math.sin(an)*rad;
+    if(tx2<WALL+R||tx2>W-WALL-R||ty2<WALL+R||ty2>H-WALL-R) continue;
+    if(!cgHazardAt(tx2,ty2,R)) found={x:tx2,y:ty2}; } }
+    if(found){ x=found.x; y=found.y; } }
+    return {x:x,y:y}; }
+    function cgHazardAt(x,y,R){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return true; }
+    for(var j=0;j<cgSand.length;j++){ if(cgIn(cgSand[j],x,y)) return true; }
+    for(var t=0;t<cgTrees.length;t++){ if(Math.hypot(x-cgTrees[t].x,y-cgTrees[t].y)<cgTrees[t].r+(R||0)+2) return true; }
+    return false; }
     function cgSandAt(x,y){ for(var i=0;i<cgSand.length;i++){ if(cgIn(cgSand[i],x,y)) return cgSand[i]; } return null; }
     function cgWaterAt(x,y){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return cgWater[i]; } return null; }
     // a cup is live only for the side attacking that end, so you can never hole out into your own half
@@ -1319,6 +1358,18 @@
     function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     cgT++; if(cgSplash>0) cgSplash--;
+    /* Sweep the pegs off the hazards from HERE, every frame the ball is still. Doing it only inside
+       rebuildFormations was not enough: formations are laid out before the arena's board is applied, so
+       boardKey was not yet 'minigolf' and cgClearSpot bailed out of its own guard — one peg was still
+       measuring as standing in the pond. This runs with the board definitely set and the pegs definitely
+       built, and it re-runs after a goal rebuilds the formation. The peg being dragged is skipped so it
+       does not fight the player's finger. */
+    if(!moving&&typeof nails!=='undefined'&&nails){ for(var ni=0;ni<nails.length;ni++){ var nn=nails[ni];
+    if(nn.goalie) continue;
+    if(typeof dragNail!=='undefined'&&dragNail===nn) continue;
+    if(!cgHazardAt(nn.x,nn.y,NAIL_R)) continue;
+    var fix=cgClearSpot(nn.x,nn.y,NAIL_R);
+    if(fix){ nn.x=fix.x; nn.y=fix.y; } } }
     for(var i=0;i<cgTrees.length;i++){ if(cgTrees[i].flash>0) cgTrees[i].flash--; }
     for(var w=0;w<cgWater.length;w++){ if(cgWater[w].flash>0) cgWater[w].flash--; }
     for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; } }

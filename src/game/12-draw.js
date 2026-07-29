@@ -606,11 +606,13 @@
     // glow was the last vector artefact left on the board).
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
     var cx=Math.round(cu.x), cy=Math.round(cu.y);
-    if(live){ var ph=Math.floor((now||0)/110)%8;
-    ctx.fillStyle=(cu['for']==='red')?'#e05b48':'#5b8fe8';
-    for(var dd=0;dd<8;dd++){ if(((dd+ph)%2)===0) continue;
-    var an=dd/8*Math.PI*2;
-    ctx.fillRect(cx+Math.round(Math.cos(an)*(CG_CUP+5))-1,cy+Math.round(Math.sin(an)*(CG_CUP+5))-1,2,2); } }
+    /* The live ring is STATIC. It span and pulsed at first, and a rotating animation on a fixed piece of
+       course furniture reads as a UI widget sitting on the grass rather than as part of the hole. It only
+       has one job — say which two cups are yours — and a still ring does that. */
+    if(live){ ctx.fillStyle=(cu['for']==='red')?'#e05b48':'#5b8fe8';
+    for(var dd=0;dd<12;dd++){ if((dd%2)===0) continue;
+    var an=dd/12*Math.PI*2;
+    ctx.fillRect(cx+Math.round(Math.cos(an)*(CG_CUP+4)),cy+Math.round(Math.sin(an)*(CG_CUP+4)),1,1); } }
     _cgDisc(ctx,cx,cy,CG_CUP,'#e8f4dc');              // the cut collar of the hole
     _cgDisc(ctx,cx,cy,CG_CUP-1.5,cf?'#ffd35a':'#0d1a0a');
     _cgDisc(ctx,cx,cy-1,CG_CUP-3.5,cf?'#fff0a8':'#000000');

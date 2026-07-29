@@ -330,6 +330,33 @@ a cushion rather than as stakes, so they are now 1px marks every 11px down the f
 bunkers' dither halo was dense enough to look furry, so it is thinner and the grass specks match the
 collar instead of the rough.
 
+**Pegs must not be placed on hazards.** The formation grid knows nothing about this board, so pieces were
+being laid out standing in the pond and on the bunkers — which looks broken and is unfair on whoever drew
+that spot. `cgClearSpot` pushes a piece radially clear and re-checks, because shoving one out of the water
+can land it in sand. Radial pushing alone was not enough: the pond's right edge is at x=109 and the
+bunker's left edge at x=114, so a peg bounced between the two until the loop ran out of passes and left it
+in the water. There is now a fallback that searches outward from the original point for the nearest
+genuinely clear spot. And the sweep runs from `minigolfTick`, not only from `rebuildFormations` — formations
+are laid out *before* the arena's board is applied, so `boardKey` was not yet `minigolf` and the nudge
+bailed out of its own guard. From the tick it runs with the board definitely set and the pegs definitely
+built, it re-runs after a goal rebuilds the formation, and it skips the piece being dragged. Measured: 0 of
+10 pegs on a hazard, at kickoff and again mid-match. Keepers are left alone and verified dead centre of the
+mouth (x=105 against a mouth of 72..139), 7px off their goal line.
+
+**The live-cup ring is static.** It rotated and pulsed at first, and animation on a fixed piece of course
+furniture reads as a UI widget sitting on the grass rather than as part of the hole. It has one job — say
+which two cups are yours — and a still ring does that.
+
+**The "dots" down the touchline were mine.** The fairway ran to `WALL+2` and then dithered that edge, but
+there was no rough there to dither into, so all the dither did was scatter a vertical dotted line of dark
+specks along both touchlines, right where the ball runs. The fairway now stops at `WALL+7`, leaving a
+genuine strip of rough, and only real material boundaries get dithered.
+
+*A fifth harness lesson, and the sharpest one:* the peg check first recomputed the hazard shapes as plain
+ellipses and reported pegs standing in the pond that the wobbled outline put safely outside. **Never
+reimplement the thing under test.** `window.__spSim.hz(x,y,r)` now asks the arena, and the answer went from
+"2 offenders" to the truth, which was none.
+
 **AI.** Unlike the prop arenas there is exactly one real lesson, and it is a big one: **do not shoot into
 the pond.** Left to itself the CPU fires at the goal centre every turn, which on this layout is the middle
 of the water — it would drown its own possession over and over and the arena would read as broken rather

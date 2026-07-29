@@ -70,9 +70,19 @@
               mode: mode, tier: (typeof hzTier === 'function') ? hzTier() : -1,
               x: coin.x, y: coin.y, vx: coin.vx, vy: coin.vy,
               air: coin.air || 0, moving: !!moving, phase: phase, turn: current,
-              red: score.red, blue: score.blue
+              red: score.red, blue: score.blue,
+              // the pegs, so a test can check nothing was placed standing in a hazard
+              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie}; })
             };
           } catch (e) { return { err: String(e) }; }
+        },
+        // Ask the ARENA whether a point is on a hazard, rather than having the test reimplement the
+        // shapes. A test that recomputed them as plain ellipses reported pegs as standing in the pond when
+        // the wobbled outline put them safely outside it — the fourth time a hand-rolled probe measured
+        // something other than what the game does.
+        hz: function(x, y, r){
+          try { return (typeof cgHazardAt === 'function') ? !!cgHazardAt(x, y, r || 0) : null; }
+          catch (e) { return null; }
         },
         put: function(o){
           try {

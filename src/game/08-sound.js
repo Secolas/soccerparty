@@ -549,7 +549,12 @@
     _dy=Math.sin(_it*1.7);_d=1;
     } var _pu=(GAP-_d)+0.6; _n.x+=_dx/_d*_pu;
     _n.y+=_dy/_d*_pu; var _c=clampToPitch(_n.x,_n.y);
-    _n.x=_c.x; _n.y=_c.y; } } nails.push(_n);
+    _n.x=_c.x; _n.y=_c.y; } }
+    // CRAZY GOLF: shift the piece clear of any hazard it landed on before it is committed. The formation
+    // grid knows nothing about this board, so pieces were being placed standing in the pond.
+    try{ if(!_n.goalie){ var _cgs=cgClearSpot(_n.x,_n.y,NAIL_R);
+    if(_cgs){ _n.x=_cgs.x; _n.y=_cgs.y; } } }catch(e){}
+    nails.push(_n);
     } }
     var TAC={power:1,glide:0,curve:false,precision:false,magnet:false,sticky:false,laser:false,frozen:false,portal:false,boomerang:false};
     var activeTactics=[]; var tacticsChosen=false;

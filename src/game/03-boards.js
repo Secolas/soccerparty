@@ -565,15 +565,19 @@
         var open=smooth((dm-0.24)/0.16)*(1-smooth((dm-0.72)/0.14));
         var gap=Math.round(open*62), lx=W/2-gap, rx=W/2+gap;
         var apron=(dm>0.80);
+        /* The fairway stops SHORT of the boards, leaving a genuine strip of rough down each side. The first
+           cut ran it to WALL+2 and then dithered that edge — but there was no rough there to dither into,
+           so all it did was scatter a vertical dotted line of dark specks along both touchlines, right
+           where the ball runs. Only real material boundaries get dithered now. */
+        var edge=WALL+7;
         g.fillStyle=apron?APRON:FAIR;
-        if(gap<=2){ g.fillRect(WALL+2,y,W-WALL*2-4,1); }
-        else { g.fillRect(WALL+2,y,lx-WALL-2,1); g.fillRect(rx,y,W-WALL-2-rx,1); }
-        // dither both edges of every run so grass meets grass by stipple, never by a hard seam
-        for(var d2=0;d2<3;d2++){ g.fillStyle=(Math.random()>0.5)?(apron?APRON:FAIR):ROUGH2;
-        g.fillRect(WALL+2+(Math.random()*4|0),y,1,1);
-        g.fillRect(W-WALL-3-(Math.random()*4|0),y,1,1);
-        if(gap>2){ g.fillRect(lx-1-(Math.random()*4|0),y,1,1);
-        g.fillRect(rx+(Math.random()*4|0),y,1,1); } } }
+        if(gap<=2){ g.fillRect(edge,y,W-edge*2,1); }
+        else { g.fillRect(edge,y,lx-edge,1); g.fillRect(rx,y,W-edge-rx,1); }
+        for(var d2=0;d2<2;d2++){ g.fillStyle=(Math.random()>0.5)?(apron?APRON:FAIR):ROUGH2;
+        g.fillRect(edge-1+(Math.random()*3|0),y,1,1);
+        g.fillRect(W-edge-1+(Math.random()*3|0),y,1,1);
+        if(gap>2){ g.fillRect(lx-1-(Math.random()*3|0),y,1,1);
+        g.fillRect(rx+(Math.random()*3|0),y,1,1); } } }
         for(var sp3=0;sp3<1400;sp3++){ g.fillStyle=(Math.random()>0.5)?FAIR2:'rgba(255,255,255,0.05)';
         g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
         g.fillStyle='rgba(255,255,255,0.05)';                 // mower stripes, integer-aligned so they stay crisp
