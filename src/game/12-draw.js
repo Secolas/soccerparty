@@ -1847,8 +1847,9 @@
         var pEff=power*staminaMul();
         var _stamMode=(mode!=='penalty' && !(pen&&pen.active));
         var L=(13+pEff*0.6)*(TAC.laser?2.4:1);
+        var _stamIdx=(typeof cgBoost!=='undefined'&&cgBoost)?0:Math.min(flickCount,3);   // hole-out boost reads as full stamina (green) even though the count advanced
         if(TAC.backspin) L=400; const pcol=TAC.frozen?'#7fdcff':(_stamMode?['#5dff5d',
-        '#ffd21a','#ff2a1a','#b31414'][Math.min(flickCount,3)]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
+        '#ffd21a','#ff2a1a','#b31414'][_stamIdx]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
         var v0=pEff*(FLICK_MAX/FLICK_POWER)*TAC.power, gvx=Math.cos(angD)*v0, gvy=Math.sin(angD)*v0, gx=coin.x, gy=coin.y;
         var _gh=-gvx, _ghd=(_gh>0.05)?1:((_gh<-0.05)?-1:((W/2-coin.x)>=0?1:-1));
         var gspin=(TAC.curve&&power>=12)?(_ghd*((gvy<0)?1:-1)*1.9):0;

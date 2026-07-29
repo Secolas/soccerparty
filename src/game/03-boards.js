@@ -755,7 +755,7 @@
       if(typeof cgTrees!=='undefined'&&cgTrees) cgTrees.length=0;
       if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
       cgOn=false; cgT=0; cgFairOn=false;
-      cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null;
+      cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null; cgBoost=false;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

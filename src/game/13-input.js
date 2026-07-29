@@ -444,6 +444,7 @@
     pmDrag=false; aiPending=false;
     aiDelay=0; aiAim=null; aiShot=null; shotTrail=[];
     hitSparks=[]; turnFlash=0; _turnBanner=null;
+    if(typeof cgBoost!=='undefined') cgBoost=false;
     struck=false; stickyUsed=false;
     ghosting=false; serpentPhase=0;
     bumpPending=false; tacticsChosen=true;
