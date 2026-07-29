@@ -1237,6 +1237,10 @@
     // hand. A reflection would have handed one side the easier approach.
     var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
     var cgFairOn=false, cgCupOn=false, cgSplash=0, cgSplashX=0, cgSplashY=0, cgHoled=null, cgBonus=false;
+    // Water drown sequence: the ball sinks where it went in, then is dropped back onto the grass shore for
+    // the next flick. Deliberately unhurried (SINK then DROP frames) so it reads as real water physics
+    // rather than the ball being snapped to the bank. null = idle; while set, stepPhysics only ticks it.
+    var cgDrown=null, CG_DROWN_SINK=50, CG_DROWN_DROP=34;
     var cgPrevX=0, cgPrevY=0;   // last frame's ball position, so a splash can be traced to the shore crossed
     /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
        The two flank lanes are what makes this a hole rather than a wall, so their width is the number
@@ -1300,7 +1304,7 @@
     var q; try{ var m=(location.search||'').match(/[?&]hz=([a-z,]+)/i); q=m?m[1].toLowerCase():CG_DEFAULT_HZ; }catch(e){ q=CG_DEFAULT_HZ; }
     return q==='all' || q.split(',').indexOf(kind)>=0; }
     function initMinigolf(){ var t=hzTier();
-    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false;
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null;
     cgFairOn=(t>=1); cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
@@ -2000,7 +2004,9 @@
     }
     function stepPhysics(){
       if(!moving){ if(typeof skateTube!=='undefined') skateTube=null;
-      return; } if(coin&&coin.air>0) coin.air--;
+      return; }
+      if(cgDrown){ try{ cgDrownTick(); }catch(e){} return; }   // drowning: freeze play, just run the sink/drop
+      if(coin&&coin.air>0) coin.air--;
       if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(rouletteFlash>0) rouletteFlash--;
       if(rouletteCD>0) rouletteCD--;
       if(!rouletteCap&&rouletteCD<=0&&moving&&(!coin.air||coin.air<=0)&&Math.hypot(coin.x-W/2,coin.y-H/2)<ROUL_R*0.55&&Math.hypot(coin.vx,coin.vy)>0.9){ rouletteCap={t:0,dur:64,ko:false};
@@ -2378,11 +2384,16 @@
       if(!cgHazardAt(_wtx,_wty,0)){ _wpx=_wtx; _wpy=_wty; _wgot=true; break; } } }
       coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,_wpx));
       coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,_wpy));
-      coin.vx=0; coin.vy=0; _gsp=0;
-      _gw.flash=26; cgSplash=26; cgSplashX=coin.x; cgSplashY=coin.y;   // remember where it went in
+      coin.vx=0; coin.vy=0; coin.air=0; _gsp=0;
+      // DROWN: sink where it went in (a little into the pond from the shore it crossed), then drop the ball
+      // back onto the grass at coin's rest spot for the next flick. cgDrown holds the turn — stepPhysics
+      // only ticks it — until the drop lands, then it releases into endFlick.
+      var _sinkx=coin.x+(_gw.x-coin.x)*0.4, _sinky=coin.y+(_gw.y-coin.y)*0.4;
+      cgDrown={t:0, sx:_sinkx, sy:_sinky, gx:coin.x, gy:coin.y};
+      _gw.flash=26; cgSplash=26; cgSplashX=_sinkx; cgSplashY=_sinky;   // impact splash at the sink point
       try{ setStatus('IN THE WATER'); }catch(e){}
       try{ if(typeof sfxSplash==='function') sfxSplash(); }catch(e){}
-      try{ spawnSparks(coin.x,coin.y,null,12); }catch(e){}
+      try{ spawnSparks(_sinkx,_sinky,null,12); }catch(e){}
       break; } }
       // CUPS (HARD): hole out for ONE MORE FLICK. Claims only a DYING ball, so a firm putt skips the
       // lip, and only in the end this side is attacking. Missing costs nothing.
@@ -2625,11 +2636,20 @@
           if(!celebrated){ celebrated=true; netBulge=3; netBulgeX=coin.x; netHold=10; hitStop=2; celebrate(t,6); }
           finalizeGoal(t);
         }
-      } else if(!(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
+      } else if(!cgDrown && !(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
       coin.vy=0; separateCoin();
       moving=false; endFlick();
       }
     }
+    // Advance the water drown: sink (SINK frames), then drop onto the grass (DROP frames). The ball already
+    // rests at cgDrown.gx/gy; this only paces the turn — the render (drawCgDrown) shows sink + drop. When the
+    // drop lands, release the turn through endFlick (a water death is not a keep, so possession passes).
+    function cgDrownTick(){ if(!cgDrown) return;
+    cgDrown.t++;
+    if(cgDrown.t>=CG_DROWN_SINK+CG_DROWN_DROP){ cgDrown=null;
+    coin.vx=0; coin.vy=0; coin.air=0; moving=false;
+    try{ separateCoin(); }catch(e){}   // nudge off any peg it landed on, as the normal stop path would
+    try{ endFlick(); }catch(e){} } }
     function syncSpecialNails(){ nails=nails.filter(function(n){ return !n.striker && !n.defender;
     }); for(var qi=0;qi<nails.length;qi++){ nails[qi].damp=false;
     nails[qi].bike=false; nails[qi].clearer=false;
@@ -3090,7 +3110,8 @@
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } current=_lkTeam;
     turnFlash=24; try{ sfxTurn();
-    }catch(e){} try{ updateComebackHUD();
+    }catch(e){} try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
+    try{ updateComebackHUD();
     }catch(e){} flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } var _fcap=(debuffActive(current,'injury')?2:FLICK_CAP);
@@ -3098,10 +3119,13 @@
     // Deliberately ahead of the FLICK_CAP branches below: this was earned by sinking a 7px target, not
     // by running down a clock, so the flick cap must not be able to swallow it.
     if((typeof cgHoled!=='undefined')&&cgHoled){ var _cgw=cgHoled;
-    cgHoled=null; cgBonus=true; cgFullFlick_=true; current=_cgw;
+    cgHoled=null; cgBonus=true; current=_cgw;
     coin.vx=0; coin.vy=0; coin.air=0;
+    // Holing out keeps possession — you play on from the hole with a FRESH count (this flick is #1, full
+    // stamina), but it is a NORMAL flick now, not a free full-power one. You keep the turn regardless of
+    // whether the shot touched your own players. cgBonus caps it at one hole-out per possession.
     flickCount=0; hitOwn=false; struck=false;
-    turnFlash=24; setStatus('HOLED OUT — FREE FULL-POWER FLICK!');
+    turnFlash=24; setStatus('HOLED OUT — PLAY ON');
     try{ sfxCheer(); }catch(e){} try{ spawnSparks(coin.x,coin.y,current,16,true);
     }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     applyTactics(); updateHUD(); return; }
@@ -3121,6 +3145,7 @@
     }catch(e){} current=current==='red'?'blue':'red';
     if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; }   /* CRAZY GOLF: one hole-out bonus per possession */
     turnFlash=24; sfxTurn();
+    try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;
     try{stopAnthem();}catch(e){} } }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     stickyUsed=false; flickCount=0;

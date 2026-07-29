@@ -669,6 +669,54 @@
     _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
     _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); }     ctx.restore(); } }
 
+    /* The water drown, drawn in place of the ball while cgDrown is active. Two unhurried phases:
+       SINK — the ball settles under the surface at the point it went in (shrinks, goes waterlogged blue-
+       grey, ripples spread, a few bubbles rise); DROP — it is dropped back onto the grass shore, falling
+       from a height with a shadow that tightens as it lands, a small bounce, and a flashing ring so you can
+       see where it is ready for the next flick. Timings live in CG_DROWN_SINK / CG_DROWN_DROP. */
+    function drawCgDrown(ctx,now){ if(typeof cgDrown==='undefined'||!cgDrown) return;
+    var t=cgDrown.t, SINK=CG_DROWN_SINK, DROP=CG_DROWN_DROP;
+    if(t<SINK){ var p=t/SINK;
+    ctx.save();
+    for(var r=0;r<3;r++){ var rp=p*1.2-r*0.28; if(rp<0||rp>1) continue;   // expanding surface ripples
+    var rr=3+rp*15; ctx.strokeStyle='rgba(214,240,255,'+(0.5*(1-rp))+')'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(cgDrown.sx,cgDrown.sy,rr,rr*0.6,0,0,6.283); ctx.stroke(); }
+    var rad=COIN_R*(1-p*0.65);                                            // the ball sinking + shrinking
+    if(rad>0.4){ ctx.globalAlpha=Math.max(0,1-p*0.55); ctx.fillStyle='#7fa6c2';
+    ctx.beginPath(); ctx.ellipse(cgDrown.sx,cgDrown.sy+p*3,rad,rad*0.72,0,0,6.283); ctx.fill(); }
+    ctx.globalAlpha=0.75; ctx.fillStyle='rgba(226,246,255,0.9)';          // bubbles rising
+    for(var b=0;b<4;b++){ var bp=(p*1.4+b*0.25)%1; ctx.fillRect(Math.round(cgDrown.sx+Math.sin(b*2.1+p*6)*3),Math.round(cgDrown.sy-2-bp*9),1,1); }
+    ctx.restore();
+    } else { var d=(t-SINK)/DROP, H0=COIN_R*5.2, hgt;
+    if(d<0.8){ var e=d/0.8; hgt=H0*(1-e*e); }                             // fall, accelerating, to grass
+    else { hgt=Math.sin(((d-0.8)/0.2)*Math.PI)*3; }                       // one small bounce on landing
+    var eg=Math.min(1,d/0.8);
+    ctx.save(); ctx.globalAlpha=0.2+0.12*eg; ctx.fillStyle='#000';        // shadow tightening as it lands
+    ctx.beginPath(); ctx.ellipse(cgDrown.gx,cgDrown.gy,COIN_R*(0.45+0.55*eg),COIN_R*(0.24+0.28*eg),0,0,6.283); ctx.fill();
+    ctx.restore();
+    drawBall(cgDrown.gx,cgDrown.gy-hgt);
+    if(d>0.65){ ctx.save(); ctx.globalAlpha=(1-(d-0.65)/0.35)*((Math.floor(t/3)%2)?0.7:0.25);   // ready-to-play flash
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(cgDrown.gx,cgDrown.gy,COIN_R+2.5,0,6.283); ctx.stroke(); ctx.restore(); } } }
+
+    /* The turn-change banner: a short "who's up" strip that slides in from the new attacker's side when
+       possession rotates, so a CPU turn (which then winds up and flicks) doesn't begin out of nowhere. It
+       sits toward the end that side is attacking. Advanced by updateFX; cleared when its timer runs out. */
+    function drawTurnBanner(ctx,now){ if(typeof _turnBanner==='undefined'||!_turnBanner) return;
+    var tb=_turnBanner, p=tb.t/tb.dur, ax;
+    if(p<0.22){ var e=p/0.22; ax=1-(1-e)*(1-e); } else if(p>0.72){ ax=1-((p-0.72)/0.28); } else ax=1;
+    if(ax<=0.02) return;
+    var tc=primary(tb.team), cy=(tb.team==='red')?Math.round(H*0.26):Math.round(H*0.74);
+    var bw=W-WALL*3, bh=20, cx=W/2, slide=(1-ax)*44*(tb.team==='red'?1:-1);
+    ctx.save(); ctx.globalAlpha=Math.min(1,ax); ctx.translate(slide,0);
+    ctx.fillStyle='rgba(14,9,5,0.82)'; ctx.fillRect(cx-bw/2,cy-bh/2,bw,bh);
+    ctx.fillStyle=tc; ctx.fillRect(cx-bw/2,cy-bh/2,bw,2); ctx.fillRect(cx-bw/2,cy+bh/2-2,bw,2);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font="7px 'Press Start 2P', monospace";
+    var nm=(teamKits[tb.team]&&teamKits[tb.team].abbr)?teamKits[tb.team].abbr.toUpperCase():String(tb.team).toUpperCase();
+    var label=(tb.cpu?'CPU · ':'')+nm+' TO PLAY';
+    ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
+    ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
+
     var _dbgAlignOn=null;
     function _dbgAlign(){ if(_dbgAlignOn===null){ try{ _dbgAlignOn=/[?&]dbg=1/.test((location&&location.search)||''); }catch(e){ _dbgAlignOn=false; } } return _dbgAlignOn; }
     function _dbgCross(g,x,y,col,r){ g.fillStyle=col;
@@ -1687,7 +1735,8 @@
         ctx.arc(t.x+2.3,t.y+1.6,1.1,0,Math.PI*2);
         ctx.fill(); } }
         ctx.save(); if(ghosting) ctx.globalAlpha=0.4;
-        if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6);
+        if(typeof cgDrown!=='undefined'&&cgDrown){ try{ drawCgDrown(ctx,now); }catch(e){}   // drowning: sink then drop, drawn in place of the ball
+        } else if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6);
         ctx.save(); ctx.globalAlpha=0.26;
         ctx.fillStyle='#000'; ctx.beginPath();
         ctx.ellipse(coin.x,coin.y,COIN_R*0.85,COIN_R*0.45,0,0,Math.PI*2);
@@ -1912,6 +1961,7 @@
       ctx.restore(); }
       if(typeof turnFx!=='undefined'&&turnFx>0){ ctx.save(); ctx.globalAlpha=(turnFx/13)*0.55; ctx.strokeStyle=turnFxCol; ctx.lineWidth=5; ctx.strokeRect(2.5,2.5,W-5,H-5); ctx.restore(); }
       if(banner>0){ drawBanner(); drawGoalCrowd(); } if(winner){ try{ drawWinner(); }catch(e){} }
+      if(phase==='play'&&!winner&&banner<=0){ try{ drawTurnBanner(ctx,now); }catch(e){} }
       ctx.restore();
 
       // fireworks (canvas coords)
@@ -2223,6 +2273,7 @@
     function updateFX(){
       frameTick++;
       if(turnFlash>0) turnFlash--;
+      if(_turnBanner){ _turnBanner.t++; if(_turnBanner.t>=_turnBanner.dur) _turnBanner=null; }
       if(_drillDisp&&_drillDisp.length&&!moving){ for(var _di=_drillDisp.length-1;_di>=0;_di--){ var _dn=_drillDisp[_di];
       if(!_dn||!_dn._drillHome){ _drillDisp.splice(_di,1);
       continue; } _dn.x+=(_dn._drillHome.x-_dn.x)*0.25;

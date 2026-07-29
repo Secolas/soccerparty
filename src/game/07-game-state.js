@@ -39,6 +39,9 @@
     const defaultFormation=size=>Object.keys(FORMATIONS[size])[0];
     // extra FX
     let shotTrail=[], hitSparks=[], turnFlash=0, frameTick=0;
+    // Turn-change transition: a short "whose turn" banner that slides in when possession rotates, so a
+    // CPU turn (which then winds up and flicks) doesn't start out of nowhere. null = idle.
+    let _turnBanner=null;
 
     // timer
     let matchMs=0,timerRunning=false,lastT=performance.now();

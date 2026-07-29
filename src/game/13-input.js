@@ -443,7 +443,7 @@
     shieldFx=null; strategistArm=null;
     pmDrag=false; aiPending=false;
     aiDelay=0; aiAim=null; aiShot=null; shotTrail=[];
-    hitSparks=[]; turnFlash=0;
+    hitSparks=[]; turnFlash=0; _turnBanner=null;
     struck=false; stickyUsed=false;
     ghosting=false; serpentPhase=0;
     bumpPending=false; tacticsChosen=true;

@@ -732,3 +732,26 @@ into a hazard), and when the straight line to goal is blocked it tries **both** 
 first whose routed line is clear. Cup-seeking is more decisive now (take-a-live-cup probability raised to
 0.4 / 0.65 / 0.9 by tier), and any cup counts, not just this side's.
 
+## Turn transition banner
+
+When possession rotates, a short **"[CPU ·] TEAM TO PLAY"** strip slides in from the new attacker's side and
+fades out (~42 frames), sitting toward the end that side attacks. It gives the turn hand-off a beat so a CPU
+turn (which then winds up and flicks) doesn't begin out of nowhere. Set in `endFlick` only where `current`
+actually flips (the pass and the lucky-loser branches — not the keep-turn/hole-out branches, where the same
+player continues); `_turnBanner` is advanced by `updateFX`, drawn by `drawTurnBanner`, cleared on reset.
+
+## CRAZY GOLF: hole-out reward + water drown
+
+**Hole-out is now "play on", not a free full-power flick.** Sinking a cup keeps possession and starts a
+**fresh count** (the next flick is #1, full stamina) but it is a *normal* flick you aim yourself — the old
+`cgFullFlick_` auto-full-power freebie is gone. You keep the turn whether or not the shot touched your own
+players, still capped at one hole-out per possession by `cgBonus`.
+
+**Water drown is a real, unhurried transition.** Instead of snapping the ball to the bank and ending the turn
+next frame, entering the pond starts `cgDrown`: the ball **sinks** where it went in (shrinks, goes waterlogged
+blue-grey, ripples spread, bubbles rise) over `CG_DROWN_SINK` frames, then is **dropped** back onto the grass
+shore over `CG_DROWN_DROP` frames — falling from a height with a shadow that tightens as it lands, a small
+bounce, and a flashing ring marking where it is ready for the next flick (~1.4s total, deliberately slow).
+`stepPhysics` only ticks `cgDrown` while it runs (play is frozen, input blocked because `moving` stays true),
+then releases into `endFlick`. Rendered by `drawCgDrown` in place of the ball; the impact splash still plays.
+
