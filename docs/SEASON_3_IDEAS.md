@@ -299,7 +299,15 @@ complaint, not the colours. Four things changed:
   thing on the course, dark with a hard near-black rim, and there are three of them in a copse rather
   than one stray blob.
 
-**The surround is a treeline AND a gallery.** The board was originally mapped to the `jungle` ambience,
+**The surround is a treeline, and there is no gallery.** A golf course has no stand, so `buildCrowd` skips
+this ambience type entirely and the trees get the full 12-unit band: two staggered rows down each side plus
+a row along the top and bottom.
+
+*(Note for anyone chasing "spectators" on this board: the coloured tiles down the inside of the timber are
+`drawTurnBoards` — the scrolling perimeter ad-boards that show whose turn it is in the current team's flag.
+They are on every pitch and are nothing to do with the crowd.)*
+
+**The old note, kept for the reasoning:** The board was originally mapped to the `jungle` ambience,
 which nothing handles, so no scenery was built at all. There is now a `golf` ambience type with two dense
 staggered rows of trees down each side band plus a thin row top and bottom, so the hole reads as cut out of
 woodland the way a real one does — with the spectators still in front of them. Sizes and offsets are
@@ -313,6 +321,30 @@ edge needs.
 **The pins are golf yellow on every cup.** Colouring the pennants by team made the course look like it was
 flying two nations' flags, and it was redundant: which cups are yours is already said by the dashed ring,
 which only ever appears on the two you can use.
+
+**THE PIN IS SOLID, and a soft arrival drops.** Requiring the ball to come to REST inside a 7px hole made
+the cup a lottery — you had to stop dead on it, which is not how anyone holes a putt. A solid flagstick
+gives you something to *aim at*: arrive at the pin softly and it drops. Hit it hard and the pin kills the
+ball's pace and it stays out, so power is the wrong answer. Two details mattered:
+- **Arm on exit.** Without it a hard shot still went in — the pin killed its pace, and the now-slow ball was
+  still touching the pin, so it qualified as a soft arrival on the very next frame. Measured before: hard
+  arrivals holed 6/6. Holing now requires the ball to have been clear of the pin first, so a hard hit has to
+  leave and come back softly. Measured after: soft holes 6/6, hard stays out 6/6.
+- **No bounce off the pin.** The inward component of the velocity is *removed* rather than reflected — a
+  flagstick stops a ball dead and it drops beside the hole, it does not spring off like a bumper.
+
+**Holing out pays a FULL-POWER flick.** An ordinary extra flick was too quiet a reward for a target this
+small. You supply the aim and the game supplies the power: measured, a deliberately tiny drag after holing
+out launched at 10.0 against a `FLICK_MAX` of 10, where that drag would normally give about 1. The CPU gets
+it on the same terms, applied *after* the soft-putt speed cap so the cap cannot quietly throw it away.
+
+**On the keeper.** Measured on three boards with the ball parked identically and the goalie tracking settled,
+both keepers come out **byte-identical**: `x=105.00` (dead centre of a mouth spanning 72–139) and `y=20.00 /
+310.00`. There is no board-specific placement difference. What does move them is `updateGoalies`, which lerps
+a keeper 12% a frame toward the ball's x while a shot is incoming and back to centre otherwise — and with
+the SWEEPER ability drafted it roams in y as well. So a screenshot taken mid-play shows a keeper off-centre
+on *any* pitch. No fix was applied because none was found; if it still reads wrong in play, SWEEPER is the
+first thing to check.
 
 **A ball that finishes in a tree disappears INTO it.** The trees are drawn in their own pass from the same
 call site as THE THICKET's bushes — which runs *after* the ball — so the canopy covers a ball that stops in

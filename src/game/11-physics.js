@@ -1260,8 +1260,18 @@
        post keeping the ball 8px away, forcing the cup wider than the thing it was meant to catch).
        CG_CUP_V keeps it a skill target: a firm putt skips the lip, only a dying ball drops. */
     var CG_CUP=7, CG_CUP_V=2.6;
+    /* THE PIN IS SOLID. Requiring the ball to come to REST inside a 7px hole made the cup a lottery: you
+       had to stop dead on it, which is not how you hole a putt. A solid flagstick gives you something to
+       AIM AT — arrive at the pin softly and it drops, which is exactly the shot a golfer plays. Hit it
+       hard instead and the pin kills the ball's pace and it stays out, so power is the wrong answer.
+       CG_PIN is deliberately thin (a flagstick is thin) but the ball is COIN_R=5, so contact happens at
+       7px — the same size target as the hole itself, just reachable while still moving. */
+    var CG_PIN=2, CG_PIN_KILL=0.35;
+    /* The payoff for holing out is ONE FULL-POWER FLICK: aim only, the power is given to you. An ordinary
+       extra flick was too quiet a reward for a target this small. */
+    var cgFullFlick_=false;
     function initMinigolf(){ var t=hzTier();
-    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0;
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false;
     /* Water, sand and trees are ALL on from easy: they are not difficulty, they are the hole. Take the
        pond away and the straight line to goal opens up, and this stops being the arena the layout is
        for. What the tiers add is a fairway bunker (med) and the cups (hard). */
@@ -1291,8 +1301,8 @@
     cgSand.push({x:rf.x,y:rf.y,rx:CG_FAIR_RX,ry:CG_FAIR_RY,pl:cgProfile(),pr:cgProfile()}); }
     // the cups sit at the far end of each flank route, so taking the long way round is what pays
     cgCups=[]; if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
-    cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0});
-    cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0}); } } }
+    cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0,armed:true});
+    cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0,armed:true}); } } }
     /* IRREGULAR OUTLINES. A perfect ellipse reads as programmer art, and a pond or bunker on a real
        course is a wobbly organic shape. Each hazard therefore carries two edge profiles — one for its
        left side, one for its right — sampled smoothly down its height, and BOTH the collision test and
@@ -1345,6 +1355,14 @@
     if(!cgHazardAt(tx2,ty2,R)) found={x:tx2,y:ty2}; } }
     if(found){ x=found.x; y=found.y; } }
     return {x:x,y:y}; }
+    // read + spend the free full-power flick, from either flick path (13-input and 09-ai)
+    function cgFullFlick(){ return !!(cgFullFlick_&&(typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards()); }
+    function cgSpendFullFlick(){ cgFullFlick_=false; }
+    function cgHoleOut(cup){ cgHoled=current; coin.x=cup.x; coin.y=cup.y;
+    coin.vx=0; coin.vy=0; cup.flash=34;
+    try{ if(typeof sfxJackpot==='function') sfxJackpot(); }catch(e){}
+    try{ spawnSparks(cup.x,cup.y,current,18,true); }catch(e){}
+    try{ shake=Math.max(shake||0,4); }catch(e){} }
     function cgHazardAt(x,y,R){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return true; }
     for(var j=0;j<cgSand.length;j++){ if(cgIn(cgSand[j],x,y)) return true; }
     for(var t=0;t<cgTrees.length;t++){ if(Math.hypot(x-cgTrees[t].x,y-cgTrees[t].y)<cgTrees[t].r+(R||0)+2) return true; }
@@ -1372,7 +1390,13 @@
     if(fix){ nn.x=fix.x; nn.y=fix.y; } } }
     for(var i=0;i<cgTrees.length;i++){ if(cgTrees[i].flash>0) cgTrees[i].flash--; }
     for(var w=0;w<cgWater.length;w++){ if(cgWater[w].flash>0) cgWater[w].flash--; }
-    for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; } }
+    for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; }
+    /* Re-ARM a cup once the ball is clear of its pin. Without this a HARD shot at the flagstick still went
+       in: the pin killed its pace, and the now-slow ball was still touching the pin, so it qualified as a
+       soft arrival on the very next frame. Holing requires the ball to have been away from the pin first,
+       so a hard hit has to leave and come back softly — which is the whole point of a solid pin. */
+    if(typeof coin!=='undefined'&&coin){ for(var ca=0;ca<cgCups.length;ca++){ var cu2=cgCups[ca];
+    if(Math.hypot(coin.x-cu2.x,coin.y-cu2.y)>CG_PIN+COIN_R+3) cu2.armed=true; } } }
     /* What the CPU has to learn here. Unlike the arenas built out of props, the hazards are landmarks,
        so there is exactly one real lesson: DO NOT SHOOT INTO THE POND. Left to itself the CPU fires at
        the goal centre every turn, which on this layout is the middle of the water — it would drown its
@@ -2301,15 +2325,29 @@
       // lip, and only in the end this side is attacking. Missing costs nothing.
       // cgBonus caps it at one per possession: without that, an extra flick played from inside the hole
       // could drop straight back in and hand out turns for ever.
-      if(cgCupOn&&_ggr&&!cgHoled&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ for(var _gci=0;_gci<cgCups.length;_gci++){ var _gc=cgCups[_gci];
-      if(!cgCupLive(_gc)) continue;
-      if(Math.hypot(coin.x-_gc.x,coin.y-_gc.y)>=CG_CUP) continue;
-      cgHoled=current; coin.x=_gc.x; coin.y=_gc.y;
-      coin.vx=0; coin.vy=0; _gsp=0; _gc.flash=34;
-      try{ if(typeof sfxJackpot==='function') sfxJackpot();
-      }catch(e){} try{ spawnSparks(_gc.x,_gc.y,current,18,true);
-      }catch(e){} try{ shake=Math.max(shake||0,4); }catch(e){}
+      // THE PIN: solid on every cup, and on a LIVE one a soft arrival drops. This is the shot the arena is
+      // for — you aim at the flagstick rather than trying to stop dead on a 7px hole. A hard arrival is
+      // killed by the pin and stays out, so power is the wrong answer.
+      if(cgCupOn&&_ggr&&!cgHoled){ for(var _gpi=0;_gpi<cgCups.length;_gpi++){ var _gp=cgCups[_gpi];
+      var _pdx=coin.x-_gp.x, _pdy=coin.y-_gp.y, _pd=Math.hypot(_pdx,_pdy), _pmn=CG_PIN+COIN_R;
+      if(_pd>=_pmn) continue;
+      if(_gp.armed&&cgCupLive(_gp)&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ cgHoleOut(_gp); _gsp=0; break; }
+      if(_pd<0.001){ _pdx=1; _pdy=0; _pd=1; }
+      var _pux=_pdx/_pd, _puy=_pdy/_pd;
+      coin.x=_gp.x+_pux*_pmn; coin.y=_gp.y+_puy*_pmn;
+      // Remove the component driving the ball INTO the pin rather than reflecting it — a flagstick stops a
+      // ball dead and it drops beside the hole, it does not spring off like a bumper.
+      var _pdot=coin.vx*_pux+coin.vy*_puy;
+      if(_pdot<0){ coin.vx-=_pdot*_pux; coin.vy-=_pdot*_puy; }
+      coin.vx*=CG_PIN_KILL; coin.vy*=CG_PIN_KILL; _gsp*=CG_PIN_KILL;
+      _gp.armed=false; _gp.flash=10;
+      try{ if(typeof sfxBump==='function') sfxBump(5); }catch(e){}
       break; } }
+      // and the original route stays: a ball that simply dies in the hole is holed too
+      if(cgCupOn&&_ggr&&!cgHoled&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ for(var _gci=0;_gci<cgCups.length;_gci++){ var _gc=cgCups[_gci];
+      if(!cgCupLive(_gc)||!_gc.armed) continue;
+      if(Math.hypot(coin.x-_gc.x,coin.y-_gc.y)>=CG_CUP) continue;
+      cgHoleOut(_gc); _gsp=0; break; } }
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
@@ -2991,10 +3029,10 @@
     // Deliberately ahead of the FLICK_CAP branches below: this was earned by sinking a 7px target, not
     // by running down a clock, so the flick cap must not be able to swallow it.
     if((typeof cgHoled!=='undefined')&&cgHoled){ var _cgw=cgHoled;
-    cgHoled=null; cgBonus=true; current=_cgw;
+    cgHoled=null; cgBonus=true; cgFullFlick_=true; current=_cgw;
     coin.vx=0; coin.vy=0; coin.air=0;
     flickCount=0; hitOwn=false; struck=false;
-    turnFlash=24; setStatus('HOLED OUT — ONE MORE FLICK!');
+    turnFlash=24; setStatus('HOLED OUT — FREE FULL-POWER FLICK!');
     try{ sfxCheer(); }catch(e){} try{ spawnSparks(coin.x,coin.y,current,16,true);
     }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     applyTactics(); updateHUD(); return; }
@@ -3012,7 +3050,7 @@
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     } else { try{ tutHook('lose');
     }catch(e){} current=current==='red'?'blue':'red';
-    if(typeof cgBonus!=='undefined') cgBonus=false;   /* CRAZY GOLF: one hole-out bonus per possession */
+    if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; }   /* CRAZY GOLF: one hole-out bonus per possession */
     turnFlash=24; sfxTurn();
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;
     try{stopAnthem();}catch(e){} } }catch(e){} if(window.__nsTurn) window.__nsTurn(current);

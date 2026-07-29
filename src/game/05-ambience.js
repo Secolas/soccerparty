@@ -71,17 +71,16 @@
       ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14});
       } else if(t==='golf'){
-        /* CRAZY GOLF is cut out of woodland, so the surround gets a TREELINE — but the surround is only
-           CROWD_LR=12 units wide, and the gallery already occupies x 3..6 and 228..231. Two dense rows of
-           full-size trees simply painted over the spectators (ambient draws after the crowd). So: a low
-           hedge of small trees in the free inner strip either side, and proper trees along the top and
-           bottom bands, which carry no crowd at all. Both read, and the gallery still shows through.
-           Sizes and offsets are jittered per tree — a row of identical sprites reads as wallpaper. */
-        for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX-2.5):(CW-OX+2.5);
-        for(var _gy=4;_gy<CH-3;_gy+=9){ ambient.push({kind:'gtree', x:_bx+(Math.random()-0.5)*2.5, y:_gy+(Math.random()-0.5)*3,
-        sz:7+Math.random()*3, f:Math.floor(Math.random()*4)}); } }
-        for(var _gx=4;_gx<CW-2;_gx+=11){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*4, y:OY*0.46+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
-        ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*4, y:CH-OY*0.46+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)}); }
+        /* CRAZY GOLF is cut out of woodland, so the surround is a TREELINE and there is no gallery at all
+           (buildCrowd skips this type entirely). With the crowd gone the trees get the full 12-unit band:
+           two staggered rows down each side and a row along the top and bottom. Sizes and offsets are
+           jittered per tree — a row of identical sprites reads as wallpaper. */
+        for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX*0.42):(CW-OX*0.42);
+        for(var _gy=3;_gy<CH-2;_gy+=8){ for(var _gc=0;_gc<2;_gc++){
+        ambient.push({kind:'gtree', x:_bx+(_gc?OX*0.34:-OX*0.3)+(Math.random()-0.5)*3, y:_gy+(_gc?4:0)+(Math.random()-0.5)*3,
+        sz:9+Math.random()*5, f:Math.floor(Math.random()*4)}); } } }
+        for(var _gx=3;_gx<CW-2;_gx+=9){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
+        ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:CH-OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)}); }
         for(var _gb=0;_gb<3;_gb++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.10+Math.random()*0.14, phase:Math.random()*6.28});
       } else if(t==='aquarium'){
         // the sea life lives only UNDER the crystal pitch; the surround is just tank water with rising bubbles

@@ -13,7 +13,9 @@
       const t=ambType();
       const beachy=t==='beach';
       // only the grass stadium is packed; every other pitch has just a few onlookers
-      const skip = (t==='stadium'||t==='arena') ? 0 : (beachy ? 0.62 : (t==='fiesta'||t==='lisbon') ? 0.5 : 0.76);
+      // A golf course has no stand — CRAZY GOLF's surround is a treeline instead (see the 'golf' case in
+      // buildAmbient), so the gallery is switched off entirely rather than left as a sparse scatter.
+      const skip = (t==='stadium'||t==='arena') ? 0 : (beachy ? 0.62 : (t==='fiesta'||t==='lisbon') ? 0.5 : (t==='golf' ? 1 : 0.76));
       function band(x0,y0,bw,bh,side,cols,rows){
         for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
           if(skip && Math.random()<skip) continue;

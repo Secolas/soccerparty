@@ -58,10 +58,10 @@
       var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
       if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
       goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
-      // CRAZY GOLF: the rails need no AI — they help whoever banks off them, which is the whole point
-      // of building help instead of hazards. Only two things to teach: a close live cup is worth a turn
-      // (it pays a free shot from the spot), and a mill on the line to goal is a coin flip the CPU
-      // cannot time, so go round it.
+      // CRAZY GOLF: the one real lesson is DO NOT SHOOT INTO THE POND — the goal centre sits behind the
+      // water on this layout, so left alone the CPU drowns its own possession every turn. cgAimPlan routes
+      // through the nearer flank lane when the line to goal crosses water or a tree, and takes a nearby
+      // live cup when one is worth a turn (which needs a soft putt, hence the speed floor drop below).
       var _cgP=null; try{ if(typeof cgAimPlan==='function') _cgP=cgAimPlan(t); }catch(e){}
       if(_cgP){ spread=Math.min(spread,_cgP.soft?2.2:4.0);
       goalX=_cgP.x+(Math.random()*2-1)*spread; goalY=_cgP.y; }
@@ -76,6 +76,9 @@
       // A putt at a cup has to ARRIVE dying or it skips the lip, and the roll here is v/(1-FRICTION) =
       // 62.5*v, so the speed that stops on the hole is dist/62.5 — far below the 5.0 floor above.
       if(_cgP&&_cgP.soft) speed=Math.max(1.0,Math.min(speed,(dist+10)/62.5));
+      // The CPU gets the hole-out reward on the same terms the player does. Applied LAST so the soft-putt
+      // cap above cannot quietly throw the free full-power flick away.
+      try{ if((typeof cgFullFlick==='function')&&cgFullFlick()){ speed=FLICK_MAX*(TAC.power||1)*staminaMul(); cgSpendFullFlick(); } }catch(e){}
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
