@@ -1237,6 +1237,7 @@
     // hand. A reflection would have handed one side the easier approach.
     var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
     var cgFairOn=false, cgCupOn=false, cgSplash=0, cgHoled=null, cgBonus=false;
+    var cgPrevX=0, cgPrevY=0;   // last frame's ball position, so a splash can be traced to the shore crossed
     /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
        The two flank lanes are what makes this a hole rather than a wall, so their width is the number
        that matters: WALL(12) to the pond's left edge is 29px, and the bunker's right edge to the far
@@ -1376,6 +1377,7 @@
     function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     cgT++; if(cgSplash>0) cgSplash--;
+    if(!moving&&typeof coin!=='undefined'&&coin){ cgPrevX=coin.x; cgPrevY=coin.y; }
     /* Sweep the pegs off the hazards from HERE, every frame the ball is still. Doing it only inside
        rebuildFormations was not enough: formations are laid out before the arena's board is applied, so
        boardKey was not yet 'minigolf' and cgClearSpot bailed out of its own guard — one peg was still
@@ -2312,9 +2314,30 @@
       // balls carry clean over, so Chip is a real answer to the pond, exactly as it is in golf.
       if(_ggr&&moving&&_gsp>0.05){ for(var _gwi=0;_gwi<cgWater.length;_gwi++){ var _gw=cgWater[_gwi];
       if(!cgIn(_gw,coin.x,coin.y)) continue;
-      var _wnx=(coin.x-_gw.x)/_gw.rx, _wny=(coin.y-_gw.y)/_gw.ry, _wnl=Math.hypot(_wnx,_wny)||0.0001;
-      coin.x=_gw.x+(_wnx/_wnl)*_gw.rx*1.06;      // set it down just outside the bank it crossed
-      coin.y=_gw.y+(_wny/_wnl)*_gw.ry*1.06;
+      /* Put the ball down where it ENTERED the water: walk the path it actually travelled this frame and
+         take the last point still on dry land. The first version pushed it to the nearest point on the bank
+         in ellipse space, and for a hard strike (a Cannon shot covers ~20px in a frame and lands well
+         inside) that threw the ball sideways or out the far side — it read as being grabbed and flung.
+         Three guards, because measurement found all three failing:
+           - the previous point is only usable if it was on dry land AND close enough to be this frame's
+             position (a kickoff, VAR or rewind teleports the ball, leaving a stale previous point);
+           - otherwise fall back to the radial push, out to 1.10x the base ellipse;
+           - and then VERIFY. A push that lands in another hazard, or fails, is stepped outward until the
+             point is genuinely clear. One measured case left the ball sitting in the pond. */
+      var _wpx=coin.x, _wpy=coin.y, _wgot=false;
+      var _wjump=Math.hypot(coin.x-cgPrevX,coin.y-cgPrevY);
+      if(_wjump<=34&&!cgIn(_gw,cgPrevX,cgPrevY)){ var _wex=cgPrevX, _wey=cgPrevY;
+      for(var _wk=1;_wk<=16;_wk++){ var _wf=_wk/16;
+      var _wqx=cgPrevX+(coin.x-cgPrevX)*_wf, _wqy=cgPrevY+(coin.y-cgPrevY)*_wf;
+      if(cgIn(_gw,_wqx,_wqy)) break;
+      _wex=_wqx; _wey=_wqy; }
+      if(!cgHazardAt(_wex,_wey,0)){ _wpx=_wex; _wpy=_wey; _wgot=true; } }
+      if(!_wgot){ var _wnx=(coin.x-_gw.x)/_gw.rx, _wny=(coin.y-_gw.y)/_gw.ry, _wnl=Math.hypot(_wnx,_wny)||0.0001;
+      for(var _ws=1.10;_ws<=1.9;_ws+=0.08){ var _wtx=_gw.x+(_wnx/_wnl)*_gw.rx*_ws, _wty=_gw.y+(_wny/_wnl)*_gw.ry*_ws;
+      if(_wtx<WALL+COIN_R||_wtx>W-WALL-COIN_R||_wty<WALL+COIN_R||_wty>H-WALL-COIN_R) continue;
+      if(!cgHazardAt(_wtx,_wty,0)){ _wpx=_wtx; _wpy=_wty; _wgot=true; break; } } }
+      coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,_wpx));
+      coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,_wpy));
       coin.vx=0; coin.vy=0; _gsp=0;
       _gw.flash=26; cgSplash=26;
       try{ setStatus('IN THE WATER'); }catch(e){}
@@ -2348,6 +2371,7 @@
       if(!cgCupLive(_gc)||!_gc.armed) continue;
       if(Math.hypot(coin.x-_gc.x,coin.y-_gc.y)>=CG_CUP) continue;
       cgHoleOut(_gc); _gsp=0; break; } }
+      cgPrevX=coin.x; cgPrevY=coin.y;
       } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];

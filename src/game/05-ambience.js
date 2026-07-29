@@ -75,11 +75,15 @@
            (buildCrowd skips this type entirely). With the crowd gone the trees get the full 12-unit band:
            two staggered rows down each side and a row along the top and bottom. Sizes and offsets are
            jittered per tree — a row of identical sprites reads as wallpaper. */
-        for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX*0.42):(CW-OX*0.42);
+        /* CG_TREELINE gates the surround trees. Switched OFF while the pitch's alignment is being checked:
+           scenery packed into a 12-unit surround makes it very hard to see by eye whether the pitch itself
+           is centred in its frame. One word to put them back. */
+        var CG_TREELINE=false;
+        if(CG_TREELINE) for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX*0.42):(CW-OX*0.42);
         for(var _gy=3;_gy<CH-2;_gy+=8){ for(var _gc=0;_gc<2;_gc++){
         ambient.push({kind:'gtree', x:_bx+(_gc?OX*0.34:-OX*0.3)+(Math.random()-0.5)*3, y:_gy+(_gc?4:0)+(Math.random()-0.5)*3,
         sz:9+Math.random()*5, f:Math.floor(Math.random()*4)}); } } }
-        for(var _gx=3;_gx<CW-2;_gx+=9){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
+        if(CG_TREELINE) for(var _gx=3;_gx<CW-2;_gx+=9){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
         ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:CH-OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)}); }
         for(var _gb=0;_gb<3;_gb++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.10+Math.random()*0.14, phase:Math.random()*6.28});
       } else if(t==='aquarium'){

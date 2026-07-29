@@ -389,6 +389,36 @@ ellipses and reported pegs standing in the pond that the wobbled outline put saf
 reimplement the thing under test.** `window.__spSim.hz(x,y,r)` now asks the arena, and the answer went from
 "2 offenders" to the truth, which was none.
 
+**Water splashes down where the ball CROSSED the bank.** The first version pushed the ball to the nearest
+point on the bank in ellipse space, and for a hard strike — a Cannon shot covers ~20px in a single frame and
+lands well inside the pond — that threw the ball sideways or out the far side. It read as the ball being
+grabbed and flung rather than splashing down, which is exactly what it was. It now walks the path the ball
+actually travelled that frame and takes the last point still on dry land. Measured, the splash point is
+**0.0px off the ball's own line of travel** for shots entering from below, from the side and from above.
+
+Three guards, each added because measurement caught it failing:
+- the previous point is only usable if it was on dry land *and* close enough to be this frame's position — a
+  kickoff, VAR or rewind teleports the ball and leaves a stale previous point, which silently sent two of
+  four test shots down the old radial path;
+- otherwise fall back to the radial push, out to 1.10× the base ellipse;
+- and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
+  clear. One measured case had been leaving the ball sitting in the pond.
+
+**Is the pitch off-centre? No — measured.** Calibrating off the halfway line, whose board coordinates are
+known exactly (y=165, x=12..198), it spans image x 49..370 and its midpoint maps to board **x=105.00**, which
+is also the canvas centre. The frame, the markings, the hazards and the pegs all come off the same transform
+in the same draw call, so they cannot slide relative to one another.
+
+What *can* read as a lopsided pitch is the deliberate **180° rotational symmetry**. Each half's hazards are a
+rotation of the other half's, not a mirror — so the dark rough sits left-of-centre in the top half and
+right-of-centre in the bottom, and the eye reads the whole pitch as skewed. That choice is what makes both
+sides face the identical hole; a mirror would hand one team the easier approach. If the lopsided *look* is
+the problem rather than the fairness, the fix is to make each half left-right symmetric in itself (a pond
+each side of a central bunker, say) — balanced to look at and still identical for both teams.
+
+*Diagnostic:* the surround treeline is behind a `CG_TREELINE` flag in the `golf` ambience case, currently
+**off** so the pitch's alignment can be judged against a bare frame. One word to put it back.
+
 **AI.** Unlike the prop arenas there is exactly one real lesson, and it is a big one: **do not shoot into
 the pond.** Left to itself the CPU fires at the goal centre every turn, which on this layout is the middle
 of the water — it would drown its own possession over and over and the arena would read as broken rather
