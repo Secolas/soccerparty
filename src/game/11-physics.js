@@ -1250,13 +1250,15 @@
        central pond per half, a matched pair of flank bunkers, and a tree pair either side of the goal.
        Everything is smaller too. Because each piece is symmetric about W/2, the 180 rotation to the far
        half is identical to a vertical mirror, so the pitch is balanced on BOTH axes. */
-    var CG_POND_X=105, CG_POND_Y=88, CG_POND_RX=24, CG_POND_RY=18;   // central pond, blocks the direct line
-    var CG_SAND_DX=57, CG_SAND_Y=104, CG_SAND_RX=13, CG_SAND_RY=11;  // MED: a bunker in each flank lane
-    /* The tree pair used to sit at y=60 right in front of the goal, so with the central pond already
-       blocking the middle the whole top third was a wall and the goalmouth was crowded — pegs ended up
-       jammed between the trees and the net, which read as broken. The trees now flank the pond at its own
-       latitude, out toward the touchlines, dressing the hole without adding a second central blocker. */
-    var CG_TREE_DX=46, CG_TREE_Y=84, CG_TREE_R=6;
+    /* PLACEMENT: contest ADVANCING, not SCORING. The hazards used to sit at y=88, right in front of each
+       goal — the box ends at y=47 and the pond started at ~70, so the attacking third was walled off and
+       there was nowhere to shoot from ("I can't score"). The whole cluster is now pushed back toward
+       midfield (y=128), which leaves the attacking third (y 13..108) OPEN — once you have worked the ball
+       up past the hazards you have a clear shot — while still blocking the full-pitch straight line, since
+       a shot from your own half must cross the belt. The centre spot (y=165) stays clear for kickoff. */
+    var CG_POND_X=105, CG_POND_Y=128, CG_POND_RX=24, CG_POND_RY=18;  // pond in the middle third, not the box
+    var CG_SAND_DX=57, CG_SAND_Y=128, CG_SAND_RX=13, CG_SAND_RY=11;  // MED: a bunker each side of the pond
+    var CG_TREE_DX=46, CG_TREE_Y=124, CG_TREE_R=6;                   // trees flanking, out toward the touchlines
     /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
        measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
        with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,
