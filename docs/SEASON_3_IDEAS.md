@@ -404,29 +404,26 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
-**THE MISALIGNMENT WAS REAL, AND IT WAS THE TREES.** After several rounds of insisting the pitch measured
-centred, a debug overlay (`?dbg=1`, `drawAlignDebug`) settled it by drawing a marker at every object's *data*
-position in the same transform the art uses. The markers came out at board **(0.2, 2.7)** where they were
-drawn at **(12, 12)** — every one offset by exactly **(−OX, −OY) = (−12, −10)**.
+**Alignment: what is actually true, and a correction.** An earlier pass through this concluded the tree
+canopies were drawn `(OX,OY)` off and "fixed" it by adding an explicit `ctx.translate(OX,OY)` at the late draw
+pass. **That conclusion was wrong and the fix made it worse** — the late pass already carries the pitch
+translate, so the second one double-applied and shifted the trees 21px right and 17px down. It has been
+reverted.
 
-The cause: the late draw pass — the one that runs *after* the ball, where THE THICKET's bushes are drawn so a
-captured ball disappears into the foliage — **does not have the pitch's `translate(OX,OY)` applied**. Moving
-CRAZY GOLF's trees into that pass (so the ball could hide behind them) therefore drew every canopy **12 units
-left and 10 units up from the tree the ball actually collides with**. With the trees as the eye's reference,
-the rest of the pitch reads as shifted the other way — which is exactly the "moved to left and down" report,
-and why the instrumented positions kept disagreeing with what was on screen. Fixed by applying the translate
-explicitly at that call site rather than moving the trees back under the ball. Verified after: pitch corners
-land at (12.2, 12.9) / (198.3, 12.9) / (12.2, 318.7) / (198.3, 318.7); keepers at (105.3, 20.7) and
-(105.3, 310.6); all four cups at (34.2, 40.7) / (176.2, 40.7) / (34.1, 290.6) / (176.2, 290.6).
+The mistake was measuring positions out of a rendered PNG by assuming the board→canvas mapping. Every such
+attempt in this arena produced a different wrong answer. What finally worked was **comparisons inside a single
+image that need no mapping at all**:
 
-**The lesson.** Instrumented data said 105.00 and the drawing code had no offset, so I kept reporting "no bug
-found" — but the *data* and the *drawing code* were both innocent; the **transform between them** was not. When
-someone reports a visual offset and the numbers disagree, the thing to instrument is the render, not the model.
-`?dbg=1` should be the first move next time, not the fifth.
+- **Two markers, two passes.** A cross drawn for each peg from *inside the peg loop* (blue) and again for the
+  same peg from the *late pass* (white/red). Before the revert they sat 28px apart; after it, 9 of 10 blue
+  crosses are hidden underneath the white ones. The passes agree.
+- **Sprite vs its own marker.** The keeper's red marker sits on the keeper sprite, and the cyan centre line
+  (drawn at `W/2`) passes through both. The keeper is on the pitch centre line.
+- **Art vs collision.** The ball parked exactly on a tree's collision centre is *hidden by that tree's
+  canopy*. The tree art and the tree collisions are the same place.
 
-**A pre-existing bug this exposes, NOT yet fixed:** the same late pass draws THE THICKET's bushes, the mud,
-cacti, the serpent, the spider and the crates, all from board coordinates. They are therefore all drawn
-(12, 10) off from the positions their collision code uses. That spans Seasons 1 and 2 and was not touched here.
+So the pitch, the pegs, the keepers, the cups and the trees are all aligned, and `?dbg=1` is the way to check
+it: the red cross should sit on the keeper and the cyan line should run through it.
 
 **"The pitch is badly aligned" — it was not, but three real things were making it look that way.** Measured
 on the canvas itself, CRAZY GOLF's margins are left 41.0 / right 42.0 and top 39.0 / bottom 39.0, and the

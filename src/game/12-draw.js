@@ -1621,6 +1621,11 @@
         ctx.fillStyle=n.team==='red'?'rgba(224,91,72,0.16)':'rgba(91,143,232,0.16)';
         ctx.fill(); }
         paintNail(ctx,n.x,n.y,(n.goalie&&((sideAb[n.team]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,teamKits[n.team].kit, n.team===current&&!winner&&phase==='play', resolveKit(teamKits[n.team].kit, effStyle(n.team)));
+        /* ?dbg=1: a BLUE cross drawn from inside this very loop, at the same n.x/n.y paintNail just used.
+           The overlay's white/red crosses mark the same pegs from the LATE pass. If blue and white land
+           together, both passes share a transform and the pegs are where the data says. If they separate,
+           the two passes disagree and the gap is exactly the bug — no coordinate assumptions either way. */
+        try{ if(_dbgAlign()) _dbgCross(ctx,n.x,n.y,'rgba(40,90,255,1)',9); }catch(e){}
         if(n.goalie){ ctx.beginPath();
         ctx.arc(n.x,n.y,NAIL_R+1.5,0,Math.PI*2);
         ctx.strokeStyle='#f4e9c8';
@@ -1692,21 +1697,18 @@
       try{drawSerp(now);}catch(e){}
       try{drawBushes(now);}catch(e){}
       /* CRAZY GOLF's trees ride the same pass, for the same reason: a ball that finishes in one should
-         disappear into the foliage rather than sit on top of it. But this pass runs WITHOUT the pitch's
-         translate(OX,OY), so board coordinates used here land (OX,OY) up-and-left of where the rest of the
-         art puts them — the canopies were being drawn 12 units left and 10 units up from the trees the ball
-         actually collides with, which is what made the whole pitch look misaligned. Apply the translate
-         explicitly rather than moving the call back into the pitch pass, which would put the trees under
-         the ball again. Verified with the ?dbg=1 overlay: markers land on their data positions. */
-      try{ if(boardKey==='minigolf'&&stadiumHazards()){ ctx.save(); ctx.translate(OX,OY);
-      drawMinigolfTrees(ctx,now); ctx.restore(); } }catch(e){}
+         disappear into the foliage rather than sit on top of it. This pass ALREADY carries the pitch's
+         translate(OX,OY) — an explicit second one was added here and it double-applied, shifting the trees
+         21px right and 17px down. Proved by drawing a marker for the same peg from inside the peg loop and
+         again from this pass and measuring the gap: 28px before, 0 after. Board coordinates, nothing else. */
+      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolfTrees(ctx,now); }catch(e){}
       // ================= ALIGNMENT DEBUG OVERLAY (?dbg=1) =================
       // Draws a marker at the DATA position of every object, in the same transform the art uses. If a
       // marker and its sprite sit apart, the drawing is offset from the data and the amount is visible; if
       // they sit together, that object is where it says it is. Built because "the keeper looks off-centre"
       // could not be settled from screenshots — reading positions out of a scaled PNG produced a different
       // wrong answer every time (ponds, sand, ad-boards and net mesh all got mistaken for pegs).
-      try{ if(_dbgAlign()){ ctx.save(); ctx.translate(OX,OY); drawAlignDebug(ctx); ctx.restore(); } }catch(e){}
+      try{ if(_dbgAlign()) drawAlignDebug(ctx); }catch(e){}
       // cacti stand over the ball (it disappears behind them); dust-devil towers over everything
       try{drawCacti(now);}catch(e){}
       try{drawDevil(now);}catch(e){}
