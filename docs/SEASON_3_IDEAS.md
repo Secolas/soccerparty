@@ -404,6 +404,15 @@ Three guards, each added because measurement caught it failing:
 - and then **verify**. A push that lands in another hazard is stepped outward until the point is genuinely
   clear. One measured case had been leaving the ball sitting in the pond.
 
+**Water polish + cup ownership.** Three changes from playtest feedback: (1) removed the red hazard stakes
+around the pond — they read as a loud dotted ring and flashed yellow on a drown, which the player disliked;
+(2) removed the moving ripple lines (they looked like crawling scanlines) in favour of a single static
+sheen, so the pond is calm at rest; (3) the pond now only comes alive when the ball hits it — a proper
+sprinkle of droplets that arc up and fall back, played at the stored entry point (cgSplashX/Y) so it stays
+put even as the turn moves the ball on. And every cup is now sinkable by whoever is playing (cgCupLive
+returns true): it was gated to one team per end, which left one of your two "own" cups uselessly in your
+defensive corner and made it unclear which holes you could use. Still one hole-out per possession.
+
 **THE ROOT CAUSE OF THE WHOLE "PITCH IS BROKEN" SAGA: a stray `ctx.restore()` in the cup draw loop.** The
 cup loop in `drawMinigolf` ended each iteration with `ctx.restore()` but opened no `ctx.save()`. It runs
 once per cup, so with the four cups present it popped the canvas transform stack four times — including the

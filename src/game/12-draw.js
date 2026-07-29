@@ -573,10 +573,11 @@
     for(var gr=0;gr<18;gr++){ var gy=Math.round(b.y+(_cgRnd(si*5+gr)-0.35)*b.ry*1.4);
     var s2=cgSpan(b,gy); if(!s2) continue;
     ctx.fillRect(Math.round(b.x-s2.l+4+_cgRnd(si*5+gr+0.4)*(s2.l+s2.r-8)),gy,1,1); } }
-    // ---- WATER: flat blue bands with a hard shoreline, and a RED STAKE LINE rather than a fat ring.
-    // A course marks a hazard with stakes, and a thin dashed line is both truer and far less ugly than
-    // the smooth red tyre the first version drew round the pond.
-    for(var wi=0;wi<cgWater.length;wi++){ var p=cgWater[wi], wf=(p.flash>0)?p.flash/26:0;
+    // ---- WATER: still, flat blue. No red hazard stakes (they read as a loud dotted ring and flashed
+    // yellow on a drown, which the player disliked) and no moving ripple lines (they looked like crawling
+    // scanlines). Just layered blue bands, a hard shoreline, and a single STATIC sheen highlight — the
+    // pond only comes alive when the ball hits it, via the splash below.
+    for(var wi=0;wi<cgWater.length;wi++){ var p=cgWater[wi];
     _cgFill(ctx,p,-1,'#2a6b34');                      // damp grass at the margin
     _cgFill(ctx,p,0,'#123f63');                       // shoreline
     _cgFill(ctx,p,1,'#1c5f96');
@@ -584,32 +585,16 @@
     _cgFill(ctx,p,6,'#3d95d6',0.2,0.7);               // shallow water catching the sky
     _cgDither(ctx,p,'#1c5f96',wi*11.3,80);
     _cgDither(ctx,p,'#2a6b34',wi*11.3+2.7,60);
-    ctx.fillStyle='rgba(210,240,255,0.5)';            // ripple lines, 1px and level
-    for(var rp=0;rp<5;rp++){ var yy=Math.round(p.y+(rp-2)*p.ry*0.34+Math.sin((now||0)/700+rp)*0.6);
-    var s3=cgSpan(p,yy); if(!s3) continue;
-    var w2=Math.round((s3.l+s3.r)*0.34);
-    ctx.fillRect(Math.round(p.x-w2/2+Math.sin((now||0)/900+rp*2)*3),yy,w2,1); }
-    ctx.fillStyle=wf?'#fff6d0':'#eaf7ff';             // sparkles, fixed so they do not crawl
-    for(var sk=0;sk<9;sk++){ var sy=Math.round(p.y+(_cgRnd(wi*9+sk)-0.5)*p.ry*1.5);
-    var s4=cgSpan(p,sy); if(!s4) continue;
-    ctx.fillRect(Math.round(p.x-s4.l+4+_cgRnd(wi*9+sk+0.6)*(s4.l+s4.r-8)),sy,1,1); }
-    var stake=wf?'#ffe07a':'#d8382c';                 // the hazard stake line
-    var y0=Math.round(p.y-p.ry), y1=Math.round(p.y+p.ry);
-    // Stakes every 4px read as a loud dotted ring round the pond, like piping on a cushion. A course
-    // plants them every few metres, so: sparse, 1px, and only down the flanks where they matter.
-    for(var y2=y0+3;y2<=y1-3;y2+=11){ var s5=cgSpan(p,y2); if(!s5) continue;
-    ctx.fillStyle=stake;
-    ctx.fillRect(Math.round(p.x-s5.l)-3,y2-1,1,3); ctx.fillRect(Math.round(p.x+s5.r)+2,y2-1,1,3);
-    ctx.fillStyle='rgba(255,255,255,0.5)';
-    ctx.fillRect(Math.round(p.x-s5.l)-3,y2-1,1,1); ctx.fillRect(Math.round(p.x+s5.r)+2,y2-1,1,1); } }
-    // ---- CUPS: white collar, black hole, and a DASHED pixel ring on the two you can use (a soft radial
-    // glow was the last vector artefact left on the board).
+    ctx.fillStyle='rgba(220,242,255,0.42)';           // one soft static sheen, upper-left
+    var sy0=Math.round(p.y-p.ry*0.42);
+    for(var sh=0;sh<3;sh++){ var shy=sy0+sh*2, ss=cgSpan(p,shy); if(!ss) continue;
+    var shw=Math.round((ss.l)*0.5); ctx.fillRect(Math.round(p.x-ss.l*0.7),shy,shw,1); } }
+    // ---- CUPS: white collar, black hole, a golf-yellow pin, and a STATIC dashed ring marking it as a
+    // sinkable hole. Every cup is usable now (see cgCupLive), so the ring is a neutral gold rather than a
+    // team colour — it says "you can hole out here", not "this one is yours".
     for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], live=cgCupLive(cu), cf=(cu.flash>0)?cu.flash/34:0;
     var cx=Math.round(cu.x), cy=Math.round(cu.y);
-    /* The live ring is STATIC. It span and pulsed at first, and a rotating animation on a fixed piece of
-       course furniture reads as a UI widget sitting on the grass rather than as part of the hole. It only
-       has one job — say which two cups are yours — and a still ring does that. */
-    if(live){ ctx.fillStyle=(cu['for']==='red')?'#e05b48':'#5b8fe8';
+    if(live){ ctx.fillStyle='#ffd94a';
     for(var dd=0;dd<12;dd++){ if((dd%2)===0) continue;
     var an=dd/12*Math.PI*2;
     ctx.fillRect(cx+Math.round(Math.cos(an)*(CG_CUP+4)),cy+Math.round(Math.sin(an)*(CG_CUP+4)),1,1); } }
@@ -631,11 +616,22 @@
            ran once per cup, popping the pitch's own translate(OX,OY) off the stack. With cups present
            everything drawn after them rendered in a corrupted transform — THE reason ?hz=all broke while
            trees+water+sand (no cups, loop never runs) was fine. */
-    if(cgSplash>0){ var sa=cgSplash/26;                             // splash ring, drawn as pixels
-    var sr=Math.round(4+16*(1-sa));
-    ctx.fillStyle='rgba(214,242,255,'+(0.8*sa)+')';
-    for(var sp2=0;sp2<12;sp2++){ var a3=sp2/12*Math.PI*2;
-    ctx.fillRect(Math.round(coin.x+Math.cos(a3)*sr),Math.round(coin.y+Math.sin(a3)*sr),1,1); } } }
+    // SPLASH: a sprinkle of droplets thrown up where the ball entered the water, played at the stored
+    // entry point (cgSplashX/Y) so it stays put even though the turn moves the ball on. An expanding
+    // ring of pixels plus a dozen droplets that arc out and fall back, each seeded off a fixed hash so
+    // the pattern is stable per splash rather than random noise.
+    if(cgSplash>0&&typeof cgSplashX!=='undefined'){ var sa=cgSplash/26, age=1-sa;   // 0 at impact -> 1 done
+    var ex=cgSplashX, ey=cgSplashY;
+    ctx.fillStyle='rgba(226,246,255,'+(0.7*sa)+')';                 // the expanding contact ring
+    var sr=Math.round(3+13*age);
+    for(var sp2=0;sp2<10;sp2++){ var a3=sp2/10*Math.PI*2;
+    ctx.fillRect(Math.round(ex+Math.cos(a3)*sr),Math.round(ey+Math.sin(a3)*sr*0.7),1,1); }
+    for(var dj=0;dj<12;dj++){                                        // droplets: out, up, then fall
+    var ang=(dj/12)*Math.PI*2+_cgRnd(dj)*0.4, dist=(6+_cgRnd(dj+0.3)*10)*age;
+    var dx2=ex+Math.cos(ang)*dist, dy2=ey+Math.sin(ang)*dist*0.7 - Math.sin(age*Math.PI)*(5+_cgRnd(dj+0.6)*6);
+    ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?'rgba(210,240,255,'+(0.9*sa)+')':'rgba(150,205,240,'+(0.9*sa)+')';
+    ctx.fillRect(Math.round(dx2),Math.round(dy2),1,1);
+    if(age<0.5) ctx.fillRect(Math.round(dx2),Math.round(dy2)+1,1,1); } } }
     /* The trees are drawn in their OWN pass, from the same call site as THE THICKET's bushes — which runs
        AFTER the ball. So a ball that finishes in a tree disappears INTO the foliage instead of sitting on
        top of it, and the canopy goes part-transparent while the ball is inside so you can still see where

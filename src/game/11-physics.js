@@ -1236,7 +1236,7 @@
     // centre spot gives the bottom half, so both sides face the identical hole with water on the same
     // hand. A reflection would have handed one side the easier approach.
     var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
-    var cgFairOn=false, cgCupOn=false, cgSplash=0, cgHoled=null, cgBonus=false;
+    var cgFairOn=false, cgCupOn=false, cgSplash=0, cgSplashX=0, cgSplashY=0, cgHoled=null, cgBonus=false;
     var cgPrevX=0, cgPrevY=0;   // last frame's ball position, so a splash can be traced to the shore crossed
     /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
        The two flank lanes are what makes this a hole rather than a wall, so their width is the number
@@ -1394,7 +1394,12 @@
     function cgSandAt(x,y){ for(var i=0;i<cgSand.length;i++){ if(cgIn(cgSand[i],x,y)) return cgSand[i]; } return null; }
     function cgWaterAt(x,y){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return cgWater[i]; } return null; }
     // a cup is live only for the side attacking that end, so you can never hole out into your own half
-    function cgCupLive(cup){ return cup['for']===current; }
+    /* Any cup is usable by whoever is playing. It used to be gated to cup.for===current (red owned the top
+       cups, blue the bottom), which just made it unclear which holes you could actually sink — and one of
+       your two "own" cups sat in your own defensive corner where holing out is nearly useless. Now every
+       cup pays whoever holes it, still capped at one hole-out per possession by cgBonus. The 'for' field
+       is kept only for the pennant/collar tint. */
+    function cgCupLive(cup){ return true; }
     // the two flank lanes: WALL to the pond's edge, and the bunker's edge to the far wall
     function cgLaneX(side){ return (side<0)?((WALL+(CG_POND_X-CG_POND_RX))/2):(W-(WALL+(CG_POND_X-CG_POND_RX))/2); }
     function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
@@ -2362,7 +2367,7 @@
       coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,_wpx));
       coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,_wpy));
       coin.vx=0; coin.vy=0; _gsp=0;
-      _gw.flash=26; cgSplash=26;
+      _gw.flash=26; cgSplash=26; cgSplashX=coin.x; cgSplashY=coin.y;   // remember where it went in
       try{ setStatus('IN THE WATER'); }catch(e){}
       try{ if(typeof sfxSplash==='function') sfxSplash(); }catch(e){}
       try{ spawnSparks(coin.x,coin.y,null,12); }catch(e){}
