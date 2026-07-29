@@ -1252,7 +1252,11 @@
        half is identical to a vertical mirror, so the pitch is balanced on BOTH axes. */
     var CG_POND_X=105, CG_POND_Y=88, CG_POND_RX=24, CG_POND_RY=18;   // central pond, blocks the direct line
     var CG_SAND_DX=57, CG_SAND_Y=104, CG_SAND_RX=13, CG_SAND_RY=11;  // MED: a bunker in each flank lane
-    var CG_TREE_DX=18, CG_TREE_Y=60, CG_TREE_R=7;                    // a tree pair guarding the goal mouth
+    /* The tree pair used to sit at y=60 right in front of the goal, so with the central pond already
+       blocking the middle the whole top third was a wall and the goalmouth was crowded — pegs ended up
+       jammed between the trees and the net, which read as broken. The trees now flank the pond at its own
+       latitude, out toward the touchlines, dressing the hole without adding a second central blocker. */
+    var CG_TREE_DX=46, CG_TREE_Y=84, CG_TREE_R=6;
     /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
        measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
        with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,

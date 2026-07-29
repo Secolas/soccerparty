@@ -686,6 +686,10 @@
     try{ _dbgCross(g,coin.x,coin.y,'rgba(0,255,0,1)',6); }catch(e){}
     // and CRAZY GOLF's cups
     try{ if(typeof cgCups!=='undefined'&&cgCups) for(var k=0;k<cgCups.length;k++) _dbgCross(g,cgCups[k].x,cgCups[k].y,'rgba(255,140,0,1)',6); }catch(e){}
+    // tree collision centres (lime) and pond/sand collision centres (deep pink), to compare against art
+    try{ if(typeof cgTrees!=='undefined'&&cgTrees) for(var tt=0;tt<cgTrees.length;tt++) _dbgCross(g,cgTrees[tt].x,cgTrees[tt].y,'rgba(180,255,0,1)',7); }catch(e){}
+    try{ if(typeof cgWater!=='undefined'&&cgWater) for(var ww=0;ww<cgWater.length;ww++) _dbgCross(g,cgWater[ww].x,cgWater[ww].y,'rgba(255,0,150,1)',7); }catch(e){}
+    try{ if(typeof cgSand!=='undefined'&&cgSand) for(var qq=0;qq<cgSand.length;qq++) _dbgCross(g,cgSand[qq].x,cgSand[qq].y,'rgba(255,0,150,1)',5); }catch(e){}
     g.restore(); }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
