@@ -1473,7 +1473,7 @@
     var gridOn=false, _gridPrevMoving=false;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { reactN:(t>=2)?99:(t>=1?3:2), reactSpd:(t>=2)?1.7:(t>=1?1.2:0.8), returnSpd:1.3, gate:1.0, lead:(t>=2)?9:(t>=1?6:3) }; }
+    return { reactN:(t>=2)?99:(t>=1?3:2), reactSpd:(t>=2)?1.7:(t>=1?1.2:0.8), returnSpd:1.3, gate:1.0, space:(t>=2)?18:22 }; }
     function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
     // Move a nail toward (tx,ty), capped at spd, kept on the pitch. avoidBall keeps a defender jogging home
     // from ever entering a resting ball's space, so it can never nudge a ball that has already stopped.
@@ -1483,9 +1483,10 @@
     if(avoidBall){ var bx=nx-coin.x, by=ny-coin.y, bd=Math.hypot(bx,by), R=NAIL_R+COIN_R+1;
     if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; } }
     n.x=nx; n.y=ny; }
-    // LIVE DEFENCE — runs every render frame. On a moving ball the nearest defenders close it down (aiming
-    // at where it is HEADING, to cut it off); when it slows they jog back to where they were placed. Home
-    // spots are snapshotted the instant a shot starts, while everyone is still at rest on their formation.
+    // LIVE DEFENCE — runs every render frame. On a moving ball the reacting defenders form a SCREEN across
+    // its path — a line just ahead of the ball, perpendicular to its travel, with the players fanned out to
+    // cover neighbouring lanes rather than all piling onto the ball. When it slows they jog back to where
+    // they were placed. Home spots are snapshotted the instant a shot starts, while all are still at rest.
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
     if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0);
@@ -1497,10 +1498,18 @@
     if(nn.team===def && !nn.goalie && !(typeof dragNail!=='undefined'&&dragNail===nn)) defs.push(nn); }
     defs.sort(function(a,b){ return Math.hypot(a.x-coin.x,a.y-coin.y)-Math.hypot(b.x-coin.x,b.y-coin.y); });
     var reactN=(c.reactN>=99)?defs.length:Math.min(c.reactN,defs.length);
-    var lx=coin.x+(coin.vx||0)*c.lead, ly=coin.y+(coin.vy||0)*c.lead;   // lead the ball so they intercept, not trail
-    for(var k=0;k<defs.length;k++){ var dn=defs[k];
-    if(fast && k<reactN){ _gridMoveNail(dn,lx,ly,c.reactSpd,false); }
-    else if(!fast && dn._gridHome){ _gridMoveNail(dn,dn._gridHome.x,dn._gridHome.y,c.returnSpd,true); } } }
+    if(fast){
+    var ux=coin.vx/sp, uy=coin.vy/sp, px=-uy, py=ux;                 // travel dir + its perpendicular
+    var ahead=Math.min(48,10+sp*3.2);                               // screen sits this far in front of the ball
+    var cx=coin.x+ux*ahead, cy=coin.y+uy*ahead;
+    var reactors=defs.slice(0,reactN);
+    reactors.sort(function(a,b){ return ((a.x-cx)*px+(a.y-cy)*py)-((b.x-cx)*px+(b.y-cy)*py); });   // assign lateral slots left->right to avoid crossing
+    var span=(reactors.length-1)*c.space;                           // total width of the screen line
+    for(var k=0;k<reactors.length;k++){ var slot=(reactors.length<=1)?0:(k/(reactors.length-1)-0.5);
+    var off=slot*span, tx=cx+px*off, ty=cy+py*off;
+    _gridMoveNail(reactors[k],tx,ty,c.reactSpd,false); }
+    for(var m=reactN;m<defs.length;m++){ if(defs[m]._gridHome) _gridMoveNail(defs[m],defs[m]._gridHome.x,defs[m]._gridHome.y,c.returnSpd,true); }   // non-reactors hold their shape
+    } else { for(var q=0;q<defs.length;q++){ if(defs[q]._gridHome) _gridMoveNail(defs[q],defs[q]._gridHome.x,defs[q]._gridHome.y,c.returnSpd,true); } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

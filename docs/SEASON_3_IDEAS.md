@@ -558,9 +558,11 @@ once it settles. No new sprites: the real player tokens move.
 - By tier: **easy** the 2 nearest react, slow (0.8); **med** 3, quicker (1.2); **hard** *all* of them, fast
   (1.7). Return speed 1.3.
 
-Verified in royale (headless drive to stadium 5, hard): enters with zero errors and the defenders visibly
-converge on the ball on a shot while the far formation holds its shape. Open tuning: they currently *swarm*
-the ball (all pile onto the same lead point) rather than spreading to mark lanes — a candidate refinement.
+The reactors form a **screen**, not a swarm: a line placed `ahead = min(48, 10+speed·3.2)` px in front of
+the ball along its travel, perpendicular to it, with the players fanned out `cfg.space` apart (22 easy/med,
+18 hard) and assigned left→right slots so they don't cross. Non-reactors hold their shape. Verified in royale
+(headless drive to stadium 5, hard): enters with zero errors and the defenders spread to cover the ball's
+lanes rather than piling on.
 
 **Fantasy:** a gridiron blitz — the whole defence reads your shot and collapses on the ball.
 
