@@ -562,10 +562,20 @@ snapshotted at the idle→moving transition; `_gridHomeNail` restores them).
 - By tier: **easy** 2 roam, **med** 4, **hard** all **+ a BREATHING GOAL**. Roam speed 1.05 / 1.35 / 1.7;
   clear cap 5.0 / 6.0 / 7.0.
 
-**BREATHING GOAL (hard only).** Posts at each mouth whose half-gap opens and closes on a slow sine
-(`gridBreathGap` = `23 ± 15`, `freq 0.02`) — time your shot for the wide phase. A wide shot is turned away by
-a **plain reflection** (`1+RESTITUTION`, *no* boost kick — deliberately not a bumper, per the "no boosty
-hazards" note). `gridironStep` runs the collision; `drawGridiron` draws the two posts at the current gap.
+**BREATHING GOAL (hard only) — moving posts.** Each mouth's two posts are **objects that slide**. The
+half-gap oscillates between `23 ± 15` under its own velocity (`gridBreatheStep`, per mouth `[top,bottom]`) —
+no longer a pure sine, so it can react to collisions:
+
+- **Posts push the ball.** A shot into a post still reflects (`1+RESTITUTION`, no boost), but because the post
+  is *sliding*, it also **carries the ball sideways** (`coin.vx += s·gridGapV·GRID_PUSH`, where `gridGapV` is
+  the px the post moved this frame) — a sweeping paddle, not a static bumper. A post crossing the ball shoves
+  it along its travel.
+- **Posts bounce off the keeper.** On the inward stroke, if the post on the keeper's side reaches that mouth's
+  goalie nail (`gridKeeperFor`), the gap **reverses** (`gridGapDir = +1`) and springs back out with a spark —
+  the keeper physically blocks the post, so the goal can't cinch shut past its own keeper.
+- **Settle-safe:** the carry is only applied to a moving ball inside `gridironStep`, and it's a few tenths of
+  a px/frame, so friction still drops the ball under `STOP_V` and the turn ends. `drawGridiron` draws each
+  mouth's posts at *its* gap (both mouths can now desync when a keeper interferes).
 
 **Symmetric pitch.** The board's end-zone bands are now an **identical** darker-green tint at both ends —
 the earlier red/blue split read as a pale wash on the red end and nothing on the blue, so the two penalty

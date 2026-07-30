@@ -720,8 +720,8 @@
     /* THE END ZONE: the roamers are the real nails (drawn normally); the only extra furniture is the HARD
        breathing goalposts, whose gap opens and closes. gridBreathGap() returns 0 off hard, so nothing draws. */
     function drawGridiron(ctx,now){ if(typeof gridArena!=='function'||!gridArena()) return;
-    var gap=(typeof gridBreathGap==='function')?gridBreathGap():0; if(gap<=0) return;
-    for(var e=0;e<2;e++){ var lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
+    if(typeof gridBreathGap!=='function'||gridBreathGap(0)<=0) return;
+    for(var e=0;e<2;e++){ var gap=gridBreathGap(e), lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
     for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
     ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
     ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
