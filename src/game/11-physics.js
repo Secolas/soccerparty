@@ -1570,23 +1570,31 @@
     // GUTTERS (side rails that suck a wall-hugging shot straight down the lane) and an OILED centre strip (keeps
     // pace); hard deepens both and packs the full 10-pin triangle. All settle-safe: pins/gutters/oil only touch
     // a MOVING grounded ball, knocked pins leave collision at once, and the oil never lifts net friction to >=1.
-    var bowlOn=false, _bowlPrevMoving=false, bowlPins=[];
+    var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakeX=[0,0], bowlRakeDir=[1,-1];
     function bowlArena(){ return (typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { rows:(t>=2)?4:(t>=1?3:2), pinLoss:(t>=2)?0.82:(t>=1?0.86:0.90),
-    gutter:(t>=1), gutterPull:(t>=2)?0.5:0.28, gutW:(t>=2)?7:6,
-    oil:(t>=1), oilKeep:(t>=2)?0.995:0.990, oilW:(t>=2)?26:18, gate:0.4 }; }
+    rake:(t>=1), rakeW:(t>=2)?52:38, rakeSpd:(t>=2)?1.7:1.15, gate:0.4 }; }
+    // THE SWEEP / RAKE geometry: a bar at a fixed y just in front of each mouth's pins, its centre sweeping
+    // side to side within the goal mouth so there's always an open side to shoot past.
+    function bowlRakeY(end){ return end?(H-(NET_DEPTH+GOAL_AREA_D)-6):((NET_DEPTH+GOAL_AREA_D)+6); }
+    function bowlRakeSpan(c){ return { min:(W/2-GOAL_W/2)+c.rakeW/2, max:(W/2+GOAL_W/2)-c.rakeW/2 }; }
     // (re)build the triangle in front of each goal, apex toward centre (the 1-pin the ball meets first).
     function bowlRerack(){ var c=bowlCfg(), dx=9, dy=8, pinR=2.6; bowlPins=[];
     for(var end=0;end<2;end++){ var dir=end?1:-1, apexY=end?(H-(NET_DEPTH+GOAL_AREA_D)+4):((NET_DEPTH+GOAL_AREA_D)-4);
     for(var r=0;r<c.rows;r++){ var py=apexY+dir*r*dy, cnt=r+1, x0=W/2-(cnt-1)*dx/2;
     for(var p=0;p<cnt;p++){ bowlPins.push({x:x0+p*dx, y:py, r:pinR, down:false, end:end, sx:0, sy:0, t:0}); } } } }
-    function initBowling(){ if(!bowlArena()) return; bowlOn=true; _bowlPrevMoving=false; bowlRerack(); }
+    function initBowling(){ if(!bowlArena()) return; bowlOn=true; _bowlPrevMoving=false; bowlRerack();
+    var c=bowlCfg(), sp=bowlRakeSpan(c), mid=(sp.min+sp.max)/2; bowlRakeX=[mid,mid]; bowlRakeDir=[1,-1]; }
     // every render frame: drift knocked pins (visual scatter only). The rack does NOT re-rack per flick — pins
     // you knock down stay down across turns, so both sides chip the rack open over the rally; it only re-racks
     // when a goal is scored (bowlRerack from finalizeGoal), starting the next point on a fresh rack.
     function bowlingTick(){ if(!bowlArena()) return; if(!bowlOn) initBowling();
     if(typeof coin==='undefined'||!coin) return;
+    var c=bowlCfg();
+    if(c.rake){ var sp=bowlRakeSpan(c);   // sweep each rake side to side, bouncing at the mouth edges
+    for(var e=0;e<2;e++){ bowlRakeX[e]+=bowlRakeDir[e]*c.rakeSpd;
+    if(bowlRakeX[e]<=sp.min){ bowlRakeX[e]=sp.min; bowlRakeDir[e]=1; } else if(bowlRakeX[e]>=sp.max){ bowlRakeX[e]=sp.max; bowlRakeDir[e]=-1; } } }
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(!pn.down) continue; pn.t++; pn.x+=pn.sx; pn.y+=pn.sy; pn.sx*=0.86; pn.sy*=0.86; } }
     // physics rate, moving grounded ball only. Pins knock + bleed pace; gutters funnel; oil preserves pace.
     function bowlingStep(){ if(!bowlArena()||!moving||scoring) return; if(!bowlOn) initBowling();
@@ -1602,14 +1610,14 @@
     coin.vx*=c.pinLoss; coin.vy*=c.pinLoss;
     coin.x=pn.x+nx*R; coin.y=pn.y+ny*R;
     try{ spawnSparks(pn.x,pn.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} } }
-    // GUTTERS (med+) — a wall-hugging shot gets pulled onto the rail and its lateral escape damped, so it runs
-    // straight down the gutter toward the corner.
-    if(c.gutter && sp>c.gate){ var inL=coin.x<WALL+c.gutW, inR=coin.x>W-WALL-c.gutW;
-    if(inL||inR){ var wall=inL?(WALL+COIN_R):(W-WALL-COIN_R);
-    coin.vx+=(wall-coin.x)*0.03*c.gutterPull; coin.vx*=(1-0.15*c.gutterPull); } }
-    // OILED CENTRE STRIP (med+) — undoes most of the frame's friction while over the strip, so the ball keeps
-    // pace down the middle. oilKeep<1 divides back a fraction; net (friction/oilKeep) stays <1 so it settles.
-    if(c.oil && sp>c.gate && Math.abs(coin.x-W/2)<c.oilW){ coin.vx/=c.oilKeep; coin.vy/=c.oilKeep; } }
+    // THE SWEEP / RAKE (med+) — a bar sweeping in front of each goal's pins. The ball BOUNCES off it (clean
+    // reflection, not a trap), so you shoot past it on the open side or wait for it to sweep clear. Reflects a
+    // moving grounded ball only, so wall bounces and settling are untouched.
+    if(c.rake){ var TH=2.6;
+    for(var e=0;e<2;e++){ var by=bowlRakeY(e), bxL=bowlRakeX[e]-c.rakeW/2, bxR=bowlRakeX[e]+c.rakeW/2;
+    if(Math.abs(coin.y-by)<COIN_R+TH && coin.x>bxL-COIN_R && coin.x<bxR+COIN_R){ var side=(coin.y<by)?-1:1;
+    if(coin.vy*side<0){ coin.vy=-coin.vy*0.92; coin.y=by+side*(COIN_R+TH);
+    try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

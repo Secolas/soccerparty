@@ -618,17 +618,17 @@ knocked down (leaves collision at once and scatters as fading debris) and **blee
 rack open over the course of the rally, working a lane through it flick by flick — and the rack only
 **re-racks when a goal is scored** (`bowlRerack` from `finalizeGoal`), starting the next point fresh.
 
-**GUTTERS (med+).** A ball that strays into the side channel gets **pulled onto the rail** and its lateral
-escape damped, so a wall-hugging shot runs straight down the gutter toward the corner (usually a miss). Off
-on easy; `gutterPull` 0.28 med / 0.50 hard, channel 6px / 7px. **Tell:** on med+ the trough lights blue with
-glints running down it (animated in `drawBowling`), so a live rail is readable; on easy the channel is the
-plain dark board art with no light.
+**THE SWEEP / RAKE (med+).** A metal pinsetter bar sits just in front of each mouth's pins and **sweeps side
+to side** across the goal, its tines pointing at the rack. The ball **bounces off it** (a clean reflection —
+not a trap), so you shoot past it on the open side or wait for it to sweep clear; its motion is the telegraph.
+Off on easy; bar width 38px med / 52px hard, sweep speed 1.15 / 1.7 (wider + faster on hard = a tighter open
+window). Reflects a **moving grounded** ball only, so wall bounces and settling are untouched, and a **chip
+flies clean over** it. `bowlingTick` sweeps it; `bowlingStep` bounces the ball; `drawBowling` draws it.
 
-**OILED CENTRE STRIP (med+).** Down the middle the lane is oiled: while over the strip the ball **keeps its
-pace** (`oilKeep` divides most of the frame's friction back). Off on easy; strip ±18px med / ±26px hard,
-slicker on hard. Reuse of Wet Shot's "keeps speed", **not** ice-slip. **Tell:** a visible slick blue band
-with bright edges and highlight bands sliding down it (animated), so the oiled lane is obvious; nothing draws
-on easy.
+*Cut on playtest:* the earlier **gutter funnel** (pulled a wall-hugging shot down the rail) killed normal wall
+bounces — a ball hitting the side got stuck like a real gutter instead of rebounding — so it was removed; the
+dark side channels stay as lane art only. The **oiled centre strip** (kept pace down the middle) and the
+animated blue tells were also cut. The sweep/rake replaces both as the med+ hazard.
 
 **Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no gutters, no oil (*meet the sport*).
 Med — **6-pin** rack (0.86) + gutters + oil (*the sport bites*). Hard — full **10-pin** rack (0.82) + deep
