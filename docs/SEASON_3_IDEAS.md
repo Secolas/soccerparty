@@ -620,11 +620,15 @@ rack open over the course of the rally, working a lane through it flick by flick
 
 **GUTTERS (med+).** A ball that strays into the side channel gets **pulled onto the rail** and its lateral
 escape damped, so a wall-hugging shot runs straight down the gutter toward the corner (usually a miss). Off
-on easy; `gutterPull` 0.28 med / 0.50 hard, channel 6px / 7px.
+on easy; `gutterPull` 0.28 med / 0.50 hard, channel 6px / 7px. **Tell:** on med+ the trough lights blue with
+glints running down it (animated in `drawBowling`), so a live rail is readable; on easy the channel is the
+plain dark board art with no light.
 
 **OILED CENTRE STRIP (med+).** Down the middle the lane is oiled: while over the strip the ball **keeps its
 pace** (`oilKeep` divides most of the frame's friction back). Off on easy; strip ±18px med / ±26px hard,
-slicker on hard. Reuse of Wet Shot's "keeps speed", **not** ice-slip.
+slicker on hard. Reuse of Wet Shot's "keeps speed", **not** ice-slip. **Tell:** a visible slick blue band
+with bright edges and highlight bands sliding down it (animated), so the oiled lane is obvious; nothing draws
+on easy.
 
 **Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no gutters, no oil (*meet the sport*).
 Med — **6-pin** rack (0.86) + gutters + oil (*the sport bites*). Hard — full **10-pin** rack (0.82) + deep

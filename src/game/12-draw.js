@@ -726,12 +726,35 @@
     ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
     ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
 
-    /* THE ALLEY: an oiled-lane sheen down the middle (med+) plus the pin racks in front of each goal. Standing
-       pins are white with a red neck stripe; a knocked pin fades as it scatters (drift handled in bowlingTick). */
+    /* THE ALLEY: the med+ hazards get live animated tells — an oiled centre strip with a slick sheen and
+       shimmer bands sliding down it, and lit side gutters with glints running down the trough — plus the pin
+       racks in front of each goal. Standing pins are white with a red neck stripe; a knocked pin fades as it
+       scatters (drift handled in bowlingTick). Off tiers draw neither tell, so the board reads clean. */
     function drawBowling(ctx,now){ if(typeof bowlArena!=='function'||!bowlArena()) return;
     if(typeof bowlPins==='undefined'||!bowlPins) return;
     var c=(typeof bowlCfg==='function')?bowlCfg():null;
-    if(c&&c.oil){ ctx.fillStyle='rgba(120,180,220,0.06)'; ctx.fillRect(Math.round(W/2-c.oilW),WALL,Math.round(c.oilW*2),H-WALL*2); }
+    // OILED CENTRE STRIP (med+) — a visible slick band with a soft base tint, bright edges, and highlight
+    // bands sliding down the lane so it reads as "this strip keeps your pace".
+    if(c&&c.oil){ var ox=Math.round(W/2-c.oilW), ow=Math.round(c.oilW*2);
+    ctx.fillStyle='rgba(88,140,190,0.13)'; ctx.fillRect(ox,WALL,ow,H-WALL*2);
+    ctx.save(); ctx.beginPath(); ctx.rect(ox,WALL,ow,H-WALL*2); ctx.clip();
+    var _op=200, _ot=(now*0.02)%_op;
+    for(var _ob=-1;_ob<(H/_op)+2;_ob++){ var _oy=WALL+_ob*_op+_ot, _og=ctx.createLinearGradient(0,_oy-46,0,_oy+46);
+    _og.addColorStop(0,'rgba(205,232,255,0)'); _og.addColorStop(0.5,'rgba(205,232,255,0.20)'); _og.addColorStop(1,'rgba(205,232,255,0)');
+    ctx.fillStyle=_og; ctx.fillRect(ox,Math.round(_oy-46),ow,92); }
+    ctx.restore();
+    ctx.fillStyle='rgba(190,222,252,0.28)'; ctx.fillRect(ox,WALL,1,H-WALL*2); ctx.fillRect(ox+ow-1,WALL,1,H-WALL*2); }
+    // GUTTERS (med+) — light the trough blue and run glints down it so the rail reads as live. The dark
+    // channel itself is painted by the board; this overlay is the on/med+ tell.
+    if(c&&c.gutter){ var _gw=c.gutW;
+    for(var _gs=0;_gs<2;_gs++){ var _gx=_gs?(W-WALL-_gw):WALL;
+    ctx.save(); ctx.beginPath(); ctx.rect(_gx,WALL,_gw,H-WALL*2); ctx.clip();
+    ctx.fillStyle='rgba(86,150,212,0.12)'; ctx.fillRect(_gx,WALL,_gw,H-WALL*2);
+    var _gp=54, _gt=(now*0.05)%_gp;
+    for(var _gi=-1;_gi<(H/_gp)+2;_gi++){ var _gy=WALL+_gi*_gp+_gt, _gg=ctx.createLinearGradient(0,_gy-12,0,_gy+12);
+    _gg.addColorStop(0,'rgba(180,220,255,0)'); _gg.addColorStop(0.5,'rgba(180,220,255,0.24)'); _gg.addColorStop(1,'rgba(180,220,255,0)');
+    ctx.fillStyle=_gg; ctx.fillRect(_gx,Math.round(_gy-12),_gw,24); }
+    ctx.restore(); } }
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i];
     if(pn.down){ if(pn.t>40) continue; ctx.globalAlpha=Math.max(0,1-pn.t/40); }
     ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
