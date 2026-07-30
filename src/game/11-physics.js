@@ -1241,10 +1241,11 @@
     // the next flick. Deliberately unhurried (SINK then DROP frames) so it reads as real water physics
     // rather than the ball being snapped to the bank. null = idle; while set, stepPhysics only ticks it.
     var cgDrown=null, CG_DROWN_SINK=50, CG_DROWN_DROP=34;
-    // Hole-out reward: for the rest of the possession the ball flicks at 100% stamina (see staminaMul).
-    // The hole-out still COUNTS as a flick (the tally keeps ticking down) — the reward is full-strength
-    // flicks, not extra ones. Cleared when the turn passes.
-    var cgBoost=false;
+    // Hole-out reward: stamina is REFRESHED to 100% at the hole, then decreases again with each following
+    // flick — it does NOT stay pinned at 100% for the rest of the turn. cgStamBase records the flick count
+    // at the hole so staminaMul counts stamina forward from there. The hole-out still COUNTS as a flick
+    // (the tally keeps ticking down) and keeps the turn. Reset to 0 when the turn passes.
+    var cgStamBase=0;
     var cgPrevX=0, cgPrevY=0;   // last frame's ball position, so a splash can be traced to the shore crossed
     /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
        The two flank lanes are what makes this a hole rather than a wall, so their width is the number
@@ -1308,7 +1309,7 @@
     var q; try{ var m=(location.search||'').match(/[?&]hz=([a-z,]+)/i); q=m?m[1].toLowerCase():CG_DEFAULT_HZ; }catch(e){ q=CG_DEFAULT_HZ; }
     return q==='all' || q.split(',').indexOf(kind)>=0; }
     function initMinigolf(){ var t=hzTier();
-    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null; cgBoost=false;
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null; cgStamBase=0;
     cgFairOn=(t>=1); cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
@@ -3113,7 +3114,7 @@
     }catch(e){} },1700); flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } current=_lkTeam;
-    if(typeof cgBoost!=='undefined') cgBoost=false;
+    if(typeof cgStamBase!=='undefined') cgStamBase=0;
     turnFlash=24; try{ sfxTurn();
     }catch(e){} try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
     try{ updateComebackHUD();
@@ -3124,15 +3125,15 @@
     // Deliberately ahead of the FLICK_CAP branches below: this was earned by sinking a 7px target, not
     // by running down a clock, so the flick cap must not be able to swallow it.
     if((typeof cgHoled!=='undefined')&&cgHoled){ var _cgw=cgHoled;
-    cgHoled=null; cgBonus=true; cgBoost=true; current=_cgw;
+    cgHoled=null; cgBonus=true; cgStamBase=flickCount; current=_cgw;
     coin.vx=0; coin.vy=0; coin.air=0;
     // Holing out KEEPS possession and the hole-out COUNTS as a flick — the tally keeps ticking down (so a
-    // hole on your first flick leaves you 2). The reward is not extra flicks or a free full-power one; it
-    // is 100% stamina for the rest of the possession (cgBoost -> staminaMul), so the flicks you have left
-    // hit at full strength. You keep the turn whether or not the shot touched your own players; cgBonus
-    // caps it at one hole-out per possession.
+    // hole on your first flick leaves you 2). The reward is that stamina is REFRESHED to 100% at the hole
+    // (cgStamBase = the current count) and then decreases again with each following flick — it is not
+    // pinned at 100% for the rest of the turn. You keep the turn whether or not the shot touched your own
+    // players; cgBonus caps it at one hole-out per possession.
     hitOwn=false; struck=false;
-    turnFlash=24; setStatus('HOLED OUT — PLAY ON · 100% STAMINA');
+    turnFlash=24; setStatus('HOLED OUT — PLAY ON');
     try{ sfxCheer(); }catch(e){} try{ spawnSparks(coin.x,coin.y,current,16,true);
     }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     applyTactics(); updateHUD(); return; }
@@ -3150,7 +3151,7 @@
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     } else { try{ tutHook('lose');
     }catch(e){} current=current==='red'?'blue':'red';
-    if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; cgBoost=false; }   /* CRAZY GOLF: hole-out bonus + stamina boost last one possession */
+    if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; cgStamBase=0; }   /* CRAZY GOLF: hole-out bonus + stamina refresh last one possession */
     turnFlash=24; sfxTurn();
     try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;

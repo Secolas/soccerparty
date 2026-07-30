@@ -742,14 +742,17 @@ player continues); `_turnBanner` is advanced by `updateFX`, drawn by `drawTurnBa
 
 ## CRAZY GOLF: hole-out reward + water drown
 
-**Hole-out is "play on" with a stamina boost, not a free flick.** Sinking a cup **counts as a flick** — the
-tally keeps ticking down, so holing on your first flick leaves you 2 — and you keep the turn (whether or not
-the shot touched your own players). The reward is not extra flicks or a free full-power one (the old
-`cgFullFlick_` auto-power freebie is gone); it is **100% stamina for the rest of the possession** (`cgBoost`
-→ `staminaMul` returns 1, and the aim guide's power colour reads full-green), so the flicks you have left
-hit at full strength while you still aim them yourself. Since a 100%-stamina flick already gives full power
-at max drag, there is no separate "power" reward — the two would be the same thing. `cgBonus` still caps it
-at one hole-out per possession; `cgBoost` clears when the turn passes.
+**Hole-out is "play on" with a stamina refresh, not a free flick.** Sinking a cup **counts as a flick** —
+the tally keeps ticking down, so holing on your first flick leaves you 2 — and you keep the turn (whether or
+not the shot touched your own players). The reward is not extra flicks or a free full-power one (the old
+`cgFullFlick_` auto-power freebie is gone); it is a **stamina refresh**: stamina jumps back to 100% at the
+hole and then **decreases again** with each following flick, exactly as a fresh possession would — it is
+*not* pinned at 100% for the rest of the turn. `cgStamBase` records the flick count at the hole and
+`staminaMul` counts stamina forward from there (the aim guide's power colour restarts at full-green too), so
+the count and the stamina curve are decoupled: the counter keeps falling while the stamina ramp restarts.
+Since a 100%-stamina flick already gives full power at max drag, there is no separate "power" reward — the
+two would be the same thing. `cgBonus` caps it at one hole-out per possession; `cgStamBase` resets when the
+turn passes.
 
 **Water drown is a real, unhurried transition.** Instead of snapping the ball to the bank and ending the turn
 next frame, entering the pond starts `cgDrown`: the ball **sinks** where it went in (shrinks, goes waterlogged

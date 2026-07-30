@@ -1052,8 +1052,8 @@
     } } }); try{ renderAiImmunityBadge();
     }catch(e){} } function staminaMul(){ if(pen&&pen.active) return 1;
     if(mode==='penalty') return 1;
-    if(typeof cgBoost!=='undefined'&&cgBoost) return 1;   // CRAZY GOLF hole-out reward: full stamina for the rest of the possession
-    return STAMINA[Math.min(flickCount, STAMINA.length-1)];
+    var _sc=flickCount-((typeof cgStamBase!=='undefined')?cgStamBase:0);   // CRAZY GOLF hole-out refreshes stamina from the hole, then it decreases again
+    return STAMINA[Math.min(Math.max(0,_sc), STAMINA.length-1)];
     }
     function renderAiImmunityBadge(){ if(typeof _royScoreDefer!=='undefined'&&_royScoreDefer) return;
     try{ var _bz=(typeof royAiBoss==='function'&&typeof royaleArena!=='undefined'&&royaleArena)?royAiBoss(royaleArena):null;
