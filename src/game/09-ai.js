@@ -17,6 +17,17 @@
     if(abOff[sd].indexOf(other)<0) abOff[sd].push(other);
     try{ applyTactics(); }catch(e){} try{ syncSlots();
     }catch(e){} }
+    // The human's drag is clamped to the pitch (aimNow is bounded by WALL..W-WALL / WALL..H-WALL), so with
+    // the ball against a wall they can only pull back a little in the away-from-wall direction — a weak shot.
+    // Mirror that ceiling for the CPU so it can't fire full power off a wall. `reach` models that the human
+    // may start the drag slightly off-ball (within COIN_R+13). Only bites near a wall; far from walls the
+    // available room dwarfs FLICK_POWER so the cap is a no-op. Returns a max speed in the same units as `speed`.
+    function aiWallPowerCap(bx,by,ang){ var reach=COIN_R+13, cx=Math.cos(ang), cy=Math.sin(ang);
+    var sx=Math.max(WALL,Math.min(W-WALL,bx+cx*reach)), sy=Math.max(WALL,Math.min(H-WALL,by+cy*reach));
+    var tx=(cx>0.0001)?(sx-WALL)/cx:((cx<-0.0001)?(sx-(W-WALL))/cx:1e9);
+    var ty=(cy>0.0001)?(sy-WALL)/cy:((cy<-0.0001)?(sy-(H-WALL))/cy:1e9);
+    var tt=Math.max(0,Math.min(tx,ty,FLICK_POWER));
+    return tt*(FLICK_MAX/FLICK_POWER)*(TAC.power||1)*staminaMul(); }
     // Compute the CPU's shot (target, angle, speed, curve spin, drunk jitter) WITHOUT touching the ball,
     // and return it as a plain object. Split out so the aim telegraph can lock the shot in at think-start
     // and render the very shot that will be released. aiPickShotMod runs here (it decides curve vs serpent).
@@ -74,6 +85,10 @@
       // dodge would nudge the ball off the hole).
       if(!(_cgP&&_cgP.soft)){ try{ ang=aiClearFront(t,ang); }catch(e){} }
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
+      // Wall ceiling: with the ball against a wall the human can't pull back far to shoot away from it, so cap
+      // the CPU the same way. Skipped for penalties (their own capped mode); the full-flick reward below is
+      // applied AFTER and deliberately bypasses this, exactly as the player's full-flick ignores drag distance.
+      if(!(pen&&pen.active)){ try{ speed=Math.min(speed, aiWallPowerCap(coin.x,coin.y,ang)); }catch(e){} }
       // A putt at a cup has to ARRIVE dying or it skips the lip, and the roll here is v/(1-FRICTION) =
       // 62.5*v, so the speed that stops on the hole is dist/62.5 — far below the 5.0 floor above.
       if(_cgP&&_cgP.soft) speed=Math.max(1.0,Math.min(speed,(dist+10)/62.5));
