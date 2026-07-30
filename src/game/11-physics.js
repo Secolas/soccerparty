@@ -1466,50 +1466,54 @@
     if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
     return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
     // ================= THE END ZONE (gridiron) =================
-    // ONE hazard: a LIVE DEFENCE. The instant you shoot, the DEFENDING side's outfield players react and
-    // close the ball down to block it, then jog back to the spots they were placed on once it settles.
-    // Settle-safe: they only close in on a MOVING ball, and while jogging home they never shove a ball at
-    // rest, so the turn always ends. Tiered: how many react, and how fast.
-    var gridOn=false, _gridPrevMoving=false;
+    // ROAMING DEFENDERS: loose players patrol left<->right across the pitch. When a MOVING ball comes close
+    // to one inside a defensive third, that defender CLEARS it — boots it back up the pitch toward midfield.
+    // Settle-safe: a clear only fires on a moving ball, sends it OUT of the defensive third, and each roamer
+    // has a cooldown, so the ball can't be juggled forever and the turn always ends. HARD adds a BREATHING
+    // GOAL: posts at each mouth whose gap opens and closes on a slow sine — time your shot for the wide phase.
+    // Tiers: easy 2 roamers, med 4, hard 6 + breathing goal.
+    var gridOn=false, gridRoam=[], gridBreathPh=0, GRID_ROAM_R=7;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { reactN:(t>=2)?99:(t>=1?3:2), reactSpd:(t>=2)?1.7:(t>=1?1.2:0.8), returnSpd:1.3, gate:1.0, space:(t>=2)?18:22 }; }
-    function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
-    // Move a nail toward (tx,ty), capped at spd, kept on the pitch. avoidBall keeps a defender jogging home
-    // from ever entering a resting ball's space, so it can never nudge a ball that has already stopped.
-    function _gridMoveNail(n,tx,ty,spd,avoidBall){ var dx=tx-n.x, dy=ty-n.y, d=Math.hypot(dx,dy)||1;
-    var nx=n.x, ny=n.y; if(d>spd){ nx+=dx/d*spd; ny+=dy/d*spd; } else { nx=tx; ny=ty; }
-    nx=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,nx)); ny=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ny));
-    if(avoidBall){ var bx=nx-coin.x, by=ny-coin.y, bd=Math.hypot(bx,by), R=NAIL_R+COIN_R+1;
-    if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; } }
-    n.x=nx; n.y=ny; }
-    // LIVE DEFENCE — runs every render frame. On a moving ball the reacting defenders form a SCREEN across
-    // its path — a line just ahead of the ball, perpendicular to its travel, with the players fanned out to
-    // cover neighbouring lanes rather than all piling onto the ball. When it slows they jog back to where
-    // they were placed. Home spots are snapshotted the instant a shot starts, while all are still at rest.
+    return { roamN:(t>=2)?6:(t>=1?4:2), roamSpd:(t>=2)?1.5:(t>=1?1.25:1.0), clearR:GRID_ROAM_R+COIN_R+6,
+    clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42, breathing:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
+    function initGridiron(){ if(!gridArena()) return; var c=gridCfg();
+    gridOn=true; gridRoam=[]; gridBreathPh=0;
+    var top=NET_DEPTH+GOAL_AREA_D+8, bot=H-NET_DEPTH-GOAL_AREA_D-8, n=c.roamN;
+    for(var i=0;i<n;i++){ var fr=(n<=1)?0.5:(i/(n-1)), y=top+fr*(bot-top), dir=(i%2)?1:-1;
+    gridRoam.push({x:(dir>0)?(WALL+GRID_ROAM_R+2):(W-WALL-GRID_ROAM_R-2), y:y, dir:dir, cd:0, flash:0}); } }
+    // roamer patrol + breathing phase — every render frame (so they keep pacing between turns too).
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
-    if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
-    var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0);
-    var fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
-    if(moving && !_gridPrevMoving){ for(var i=0;i<nails.length;i++){ nails[i]._gridHome={x:nails[i].x,y:nails[i].y}; } }
-    _gridPrevMoving=moving;
-    var def=(current==='red')?'blue':'red';        // the side defending this shot
-    var defs=[]; for(var j=0;j<nails.length;j++){ var nn=nails[j];
-    if(nn.team===def && !nn.goalie && !(typeof dragNail!=='undefined'&&dragNail===nn)) defs.push(nn); }
-    defs.sort(function(a,b){ return Math.hypot(a.x-coin.x,a.y-coin.y)-Math.hypot(b.x-coin.x,b.y-coin.y); });
-    var reactN=(c.reactN>=99)?defs.length:Math.min(c.reactN,defs.length);
-    if(fast){
-    var ux=coin.vx/sp, uy=coin.vy/sp, px=-uy, py=ux;                 // travel dir + its perpendicular
-    var ahead=Math.min(48,10+sp*3.2);                               // screen sits this far in front of the ball
-    var cx=coin.x+ux*ahead, cy=coin.y+uy*ahead;
-    var reactors=defs.slice(0,reactN);
-    reactors.sort(function(a,b){ return ((a.x-cx)*px+(a.y-cy)*py)-((b.x-cx)*px+(b.y-cy)*py); });   // assign lateral slots left->right to avoid crossing
-    var span=(reactors.length-1)*c.space;                           // total width of the screen line
-    for(var k=0;k<reactors.length;k++){ var slot=(reactors.length<=1)?0:(k/(reactors.length-1)-0.5);
-    var off=slot*span, tx=cx+px*off, ty=cy+py*off;
-    _gridMoveNail(reactors[k],tx,ty,c.reactSpd,false); }
-    for(var m=reactN;m<defs.length;m++){ if(defs[m]._gridHome) _gridMoveNail(defs[m],defs[m]._gridHome.x,defs[m]._gridHome.y,c.returnSpd,true); }   // non-reactors hold their shape
-    } else { for(var q=0;q<defs.length;q++){ if(defs[q]._gridHome) _gridMoveNail(defs[q],defs[q]._gridHome.x,defs[q]._gridHome.y,c.returnSpd,true); } } }
+    var c=gridCfg(), lft=WALL+GRID_ROAM_R, rgt=W-WALL-GRID_ROAM_R;
+    gridBreathPh+=c.breathFreq;
+    for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.flash>0) r.flash--; if(r.cd>0) r.cd--;
+    r.x+=r.dir*c.roamSpd;
+    if(r.x<lft){ r.x=lft; r.dir=1; } else if(r.x>rgt){ r.x=rgt; r.dir=-1; } } }
+    // clearance + breathing-goal posts — physics rate, only on a moving ball (settle-safe).
+    function gridironStep(){ if(!gridArena()||!moving||scoring) return;
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    if(!gridOn) initGridiron();
+    var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    // CLEARANCE: a roamer that catches a moving ball inside a defensive third boots it back toward midfield.
+    if(air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
+    if(inDef){ for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.cd>0) continue;
+    var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
+    if(d<c.clearR && d>0.001){ r.cd=c.cd; r.flash=12;
+    var away=(coin.y<H/2)?1:-1, la=(Math.random()-0.5)*0.5, vy=away*Math.cos(la), vx=Math.sin(la)*(Math.random()<0.5?-1:1), m=Math.hypot(vx,vy)||1;
+    coin.vx=vx/m*c.clearPow; coin.vy=vy/m*c.clearPow;
+    coin.x=r.x+dx/d*(GRID_ROAM_R+COIN_R+1); coin.y=r.y+dy/d*(GRID_ROAM_R+COIN_R+1);
+    try{ spawnSparks(r.x,r.y,null,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
+    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } }
+    // BREATHING GOAL (hard): posts at each mouth whose gap breathes; a ball hitting one rebounds.
+    if(c.breathing){ var gap=c.breathBase+c.breathAmp*Math.sin(gridBreathPh);
+    for(var e=0;e<2;e++){ var gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1);
+    for(var s=-1;s<=1;s+=2){ var px=W/2+s*gap, pdx=coin.x-px, pdy=coin.y-gy, pd=Math.hypot(pdx,pdy), R2=3+COIN_R;
+    if(pd<R2 && pd>0.001){ var nx=pdx/pd, ny=pdy/pd, vn=coin.vx*nx+coin.vy*ny;
+    if(vn<0){ coin.vx-=2*vn*nx; coin.vy-=2*vn*ny; } coin.x=px+nx*R2; coin.y=gy+ny*R2;
+    coin.vx+=nx*2.2; coin.vy+=ny*2.2;
+    try{ spawnSparks(px,gy,null,6); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
+    // current breathing-goal half-gap, so the renderer can draw the posts where the physics has them.
+    function gridBreathGap(){ var c=gridCfg(); return c.breathing?(c.breathBase+c.breathAmp*Math.sin(gridBreathPh)):0; }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2372,7 +2376,8 @@
       var _side=(_was>=0?1:-1); coin.y=_ny+_side*(COIN_R+1.5);
       if(coin.vy*_side<0) coin.vy=-coin.vy*0.45; }
       tnPrevY=coin.y;
-      } if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
+      } if(gridArena()&&!scoring){ try{ gridironStep(); }catch(e){} }
+      if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
       // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
       // turn; a near-max strike from close range carries clean through, and a chip flies over. See

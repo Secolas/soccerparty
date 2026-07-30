@@ -717,6 +717,21 @@
     ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
     ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
 
+    /* THE END ZONE: the patrolling roamers (clear the ball out of a defensive third) and, on hard, the
+       breathing goalposts whose gap opens and closes. Drawn in the hazard-tick pass, under the ball. */
+    function drawGridiron(ctx,now){ if(typeof gridArena!=='function'||!gridArena()) return; if(!gridOn) initGridiron();
+    var gap=(typeof gridBreathGap==='function')?gridBreathGap():0;
+    if(gap>0){ for(var e=0;e<2;e++){ var lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
+    for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
+    ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
+    ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
+    for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i], hot=r.flash>0, rx=r.x, ry=r.y;
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.beginPath(); ctx.ellipse(rx,ry+GRID_ROAM_R*0.55,GRID_ROAM_R*0.85,GRID_ROAM_R*0.42,0,0,6.283); ctx.fill();
+    ctx.fillStyle=hot?'#ffe28a':'#8a9099'; ctx.beginPath(); ctx.arc(rx,ry,GRID_ROAM_R,0,6.283); ctx.fill();   // neutral grey blocker, so it never blends into either kit
+    ctx.fillStyle=hot?'#8a5a12':'#3a3f47'; ctx.fillRect(Math.round(rx-GRID_ROAM_R),Math.round(ry-1),GRID_ROAM_R*2,2);   // dark face bar
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.arc(rx-2,ry-2.5,1.4,0,6.283); ctx.fill();
+    ctx.restore(); } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1279,7 +1294,7 @@
     site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
     } if(boardKey==='minigolf'&&stadiumHazards()){ try{ minigolfTick();
     }catch(e){} return;   /* the course furniture is drawn later, above the pitch lines */
-    } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick();
+    } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick(); drawGridiron(ctx,now);
     }catch(e){} return;
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);

@@ -541,30 +541,31 @@ layout working. When an aggregate reads exactly zero, trace one shot before beli
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — BUILT (first pass, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`, ambience →
-`stadium`). The first pass had three separate hazards (pursuing rusher sprites, yard-line drag, uprights);
-those were **cut** in favour of one stronger idea that reuses the tokens already on the pitch:
+`stadium`). The design went through two cut passes (separate rusher/drag/upright sprites; then a live defence
+that moved the player tokens). The **current** design (all in `11-physics.js`, drawn from `12-draw.js`):
 
-**LIVE DEFENCE** (`gridironTick` in `11-physics.js`) — the instant a shot is struck, the DEFENDING side's
-outfield players react and close the ball down to block it, then jog back to the spots they were placed on
-once it settles. No new sprites: the real player tokens move.
+**ROAMING DEFENDERS + CLEARANCE.** Loose grey blocker sprites patrol left↔right across the pitch on spread
+lanes (`gridRoam`, moved by `gridironTick` every frame, bouncing at the walls). When a **moving** ball comes
+within `cfg.clearR` of a roamer **inside a defensive third**, that roamer **clears** it — boots it back
+toward midfield (`gridironStep`, physics rate). Separate entities, so the player's own formation is never
+disturbed.
 
-- Runs every render frame from the board-FX dispatch (so defenders also jog home *between* turns). Home
-  spots are snapshotted at the idle→moving transition, while everyone is still at rest on their formation.
-- Defenders aim at where the ball is *heading* (`coin + vel·lead`) to cut it off, not trail it. The
-  existing ball↔nail collision does the actual blocking.
-- **Settle-safe:** they only close in while the ball is moving above `cfg.gate`; while jogging home
-  (`avoidBall`) a defender can never enter a resting ball's space, so it can't nudge a stopped ball and the
-  turn always ends. The goalie is excluded (it already tracks) and a token being dragged is skipped.
-- By tier: **easy** the 2 nearest react, slow (0.8); **med** 3, quicker (1.2); **hard** *all* of them, fast
-  (1.7). Return speed 1.3.
+- **Settle-safe:** a clear only fires on a moving ball (`sp>0.8`), sends it *out* of the defensive third
+  (toward centre), and each roamer has a `cfg.cd`-frame cooldown — so the ball can't be juggled forever and
+  the turn always ends.
+- **BREATHING GOAL (hard):** bumper posts at each mouth whose half-gap breathes on a slow sine
+  (`base 23 ± 15`, `freq 0.02`); a ball hitting a post rebounds, so you time your shot for the wide phase.
+  `gridBreathGap()` hands the renderer the same gap the physics uses.
+- By tier: **easy** 2 roamers, slow; **med** 4; **hard** 6 **+ breathing goal**. Clear power 6.5 / 7.5 / 8.5.
 
-The reactors form a **screen**, not a swarm: a line placed `ahead = min(48, 10+speed·3.2)` px in front of
-the ball along its travel, perpendicular to it, with the players fanned out `cfg.space` apart (22 easy/med,
-18 hard) and assigned left→right slots so they don't cross. Non-reactors hold their shape. Verified in royale
-(headless drive to stadium 5, hard): enters with zero errors and the defenders spread to cover the ball's
-lanes rather than piling on.
+Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the 6 roamers patrol their
+lanes and the breathing posts render at both mouths. Roamers drawn neutral grey so they never blend into a
+red or blue kit.
 
-**Fantasy:** a gridiron blitz — the whole defence reads your shot and collapses on the ball.
+**Fantasy:** a scrappy gridiron — loose defenders roam the field and boot any ball that strays into their
+zone, and on hard the posts themselves won't hold still.
+
+Superseded first-pass hazard tables (kept for reference):
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|
