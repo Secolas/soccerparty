@@ -538,13 +538,26 @@ underneath you); and check the hazard is the only thing on the line you are test
 approach to the tree and a defender was intercepting the sand shot, so two "broken" readings were the
 layout working. When an aggregate reads exactly zero, trace one shot before believing it.
 
-### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — FIELD BUILT, HAZARDS TBD
+### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — BUILT (first pass, tuning on preview)
 
-**Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`,
-ambience → `stadium`). Board-first per the guiding idea: a striped green field with yard lines, end-zone
-bands and sidelines, playing as a plain pitch for now. Hazards are the next passes, in order:
-**rushers** (the pursuing-tackler type — the season's big new mechanic) → **yard-line drag** → **uprights**,
-each layered on and tuned against the preview.
+**Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`, ambience →
+`stadium`), field + all three hazards in. Implementation (`11-physics.js`, drawn from `12-draw.js`):
+
+- **Rushers** (`gridRush`, `gridironTick`/`gridironStep`) — pursuing tacklers. Movement runs every frame
+  (`gridironTick`) so they trot back to their lanes between turns; they only *chase* while the ball is
+  moving above `cfg.gate`, is grounded, and is outside the deep zones (`gridDeepTop/Bot`). Contact
+  (`gridironStep`, physics rate) is gated on ball speed `>0.8`, so a dying ball is never touched — the
+  season-wide settle-safe invariant. By tier: 1 slow rusher / gentle nudge (easy), 2 / deflect off-line
+  (med), 3 fast / knock back toward the shooter's half (hard). Each hit has an 18-frame cooldown.
+- **Yard-line drag** (`cfg.dragMax`, med+) — a mild per-frame pace bleed in the attacking thirds that
+  deepens toward each goal (0 easy / 0.012 med / 0.020 hard at the goal edge). Gentle enough that base
+  friction still settles the ball.
+- **Uprights** (`gridPosts`) — bumper posts at each goal mouth (reflect + kick), gap narrowing by tier
+  (≈full-mouth easy / 48px med / 32px hard) and the kick rising (1.6 / 2.1 / 2.6). A wide shot rattles out.
+
+The CPU tightens its aim on gridiron (added to the `_s3` list in `aiComputeShot`) so it threads the gap.
+**Not yet verified in play** — royale-only, so the headless smoke can't reach it; needs a preview pass to
+tune rusher speed/aggression, drag strength and gap widths, and to check z-order of the furniture vs the ball.
 
 **Fantasy:** a gridiron — linebackers rush your ball, yard lines drag it as you
 push upfield, narrow uprights guard the goal.
