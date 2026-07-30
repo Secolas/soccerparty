@@ -1634,64 +1634,41 @@
     try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } } }
 
     // ===== THE GRAND PRIX (raceway) — arena 7 hazards =========================================================
-    // Three conditions: (1) a PACE-CAR you draft behind for a tow (the want-to-chase hazard); (2) DRS BOOST
-    // strips that kick your pace when crossed; (3) OIL spills that spin you off-line + springy TYRE walls at
-    // the corners. Tiers: easy — parked car + tyre bounce (learn the track); med — car roams + draft, 2 DRS,
-    // 1 oil; hard — faster car that CLIPS you, 3 DRS, 3 oil, springy tyres. All settle-safe: everything acts
-    // only on a MOVING grounded ball, every boost is capped, and nothing traps the ball.
-    var rcOn=false, rcCar={x:0,y:0,vy:1}, rcPads=[], rcOils=[], rcTyres=[];
-    var RC_CARX=Math.round(W/2-26), RC_CAR_R=7, RC_TYRE_R=8;
+    // Current hazards: OIL slicks that spin the ball off-line (with a splash), and springy TYRE walls at the
+    // corners that bounce it back (with a squash). Both act only on a MOVING grounded ball, are bounded/capped,
+    // and never trap the turn; a chip clears them. (The pace-car and DRS strips were cut — replacements TBD.)
+    var rcOn=false, rcOils=[], rcTyres=[];
+    var RC_TYRE_R=8, RC_OIL_R=8;
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { carMove:(t>=1), carSpd:(t>=2)?1.6:1.1, draft:(t>=1), draftMul:(t>=2)?1.02:1.013, draftCap:12, clip:(t>=2),
-    drsN:(t>=2)?3:(t>=1?2:0), drsMul:(t>=2)?1.35:1.25, drsCap:13,
-    oilN:(t>=2)?3:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
+    return { oilN:(t>=2)?3:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
     tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12, gate:0.4 }; }
-    function rcCarRange(){ return { top:NET_DEPTH+GOAL_AREA_D+16, bot:H-(NET_DEPTH+GOAL_AREA_D)-16 }; }
-    function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg(), rg=rcCarRange();
-    rcCar={ x:RC_CARX, y:(c.carMove?rg.top:Math.round(H/2)), vy:1 };
-    rcPads=[]; if(c.drsN>=2){ rcPads.push({x:Math.round(W/2),y:Math.round(H*0.32),cd:0}); rcPads.push({x:Math.round(W/2),y:Math.round(H*0.68),cd:0}); }
-    if(c.drsN>=3){ rcPads.push({x:Math.round(W/2),y:Math.round(H*0.5),cd:0}); }
-    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.5),cd:0}); }
-    if(c.oilN>=3){ rcOils.push({x:Math.round(W/2-30),y:Math.round(H*0.33),cd:0}); rcOils.push({x:Math.round(W/2+22),y:Math.round(H*0.70),cd:0}); }
+    function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
+    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.5),cd:0,sp:0}); }
+    if(c.oilN>=3){ rcOils.push({x:Math.round(W/2-30),y:Math.round(H*0.33),cd:0,sp:0}); rcOils.push({x:Math.round(W/2+22),y:Math.round(H*0.70),cd:0,sp:0}); }
     rcTyres=[]; var ti=RC_TYRE_R+3;
-    rcTyres.push({x:WALL+ti,y:WALL+ti}); rcTyres.push({x:W-WALL-ti,y:WALL+ti});
-    rcTyres.push({x:WALL+ti,y:H-WALL-ti}); rcTyres.push({x:W-WALL-ti,y:H-WALL-ti}); }
-    // draw-loop: patrol the pace-car up and down its lane; tick pad/oil cooldowns.
+    rcTyres.push({x:WALL+ti,y:WALL+ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:WALL+ti,hit:0});
+    rcTyres.push({x:WALL+ti,y:H-WALL-ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:H-WALL-ti,hit:0}); }
+    // draw-loop: tick the oil cooldowns + splash timers and the tyre squash timers so the animations play.
     function racewayTick(){ if(!rcArena()) return; if(!rcOn) initRaceway();
-    var c=rcCfg(), rg=rcCarRange();
-    if(c.carMove){ rcCar.y+=rcCar.vy*c.carSpd;
-    if(rcCar.y<=rg.top){ rcCar.y=rg.top; rcCar.vy=1; } else if(rcCar.y>=rg.bot){ rcCar.y=rg.bot; rcCar.vy=-1; } }
-    for(var i=0;i<rcPads.length;i++){ if(rcPads[i].cd>0) rcPads[i].cd--; }
-    for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; } }
-    // physics rate, moving grounded ball only. Car bounce + draft tow; DRS kick; oil spin; springy tyres.
+    for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
+    for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; } }
+    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash; tyres bounce + squash.
     function racewayStep(){ if(!rcArena()||!moving||scoring) return; if(!rcOn) initRaceway();
     if(typeof ghosting!=='undefined'&&ghosting) return;
     var c=rcCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(!air) return;   // airborne clears the track hazards
-    // PACE-CAR: solid bounce when you hit it, or a slipstream TOW when you tuck into the cone behind it.
-    var cdx=coin.x-rcCar.x, cdy=coin.y-rcCar.y, ccd=Math.hypot(cdx,cdy), CR=RC_CAR_R+COIN_R;
-    if(ccd<CR && ccd>0.001){ var nx=cdx/ccd, ny=cdy/ccd, vn=coin.vx*nx+coin.vy*ny;
-    if(vn<0){ coin.vx-=(1+RESTITUTION)*vn*nx; coin.vy-=(1+RESTITUTION)*vn*ny; }
-    coin.x=rcCar.x+nx*CR; coin.y=rcCar.y+ny*CR;
-    if(c.clip){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((cdx>=0)?1.6:-1.6))); }   // hard: clipping spins you off
-    try{ spawnSparks(rcCar.x,rcCar.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){}
-    } else if(c.draft && c.carMove && sp>c.gate){ var behind=(rcCar.vy<0)?(cdy>0):(cdy<0);
-    if(behind && Math.abs(cdx)<10 && Math.abs(cdy)<28 && (coin.vy*rcCar.vy>0)){ var ns=Math.min(sp*c.draftMul,c.draftCap), k=ns/(sp||1); coin.vx*=k; coin.vy*=k; } }
-    // DRS BOOST strips — a one-shot speed kick per pass (per-pad cooldown), capped.
-    for(var i=0;i<rcPads.length;i++){ var pd=rcPads[i];
-    if(pd.cd<=0 && sp>c.gate && Math.abs(coin.x-pd.x)<16 && Math.abs(coin.y-pd.y)<4){ var ns2=Math.min(sp*c.drsMul,c.drsCap), k2=ns2/(sp||1); coin.vx*=k2; coin.vy*=k2; pd.cd=22;
-    try{ spawnSparks(coin.x,coin.y,current,8,true); }catch(e){} try{ if(!muted&&typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
     // OIL spills — inject spin so the ball curves off-line (Magnus does the bending). Spin is bounded; friction
-    // still settles the ball, so this never traps a turn.
+    // still settles the ball, so this never traps a turn. Arms the splash animation.
     for(var j=0;j<rcOils.length;j++){ var ol=rcOils[j];
-    if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_TYRE_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30;
-    try{ spawnSparks(ol.x,ol.y,null,4); }catch(e){} } }
+    if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_OIL_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30; ol.sp=18;
+    try{ spawnSparks(ol.x,ol.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
     // TYRE walls at the corners — springy bounce (restitution up to 1.15 on hard), capped so it can't run away.
+    // Arms the squash animation.
     for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
     if(td<TR && td>0.001){ var tnx=tdx/td, tny=tdy/td, tvn=coin.vx*tnx+coin.vy*tny;
     if(tvn<0){ coin.vx-=(1+c.tyreRest)*tvn*tnx; coin.vy-=(1+c.tyreRest)*tvn*tny;
-    var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; } }
+    var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; } ty.hit=12; }
     coin.x=ty.x+tnx*TR; coin.y=ty.y+tny*TR;
     try{ spawnSparks(ty.x,ty.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }

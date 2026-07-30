@@ -759,35 +759,25 @@
     ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
     ctx.fillStyle='#d0402e'; ctx.fillRect(Math.round(pn.x-pn.r),Math.round(pn.y-1),Math.round(pn.r*2),1);   // red neck stripe
     ctx.globalAlpha=1; } }
-    /* THE GRAND PRIX: oil slicks + DRS pads + tyre stacks on the track, and the pace-car on its lane. All
-       drawn with the ground FX (under the nails); the ball stays on top. */
+    /* THE GRAND PRIX: oil slicks (splash when crossed) + springy tyre stacks (squash when hit) on the track.
+       Drawn with the ground FX (under the nails); the ball stays on top. */
     function drawRaceway(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
-    var c=(typeof rcCfg==='function')?rcCfg():null;
-    // OIL slicks — dark glossy puddles with a cool sheen
+    // OIL slicks — dark glossy puddles with a cool sheen; a fresh crossing throws an expanding splash ring.
     if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
-    ctx.fillStyle='rgba(10,8,16,0.72)'; ctx.beginPath(); ctx.arc(ol.x,ol.y,RC_TYRE_R,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(90,120,180,0.28)'; ctx.beginPath(); ctx.arc(ol.x-2,ol.y-2,RC_TYRE_R*0.5,0,6.283); ctx.fill(); } }
-    // DRS boost pads — lit cyan strips; brighter armed, yellow flash right after a boost
-    if(typeof rcPads!=='undefined'){ for(var p=0;p<rcPads.length;p++){ var pd=rcPads[p], used=pd.cd>0, pulse=0.55+Math.sin((now||0)*0.008+p)*0.25;
-    ctx.fillStyle=used?'rgba(255,210,70,0.85)':('rgba(60,200,235,'+pulse.toFixed(3)+')');
-    ctx.fillRect(pd.x-16,pd.y-3,32,6);
-    ctx.fillStyle=used?'rgba(255,240,180,0.9)':'rgba(200,245,255,0.7)';
-    ctx.fillRect(pd.x-16,pd.y-3,32,1);
-    // little forward chevrons
-    ctx.fillStyle='rgba(255,255,255,0.5)'; for(var cx2=-10;cx2<=10;cx2+=8){ ctx.fillRect(pd.x+cx2,pd.y-1,3,1); } } }
-    // TYRE stacks — black rings at the corners
-    if(typeof rcTyres!=='undefined'){ for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t];
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,RC_TYRE_R,0,6.283); ctx.fill();
-    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(ty.x,ty.y,RC_TYRE_R-2,0,6.283); ctx.fill();
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,RC_TYRE_R-4,0,6.283); ctx.fill(); } }
-    // PACE-CAR — a little top-down race car on its lane, nose in its travel direction
-    if(typeof rcCar!=='undefined'&&rcCar){ var cx=Math.round(rcCar.x), cy=Math.round(rcCar.y), dir=(rcCar.vy<0)?-1:1;
-    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(cx-6,cy-8,12,17);   // shadow
-    ctx.fillStyle='#101216'; ctx.fillRect(cx-6,cy-7+dir*2,3,4); ctx.fillRect(cx+3,cy-7+dir*2,3,4); ctx.fillRect(cx-6,cy+3-dir*2,3,4); ctx.fillRect(cx+3,cy+3-dir*2,3,4);   // wheels
-    ctx.fillStyle='#e23c2c'; ctx.fillRect(cx-4,cy-8,8,16);   // body
-    ctx.fillStyle='#ff6a4a'; ctx.fillRect(cx-4,cy-8,8,3);   // nose/highlight
-    ctx.fillStyle='#0b0d10'; ctx.fillRect(cx-3,cy-1,6,4);   // cockpit
-    ctx.fillStyle='#f4e9c8'; ctx.fillRect(cx-2,cy+dir*-7,4,1); } }
+    ctx.fillStyle='rgba(10,8,16,0.72)'; ctx.beginPath(); ctx.arc(ol.x,ol.y,RC_OIL_R,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(90,120,180,0.28)'; ctx.beginPath(); ctx.arc(ol.x-2,ol.y-2,RC_OIL_R*0.5,0,6.283); ctx.fill();
+    if(ol.sp>0){ var op=1-ol.sp/18, rr=RC_OIL_R+op*9, a=(1-op)*0.6;   // splash: expanding ring + droplets
+    ctx.strokeStyle='rgba(150,180,230,'+a.toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ol.x,ol.y,rr,0,6.283); ctx.stroke();
+    ctx.fillStyle='rgba(120,150,210,'+a.toFixed(3)+')';
+    for(var d=0;d<6;d++){ var ang=d*1.047, dr=rr+2;
+    ctx.fillRect(Math.round(ol.x+Math.cos(ang)*dr)-1,Math.round(ol.y+Math.sin(ang)*dr)-1,2,2);
+    } } } }
+    // TYRE stacks — black rings at the corners; a hit squashes them briefly (scale pulse + a bright rim).
+    if(typeof rcTyres!=='undefined'){ for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k=(ty.hit>0)?(ty.hit/12):0, s=1+k*0.4, R=RC_TYRE_R*s;
+    if(k>0){ ctx.strokeStyle='rgba(255,220,120,'+(k*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ty.x,ty.y,R+2,0,6.283); ctx.stroke(); }
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R,0,6.283); ctx.fill();
+    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-2,0,6.283); ctx.fill();
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-4,0,6.283); ctx.fill(); } } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
