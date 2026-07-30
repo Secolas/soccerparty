@@ -738,6 +738,12 @@
     ctx.fillStyle=_GUT; ctx.fillRect(WALL,WALL,_GW,H-WALL*2); ctx.fillRect(W-WALL-_GW,WALL,_GW,H-WALL*2);
     ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.fillRect(WALL+_GW,WALL,1,H-WALL*2); ctx.fillRect(W-WALL-_GW-1,WALL,1,H-WALL*2);
     ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(WALL,WALL,2,H-WALL*2); ctx.fillRect(W-WALL-2,WALL,2,H-WALL*2);
+    // BUMPERS (easy/med): a raised padded rail fills each gutter so the ball bounces back instead of dropping
+    // in. Off on hard — the bare dark channel above is the open gutter that eats the ball.
+    if(c&&c.bumpers){ for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_GW):WALL, _lit=_bs?(_bx+1):(_bx+_GW-4);
+    ctx.fillStyle='#2f6fa8'; ctx.fillRect(_bx+1,WALL,_GW-2,H-WALL*2);          // padded bumper body
+    ctx.fillStyle='#6fb0e6'; ctx.fillRect(_lit,WALL,3,H-WALL*2);              // lane-facing highlight
+    ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(_bs?(_bx+_GW-2):(_bx+1),WALL,1,H-WALL*2); } }   // wall-side shadow
     // THE RAKE GATE (med+) — drawn at its risen/fallen y; solid + opaque when down (blocking), lifted +
     // translucent when up (open), tines pointing toward that mouth's pins.
     if(c&&c.rake&&typeof bowlRakeBarY==='function'){ var _cl=bowlRakeClosed(), _down=_cl>c.rakeCloseTh, _bxL=Math.round(W/2-c.rakeW/2), _bw=Math.round(c.rakeW);

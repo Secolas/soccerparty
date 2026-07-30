@@ -1574,8 +1574,10 @@
     var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakePh=0, bowlGutter=null;
     function bowlArena(){ return (typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { rows:(t>=2)?4:(t>=1?3:2), pinLoss:(t>=2)?0.82:(t>=1?0.86:0.90),
-    gutter:(t>=1), rake:(t>=1), rakeW:(t>=2)?66:56, rakeFreq:(t>=2)?0.05:0.036, rakeCloseTh:(t>=2)?0.58:0.5, gate:0.4 }; }
+    // easy: 6 pins + BUMPERS (sides bounce, no gutter loss). med: + the RAKE gate, bumpers still up.
+    // hard: bumpers OFF so the GUTTERS eat the ball, + rake, + the full 10-pin rack.
+    return { rows:(t>=2)?4:3, pinLoss:(t>=2)?0.82:(t>=1?0.86:0.90),
+    bumpers:(t<2), gutter:(t>=2), rake:(t>=1), rakeW:(t>=2)?66:56, rakeFreq:(t>=2)?0.05:0.036, rakeCloseTh:(t>=2)?0.58:0.5, gate:0.4 }; }
     // THE RAKE gate: a bar spanning the goal mouth that rises and falls along the lane. DOWN (in front of the
     // pins) it blocks the whole mouth; UP (lifted toward the goal line) it is open and you can score. Timed on
     // bowlRakePh — the vertical motion is the tell. bowlRakeClosed(): 1 = fully down/block, 0 = fully up/open.

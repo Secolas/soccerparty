@@ -626,23 +626,25 @@ you **score**. So you time your shot for the up window. Off on easy; bar spans 5
 hard). Blocks a **moving grounded** ball only, and a **chip flies over**. `bowlRakeClosed()` drives it;
 `drawBowling` draws it solid+opaque when down, lifted+translucent when up.
 
-**GUTTER (med+) — a real gutter, rolled by physics.** Each side has a **coin-width sunken channel**. Touch a
-side wall and the ball is **captured** into the gutter: its outward speed is killed and it **rolls down the
-channel on its own momentum** (no freeze, no teleport), friction bringing it to rest — a **lost shot**, so the
-turn passes through the normal settle. The sides are gutters, not bumpers: keep it down the lane. Captures a
-**moving** ball only (a resting ball is safe) and a **chip clears** the gutter. The capture is done at the
-side-wall bounce in `collideStep` (the collision point), so even a **fast Cannon shot is caught** — the
-earlier once-per-frame check ran after the bounce had already flung it back inward, so hard shots wrongly
-rebounded. The pitch lines are re-painted under the gutter art so the white markings don't cross the channel.
+**BUMPERS vs GUTTERS (the sides).** Each side is a **coin-width channel**. On **easy and med** a **BUMPER** rail
+fills it (drawn blue/padded) so the ball simply **bounces back** into play — the normal side bounce, no loss.
+On **hard** the bumpers are **OFF** and the bare channel is a live **GUTTER**: touch a side wall and the ball
+is **captured** — its outward speed is killed and it **rolls down the channel on its own momentum** (no freeze,
+no teleport), friction bringing it to rest, a **lost shot** so the turn passes through the normal settle.
+Captures a **moving** ball only (a resting ball is safe) and a **chip clears** it. The capture is done at the
+side-wall bounce in `collideStep` (the collision point), so even a **fast Cannon shot is caught** — the earlier
+once-per-frame check ran after the bounce had already flung it back inward, so hard shots wrongly rebounded.
+The pitch lines are re-painted under the channel art so the white markings don't cross it.
 
 *Iteration history:* v1 was a **funnel** (pulled a wall shot down the rail) — made the ball feel *stuck* and
 killed wall bounces, cut. v2 was a freeze-then-teleport gutter ball — replaced here by the **physics roll**
 (the ball actually rolls the channel to a stop). The **oiled centre strip**, the animated blue tells, and the
 side-to-side sweep rake were all cut along the way.
 
-**Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no rake, no gutters (*meet the sport*).
-Med — **6-pin** rack (0.86) + rake gate + gutters (*the sport bites*). Hard — full **10-pin** rack (0.82) +
-wider/faster rake with a tighter window + gutters (*hostile*).
+**Tiers:** easy — **6-pin** rack (bleed 0.90) with **bumpers** up, no rake (*meet the sport — the sides keep
+you in*). Med — **6-pin** rack (0.86) + the **rake gate**, bumpers still up (*the sport bites*). Hard — full
+**10-pin** rack (0.82) + wider/faster rake with a tighter window + **bumpers OFF so the gutters eat the ball**
+(*hostile*).
 
 **Settle-safe:** the rake and pins only touch a **moving grounded** ball and a knocked pin leaves collision at
 once; a guttered ball rolls to rest and the turn passes through the normal `STOP_V` settle. Symmetric
