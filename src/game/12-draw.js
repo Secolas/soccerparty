@@ -1668,8 +1668,11 @@
          reads as a white curve floating on the woodwork, which is what made that pitch look misdrawn.
          Clipping the arcs to the pitch rect is what they always meant: a corner arc is a pitch marking. */
       const cr=8;
+      // THE ALLEY: keep the corner arcs BEHIND the bumper/gutter — clip them to the lane (inset past the
+      // coin-width side channel) so they don't paint over the rail. Other boards clip to the full pitch.
+      var _cInset=((typeof bowlArena==='function')&&bowlArena())?(COIN_R*2+1):0;
       ctx.save();
-      ctx.beginPath(); ctx.rect(WALL,WALL,W-WALL*2,H-WALL*2); ctx.clip();
+      ctx.beginPath(); ctx.rect(WALL+_cInset,WALL,W-WALL*2-2*_cInset,H-WALL*2); ctx.clip();
       ctx.strokeStyle=board.line2;
       ctx.beginPath(); ctx.arc(WALL,WALL,cr,0,Math.PI/2); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,WALL,cr,Math.PI/2,Math.PI); ctx.stroke();
