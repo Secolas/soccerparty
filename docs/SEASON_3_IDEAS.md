@@ -670,13 +670,36 @@ obstacles — the pitch gets messier the longer the rally runs.
 gutters = directional lane funnel (conveyor); oiled lane = pace-preserving strip
 (Wet Shot's "keeps speed off contact", **not** ice-slip — that's spent).
 
-### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4) — BOARD BUILT (plain circuit, hazards TBD)
+### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4) — BUILT (hazards in, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #7 (`pitch:'raceway'`, board in `03-boards.js`, ambience →
-`stadium`). Board-first, matching arenas 5–6: a dark **tarmac** circuit with a speckle texture, **red-and-white
-kerbs** down each side wall, a **checkered start/finish stripe** in front of each goal, and a faint **dashed
-racing lane** down the middle. No hazards yet — the pace-car / slipstream, DRS boost strips, oil spills and
-tyre walls below are the next passes.
+`stadium`). Board: a dark **tarmac** circuit — speckle texture, **red-and-white kerbs** down each side wall, a
+**checkered start/finish stripe** in front of each goal, and a faint **dashed racing lane** down the middle.
+The hazards (all in `11-physics.js` + `drawRaceway` in `12-draw.js`):
+
+**PACE-CAR + SLIPSTREAM (the want-to-chase hazard).** A race-car patrols a lane (`RC_CARX = W/2−26`, up/down
+between the goal areas). Hit it and you **bounce** off; but tuck into the **cone behind it** while moving its
+way and you get a **tow** — a per-frame speed multiplier (`draftMul`, capped at 12) — so you *chase* it for
+range. Easy: **parked** (a static chicane, clear of kickoff). Med: roams (`carSpd` 1.1), draft ×1.013/frame.
+Hard: faster (1.6), draft ×1.02, and **clipping it spins the ball off** (`clip`).
+
+**DRS BOOST STRIPS.** Lit pads on the centre line; cross one while moving for a **one-shot speed kick**
+(`drsMul`, capped 13, per-pad cooldown). Off on easy; **2 pads** med (×1.25), **3 pads** hard (×1.35), drawn
+cyan (armed) → yellow (just fired).
+
+**OIL + TYRE WALLS.** **Oil slicks** inject **spin** so the ball curves off-line (Magnus does the bending;
+spin bounded ±4) — off easy, **1** med, **3** hard. **Tyre stacks** at all four corners give a **springy**
+bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12).
+
+**Tiers:** easy — parked car + tyre bounce (learn the track). Med — car roams + draft, 2 DRS, 1 oil. Hard —
+faster car that clips you, 3 DRS, 3 oil, springy tyres.
+
+**Settle-safe:** everything acts only on a **moving grounded** ball; every boost is capped and the draft cone
+moves with the car so it can't sustain a resting ball; oil only adds bounded spin (speed still decays); tyres
+are one-shot per contact and capped. A **chip clears** the track hazards. Symmetric (fair to both teams).
+
+Verified in royale (headless to stadium 7): hard shows the pace-car + 3 DRS pads + 3 oil slicks + corner tyre
+stacks; med shows 2 DRS + 1 oil; zero page errors on both.
 
 **Fantasy:** a race circuit — draft behind the pace-car for a tow, hit the DRS
 boost strips, mind the oil and the tyre walls.

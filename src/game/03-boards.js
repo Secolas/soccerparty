@@ -844,6 +844,7 @@
       gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
       bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
       bowlRakePh=0; bowlGutter=null;
+      rcOn=false; if(typeof rcPads!=='undefined'&&rcPads) rcPads.length=0; if(typeof rcOils!=='undefined'&&rcOils) rcOils.length=0; if(typeof rcTyres!=='undefined'&&rcTyres) rcTyres.length=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;
