@@ -776,7 +776,7 @@
       if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
       cgOn=false; cgT=0;
       cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null; cgStamBase=0;
-      gridOn=false; gridRush=[]; gridPosts=[];
+      gridOn=false; _gridPrevMoving=false;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

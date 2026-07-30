@@ -62,7 +62,7 @@
       goalX=_cgP.x+(Math.random()*2-1)*spread; goalY=_cgP.y; }
       // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
       // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
-      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='minigolf'||boardKey==='gridiron');
+      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='minigolf');
       }catch(e){}
       if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;

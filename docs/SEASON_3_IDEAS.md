@@ -541,31 +541,28 @@ layout working. When an aggregate reads exactly zero, trace one shot before beli
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — BUILT (first pass, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`, ambience →
-`stadium`), field + all three hazards in. Implementation (`11-physics.js`, drawn from `12-draw.js`):
+`stadium`). The first pass had three separate hazards (pursuing rusher sprites, yard-line drag, uprights);
+those were **cut** in favour of one stronger idea that reuses the tokens already on the pitch:
 
-- **Rushers** (`gridRush`, `gridironTick`/`gridironStep`) — pursuing tacklers. Movement runs every frame
-  (`gridironTick`) so they trot back to their lanes between turns; they only *chase* while the ball is
-  moving above `cfg.gate`, is grounded, and is outside the deep zones (`gridDeepTop/Bot`). Contact
-  (`gridironStep`, physics rate) is gated on ball speed `>0.8`, so a dying ball is never touched — the
-  season-wide settle-safe invariant. By tier: 1 slow rusher / gentle nudge (easy), 2 / deflect off-line
-  (med), 3 fast / knock back toward the shooter's half (hard). Each hit has an 18-frame cooldown.
-- **Yard-line drag** (`cfg.dragMax`, med+) — a mild per-frame pace bleed in the attacking thirds that
-  deepens toward each goal (0 easy / 0.012 med / 0.020 hard at the goal edge). Gentle enough that base
-  friction still settles the ball.
-- **Uprights** (`gridPosts`) — bumper posts at each goal mouth (reflect + kick), gap narrowing by tier
-  (≈full-mouth easy / 48px med / 32px hard) and the kick rising (1.6 / 2.1 / 2.6). A wide shot rattles out.
+**LIVE DEFENCE** (`gridironTick` in `11-physics.js`) — the instant a shot is struck, the DEFENDING side's
+outfield players react and close the ball down to block it, then jog back to the spots they were placed on
+once it settles. No new sprites: the real player tokens move.
 
-The CPU tightens its aim on gridiron (added to the `_s3` list in `aiComputeShot`) so it threads the gap.
-**Not yet verified in play** — royale-only, so the headless smoke can't reach it; needs a preview pass to
-tune rusher speed/aggression, drag strength and gap widths, and to check z-order of the furniture vs the ball.
+- Runs every render frame from the board-FX dispatch (so defenders also jog home *between* turns). Home
+  spots are snapshotted at the idle→moving transition, while everyone is still at rest on their formation.
+- Defenders aim at where the ball is *heading* (`coin + vel·lead`) to cut it off, not trail it. The
+  existing ball↔nail collision does the actual blocking.
+- **Settle-safe:** they only close in while the ball is moving above `cfg.gate`; while jogging home
+  (`avoidBall`) a defender can never enter a resting ball's space, so it can't nudge a stopped ball and the
+  turn always ends. The goalie is excluded (it already tracks) and a token being dragged is skipped.
+- By tier: **easy** the 2 nearest react, slow (0.8); **med** 3, quicker (1.2); **hard** *all* of them, fast
+  (1.7). Return speed 1.3.
 
-**Fantasy:** a gridiron — linebackers rush your ball, yard lines drag it as you
-push upfield, narrow uprights guard the goal.
+Verified in royale (headless drive to stadium 5, hard): enters with zero errors and the defenders visibly
+converge on the ball on a shot while the far formation holds its shape. Open tuning: they currently *swarm*
+the ball (all pile onto the same lead point) rather than spreading to mark lanes — a candidate refinement.
 
-*New mechanic:* **pursuing tackler hazards** that chase the ball — the biggest new
-hazard *type* of the season. Settle-safe: rushers only pursue while the ball is
-above the speed-gate and outside the deep zones; they retreat to lanes when it
-slows, so the ball always comes to rest.
+**Fantasy:** a gridiron blitz — the whole defence reads your shot and collapses on the ball.
 
 | Condition | Easy | Med | Hard |
 |---|---|---|---|

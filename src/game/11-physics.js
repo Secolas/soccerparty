@@ -1466,69 +1466,41 @@
     if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
     return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
     // ================= THE END ZONE (gridiron) =================
-    // Three hazards, tiered. RUSHERS: pursuing tacklers that chase a fast ball and shove it off-line, and
-    // retreat to their lanes when it slows (so the ball always settles — they only act on a moving ball).
-    // YARD-LINE DRAG: a gentle pace bleed that deepens toward each goal (med+). UPRIGHTS: bumper posts at
-    // each goal mouth that rattle a wide shot back out, narrowing by tier.
-    var gridOn=false, gridRush=[], gridPosts=[], GRID_RUSH_R=7;
+    // ONE hazard: a LIVE DEFENCE. The instant you shoot, the DEFENDING side's outfield players react and
+    // close the ball down to block it, then jog back to the spots they were placed on once it settles.
+    // Settle-safe: they only close in on a MOVING ball, and while jogging home they never shove a ball at
+    // rest, so the turn always ends. Tiered: how many react, and how fast.
+    var gridOn=false, _gridPrevMoving=false;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { rushN:(t>=2)?3:(t>=1?2:1), rushSpd:(t>=2)?1.5:(t>=1?1.15:0.85), gate:1.1, kind:t,
-    dragMax:(t>=2)?0.020:(t>=1?0.012:0), gapHalf:(t>=2)?16:(t>=1?24:(Math.round(GOAL_W/2)-2)), rattle:(t>=2)?2.6:(t>=1?2.1:1.6) }; }
-    function gridDeepTop(){ return NET_DEPTH+GOAL_AREA_D; }
-    function gridDeepBot(){ return H-NET_DEPTH-GOAL_AREA_D; }
-    function gridPostList(){ var c=gridCfg(), out=[]; for(var e=0;e<2;e++){ var gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1);
-    out.push({x:W/2-c.gapHalf,y:gy,e:e,flash:0}); out.push({x:W/2+c.gapHalf,y:gy,e:e,flash:0}); } return out; }
-    function gridRushHome(i,n){ var frac=(n<=1)?0.5:(i/(n-1)); var x=WALL+20+frac*(W-2*WALL-40);
-    return {x:x, y:H/2 + ((i%2)?-1:1)*(20+ (i>1?14:0))}; }
-    function initGridiron(){ if(!gridArena()) return; var c=gridCfg();
-    gridOn=true; gridRush=[];
-    for(var i=0;i<c.rushN;i++){ var h=gridRushHome(i,c.rushN); gridRush.push({x:h.x,y:h.y,hx:h.x,hy:h.y,cd:0,flash:0}); }
-    gridPosts=gridPostList(); }
-    // rusher movement — runs every render frame (even between turns, so they trot back to their lanes).
+    return { reactN:(t>=2)?99:(t>=1?3:2), reactSpd:(t>=2)?1.7:(t>=1?1.2:0.8), returnSpd:1.3, gate:1.0, lead:(t>=2)?9:(t>=1?6:3) }; }
+    function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
+    // Move a nail toward (tx,ty), capped at spd, kept on the pitch. avoidBall keeps a defender jogging home
+    // from ever entering a resting ball's space, so it can never nudge a ball that has already stopped.
+    function _gridMoveNail(n,tx,ty,spd,avoidBall){ var dx=tx-n.x, dy=ty-n.y, d=Math.hypot(dx,dy)||1;
+    var nx=n.x, ny=n.y; if(d>spd){ nx+=dx/d*spd; ny+=dy/d*spd; } else { nx=tx; ny=ty; }
+    nx=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,nx)); ny=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ny));
+    if(avoidBall){ var bx=nx-coin.x, by=ny-coin.y, bd=Math.hypot(bx,by), R=NAIL_R+COIN_R+1;
+    if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; } }
+    n.x=nx; n.y=ny; }
+    // LIVE DEFENCE — runs every render frame. On a moving ball the nearest defenders close it down (aiming
+    // at where it is HEADING, to cut it off); when it slows they jog back to where they were placed. Home
+    // spots are snapshotted the instant a shot starts, while everyone is still at rest on their formation.
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
+    if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0);
-    var chase=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0) && coin.y>gridDeepTop() && coin.y<gridDeepBot());
-    for(var i=0;i<gridRush.length;i++){ var r=gridRush[i]; if(r.flash>0) r.flash--; if(r.cd>0) r.cd--;
-    var tx,ty,mv; if(chase){ tx=coin.x; ty=Math.max(gridDeepTop()+2,Math.min(gridDeepBot()-2,coin.y)); mv=c.rushSpd; }
-    else { tx=r.hx; ty=r.hy; mv=c.rushSpd*0.7; }
-    var dx=tx-r.x, dy=ty-r.y, d=Math.hypot(dx,dy)||1;
-    if(d>mv){ r.x+=dx/d*mv; r.y+=dy/d*mv; } else { r.x=tx; r.y=ty; }
-    r.x=Math.max(WALL+GRID_RUSH_R,Math.min(W-WALL-GRID_RUSH_R,r.x)); } }
-    // physics interaction — runs at physics rate from stepPhysics. Only ever acts on a MOVING ball, so a
-    // dying ball is left alone and the turn ends (the season-wide settle-safe invariant).
-    function gridironStep(){ if(!gridArena()||!moving||scoring) return;
-    if(typeof ghosting!=='undefined'&&ghosting) return;
-    if(!gridOn) initGridiron();
-    var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
-    // UPRIGHTS: bumper posts at each goal mouth — reflect + kick a wide shot back out.
-    for(var p=0;p<gridPosts.length;p++){ var po=gridPosts[p], dx=coin.x-po.x, dy=coin.y-po.y, d=Math.hypot(dx,dy), R=3+COIN_R;
-    if(d<R && d>0.001){ var nx=dx/d, ny=dy/d, vn=coin.vx*nx+coin.vy*ny;
-    if(vn<0){ coin.vx-=2*vn*nx; coin.vy-=2*vn*ny; } coin.x=po.x+nx*R; coin.y=po.y+ny*R;
-    coin.vx+=nx*c.rattle; coin.vy+=ny*c.rattle; po.flash=6;
-    try{ spawnSparks(po.x,po.y,null,6); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} break; } }
-    // RUSHERS: contact deflects a moving ball. Gated on speed so a slow ball is never nudged (settle-safe).
-    if(air && sp>0.8){ for(var i=0;i<gridRush.length;i++){ var r=gridRush[i]; if(r.cd>0) continue;
-    var rdx=coin.x-r.x, rdy=coin.y-r.y, rd=Math.hypot(rdx,rdy);
-    if(rd<GRID_RUSH_R+COIN_R && rd>0.001){ r.cd=18; r.flash=8;
-    if(c.kind===0){ var a=(Math.random()-0.5)*0.5, cs=Math.cos(a), sn=Math.sin(a), vx=coin.vx*cs-coin.vy*sn, vy=coin.vx*sn+coin.vy*cs; coin.vx=vx; coin.vy=vy; }        // gentle nudge, keeps pace
-    else if(c.kind===1){ var a2=(Math.random()<0.5?-1:1)*(0.45+Math.random()*0.3), cs2=Math.cos(a2), sn2=Math.sin(a2), vx2=coin.vx*cs2-coin.vy*sn2, vy2=coin.vx*sn2+coin.vy*cs2;
-    coin.vx=vx2*0.9; coin.vy=vy2*0.9;
-    }   // deflect off-line
-    else { var ownY=(current==='red')?(H-NET_DEPTH):NET_DEPTH, back=(ownY>H/2?1:-1);
-    coin.vy=back*sp*0.55+coin.vy*0.15;
-    coin.vx=coin.vx*0.5+(Math.random()-0.5)*sp*0.5;
-    }   // knock back toward the shooter's half
-    var nnx=rdx/rd, nny=rdy/rd; coin.x=r.x+nnx*(GRID_RUSH_R+COIN_R+0.5); coin.y=r.y+nny*(GRID_RUSH_R+COIN_R+0.5);
-    try{ spawnSparks(r.x,r.y,null,8); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(6); }catch(e){}
-    try{ if(typeof haptic==='function') haptic([0,12,14,16]); }catch(e){} break; } } }
-    // YARD-LINE DRAG (med+): a mild pace bleed in the attacking thirds that deepens toward the goal.
-    if(c.dragMax>0 && air && sp>0.3){ var top=gridDeepTop(), bot=gridDeepBot(), half=(bot-top)/2;
-    if(coin.y>top && coin.y<bot){ var near=1-Math.min(coin.y-top,bot-coin.y)/half; var f=1-c.dragMax*Math.max(0,near);
-    coin.vx*=f; coin.vy*=f; } }
-    }
-    // The CPU aims at the gap centre (goal centre) with a tightened spread — see the _s3 list in aiComputeShot.
-    function gridAimPlan(team){ if(!gridArena()) return null; var gy=(team==='red')?(NET_DEPTH+COIN_R+1):(H-NET_DEPTH-COIN_R-1); return {x:W/2,y:gy}; }
+    var fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
+    if(moving && !_gridPrevMoving){ for(var i=0;i<nails.length;i++){ nails[i]._gridHome={x:nails[i].x,y:nails[i].y}; } }
+    _gridPrevMoving=moving;
+    var def=(current==='red')?'blue':'red';        // the side defending this shot
+    var defs=[]; for(var j=0;j<nails.length;j++){ var nn=nails[j];
+    if(nn.team===def && !nn.goalie && !(typeof dragNail!=='undefined'&&dragNail===nn)) defs.push(nn); }
+    defs.sort(function(a,b){ return Math.hypot(a.x-coin.x,a.y-coin.y)-Math.hypot(b.x-coin.x,b.y-coin.y); });
+    var reactN=(c.reactN>=99)?defs.length:Math.min(c.reactN,defs.length);
+    var lx=coin.x+(coin.vx||0)*c.lead, ly=coin.y+(coin.vy||0)*c.lead;   // lead the ball so they intercept, not trail
+    for(var k=0;k<defs.length;k++){ var dn=defs[k];
+    if(fast && k<reactN){ _gridMoveNail(dn,lx,ly,c.reactSpd,false); }
+    else if(!fast && dn._gridHome){ _gridMoveNail(dn,dn._gridHome.x,dn._gridHome.y,c.returnSpd,true); } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2391,8 +2363,7 @@
       var _side=(_was>=0?1:-1); coin.y=_ny+_side*(COIN_R+1.5);
       if(coin.vy*_side<0) coin.vy=-coin.vy*0.45; }
       tnPrevY=coin.y;
-      } if(gridArena()&&!scoring){ try{ gridironStep(); }catch(e){} }
-      if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
+      } if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
       // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
       // turn; a near-max strike from close range carries clean through, and a chip flies over. See
