@@ -551,13 +551,15 @@ real nails), bouncing off the walls and off any token they meet. When a **moving
 midfield (`gridironStep`). When the ball settles they jog back to the spots they were placed on (homes
 snapshotted at the idle→moving transition; `_gridHomeNail` restores them).
 
-- **Clear, not a bounce:** `clearR` is a hair larger than the ball↔token contact radius, so a roaming
-  defender launches the ball clear *before* contact instead of the plain reflection. No bouncy hazards.
+- **Clear, not a bounce, not a boost:** `clearR` is a hair larger than the ball↔token contact radius, so a
+  roaming defender redirects the ball *before* contact. The clear keeps the pace the ball ARRIVED at
+  (`min(sp·1.05, clearCap)`) — a soft ball gets a soft clear, a firm shot a firm one — rather than the old
+  fixed high-power boot that launched even a slow ball hard.
 - **Settle-safe:** roam/clear only on a moving ball (`sp>0.8`); the clear sends it out of the third; per-nail
   cooldown; and jogging home a defender never enters a resting ball's space — so the turn always ends. Only
   the DEFENDING side's outfield roam (goalie excluded, dragged token skipped); the attacking formation is
   untouched.
-- By tier: **easy** 2 roam, **med** 4, **hard** all. Roam speed 1.05 / 1.35 / 1.7, clear power 6.5 / 7.5 / 8.5.
+- By tier: **easy** 2 roam, **med** 4, **hard** all. Roam speed 1.05 / 1.35 / 1.7; clear cap 5.0 / 6.0 / 7.0.
 
 Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the defending team's tokens
 break formation and patrol while the attacking side holds shape, and the ball is only cleared, never

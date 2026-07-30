@@ -1477,7 +1477,7 @@
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { roamN:(t>=2)?99:(t>=1?4:2), roamSpd:(t>=2)?1.7:(t>=1?1.35:1.05), returnSpd:1.4, gate:1.0,
-    clearR:NAIL_R+COIN_R+6, clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42 }; }
+    clearR:NAIL_R+COIN_R+6, clearCap:(t>=2)?7.0:(t>=1?6.0:5.0), cd:42 }; }
     function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
     // Jog a nail toward its snapshotted home, capped, on the pitch, never entering a resting ball's space.
     function _gridHomeNail(n,spd){ if(!n._gridHome) return; var dx=n._gridHome.x-n.x, dy=n._gridHome.y-n.y, d=Math.hypot(dx,dy)||1;
@@ -1518,8 +1518,10 @@
     if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0) continue;
     var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
     if(d<c.clearR && d>0.001){ r._gridCd=c.cd;
-    var away=(coin.y<H/2)?1:-1, la=(Math.random()-0.5)*0.5, vy=away*Math.cos(la), vx=Math.sin(la)*(Math.random()<0.5?-1:1), m=Math.hypot(vx,vy)||1;
-    coin.vx=vx/m*c.clearPow; coin.vy=vy/m*c.clearPow;
+    // clear at the pace the ball ARRIVED (tiny nudge so it leaves the third), capped — not a fixed boost,
+    // so a soft ball gets a soft clear and a firm shot a firm clear, redirected away from the near goal.
+    var _out=Math.min(sp*1.05, c.clearCap), away=(coin.y<H/2)?1:-1, la=(Math.random()-0.5)*0.5, vy=away*Math.cos(la), vx=Math.sin(la)*(Math.random()<0.5?-1:1), m=Math.hypot(vx,vy)||1;
+    coin.vx=vx/m*_out; coin.vy=vy/m*_out;
     coin.x=r.x+dx/d*(NAIL_R+COIN_R+1); coin.y=r.y+dy/d*(NAIL_R+COIN_R+1);
     try{ spawnSparks(r.x,r.y,r.team,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
     try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } } }
