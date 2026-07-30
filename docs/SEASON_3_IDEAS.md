@@ -630,7 +630,10 @@ hard). Blocks a **moving grounded** ball only, and a **chip flies over**. `bowlR
 side wall and the ball is **captured** into the gutter: its outward speed is killed and it **rolls down the
 channel on its own momentum** (no freeze, no teleport), friction bringing it to rest — a **lost shot**, so the
 turn passes through the normal settle. The sides are gutters, not bumpers: keep it down the lane. Captures a
-**moving** ball only (a resting ball is safe) and a **chip clears** the gutter.
+**moving** ball only (a resting ball is safe) and a **chip clears** the gutter. The capture is done at the
+side-wall bounce in `collideStep` (the collision point), so even a **fast Cannon shot is caught** — the
+earlier once-per-frame check ran after the bounce had already flung it back inward, so hard shots wrongly
+rebounded. The pitch lines are re-painted under the gutter art so the white markings don't cross the channel.
 
 *Iteration history:* v1 was a **funnel** (pulled a wall shot down the rail) — made the ball feel *stuck* and
 killed wall bounces, cut. v2 was a freeze-then-teleport gutter ball — replaced here by the **physics roll**

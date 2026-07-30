@@ -732,6 +732,12 @@
     function drawBowling(ctx,now){ if(typeof bowlArena!=='function'||!bowlArena()) return;
     if(typeof bowlPins==='undefined'||!bowlPins) return;
     var c=(typeof bowlCfg==='function')?bowlCfg():null;
+    // Re-paint the gutter channels OVER the pitch markings so the white lines don't cross the gutters — the
+    // lane lines belong to the lane, not the gutter. Matches the board's channel art (drawn under objects).
+    var _GUT='#241708', _GW=COIN_R*2+1;
+    ctx.fillStyle=_GUT; ctx.fillRect(WALL,WALL,_GW,H-WALL*2); ctx.fillRect(W-WALL-_GW,WALL,_GW,H-WALL*2);
+    ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.fillRect(WALL+_GW,WALL,1,H-WALL*2); ctx.fillRect(W-WALL-_GW-1,WALL,1,H-WALL*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(WALL,WALL,2,H-WALL*2); ctx.fillRect(W-WALL-2,WALL,2,H-WALL*2);
     // THE RAKE GATE (med+) — drawn at its risen/fallen y; solid + opaque when down (blocking), lifted +
     // translucent when up (open), tines pointing toward that mouth's pins.
     if(c&&c.rake&&typeof bowlRakeBarY==='function'){ var _cl=bowlRakeClosed(), _down=_cl>c.rakeCloseTh, _bxL=Math.round(W/2-c.rakeW/2), _bw=Math.round(c.rakeW);

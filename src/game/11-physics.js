@@ -3100,7 +3100,18 @@
       scoreFrames=0; spawnSparks(coin.x,H-NET_DEPTH,'blue',18);
       return; }
       var _skRamp=((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&hzTier()>=1);
-      if(coin.x<left&&!_skRamp){coin.x=left;
+      // THE ALLEY gutters (med+): a side wall CAPTURES the ball instead of bouncing it — done here, at the
+      // collision point, so even a fast cannon shot is caught (the once-per-frame gutter check missed it after
+      // the bounce had already flung it back inward). Kill outward speed; it then rolls down the channel.
+      var _bowlGut=((typeof bowlArena==='function')&&bowlArena()&&bowlCfg().gutter&&(!coin.air||coin.air<=0));
+      if(coin.x<left&&!_skRamp){ if(_bowlGut){ coin.x=left; coin.vx=0; coin.spin=0;
+      if(!bowlGutter){ bowlGutter={side:0};
+      try{ setStatus('GUTTER BALL!');
+      }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh();
+      else if(typeof sfxBump==='function') sfxBump(3);
+      } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
+      18,26,34]); }catch(e){} }
+      } else { coin.x=left;
       coin.vx=-coin.vx*RESTITUTION;
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
@@ -3110,8 +3121,15 @@
       try{ sfxBounce(Math.abs(coin.vx));
       }catch(e){} try{ nsKick(Math.abs(coin.vx));
       }catch(e){} try{ nsWallHit(coin.x,coin.y);
-      }catch(e){} }}
-      if(coin.x>right&&!_skRamp){coin.x=right;
+      }catch(e){} } }}
+      if(coin.x>right&&!_skRamp){ if(_bowlGut){ coin.x=right; coin.vx=0; coin.spin=0;
+      if(!bowlGutter){ bowlGutter={side:1};
+      try{ setStatus('GUTTER BALL!');
+      }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh();
+      else if(typeof sfxBump==='function') sfxBump(3);
+      } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
+      18,26,34]); }catch(e){} }
+      } else { coin.x=right;
       coin.vx=-coin.vx*RESTITUTION;
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
@@ -3121,7 +3139,7 @@
       try{ sfxBounce(Math.abs(coin.vx));
       }catch(e){} try{ nsKick(Math.abs(coin.vx));
       }catch(e){} try{ nsWallHit(coin.x,coin.y);
-      }catch(e){} }}
+      }catch(e){} } }}
       const top=WALL+COIN_R,bottom=H-WALL-COIN_R;
       if(coin.y<top&&!(coin.x>gL&&coin.x<gR)){coin.y=top;
       coin.vy=-coin.vy*RESTITUTION;
