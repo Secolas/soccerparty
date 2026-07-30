@@ -428,10 +428,9 @@
     var kit=teamKits[t].kit, rk=resolveKit(kit,effStyle(t));
     try{ formation(t).forEach(function(n){ paintNail(g,n.x,n.y,(n.goalie&&((sideAb[t]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,kit,false,rk);
     }); }catch(e){} });
-    // THE ALLEY: the halfway line + goal boxes above cross the gutters, and the bumpers/pins/rake are live-
-    // only, so the clash intro looked like the old pitch. Re-apply the bowling furniture statically here so
-    // the intro matches play: gutter channels over the lines, bumpers (easy/med) or open gutters (hard), a
-    // fresh pin rack, and the rake gate drawn DOWN.
+    // THE ALLEY: the halfway line + goal boxes above cross the gutters and the bumpers are live-only, so the
+    // clash intro looked like the old pitch. Re-apply the LANE LAYOUT only (no hazards, matching every other
+    // arena's clash intro): gutter channels over the lines, and bumpers (easy/med) or open gutters (hard).
     try{ if((typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof bowlCfg==='function')){ var _bc=bowlCfg(), _gw=COIN_R*2+1;
     g.fillStyle='#241708'; g.fillRect(WALL,WALL,_gw,H-WALL*2); g.fillRect(W-WALL-_gw,WALL,_gw,H-WALL*2);
     g.fillStyle='rgba(0,0,0,0.30)'; g.fillRect(WALL+_gw,WALL,1,H-WALL*2); g.fillRect(W-WALL-_gw-1,WALL,1,H-WALL*2);
@@ -439,19 +438,7 @@
     if(_bc.bumpers){ for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_gw):WALL, _lit=_bs?(_bx+1):(_bx+_gw-4);
     g.fillStyle='#2f6fa8'; g.fillRect(_bx+1,WALL,_gw-2,H-WALL*2);
     g.fillStyle='#6fb0e6'; g.fillRect(_lit,WALL,3,H-WALL*2);
-    g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(_bs?(_bx+_gw-2):(_bx+1),WALL,1,H-WALL*2); } }
-    var _pdx=9,_pdy=8,_ppr=2.6;
-    for(var _end=0;_end<2;_end++){ var _dir=_end?1:-1, _apex=_end?(H-(NET_DEPTH+GOAL_AREA_D)+4):((NET_DEPTH+GOAL_AREA_D)-4);
-    for(var _r=0;_r<_bc.rows;_r++){ var _py=_apex+_dir*_r*_pdy, _cnt=_r+1, _x0=W/2-(_cnt-1)*_pdx/2;
-    for(var _p=0;_p<_cnt;_p++){ var _px=_x0+_p*_pdx;
-    g.fillStyle='#f6efe0'; g.beginPath(); g.arc(_px,_py,_ppr,0,6.283); g.fill();
-    g.fillStyle='#d0402e'; g.fillRect(Math.round(_px-_ppr),Math.round(_py-1),Math.round(_ppr*2),1); } } }
-    if(_bc.rake&&typeof bowlRakeDownY==='function'){ var _rbxL=Math.round(W/2-_bc.rakeW/2), _rbw=Math.round(_bc.rakeW);
-    for(var _re=0;_re<2;_re++){ var _rby=Math.round(bowlRakeDownY(_re));
-    g.fillStyle='#2b2f36'; g.fillRect(_rbxL,_rby-2,_rbw,4);
-    g.fillStyle='#9aa3ad'; g.fillRect(_rbxL,_rby-2,_rbw,1);
-    var _rty=_re?(_rby+2):(_rby-5);
-    g.fillStyle='#6b7280'; for(var _rtx=_rbxL+3;_rtx<_rbxL+_rbw-3;_rtx+=6){ g.fillRect(_rtx,_rty,2,3); } } } } }catch(e){}
+    g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(_bs?(_bx+_gw-2):(_bx+1),WALL,1,H-WALL*2); } } } }catch(e){}
     g.beginPath();
     g.arc(W/2,H/2,COIN_R,0,Math.PI*2);
     g.fillStyle='#fbfbf6'; g.fill();
