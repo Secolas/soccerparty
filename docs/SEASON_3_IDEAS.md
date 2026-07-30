@@ -603,7 +603,13 @@ Superseded first-pass hazard tables (kept for reference):
 markers; yard-line drag = zonal speed-loss (Zone-Defense-style bands); uprights =
 static bounce walls (bumper/wall).
 
-### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4)
+### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4) — BOARD BUILT (plain lane, hazards TBD)
+
+**Build status:** registered as Season 3 stadium #6 (`pitch:'bowling'`, board in `03-boards.js`, ambience →
+`arena`). Board-first, matching the arena-5 approach: a polished maple lane — lengthwise board seams, an
+alternating plank tint and grain speckle, dark **gutters** down each side wall, a **foul line** at each end
+and the **dovetail aiming arrows** (a shallow V of chevrons pointing at each goal). Symmetric top/bottom. No
+hazards yet — the pin racks / gutter funnels / oiled strip below are the next passes.
 
 **Fantasy:** a bowling lane — knock the pins and they scatter into a mess, gutters
 funnel wall-huggers, the oiled centre lane keeps you fast.

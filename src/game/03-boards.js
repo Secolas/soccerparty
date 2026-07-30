@@ -603,6 +603,41 @@
         g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
         } },
 
+      /* THE ALLEY — bowling. Board-first: a polished maple lane with lengthwise board seams, dark side
+         gutters, a foul line at each end and the dovetail aiming arrows. The hazards (destructible pin
+         racks, gutter funnels, an oiled centre strip) are layered on in follow-up passes; for now it plays
+         as a plain lane with a bowling alley's markings. */
+      bowling:{ name:'THE ALLEY', surround:'#2a1a0c', stand:'#442a12', tier:'rgba(255,225,170,0.05)',
+        frame:'#7a4a24',frameHi:'#c48a44',frameLo:'#4a2a10',post:'#f6efdc',   // warm lacquered-wood frame
+        line:'rgba(252,244,224,0.9)',line2:'rgba(252,244,224,0.55)',
+        netRecess:'#3a2410',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(255,240,214,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,240,214,0.56)',netOverlay:'rgba(30,18,8,0.44)',
+        surface(g){ var LANE='#c98a3e', LANE2='#bd7d34', GUT='#241708', ARROW='rgba(46,28,12,0.6)', CHALK='rgba(252,244,224,0.85)';
+        g.fillStyle=LANE; g.fillRect(0,0,W,H);
+        // board seams run DOWN the lane — the boards a bowler lines up across
+        for(var sx=WALL+7; sx<W-WALL; sx+=7){ g.fillStyle='rgba(120,74,30,0.35)'; g.fillRect(sx,WALL,1,H-WALL*2); }
+        // subtle alternating plank tint
+        for(var bi=0,bx=WALL; bx<W-WALL; bx+=14,bi++){ if(bi%2){ g.fillStyle='rgba(255,222,150,0.05)'; g.fillRect(bx,WALL,7,H-WALL*2); } }
+        // maple grain speckle
+        for(var pn=0;pn<800;pn++){ g.fillStyle=(Math.random()>0.5)?LANE2:'rgba(92,56,24,0.16)'; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // GUTTERS — dark channels just inside each side wall
+        g.fillStyle=GUT; g.fillRect(WALL,WALL,5,H-WALL*2); g.fillRect(W-WALL-5,WALL,5,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(WALL+5,WALL,1,H-WALL*2); g.fillRect(W-WALL-6,WALL,1,H-WALL*2);
+        // FOUL LINE at each end
+        var foulT=NET_DEPTH+GOAL_AREA_D+6, foulB=H-NET_DEPTH-GOAL_AREA_D-6;
+        g.fillStyle=CHALK; g.fillRect(WALL+6,foulT,W-WALL*2-12,1); g.fillRect(WALL+6,foulB,W-WALL*2-12,1);
+        // DOVETAIL AIMING ARROWS — a shallow V of chevrons at each end, centre chevron deepest toward its goal
+        g.fillStyle=ARROW;
+        for(var ai=0;ai<2;ai++){ var dir=ai?1:-1, baseY=ai?(H-NET_DEPTH-GOAL_AREA_D-20):(NET_DEPTH+GOAL_AREA_D+20);
+        for(var k=-2;k<=2;k++){ var ax=Math.round(W/2+k*11), ay=Math.round(baseY-dir*Math.abs(k)*5);
+        g.beginPath(); g.moveTo(ax-3,ay); g.lineTo(ax+3,ay); g.lineTo(ax,ay+dir*5); g.closePath(); g.fill(); } }
+        },
+        preview(g,w,h){ g.fillStyle='#c98a3e'; g.fillRect(0,0,w,h);
+        g.fillStyle='#241708'; g.fillRect(0,0,Math.max(2,w*0.1),h); g.fillRect(w-Math.max(2,w*0.1),0,Math.max(2,w*0.1),h);
+        g.fillStyle='rgba(120,74,30,0.4)'; for(var i=1;i<6;i++) g.fillRect(Math.round(w*i/6),0,1,h);
+        g.fillStyle='rgba(252,244,224,0.8)'; g.fillRect(2,Math.round(h*0.2),w-4,1); g.fillRect(2,Math.round(h*0.8),w-4,1);
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -738,7 +773,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){

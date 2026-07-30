@@ -68,7 +68,9 @@
       {name:'CRAZY GOLF',pitch:'minigolf',ab:['cannon',
       'curve','sniper'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
       {name:'THE END ZONE',pitch:'gridiron',ab:['cannon',
-      'sniper','wall'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'}
+      'sniper','wall'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
+      {name:'THE ALLEY',pitch:'bowling',ab:['cannon',
+      'sniper','ricochet'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
