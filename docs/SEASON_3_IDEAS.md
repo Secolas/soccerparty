@@ -242,10 +242,19 @@ Every one of these only ever **removes** energy, so none of them can stop the ba
 ending — the invariant every earlier arena needed special-casing to preserve, satisfied here by
 construction.
 
-Tiers are additive: water, sand and trees are all on from **easy**, because they are not difficulty, they
-are the hole — take the pond away and the straight line opens up. **Med** adds a fairway bunker in the
-left-hand lane, which makes the two routes genuinely different rather than interchangeable (left is short
-but you pay a toll in sand; right is clean but long). **Hard** adds the cups.
+Tiers are additive, and now each one actually adds a hazard type (they used to all arrive at once, so easy
+and med played the same):
+
+| Tier | Hazards | Why |
+|---|---|---|
+| **Easy** | Pond (water) | Just the pond to route around — no straight line to goal, but only one landmark to read. Still unmistakably a golf hole |
+| **Med** | + Sand bunkers + Trees | The full hazard field: bunkers toll the flank lanes and trees can kill the ball, so approach play matters |
+| **Hard** | + Cups | The flagstick cups in the attacking corners — the hole-out reward and the pin that punishes a hard shot |
+
+Gated in `initMinigolf` by `hzTier()` (easy 0 / med 1 / hard 2): water unconditionally, sand + trees on
+`t>=1`, cups on `t>=2` (`cgCupOn`). The old unused `cgFairOn` med flag was removed — med's step up is now
+the real sand + trees, not a dead flag. The `?hz=` dev selector still narrows the set for a spot-check, but
+the tier gate is the production rule.
 
 The layout is **180° rotationally symmetric**, not mirrored: rotating the top half about the centre spot
 gives the bottom half, so both sides face the identical hole with the water on the same hand. A

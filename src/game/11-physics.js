@@ -1236,7 +1236,7 @@
     // centre spot gives the bottom half, so both sides face the identical hole with water on the same
     // hand. A reflection would have handed one side the easier approach.
     var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
-    var cgFairOn=false, cgCupOn=false, cgSplash=0, cgSplashX=0, cgSplashY=0, cgHoled=null, cgBonus=false;
+    var cgCupOn=false, cgSplash=0, cgSplashX=0, cgSplashY=0, cgHoled=null, cgBonus=false;
     // Water drown sequence: the ball sinks where it went in, then is dropped back onto the grass shore for
     // the next flick. Deliberately unhurried (SINK then DROP frames) so it reads as real water physics
     // rather than the ball being snapped to the bank. null = idle; while set, stepPhysics only ticks it.
@@ -1310,18 +1310,21 @@
     return q==='all' || q.split(',').indexOf(kind)>=0; }
     function initMinigolf(){ var t=hzTier();
     cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null; cgStamBase=0;
-    cgFairOn=(t>=1); cgCupOn=(t>=2);
+    cgCupOn=(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
     cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[];
     if(cgNoHz()){ return; }   // ?nohz=1 — bare pitch
-    // TREES: a symmetric pair flanking the midfield belt (see cgActive for the ?hz= selector).
-    if(cgActive('tree')){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
-    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0}); }
-    // WATER: a central pond in the midfield belt.
+    // HAZARD TIERS: the pond is on at EVERY difficulty (easy is just the pond, to learn the routing);
+    // bunkers + trees add on MEDIUM (the full hazard field); the cups add on HARD (cgCupOn, below). The
+    // ?hz= selector can still narrow this for a dev spot-check, but the tier gate is the production rule.
+    // WATER: a central pond in the midfield belt — EASY and up.
     if(cgActive('water')){ cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()}); }
-    // SAND: a matched pair of bunkers flanking the pond.
-    if(cgActive('sand')){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
+    // TREES: a symmetric pair flanking the midfield belt — MEDIUM and up.
+    if(cgActive('tree')&&t>=1){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0}); }
+    // SAND: a matched pair of bunkers flanking the pond — MEDIUM and up.
+    if(cgActive('sand')&&t>=1){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
     cgSand.push({x:CG_POND_X+CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}); }
     // Mirror the whole top-half set to the bottom. Every piece above is symmetric about W/2, so the 180
     // rotation and a vertical mirror give the same result — the pitch ends up balanced on both axes.
