@@ -548,8 +548,11 @@ separate grey roamer sprites; a breathing goal). The **current** design (all in 
 nearest **N outfield tokens** break formation and PATROL left↔right in their lanes (`gridironTick` moves the
 real nails), bouncing off the walls and off any token they meet. When a **moving** ball comes within
 `cfg.clearR` of a roaming defender **inside a defensive third**, that token **CLEARS** it back toward
-midfield (`gridironStep`). When the ball settles they jog back to the spots they were placed on (homes
-snapshotted at the idle→moving transition; `_gridHomeNail` restores them).
+midfield (`gridironStep`). Once the ball is **too slow to roam but still in play** they **HOLD** as solid
+obstacles — a slow ball hitting one bounces off it, it does not scoot away — and only **after the ball has
+fully settled** (`!moving`) do they jog back to the spots they were placed on (homes snapshotted at the
+idle→moving transition; `_gridHomeNail` restores them). Jogging home during the slow-finish would make the
+return-path anti-overlap dodge the ball, which read as defenders fleeing on contact.
 
 - **Clear, not a bounce, not a boost:** `clearR` is a hair larger than the ball↔token contact radius, so a
   roaming defender redirects the ball *before* contact. The clear keeps the pace the ball ARRIVED at

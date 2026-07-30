@@ -1508,7 +1508,8 @@
     if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; }
     n.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,nx)); n.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ny)); }
     // roaming defence — every render frame. At a shot's start the nearest N defenders are tagged to roam and
-    // their homes snapshotted; while the ball is live they patrol their lane; when it slows everyone jogs home.
+    // their homes snapshotted; while the ball is live they patrol their lane; once it is too slow to roam they
+    // HOLD as solid obstacles, and only jog home after the ball has fully settled.
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
     if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0), fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
@@ -1530,7 +1531,10 @@
     for(var j=0;j<nails.length;j++){ if(j===i2) continue; var o=nails[j];   // bounce off any token in the lane
     if(Math.abs(r.y-o.y)<gap && Math.abs(r.x-o.x)<gap){ var side=(r.x>=o.x)?1:-1; r.x=o.x+side*gap; r._gridDir=side; } }
     r.x=Math.max(lft,Math.min(rgt,r.x));
-    } else if(!fast){ _gridHomeNail(r,c.returnSpd); } } }
+    } else if(!moving){ _gridHomeNail(r,c.returnSpd); }
+    /* else: ball still in play but too slow to roam — HOLD, standing as a solid obstacle. Jogging home here
+       would make the return-path anti-overlap dodge a slow ball, so a defender looked like it fled on contact.
+       Only jog home once the ball has fully settled (!moving). */ } }
     // clearance — physics rate, only on a moving ball. Fires a hair before contact (clearR > the ball<->token
     // contact radius) so a roaming defender launches the ball clear instead of the plain reflection.
     function gridironStep(){ if(!gridArena()||!moving||scoring) return;
