@@ -618,34 +618,36 @@ knocked down (leaves collision at once and scatters as fading debris) and **blee
 rack open over the course of the rally, working a lane through it flick by flick — and the rack only
 **re-racks when a goal is scored** (`bowlRerack` from `finalizeGoal`), starting the next point fresh.
 
-**THE SWEEP / RAKE (med+).** A metal pinsetter bar sits just in front of each mouth's pins and **sweeps side
-to side** across the goal, its tines pointing at the rack. The ball **bounces off it** (a clean reflection —
-not a trap), so you shoot past it on the open side or wait for it to sweep clear; its motion is the telegraph.
-Off on easy; bar width 38px med / 52px hard, sweep speed 1.15 / 1.7 (wider + faster on hard = a tighter open
-window). Reflects a **moving grounded** ball only, so wall bounces and settling are untouched, and a **chip
-flies clean over** it. `bowlingTick` sweeps it; `bowlingStep` bounces the ball; `drawBowling` draws it.
+**THE RAKE GATE (med+).** A metal pinsetter bar spans the goal mouth and **rises and falls along the lane**
+(timed on `bowlRakePh`; the vertical motion is the telegraph). **DOWN** — in front of the pins — it blocks the
+whole mouth and a shot **bounces cleanly off it**; **UP** — lifted toward the goal line — the gate is open and
+you **score**. So you time your shot for the up window. Off on easy; bar spans 56px med / 66px hard, cycles at
+`rakeFreq` 0.036 / 0.05 with an open threshold of 0.50 / 0.58 (wider bar, faster cycle, shorter open window on
+hard). Blocks a **moving grounded** ball only, and a **chip flies over**. `bowlRakeClosed()` drives it;
+`drawBowling` draws it solid+opaque when down, lifted+translucent when up.
 
-**GUTTER BALL (med+).** Like real bowling: a shot that reaches a **side wall** drops into the gutter and is
-**LOST** — play freezes for a beat (`bowlGutterTick`, ~30 frames, mirrors the golf water-drown), then the
-**turn passes** and the ball returns to the lane edge for the next player. So on med+ the sides are gutters,
-not bumpers: keep it down the lane. Triggers on a **moving grounded** ball only (`sp>gate`), so a dying ball
-still settles and a **chip clears** the gutter. Off on easy — the walls bounce normally there.
+**GUTTER (med+) — a real gutter, rolled by physics.** Each side has a **coin-width sunken channel**. Touch a
+side wall and the ball is **captured** into the gutter: its outward speed is killed and it **rolls down the
+channel on its own momentum** (no freeze, no teleport), friction bringing it to rest — a **lost shot**, so the
+turn passes through the normal settle. The sides are gutters, not bumpers: keep it down the lane. Captures a
+**moving** ball only (a resting ball is safe) and a **chip clears** the gutter.
 
-*Iteration history:* the first gutter was a **funnel** that pulled a wall-hugging shot down the rail; it made
-the ball feel *stuck* and killed normal wall bounces, so it was cut. This gutter-ball version is the clean
-replacement — a wall touch is a clear lost-shot, not a mushy pull. The **oiled centre strip** and the animated
-blue tells were also cut.
+*Iteration history:* v1 was a **funnel** (pulled a wall shot down the rail) — made the ball feel *stuck* and
+killed wall bounces, cut. v2 was a freeze-then-teleport gutter ball — replaced here by the **physics roll**
+(the ball actually rolls the channel to a stop). The **oiled centre strip**, the animated blue tells, and the
+side-to-side sweep rake were all cut along the way.
 
-**Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no gutters, no oil (*meet the sport*).
-Med — **6-pin** rack (0.86) + gutters + oil (*the sport bites*). Hard — full **10-pin** rack (0.82) + deep
-gutters + wide slick oil (*hostile*).
+**Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no rake, no gutters (*meet the sport*).
+Med — **6-pin** rack (0.86) + rake gate + gutters (*the sport bites*). Hard — full **10-pin** rack (0.82) +
+wider/faster rake with a tighter window + gutters (*hostile*).
 
-**Settle-safe:** pins/gutters/oil only touch a **moving grounded** ball; a knocked pin leaves collision
-immediately (never traps); the oil divides friction back by `oilKeep<1` so net friction stays `<1` and the
-ball always settles. Symmetric top/bottom.
+**Settle-safe:** the rake and pins only touch a **moving grounded** ball and a knocked pin leaves collision at
+once; a guttered ball rolls to rest and the turn passes through the normal `STOP_V` settle. Symmetric
+top/bottom.
 
-Verified in royale (headless to stadium 6): easy shows the 3-pin racks with no oil sheen; hard shows the full
-10-pin triangles + the centre oil strip; zero page errors on both.
+Verified in royale (headless to stadium 6, med): the rake gate spans both mouths and the gutters are coin-width
+channels; a shot into a side wall is captured and rolls down the gutter to a stop, and possession passes; zero
+page errors.
 
 **Fantasy:** a bowling lane — knock the pins and they scatter into a mess, gutters
 funnel wall-huggers, the oiled centre lane keeps you fast.

@@ -726,18 +726,22 @@
     ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
     ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
 
-    /* THE ALLEY: the pin racks in front of each goal, plus (med+) the SWEEP/RAKE — a metal bar with tines
-       pointing at the pins that sweeps side to side across the mouth. Standing pins are white with a red neck
-       stripe; a knocked pin fades as it scatters (drift handled in bowlingTick). */
+    /* THE ALLEY: the pin racks in front of each goal, plus (med+) the RAKE GATE — a metal bar spanning the
+       mouth that rises (open, translucent) and falls (down, solid — blocks). Standing pins are white with a
+       red neck stripe; a knocked pin fades as it scatters (drift handled in bowlingTick). */
     function drawBowling(ctx,now){ if(typeof bowlArena!=='function'||!bowlArena()) return;
     if(typeof bowlPins==='undefined'||!bowlPins) return;
     var c=(typeof bowlCfg==='function')?bowlCfg():null;
-    // THE SWEEP / RAKE (med+) — drawn at its swept x, tines pointing toward that mouth's pins.
-    if(c&&c.rake&&typeof bowlRakeY==='function'){ for(var _re=0;_re<2;_re++){ var _by=bowlRakeY(_re), _cx=bowlRakeX[_re], _bxL=Math.round(_cx-c.rakeW/2), _bw=Math.round(c.rakeW);
-    ctx.fillStyle='#2b2f36'; ctx.fillRect(_bxL,Math.round(_by-2),_bw,4);   // bar body
-    ctx.fillStyle='#9aa3ad'; ctx.fillRect(_bxL,Math.round(_by-2),_bw,1);   // top highlight
-    var _ty=_re?(Math.round(_by)+2):(Math.round(_by)-5);   // tines toward the pins/goal
-    ctx.fillStyle='#6b7280'; for(var _tx=_bxL+3; _tx<_bxL+_bw-3; _tx+=6){ ctx.fillRect(_tx,_ty,2,3); } } }
+    // THE RAKE GATE (med+) — drawn at its risen/fallen y; solid + opaque when down (blocking), lifted +
+    // translucent when up (open), tines pointing toward that mouth's pins.
+    if(c&&c.rake&&typeof bowlRakeBarY==='function'){ var _cl=bowlRakeClosed(), _down=_cl>c.rakeCloseTh, _bxL=Math.round(W/2-c.rakeW/2), _bw=Math.round(c.rakeW);
+    for(var _re=0;_re<2;_re++){ var _by=Math.round(bowlRakeBarY(_re,_cl));
+    ctx.globalAlpha=_down?1:0.45;
+    ctx.fillStyle=_down?'#2b2f36':'#4a525b'; ctx.fillRect(_bxL,_by-2,_bw,4);   // bar body
+    ctx.fillStyle='#9aa3ad'; ctx.fillRect(_bxL,_by-2,_bw,1);   // top highlight
+    var _ty=_re?(_by+2):(_by-5);   // tines toward the pins/goal
+    ctx.fillStyle=_down?'#6b7280':'#79818b'; for(var _tx=_bxL+3; _tx<_bxL+_bw-3; _tx+=6){ ctx.fillRect(_tx,_ty,2,3); }
+    ctx.globalAlpha=1; } }
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i];
     if(pn.down){ if(pn.t>40) continue; ctx.globalAlpha=Math.max(0,1-pn.t/40); }
     ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body

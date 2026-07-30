@@ -619,9 +619,11 @@
         for(var bi=0,bx=WALL; bx<W-WALL; bx+=14,bi++){ if(bi%2){ g.fillStyle='rgba(255,222,150,0.05)'; g.fillRect(bx,WALL,7,H-WALL*2); } }
         // maple grain speckle
         for(var pn=0;pn<800;pn++){ g.fillStyle=(Math.random()>0.5)?LANE2:'rgba(92,56,24,0.16)'; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
-        // GUTTERS — dark channels just inside each side wall
-        g.fillStyle=GUT; g.fillRect(WALL,WALL,5,H-WALL*2); g.fillRect(W-WALL-5,WALL,5,H-WALL*2);
-        g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(WALL+5,WALL,1,H-WALL*2); g.fillRect(W-WALL-6,WALL,1,H-WALL*2);
+        // GUTTERS — coin-width sunken channels just inside each side wall (the ball drops in and rolls down)
+        var GW=COIN_R*2+1;   // ~11px, a touch wider than the ball
+        g.fillStyle=GUT; g.fillRect(WALL,WALL,GW,H-WALL*2); g.fillRect(W-WALL-GW,WALL,GW,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.30)'; g.fillRect(WALL+GW,WALL,1,H-WALL*2); g.fillRect(W-WALL-GW-1,WALL,1,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.18)'; g.fillRect(WALL,WALL,2,H-WALL*2); g.fillRect(W-WALL-2,WALL,2,H-WALL*2);   // inner shadow at the wall
         // FOUL LINE at each end
         var foulT=NET_DEPTH+GOAL_AREA_D+6, foulB=H-NET_DEPTH-GOAL_AREA_D-6;
         g.fillStyle=CHALK; g.fillRect(WALL+6,foulT,W-WALL*2-12,1); g.fillRect(WALL+6,foulB,W-WALL*2-12,1);
@@ -813,7 +815,7 @@
       cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null; cgStamBase=0;
       gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
       bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
-      bowlRakeX=[0,0]; bowlRakeDir=[1,-1]; bowlGutter=null;
+      bowlRakePh=0; bowlGutter=null;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;
