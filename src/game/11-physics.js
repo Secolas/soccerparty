@@ -3043,7 +3043,11 @@
     try{ if(typeof haptic==='function') haptic([0,
     12,22,14]); }catch(_h){} return;
     } } } function collideStep(){
-      const left=WALL+COIN_R,right=W-WALL-COIN_R,gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
+      // THE ALLEY bumpers (easy/med): the raised rail fills the coin-width channel, so the ball must bounce off
+      // its INNER FACE, not the wall hidden behind it — inset the side boundary by the rail width. Hard has no
+      // bumper (inset 0), so the ball reaches the wall and the gutter capture takes it.
+      var _bInset=((typeof bowlArena==='function')&&bowlArena()&&bowlCfg().bumpers)?(COIN_R*2+1):0;
+      const left=WALL+COIN_R+_bInset,right=W-WALL-COIN_R-_bInset,gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
       if(scoring){
         const pl=gL+COIN_R,pr=gR-COIN_R;
         if(coin.x<pl){coin.x=pl;coin.vx=0;} if(coin.x>pr){coin.x=pr;coin.vx=0;}
