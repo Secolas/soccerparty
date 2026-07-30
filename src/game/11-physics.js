@@ -1466,49 +1466,62 @@
     if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
     return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
     // ================= THE END ZONE (gridiron) =================
-    // ROAMING DEFENDERS: token blockers patrol left<->right across the pitch and BOUNCE off any player token
-    // they run into (and off each other), so they weave through the formation instead of sliding under it.
-    // When a MOVING ball comes close to one inside a defensive third, that roamer CLEARS it — boots it back
-    // up the pitch toward midfield. Nothing here is bouncy for the ball: it passes over the roamers untouched
-    // except for that one directed clear (no rebound). Settle-safe: a clear only fires on a moving ball,
-    // sends it OUT of the defensive third, and each roamer has a cooldown, so the turn always ends.
-    // Tiers: easy 2 roamers, med 4, hard 6.
-    var gridOn=false, gridRoam=[], GRID_ROAM_R=7;
+    // ROAMING DEFENCE — the tokens themselves. When a shot goes live, the DEFENDING side's nearest N outfield
+    // tokens break formation and PATROL left<->right in their lanes, bouncing off the walls and off any token
+    // they meet. When a moving ball comes close to one inside a defensive third, that token CLEARS it back
+    // toward midfield. When the ball settles they jog back to the spots they were placed on. No new sprites —
+    // the real player nails do it. Settle-safe: they only patrol/clear on a moving ball, the clear sends it
+    // out of the third, and while jogging home they never enter a resting ball's space, so the turn ends.
+    // Tiers: easy 2 roam, med 4, hard all.
+    var gridOn=false, _gridPrevMoving=false;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { roamN:(t>=2)?6:(t>=1?4:2), roamSpd:(t>=2)?1.5:(t>=1?1.25:1.0), clearR:GRID_ROAM_R+COIN_R+6,
-    clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42 }; }
-    function initGridiron(){ if(!gridArena()) return; var c=gridCfg();
-    gridOn=true; gridRoam=[];
-    var top=NET_DEPTH+GOAL_AREA_D+8, bot=H-NET_DEPTH-GOAL_AREA_D-8, n=c.roamN;
-    for(var i=0;i<n;i++){ var fr=(n<=1)?0.5:(i/(n-1)), y=top+fr*(bot-top), dir=(i%2)?1:-1;
-    gridRoam.push({x:(dir>0)?(WALL+GRID_ROAM_R+2):(W-WALL-GRID_ROAM_R-2), y:y, dir:dir, cd:0, flash:0}); } }
-    // roamer patrol — every render frame. Bounces at the walls, off any player token in its lane, and off
-    // another roamer sharing its lane, reversing direction each time it is turned back.
+    return { roamN:(t>=2)?99:(t>=1?4:2), roamSpd:(t>=2)?1.7:(t>=1?1.35:1.05), returnSpd:1.4, gate:1.0,
+    clearR:NAIL_R+COIN_R+6, clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42 }; }
+    function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
+    // Jog a nail toward its snapshotted home, capped, on the pitch, never entering a resting ball's space.
+    function _gridHomeNail(n,spd){ if(!n._gridHome) return; var dx=n._gridHome.x-n.x, dy=n._gridHome.y-n.y, d=Math.hypot(dx,dy)||1;
+    var nx=n.x, ny=n.y; if(d>spd){ nx+=dx/d*spd; ny+=dy/d*spd; } else { nx=n._gridHome.x; ny=n._gridHome.y; }
+    var bx=nx-coin.x, by=ny-coin.y, bd=Math.hypot(bx,by), R=NAIL_R+COIN_R+1;
+    if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; }
+    n.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,nx)); n.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ny)); }
+    // roaming defence — every render frame. At a shot's start the nearest N defenders are tagged to roam and
+    // their homes snapshotted; while the ball is live they patrol their lane; when it slows everyone jogs home.
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
-    var c=gridCfg(), lft=WALL+GRID_ROAM_R, rgt=W-WALL-GRID_ROAM_R, gap=GRID_ROAM_R+NAIL_R, rg=GRID_ROAM_R*2;
-    for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.flash>0) r.flash--; if(r.cd>0) r.cd--;
-    r.x+=r.dir*c.roamSpd;
-    if(r.x<lft){ r.x=lft; r.dir=1; } else if(r.x>rgt){ r.x=rgt; r.dir=-1; }
-    if(typeof nails!=='undefined'&&nails){ for(var j=0;j<nails.length;j++){ var nn=nails[j];   // bounce off tokens in this lane
-    if(Math.abs(r.y-nn.y)<gap && Math.abs(r.x-nn.x)<gap){ var side=(r.x>=nn.x)?1:-1; r.x=nn.x+side*gap; r.dir=side; } } }
-    for(var k=0;k<gridRoam.length;k++){ if(k===i) continue; var o=gridRoam[k];   // and off another roamer sharing the lane
-    if(Math.abs(r.y-o.y)<rg && Math.abs(r.x-o.x)<rg){ var s2=(r.x>=o.x)?1:-1; r.x=o.x+s2*rg; r.dir=s2; } }
-    r.x=Math.max(lft,Math.min(rgt,r.x)); } }
-    // clearance — physics rate, only on a moving ball (settle-safe). The ball is never reflected off a
-    // roamer; it is only cleared when it enters a defensive third close to one.
+    if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
+    var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0), fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
+    var def=(current==='red')?'blue':'red';
+    if(moving && !_gridPrevMoving){ var pool=[];
+    for(var i=0;i<nails.length;i++){ var n=nails[i]; n._gridHome={x:n.x,y:n.y}; n._gridRoam=false; n._gridCd=0;
+    if(n.team===def && !n.goalie) pool.push(n); }
+    pool.sort(function(a,b){ return Math.hypot(a.x-coin.x,a.y-coin.y)-Math.hypot(b.x-coin.x,b.y-coin.y); });
+    var N=(c.roamN>=99)?pool.length:Math.min(c.roamN,pool.length);
+    for(var p=0;p<N;p++){ pool[p]._gridRoam=true; pool[p]._gridDir=(pool[p].x<W/2)?1:-1; } }
+    _gridPrevMoving=moving;
+    var lft=WALL+NAIL_R, rgt=W-WALL-NAIL_R, gap=NAIL_R*2;
+    for(var i2=0;i2<nails.length;i2++){ var r=nails[i2]; if(!r._gridRoam) continue;
+    if(r._gridCd>0) r._gridCd--;
+    if(fast && !(typeof dragNail!=='undefined'&&dragNail===r)){
+    r.x+=r._gridDir*c.roamSpd;
+    if(r.x<lft){ r.x=lft; r._gridDir=1; } else if(r.x>rgt){ r.x=rgt; r._gridDir=-1; }
+    for(var j=0;j<nails.length;j++){ if(j===i2) continue; var o=nails[j];   // bounce off any token in the lane
+    if(Math.abs(r.y-o.y)<gap && Math.abs(r.x-o.x)<gap){ var side=(r.x>=o.x)?1:-1; r.x=o.x+side*gap; r._gridDir=side; } }
+    r.x=Math.max(lft,Math.min(rgt,r.x));
+    } else if(!fast){ _gridHomeNail(r,c.returnSpd); } } }
+    // clearance — physics rate, only on a moving ball. Fires a hair before contact (clearR > the ball<->token
+    // contact radius) so a roaming defender launches the ball clear instead of the plain reflection.
     function gridironStep(){ if(!gridArena()||!moving||scoring) return;
     if(typeof ghosting!=='undefined'&&ghosting) return;
-    if(!gridOn) initGridiron();
+    if(!gridOn||typeof nails==='undefined'||!nails) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
-    if(inDef){ for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.cd>0) continue;
+    if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0) continue;
     var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
-    if(d<c.clearR && d>0.001){ r.cd=c.cd; r.flash=12;
+    if(d<c.clearR && d>0.001){ r._gridCd=c.cd;
     var away=(coin.y<H/2)?1:-1, la=(Math.random()-0.5)*0.5, vy=away*Math.cos(la), vx=Math.sin(la)*(Math.random()<0.5?-1:1), m=Math.hypot(vx,vy)||1;
     coin.vx=vx/m*c.clearPow; coin.vy=vy/m*c.clearPow;
-    coin.x=r.x+dx/d*(GRID_ROAM_R+COIN_R+1); coin.y=r.y+dy/d*(GRID_ROAM_R+COIN_R+1);
-    try{ spawnSparks(r.x,r.y,null,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
+    coin.x=r.x+dx/d*(NAIL_R+COIN_R+1); coin.y=r.y+dy/d*(NAIL_R+COIN_R+1);
+    try{ spawnSparks(r.x,r.y,r.team,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
     try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;

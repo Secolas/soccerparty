@@ -541,26 +541,27 @@ layout working. When an aggregate reads exactly zero, trace one shot before beli
 ### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — BUILT (first pass, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`, ambience →
-`stadium`). The design went through two cut passes (separate rusher/drag/upright sprites; then a live defence
-that moved the player tokens). The **current** design (all in `11-physics.js`, drawn from `12-draw.js`):
+`stadium`). The design went through several cut passes (rusher/drag/upright sprites; a live-defence screen;
+separate grey roamer sprites; a breathing goal). The **current** design (all in `11-physics.js`):
 
-**ROAMING BLOCKERS + CLEARANCE.** Grey blocker tokens patrol left↔right across the pitch on spread lanes
-(`gridRoam`, moved by `gridironTick` every frame). They **bounce off the walls, off any player token in
-their lane, and off each other** (reversing direction each time), so they weave through the formation
-instead of sliding under it. When a **moving** ball comes within `cfg.clearR` of a roamer **inside a
-defensive third**, that roamer **clears** it — boots it back toward midfield (`gridironStep`, physics rate).
-Separate entities, so the teams' own formations are never disturbed.
+**ROAMING DEFENCE — the tokens themselves.** No new sprites: when a shot goes live, the DEFENDING side's
+nearest **N outfield tokens** break formation and PATROL left↔right in their lanes (`gridironTick` moves the
+real nails), bouncing off the walls and off any token they meet. When a **moving** ball comes within
+`cfg.clearR` of a roaming defender **inside a defensive third**, that token **CLEARS** it back toward
+midfield (`gridironStep`). When the ball settles they jog back to the spots they were placed on (homes
+snapshotted at the idle→moving transition; `_gridHomeNail` restores them).
 
-- **Nothing is bouncy for the ball:** it passes over the roamers untouched — the only interaction is the one
-  directed clear, never a rebound. (The earlier breathing-goal bumper posts were cut for this reason.)
-- **Settle-safe:** a clear only fires on a moving ball (`sp>0.8`), sends it *out* of the defensive third
-  (toward centre), and each roamer has a `cfg.cd`-frame cooldown — so the ball can't be juggled forever and
-  the turn always ends.
-- By tier: **easy** 2 roamers, slow; **med** 4; **hard** 6. Clear power 6.5 / 7.5 / 8.5.
+- **Clear, not a bounce:** `clearR` is a hair larger than the ball↔token contact radius, so a roaming
+  defender launches the ball clear *before* contact instead of the plain reflection. No bouncy hazards.
+- **Settle-safe:** roam/clear only on a moving ball (`sp>0.8`); the clear sends it out of the third; per-nail
+  cooldown; and jogging home a defender never enters a resting ball's space — so the turn always ends. Only
+  the DEFENDING side's outfield roam (goalie excluded, dragged token skipped); the attacking formation is
+  untouched.
+- By tier: **easy** 2 roam, **med** 4, **hard** all. Roam speed 1.05 / 1.35 / 1.7, clear power 6.5 / 7.5 / 8.5.
 
-Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the 6 roamers patrol their
-lanes, no goalposts, and the ball is only cleared (never rebounds). Roamers drawn neutral grey so they never
-blend into a team kit.
+Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the defending team's tokens
+break formation and patrol while the attacking side holds shape, and the ball is only cleared, never
+rebounds.
 
 **Fantasy:** a scrappy gridiron — loose defenders roam the field and boot any ball that strays into their
 zone, and on hard the posts themselves won't hold still.
