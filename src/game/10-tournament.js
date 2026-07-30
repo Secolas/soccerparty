@@ -136,13 +136,25 @@
       ROYALE={i:0,player:pi,opps:opps,playerAb:[],history:[],map:royMap,ch:(fixed&&(fixed.target!=null||fixed.from))?{target:fixed.target,from:fixed.from}:null};
       mode='royale'; try{ CHALLENGE=null;
       chClearUrl(); }catch(e){} showRoyaleMap();
-      } function startRoyaleArena(){ if(!ROYALE) return;
+      }
+      /* A valid opponent preset index for arena i. ROYALE.opps is built to the ladder length, but a run
+         SAVED before the ladder grew (e.g. Season 3 at 4 arenas, now 5) resumes with a short array, so
+         opps[i] can be undefined on a new stadium — and PRESETS[undefined] then blanks the frame the first
+         time anything reads teamKits.blue.kit/.abbr. This fills a stable valid country opponent (not the
+         player) into the gap and caches it, so every read below is safe. */
+      function royOpp(i){ if(!ROYALE) return 0; if(!ROYALE.opps) ROYALE.opps=[];
+      var v=ROYALE.opps[i];
+      if(typeof v==='number'&&PRESETS[v]&&PRESETS[v].kit) return v;
+      var p=(typeof ROYALE.player==='number')?ROYALE.player:0, pick=(p+1+i)%PRESETS.length, tries=0;
+      while(tries<PRESETS.length && (pick===p||!PRESETS[pick]||PRESETS[pick].cat!=='country'||!PRESETS[pick].kit)){ pick=(pick+1)%PRESETS.length; tries++; }
+      if(!PRESETS[pick]) pick=0; ROYALE.opps[i]=pick; return pick; }
+      function startRoyaleArena(){ if(!ROYALE) return;
       var ar=ROYALE_ARENAS[ROYALE.i];
       royaleArena=ar; aiLevel=royaleRamp(ROYALE.i);
       ROYALE.af=0; if(ROYALE.i===0){ try{ tutStart('roy');
       }catch(e){} } teamSize=5;
       /* Royale is always 5-a-side — don't inherit the exhibition formation */ teamKits.red=PRESETS[ROYALE.player];
-      teamKits.blue=PRESETS[ROYALE.opps[ROYALE.i]];
+      teamKits.blue=PRESETS[royOpp(ROYALE.i)];
       boardKey=ar.pitch; buildBoard();
       buildCrowd(); mode='royale';
       winTarget=3; matchLen=0;
@@ -349,7 +361,7 @@
     var num=mk('div',FS(9,cur?'#0b0910':'#c9bce0')+'flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:'+(cur?'#a9c94b':(done?'#3a5a2a':'#241a2e'))+';', done?'✓':String(k+1));
     row.appendChild(num); var mid=mk('div','flex:1 1 auto;text-align:left;min-width:0;');
     mid.appendChild(mk('div',FS(7,cur?'#f4e9c8':'#c9bce0')+'letter-spacing:0.4px;line-height:1.4;',ar.name+'  '+Array((ar.d||1)+1).join('◆')));
-    var opp=PRESETS[ROYALE.opps[k]];
+    var opp=PRESETS[royOpp(k)];
     var oppRow=mk('div','display:flex;align-items:center;gap:5px;margin-top:3px;');
     oppRow.appendChild(royFlag(opp,18,12));
     oppRow.appendChild(mk('span',FS(6,'#9a8fb0'),'vs '+(opp?opp.abbr:'?')));
@@ -387,7 +399,7 @@
     } g.stroke(); g.setLineDash([]);
     g.lineWidth=1; g.strokeStyle='rgba(90,60,20,0.5)';
     g.stroke(); g.restore();
-    })(); var pk=PRESETS[ROYALE.player], opp=PRESETS[ROYALE.opps[ROYALE.i]];
+    })(); var pk=PRESETS[ROYALE.player], opp=PRESETS[royOpp(ROYALE.i)];
     for(var k=0;k<NN;k++){ var p=P(k), done=k<ROYALE.i, cur=k===ROYALE.i, R=(cur?11:9);
     g.save(); g.globalAlpha=0.4;
     g.fillStyle='#000'; g.beginPath();
@@ -403,7 +415,7 @@
     g.fillStyle=(cur||done)?'#0b0910':'#d8cfe8';
     g.font="8px 'Press Start 2P', monospace";
     g.fillText(done?'✓':String(k+1), p.x, p.y+0.5);
-    try{ var _op=PRESETS[ROYALE.opps[k]];
+    try{ var _op=PRESETS[royOpp(k)];
     if(_op&&_op.kit){ var _fr=6, _fcy=p.y-R-_fr-3;
     g.globalAlpha=1; flagCoin(g,p.x,_fcy,_fr,_op.kit,false);
     } }catch(e){} g.restore();
@@ -1133,11 +1145,11 @@
     cv.style.cssText='width:'+CW+'px;height:'+CH+'px;display:block;border-radius:10px;border:2px solid #3a3050;image-rendering:pixelated;box-shadow:0 6px 18px rgba(0,0,0,0.5);';
     pad.appendChild(cv); var mctx=cv.getContext('2d');
     mctx.scale(2,2); mctx.imageSmoothingEnabled=false;
-    var ar=ROYALE_ARENAS[ROYALE.i], opp=PRESETS[ROYALE.opps[ROYALE.i]];
+    var ar=ROYALE_ARENAS[ROYALE.i], opp=PRESETS[royOpp(ROYALE.i)];
     var descBox=mk('div','display:flex;flex-direction:column;align-items:center;width:100%;');
     pad.appendChild(descBox);
       function renderDesc(idx){ descBox.innerHTML='';
-      var a2=ROYALE_ARENAS[idx], op2=PRESETS[ROYALE.opps[idx]], _cur=(idx===ROYALE.i);
+      var a2=ROYALE_ARENAS[idx], op2=PRESETS[royOpp(idx)], _cur=(idx===ROYALE.i);
       descBox.appendChild(mk('div',FS(8,'#f4e9c8')+'text-align:center;margin:10px 0 2px;line-height:1.5;','STADIUM '+(idx+1)+': '+a2.name+(_cur?'':' — PREVIEW')));
       var conds=royArenaConds(a2,true);
       if(conds.length){ var list=mk('div','width:100%;max-width:'+CW+'px;margin:7px 0 2px;');
