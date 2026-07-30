@@ -581,10 +581,11 @@
         g.fillRect(WALL,by,W-WALL*2,Math.min(8,H-WALL-by)); }
         for(var n=0;n<1200;n++){ g.fillStyle=(Math.random()>0.5)?TURF2:'rgba(255,255,255,0.04)';
         g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
-        // END ZONES: a tinted band in front of each goal (home red / away blue)
+        // END ZONES: an IDENTICAL darker mown band in front of each goal. A red/blue split read as a pale
+        // wash on the red end and nothing on the blue — both ends must look the same, so use one green tint.
         var ezD=GOAL_AREA_D, top=NET_DEPTH+ezD, bot=H-NET_DEPTH-ezD;
-        g.fillStyle='rgba(212,64,50,0.16)'; g.fillRect(WALL,NET_DEPTH,W-WALL*2,ezD);
-        g.fillStyle='rgba(64,120,212,0.16)'; g.fillRect(WALL,H-NET_DEPTH-ezD,W-WALL*2,ezD);
+        g.fillStyle='rgba(16,60,30,0.30)'; g.fillRect(WALL,NET_DEPTH,W-WALL*2,ezD);
+        g.fillRect(WALL,H-NET_DEPTH-ezD,W-WALL*2,ezD);
         // YARD LINES across the field, brighter every 5th (the 10-yard lines)
         var step=(bot-top)/10;
         for(var i=0;i<=10;i++){ var ly=Math.round(top+step*i);
@@ -596,8 +597,7 @@
         g.fillStyle=CHALK; g.fillRect(WALL+2,WALL,1,H-WALL*2); g.fillRect(W-WALL-3,WALL,1,H-WALL*2);
         },
         preview(g,w,h){ g.fillStyle='#2f8f42'; g.fillRect(0,0,w,h);
-        g.fillStyle='rgba(212,64,50,0.35)'; g.fillRect(0,0,w,Math.max(2,h*0.14));
-        g.fillStyle='rgba(64,120,212,0.35)'; g.fillRect(0,h-Math.max(2,h*0.14),w,Math.max(2,h*0.14));
+        g.fillStyle='rgba(16,60,30,0.5)'; g.fillRect(0,0,w,Math.max(2,h*0.14)); g.fillRect(0,h-Math.max(2,h*0.14),w,Math.max(2,h*0.14));
         g.fillStyle='rgba(255,255,255,0.85)';
         for(var i=1;i<6;i++) g.fillRect(2,Math.round(h*(0.14+0.72*i/6)),w-4,1);
         g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
@@ -776,7 +776,7 @@
       if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
       cgOn=false; cgT=0;
       cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null; cgStamBase=0;
-      gridOn=false; _gridPrevMoving=false;
+      gridOn=false; _gridPrevMoving=false; gridBreathPh=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

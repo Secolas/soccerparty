@@ -559,7 +559,17 @@ snapshotted at the idle→moving transition; `_gridHomeNail` restores them).
   cooldown; and jogging home a defender never enters a resting ball's space — so the turn always ends. Only
   the DEFENDING side's outfield roam (goalie excluded, dragged token skipped); the attacking formation is
   untouched.
-- By tier: **easy** 2 roam, **med** 4, **hard** all. Roam speed 1.05 / 1.35 / 1.7; clear cap 5.0 / 6.0 / 7.0.
+- By tier: **easy** 2 roam, **med** 4, **hard** all **+ a BREATHING GOAL**. Roam speed 1.05 / 1.35 / 1.7;
+  clear cap 5.0 / 6.0 / 7.0.
+
+**BREATHING GOAL (hard only).** Posts at each mouth whose half-gap opens and closes on a slow sine
+(`gridBreathGap` = `23 ± 15`, `freq 0.02`) — time your shot for the wide phase. A wide shot is turned away by
+a **plain reflection** (`1+RESTITUTION`, *no* boost kick — deliberately not a bumper, per the "no boosty
+hazards" note). `gridironStep` runs the collision; `drawGridiron` draws the two posts at the current gap.
+
+**Symmetric pitch.** The board's end-zone bands are now an **identical** darker-green tint at both ends —
+the earlier red/blue split read as a pale wash on the red end and nothing on the blue, so the two penalty
+areas looked different.
 
 Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the defending team's tokens
 break formation and patrol while the attacking side holds shape, and the ball is only cleared, never

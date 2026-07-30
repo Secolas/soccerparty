@@ -1473,11 +1473,14 @@
     // the real player nails do it. Settle-safe: they only patrol/clear on a moving ball, the clear sends it
     // out of the third, and while jogging home they never enter a resting ball's space, so the turn ends.
     // Tiers: easy 2 roam, med 4, hard all.
-    var gridOn=false, _gridPrevMoving=false;
+    var gridOn=false, _gridPrevMoving=false, gridBreathPh=0;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { roamN:(t>=2)?99:(t>=1?4:2), roamSpd:(t>=2)?1.7:(t>=1?1.35:1.05), returnSpd:1.4, gate:1.0,
-    clearR:NAIL_R+COIN_R+6, clearCap:(t>=2)?7.0:(t>=1?6.0:5.0), cd:42 }; }
+    clearR:NAIL_R+COIN_R+6, clearCap:(t>=2)?7.0:(t>=1?6.0:5.0), cd:42,
+    breathing:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
+    // current breathing-goal half-gap (HARD only) — 0 when off. Shared by physics + renderer.
+    function gridBreathGap(){ var c=gridCfg(); return c.breathing?(c.breathBase+c.breathAmp*Math.sin(gridBreathPh)):0; }
     function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false; }
     // Jog a nail toward its snapshotted home, capped, on the pitch, never entering a resting ball's space.
     function _gridHomeNail(n,spd){ if(!n._gridHome) return; var dx=n._gridHome.x-n.x, dy=n._gridHome.y-n.y, d=Math.hypot(dx,dy)||1;
@@ -1490,6 +1493,7 @@
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
     if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0), fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
+    if(c.breathing) gridBreathPh+=c.breathFreq;
     var def=(current==='red')?'blue':'red';
     if(moving && !_gridPrevMoving){ var pool=[];
     for(var i=0;i<nails.length;i++){ var n=nails[i]; n._gridHome={x:n.x,y:n.y}; n._gridRoam=false; n._gridCd=0;
@@ -1524,7 +1528,15 @@
     coin.vx=vx/m*_out; coin.vy=vy/m*_out;
     coin.x=r.x+dx/d*(NAIL_R+COIN_R+1); coin.y=r.y+dy/d*(NAIL_R+COIN_R+1);
     try{ spawnSparks(r.x,r.y,r.team,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
-    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } } }
+    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } }
+    // BREATHING GOAL (HARD): posts at each mouth whose gap breathes; a wide shot is turned away by a PLAIN
+    // reflection (no boost kick — not a bumper), so you time your shot for the wide phase.
+    if(c.breathing){ var gp=gridBreathGap();
+    for(var e=0;e<2;e++){ var gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1);
+    for(var s=-1;s<=1;s+=2){ var px=W/2+s*gp, pdx=coin.x-px, pdy=coin.y-gy, pd=Math.hypot(pdx,pdy), R2=3+COIN_R;
+    if(pd<R2 && pd>0.001){ var nx=pdx/pd, ny=pdy/pd, vn=coin.vx*nx+coin.vy*ny;
+    if(vn<0){ coin.vx-=(1+RESTITUTION)*vn*nx; coin.vy-=(1+RESTITUTION)*vn*ny; } coin.x=px+nx*R2; coin.y=gy+ny*R2;
+    try{ spawnSparks(px,gy,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

@@ -717,6 +717,14 @@
     ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
     ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
 
+    /* THE END ZONE: the roamers are the real nails (drawn normally); the only extra furniture is the HARD
+       breathing goalposts, whose gap opens and closes. gridBreathGap() returns 0 off hard, so nothing draws. */
+    function drawGridiron(ctx,now){ if(typeof gridArena!=='function'||!gridArena()) return;
+    var gap=(typeof gridBreathGap==='function')?gridBreathGap():0; if(gap<=0) return;
+    for(var e=0;e<2;e++){ var lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
+    for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
+    ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
+    ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1279,7 +1287,7 @@
     site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
     } if(boardKey==='minigolf'&&stadiumHazards()){ try{ minigolfTick();
     }catch(e){} return;   /* the course furniture is drawn later, above the pitch lines */
-    } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick();
+    } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick(); drawGridiron(ctx,now);
     }catch(e){} return;
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
