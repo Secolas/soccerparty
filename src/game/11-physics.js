@@ -1582,11 +1582,11 @@
     for(var r=0;r<c.rows;r++){ var py=apexY+dir*r*dy, cnt=r+1, x0=W/2-(cnt-1)*dx/2;
     for(var p=0;p<cnt;p++){ bowlPins.push({x:x0+p*dx, y:py, r:pinR, down:false, end:end, sx:0, sy:0, t:0}); } } } }
     function initBowling(){ if(!bowlArena()) return; bowlOn=true; _bowlPrevMoving=false; bowlRerack(); }
-    // every render frame: re-rack on the idle->moving transition, and drift knocked pins (visual scatter only).
+    // every render frame: drift knocked pins (visual scatter only). The rack does NOT re-rack per flick — pins
+    // you knock down stay down across turns, so both sides chip the rack open over the rally; it only re-racks
+    // when a goal is scored (bowlRerack from finalizeGoal), starting the next point on a fresh rack.
     function bowlingTick(){ if(!bowlArena()) return; if(!bowlOn) initBowling();
     if(typeof coin==='undefined'||!coin) return;
-    if(moving && !_bowlPrevMoving) bowlRerack();
-    _bowlPrevMoving=moving;
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(!pn.down) continue; pn.t++; pn.x+=pn.sx; pn.y+=pn.sy; pn.sx*=0.86; pn.sy*=0.86; } }
     // physics rate, moving grounded ball only. Pins knock + bleed pace; gutters funnel; oil preserves pace.
     function bowlingStep(){ if(!bowlArena()||!moving||scoring) return; if(!bowlOn) initBowling();
@@ -3559,6 +3559,7 @@
     }catch(e){} }); }
     function finalizeGoal(scorer){ if(pen&&pen.active){ penResolve('goal'); return; }
       _rwSnap=null;
+      try{ if(typeof bowlArena==='function'&&bowlArena()&&typeof bowlRerack==='function') bowlRerack(); }catch(e){}   // THE ALLEY: fresh rack each point
       score[scorer]++; try{ tutHook('goal',scorer);
       }catch(e){} try{ ecoOnGoal(scorer);
       }catch(e){} try{ if(scorer==='red' && mode!=='practice'){ var _ag=spAchGet();

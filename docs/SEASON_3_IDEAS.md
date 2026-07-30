@@ -614,8 +614,9 @@ hazards (all in `11-physics.js` + `drawBowling` in `12-draw.js`):
 (the 1-pin the ball meets first), so you must **bowl through** them to score. Each pin the ball touches is
 knocked down (leaves collision at once and scatters as fading debris) and **bleeds a little pace**
 (`pinLoss`), so a firm strike ploughs through while a soft shot dies in the rack. A **chip flies clean over**
-(the pins only touch a grounded ball). The rack **re-racks at the start of every shot** — like re-racking a
-frame — so it's fresh each turn and can't leave the goal permanently open.
+(the pins only touch a grounded ball). **Pins you knock down STAY down across turns** — both sides chip the
+rack open over the course of the rally, working a lane through it flick by flick — and the rack only
+**re-racks when a goal is scored** (`bowlRerack` from `finalizeGoal`), starting the next point fresh.
 
 **GUTTERS (med+).** A ball that strays into the side channel gets **pulled onto the rail** and its lateral
 escape damped, so a wall-hugging shot runs straight down the gutter toward the corner (usually a miss). Off
