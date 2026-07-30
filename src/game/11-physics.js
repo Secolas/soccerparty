@@ -1570,11 +1570,12 @@
     // GUTTERS (side rails that suck a wall-hugging shot straight down the lane) and an OILED centre strip (keeps
     // pace); hard deepens both and packs the full 10-pin triangle. All settle-safe: pins/gutters/oil only touch
     // a MOVING grounded ball, knocked pins leave collision at once, and the oil never lifts net friction to >=1.
-    var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakeX=[0,0], bowlRakeDir=[1,-1];
+    var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakeX=[0,0], bowlRakeDir=[1,-1], bowlGutter=null;
+    var BOWL_GUT_T=30;   // gutter-ball freeze length (frames) before the turn passes
     function bowlArena(){ return (typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { rows:(t>=2)?4:(t>=1?3:2), pinLoss:(t>=2)?0.82:(t>=1?0.86:0.90),
-    rake:(t>=1), rakeW:(t>=2)?52:38, rakeSpd:(t>=2)?1.7:1.15, gate:0.4 }; }
+    gutter:(t>=1), rake:(t>=1), rakeW:(t>=2)?52:38, rakeSpd:(t>=2)?1.7:1.15, gate:0.4 }; }
     // THE SWEEP / RAKE geometry: a bar at a fixed y just in front of each mouth's pins, its centre sweeping
     // side to side within the goal mouth so there's always an open side to shoot past.
     function bowlRakeY(end){ return end?(H-(NET_DEPTH+GOAL_AREA_D)-6):((NET_DEPTH+GOAL_AREA_D)+6); }
@@ -1596,11 +1597,19 @@
     for(var e=0;e<2;e++){ bowlRakeX[e]+=bowlRakeDir[e]*c.rakeSpd;
     if(bowlRakeX[e]<=sp.min){ bowlRakeX[e]=sp.min; bowlRakeDir[e]=1; } else if(bowlRakeX[e]>=sp.max){ bowlRakeX[e]=sp.max; bowlRakeDir[e]=-1; } } }
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(!pn.down) continue; pn.t++; pn.x+=pn.sx; pn.y+=pn.sy; pn.sx*=0.86; pn.sy*=0.86; } }
-    // physics rate, moving grounded ball only. Pins knock + bleed pace; gutters funnel; oil preserves pace.
-    function bowlingStep(){ if(!bowlArena()||!moving||scoring) return; if(!bowlOn) initBowling();
+    // physics rate, moving grounded ball only. Gutter ball ends the turn; pins knock + bleed pace; the rake bounces.
+    function bowlingStep(){ if(!bowlArena()||!moving||scoring||bowlGutter) return; if(!bowlOn) initBowling();
     if(typeof ghosting!=='undefined'&&ghosting) return;
     var c=bowlCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
-    if(!air) return;   // a chip in the air flies over the rack
+    if(!air) return;   // a chip in the air flies over the rack (and clears the gutters)
+    // GUTTER BALL (med+) — like real bowling: a shot that reaches a side wall drops into the gutter and is
+    // LOST. Play freezes for a beat (bowlGutterTick), then the turn passes and the ball returns to the lane
+    // edge. This is why the sides are gutters, not bumpers — keep it down the lane.
+    if(c.gutter && sp>c.gate){ var atL=coin.x<=WALL+COIN_R+2.5, atR=coin.x>=W-WALL-COIN_R-2.5;
+    if(atL||atR){ bowlGutter={side:atL?0:1, t:0, y:coin.y}; coin.vx=0; coin.vy=0;
+    coin.x=atL?(WALL+COIN_R-1):(W-WALL-COIN_R+1);
+    try{ setStatus('GUTTER BALL!'); }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh(); else if(typeof sfxBump==='function') sfxBump(3); } }catch(e){}
+    try{ if(typeof haptic==='function') haptic([0,20,30,40]); }catch(e){} return; } }
     // PINS — knock any standing pin the ball reaches; it scatters, the ball loses a little pace and deflects.
     for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(pn.down) continue;
     var dx=coin.x-pn.x, dy=coin.y-pn.y, d=Math.hypot(dx,dy), R=COIN_R+pn.r;
@@ -1618,6 +1627,14 @@
     if(Math.abs(coin.y-by)<COIN_R+TH && coin.x>bxL-COIN_R && coin.x<bxR+COIN_R){ var side=(coin.y<by)?-1:1;
     if(coin.vy*side<0){ coin.vy=-coin.vy*0.92; coin.y=by+side*(COIN_R+TH);
     try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
+    // Run the gutter-ball freeze: the ball sinks into the channel for a beat, then the turn passes and it
+    // returns to the lane edge for the next player. A gutter ball is a lost shot, so possession changes.
+    function bowlGutterTick(){ if(!bowlGutter) return; bowlGutter.t++;
+    var s=bowlGutter.side; coin.x=s?(W-WALL-COIN_R+1):(WALL+COIN_R-1); coin.vx=0; coin.vy=0;   // held in the gutter
+    if(bowlGutter.t>=BOWL_GUT_T){ coin.x=s?(W-WALL-COIN_R-3):(WALL+COIN_R+3);   // back onto the lane edge
+    coin.y=Math.max(WALL+COIN_R+1,Math.min(H-WALL-COIN_R-1,bowlGutter.y));
+    coin.air=0; moving=false; bowlGutter=null;
+    try{ separateCoin(); }catch(e){} try{ endFlick(); }catch(e){} } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2150,6 +2167,7 @@
       if(!moving){ if(typeof skateTube!=='undefined') skateTube=null;
       return; }
       if(cgDrown){ try{ cgDrownTick(); }catch(e){} return; }   // drowning: freeze play, just run the sink/drop
+      if(bowlGutter){ try{ bowlGutterTick(); }catch(e){} return; }   // gutter ball: freeze, then pass the turn
       if(coin&&coin.air>0) coin.air--;
       if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(rouletteFlash>0) rouletteFlash--;
       if(rouletteCD>0) rouletteCD--;
@@ -2782,7 +2800,7 @@
           if(!celebrated){ celebrated=true; netBulge=3; netBulgeX=coin.x; netHold=10; hitStop=2; celebrate(t,6); }
           finalizeGoal(t);
         }
-      } else if(!cgDrown && !(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
+      } else if(!cgDrown && !bowlGutter && !(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
       coin.vy=0; separateCoin();
       moving=false; endFlick();
       }

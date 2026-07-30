@@ -625,10 +625,16 @@ Off on easy; bar width 38px med / 52px hard, sweep speed 1.15 / 1.7 (wider + fas
 window). Reflects a **moving grounded** ball only, so wall bounces and settling are untouched, and a **chip
 flies clean over** it. `bowlingTick` sweeps it; `bowlingStep` bounces the ball; `drawBowling` draws it.
 
-*Cut on playtest:* the earlier **gutter funnel** (pulled a wall-hugging shot down the rail) killed normal wall
-bounces — a ball hitting the side got stuck like a real gutter instead of rebounding — so it was removed; the
-dark side channels stay as lane art only. The **oiled centre strip** (kept pace down the middle) and the
-animated blue tells were also cut. The sweep/rake replaces both as the med+ hazard.
+**GUTTER BALL (med+).** Like real bowling: a shot that reaches a **side wall** drops into the gutter and is
+**LOST** — play freezes for a beat (`bowlGutterTick`, ~30 frames, mirrors the golf water-drown), then the
+**turn passes** and the ball returns to the lane edge for the next player. So on med+ the sides are gutters,
+not bumpers: keep it down the lane. Triggers on a **moving grounded** ball only (`sp>gate`), so a dying ball
+still settles and a **chip clears** the gutter. Off on easy — the walls bounce normally there.
+
+*Iteration history:* the first gutter was a **funnel** that pulled a wall-hugging shot down the rail; it made
+the ball feel *stuck* and killed normal wall bounces, so it was cut. This gutter-ball version is the clean
+replacement — a wall touch is a clear lost-shot, not a mushy pull. The **oiled centre strip** and the animated
+blue tells were also cut.
 
 **Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no gutters, no oil (*meet the sport*).
 Med — **6-pin** rack (0.86) + gutters + oil (*the sport bites*). Hard — full **10-pin** rack (0.82) + deep
