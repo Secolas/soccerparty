@@ -725,6 +725,18 @@
     for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
     ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
     ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
+
+    /* THE ALLEY: an oiled-lane sheen down the middle (med+) plus the pin racks in front of each goal. Standing
+       pins are white with a red neck stripe; a knocked pin fades as it scatters (drift handled in bowlingTick). */
+    function drawBowling(ctx,now){ if(typeof bowlArena!=='function'||!bowlArena()) return;
+    if(typeof bowlPins==='undefined'||!bowlPins) return;
+    var c=(typeof bowlCfg==='function')?bowlCfg():null;
+    if(c&&c.oil){ ctx.fillStyle='rgba(120,180,220,0.06)'; ctx.fillRect(Math.round(W/2-c.oilW),WALL,Math.round(c.oilW*2),H-WALL*2); }
+    for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i];
+    if(pn.down){ if(pn.t>40) continue; ctx.globalAlpha=Math.max(0,1-pn.t/40); }
+    ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
+    ctx.fillStyle='#d0402e'; ctx.fillRect(Math.round(pn.x-pn.r),Math.round(pn.y-1),Math.round(pn.r*2),1);   // red neck stripe
+    ctx.globalAlpha=1; } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1289,6 +1301,8 @@
     }catch(e){} return;   /* the course furniture is drawn later, above the pitch lines */
     } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick(); drawGridiron(ctx,now);
     }catch(e){} return;
+    } if(boardKey==='bowling'&&stadiumHazards()){ try{ bowlingTick();
+    }catch(e){} return;   /* the pins are drawn later, above the pitch lines (see drawBowling's call site) */
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
@@ -1618,6 +1632,7 @@
       try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
       try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
       try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolf(ctx,now); }catch(e){}
+      try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';

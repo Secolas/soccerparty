@@ -603,13 +603,38 @@ Superseded first-pass hazard tables (kept for reference):
 markers; yard-line drag = zonal speed-loss (Zone-Defense-style bands); uprights =
 static bounce walls (bumper/wall).
 
-### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4) — BOARD BUILT (plain lane, hazards TBD)
+### 6. 🎳 THE ALLEY — "BOWLING" (med–hard, ~d4) — BUILT (hazards in, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #6 (`pitch:'bowling'`, board in `03-boards.js`, ambience →
-`arena`). Board-first, matching the arena-5 approach: a polished maple lane — lengthwise board seams, an
-alternating plank tint and grain speckle, dark **gutters** down each side wall, a **foul line** at each end
-and the **dovetail aiming arrows** (a shallow V of chevrons pointing at each goal). Symmetric top/bottom. No
-hazards yet — the pin racks / gutter funnels / oiled strip below are the next passes.
+`arena`). The board is a polished maple lane — lengthwise board seams, an alternating plank tint and grain
+speckle, dark gutters down each side wall, a foul line at each end and the dovetail aiming arrows. The
+hazards (all in `11-physics.js` + `drawBowling` in `12-draw.js`):
+
+**PIN RACK (all tiers) — the signature mechanic.** A triangle of pins guards each goal, apex toward centre
+(the 1-pin the ball meets first), so you must **bowl through** them to score. Each pin the ball touches is
+knocked down (leaves collision at once and scatters as fading debris) and **bleeds a little pace**
+(`pinLoss`), so a firm strike ploughs through while a soft shot dies in the rack. A **chip flies clean over**
+(the pins only touch a grounded ball). The rack **re-racks at the start of every shot** — like re-racking a
+frame — so it's fresh each turn and can't leave the goal permanently open.
+
+**GUTTERS (med+).** A ball that strays into the side channel gets **pulled onto the rail** and its lateral
+escape damped, so a wall-hugging shot runs straight down the gutter toward the corner (usually a miss). Off
+on easy; `gutterPull` 0.28 med / 0.50 hard, channel 6px / 7px.
+
+**OILED CENTRE STRIP (med+).** Down the middle the lane is oiled: while over the strip the ball **keeps its
+pace** (`oilKeep` divides most of the frame's friction back). Off on easy; strip ±18px med / ±26px hard,
+slicker on hard. Reuse of Wet Shot's "keeps speed", **not** ice-slip.
+
+**Tiers:** easy — a light **3-pin** rack, pins bleed least (0.90), no gutters, no oil (*meet the sport*).
+Med — **6-pin** rack (0.86) + gutters + oil (*the sport bites*). Hard — full **10-pin** rack (0.82) + deep
+gutters + wide slick oil (*hostile*).
+
+**Settle-safe:** pins/gutters/oil only touch a **moving grounded** ball; a knocked pin leaves collision
+immediately (never traps); the oil divides friction back by `oilKeep<1` so net friction stays `<1` and the
+ball always settles. Symmetric top/bottom.
+
+Verified in royale (headless to stadium 6): easy shows the 3-pin racks with no oil sheen; hard shows the full
+10-pin triangles + the centre oil strip; zero page errors on both.
 
 **Fantasy:** a bowling lane — knock the pins and they scatter into a mess, gutters
 funnel wall-huggers, the oiled centre lane keeps you fast.
