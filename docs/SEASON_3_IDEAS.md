@@ -670,7 +670,13 @@ obstacles — the pitch gets messier the longer the rally runs.
 gutters = directional lane funnel (conveyor); oiled lane = pace-preserving strip
 (Wet Shot's "keeps speed off contact", **not** ice-slip — that's spent).
 
-### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4)
+### 7. 🏎️ THE GRAND PRIX — "MOTORSPORT" (hard, ~d4) — BOARD BUILT (plain circuit, hazards TBD)
+
+**Build status:** registered as Season 3 stadium #7 (`pitch:'raceway'`, board in `03-boards.js`, ambience →
+`stadium`). Board-first, matching arenas 5–6: a dark **tarmac** circuit with a speckle texture, **red-and-white
+kerbs** down each side wall, a **checkered start/finish stripe** in front of each goal, and a faint **dashed
+racing lane** down the middle. No hazards yet — the pace-car / slipstream, DRS boost strips, oil spills and
+tyre walls below are the next passes.
 
 **Fantasy:** a race circuit — draft behind the pace-car for a tow, hit the DRS
 boost strips, mind the oil and the tyre walls.

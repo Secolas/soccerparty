@@ -70,7 +70,9 @@
       {name:'THE END ZONE',pitch:'gridiron',ab:['cannon',
       'sniper','wall'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
       {name:'THE ALLEY',pitch:'bowling',ab:['cannon',
-      'sniper','ricochet'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'}
+      'sniper','ricochet'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
+      {name:'THE GRAND PRIX',pitch:'raceway',ab:['cannon',
+      'glide','sniper'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

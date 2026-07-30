@@ -640,6 +640,34 @@
         g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
         } },
 
+      /* THE GRAND PRIX — motorsport. Board-first: a dark tarmac circuit with red-and-white kerbs down each
+         side, a checkered start/finish stripe in front of each goal and a dashed racing lane down the middle.
+         The hazards (a roaming pace-car + slipstream, DRS boost strips, oil spills, tyre walls) are layered on
+         in follow-up passes; for now it plays as a plain circuit with a racetrack's markings. */
+      raceway:{ name:'THE GRAND PRIX', surround:'#141518', stand:'#26282d', tier:'rgba(255,255,255,0.05)',
+        frame:'#3a3d42',frameHi:'#5a5e66',frameLo:'#222428',post:'#e8eaee',   // pit-wall steel frame
+        line:'rgba(245,247,250,0.9)',line2:'rgba(245,247,250,0.55)',
+        netRecess:'#1c1e22',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(230,235,240,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(230,235,240,0.56)',netOverlay:'rgba(10,11,14,0.44)',
+        surface(g){ var TAR='#2c2e33', TAR2='#26282d', KR='#c8402e', KW='#e8e2d8';
+        g.fillStyle=TAR; g.fillRect(0,0,W,H);
+        // tarmac speckle + faint patch tone
+        for(var pn=0;pn<1000;pn++){ g.fillStyle=(Math.random()>0.5)?TAR2:'rgba(255,255,255,0.03)'; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // dashed racing lane down the middle (two faint rails, offset from the halfway marking)
+        g.fillStyle='rgba(255,255,255,0.16)'; for(var dy=WALL+6; dy<H-WALL; dy+=16){ g.fillRect(Math.round(W/2)-8,dy,1,9); g.fillRect(Math.round(W/2)+7,dy,1,9); }
+        // RED/WHITE KERBS down each side wall
+        for(var ky=WALL; ky<H-WALL; ky+=7){ var kk=(((ky-WALL)/7)|0)%2, hh=Math.min(7,H-WALL-ky);
+        g.fillStyle=kk?KR:KW; g.fillRect(WALL,ky,4,hh); g.fillRect(W-WALL-4,ky,4,hh); }
+        // CHECKERED start/finish stripe just in front of each goal
+        for(var e=0;e<2;e++){ var by=e?(H-NET_DEPTH-GOAL_AREA_D-4):(NET_DEPTH+GOAL_AREA_D+1);
+        for(var cx=WALL+5; cx<W-WALL-5; cx+=5){ var cc=(((cx/5)|0)%2); g.fillStyle=cc?'#12140f':'#eef0ea'; g.fillRect(cx,by,5,3); } }
+        },
+        preview(g,w,h){ g.fillStyle='#2c2e33'; g.fillRect(0,0,w,h);
+        for(var ky=0;ky<h;ky+=4){ var kk=((ky/4)|0)%2; g.fillStyle=kk?'#c8402e':'#e8e2d8'; g.fillRect(0,ky,Math.max(2,w*0.09),4); g.fillRect(w-Math.max(2,w*0.09),ky,Math.max(2,w*0.09),4); }
+        for(var cx=0;cx<w;cx+=4){ if(((cx/4)|0)%2){ g.fillStyle='#eef0ea'; g.fillRect(cx,Math.round(h*0.2),4,2); g.fillRect(cx,Math.round(h*0.8),4,2); } }
+        g.fillStyle='rgba(255,255,255,0.16)'; g.fillRect(Math.round(w/2),2,1,h-4);
+        g.strokeStyle='rgba(0,0,0,0.3)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -775,7 +803,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
