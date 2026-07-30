@@ -6,17 +6,6 @@
     g.fillStyle=Math.random()>0.5?dark:light;
     g.fillRect(Math.round(x),Math.round(y),Math.round(len),1);
     } }
-    /* URL DIAGNOSTICS for CRAZY GOLF, so an alignment complaint can be bisected in the browser with no
-       redeploy between steps:
-         ?nohz=1   strip every hazard (water, sand, trees, cups) — is the bare pitch square?
-         ?flat=1   paint a plain striped pitch with no fairway/rough/apron shaping — is the SURFACE square?
-         ?dbg=1    the marker overlay (see drawAlignDebug)
-       Combine them: ?nohz=1&flat=1 leaves nothing but the frame, the markings and the pegs. */
-    function _cgQ(k){ try{ return new RegExp('[?&]'+k+'=1').test((location&&location.search)||''); }catch(e){ return false; } }
-    function cgNoHz(){ return _cgQ('nohz'); }
-    function cgFlat(){ return _cgQ('flat'); }
-
-
     const BOARDS={
       wood:{ name:'WOOD', surround:'#1c150d', stand:'#352619', tier:'rgba(0,0,0,0.25)',
         frame:'#6b4a28',frameHi:'#8a6338',frameLo:'#4a3018',post:'#d9d0be',
@@ -546,11 +535,6 @@
         line:'rgba(255,255,255,0.8)',line2:'rgba(255,255,255,0.52)',
         netRecess:'#14401f',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
         surface(g){
-        if(cgFlat()){                                  // ?flat=1 — plain pitch, no fairway shaping at all
-        g.fillStyle='#2c8f3c'; g.fillRect(0,0,W,H);
-        g.fillStyle='rgba(255,255,255,0.05)';
-        for(var fx=WALL;fx<W-WALL;fx+=10) g.fillRect(fx,WALL,5,H-WALL*2);
-        return; }
         /* A PLAIN, EVEN FAIRWAY — no dark "rough lens". The earlier surface shaded a dark dead-zone down
            the middle of each half to "show the route", but the central pond already shows the route, and
            with the hazards sitting on top of it the dark lens read as a muddy, off-centre discolouration —

@@ -717,35 +717,6 @@
     ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
     ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
 
-    var _dbgAlignOn=null;
-    function _dbgAlign(){ if(_dbgAlignOn===null){ try{ _dbgAlignOn=/[?&]dbg=1/.test((location&&location.search)||''); }catch(e){ _dbgAlignOn=false; } } return _dbgAlignOn; }
-    function _dbgCross(g,x,y,col,r){ g.fillStyle=col;
-    g.fillRect(Math.round(x)-r,Math.round(y),r*2+1,1);
-    g.fillRect(Math.round(x),Math.round(y)-r,1,r*2+1); }
-    function drawAlignDebug(g){
-    g.save();
-    // the geometric truths: pitch centre lines, the goal mouth edges, and the four pitch corners
-    g.fillStyle='rgba(0,255,255,0.75)';
-    g.fillRect(Math.round(W/2),0,1,H);                         // x = W/2 = 105
-    g.fillRect(0,Math.round(H/2),W,1);                         // y = H/2 = 165
-    g.fillStyle='rgba(255,230,0,0.9)';
-    var gl=Math.round((W-GOAL_W)/2), gr=Math.round((W+GOAL_W)/2);
-    g.fillRect(gl,0,1,H); g.fillRect(gr,0,1,H);                // the goal mouth edges, full height
-    g.fillStyle='rgba(255,0,255,0.9)';                         // the pitch rect corners
-    var cs=[[WALL,WALL],[W-WALL,WALL],[WALL,H-WALL],[W-WALL,H-WALL]];
-    for(var c=0;c<cs.length;c++) _dbgCross(g,cs[c][0],cs[c][1],'rgba(255,0,255,0.95)',4);
-    // every peg's DATA position: white cross for an outfield piece, red for a keeper
-    try{ for(var i=0;i<nails.length;i++){ var n=nails[i];
-    _dbgCross(g,n.x,n.y,n.goalie?'rgba(255,40,40,1)':'rgba(255,255,255,1)',6); } }catch(e){}
-    // the ball
-    try{ _dbgCross(g,coin.x,coin.y,'rgba(0,255,0,1)',6); }catch(e){}
-    // and CRAZY GOLF's cups
-    try{ if(typeof cgCups!=='undefined'&&cgCups) for(var k=0;k<cgCups.length;k++) _dbgCross(g,cgCups[k].x,cgCups[k].y,'rgba(255,140,0,1)',6); }catch(e){}
-    // tree collision centres (lime) and pond/sand collision centres (deep pink), to compare against art
-    try{ if(typeof cgTrees!=='undefined'&&cgTrees) for(var tt=0;tt<cgTrees.length;tt++) _dbgCross(g,cgTrees[tt].x,cgTrees[tt].y,'rgba(180,255,0,1)',7); }catch(e){}
-    try{ if(typeof cgWater!=='undefined'&&cgWater) for(var ww=0;ww<cgWater.length;ww++) _dbgCross(g,cgWater[ww].x,cgWater[ww].y,'rgba(255,0,150,1)',7); }catch(e){}
-    try{ if(typeof cgSand!=='undefined'&&cgSand) for(var qq=0;qq<cgSand.length;qq++) _dbgCross(g,cgSand[qq].x,cgSand[qq].y,'rgba(255,0,150,1)',5); }catch(e){}
-    g.restore(); }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1680,11 +1651,6 @@
         ctx.fillStyle=n.team==='red'?'rgba(224,91,72,0.16)':'rgba(91,143,232,0.16)';
         ctx.fill(); }
         paintNail(ctx,n.x,n.y,(n.goalie&&((sideAb[n.team]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,teamKits[n.team].kit, n.team===current&&!winner&&phase==='play', resolveKit(teamKits[n.team].kit, effStyle(n.team)));
-        /* ?dbg=1: a BLUE cross drawn from inside this very loop, at the same n.x/n.y paintNail just used.
-           The overlay's white/red crosses mark the same pegs from the LATE pass. If blue and white land
-           together, both passes share a transform and the pegs are where the data says. If they separate,
-           the two passes disagree and the gap is exactly the bug — no coordinate assumptions either way. */
-        try{ if(_dbgAlign()) _dbgCross(ctx,n.x,n.y,'rgba(40,90,255,1)',9); }catch(e){}
         if(n.goalie){ ctx.beginPath();
         ctx.arc(n.x,n.y,NAIL_R+1.5,0,Math.PI*2);
         ctx.strokeStyle='#f4e9c8';
@@ -1762,13 +1728,6 @@
          21px right and 17px down. Proved by drawing a marker for the same peg from inside the peg loop and
          again from this pass and measuring the gap: 28px before, 0 after. Board coordinates, nothing else. */
       try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolfTrees(ctx,now); }catch(e){}
-      // ================= ALIGNMENT DEBUG OVERLAY (?dbg=1) =================
-      // Draws a marker at the DATA position of every object, in the same transform the art uses. If a
-      // marker and its sprite sit apart, the drawing is offset from the data and the amount is visible; if
-      // they sit together, that object is where it says it is. Built because "the keeper looks off-centre"
-      // could not be settled from screenshots — reading positions out of a scaled PNG produced a different
-      // wrong answer every time (ponds, sand, ad-boards and net mesh all got mistaken for pegs).
-      try{ if(_dbgAlign()) drawAlignDebug(ctx); }catch(e){}
       // cacti stand over the ball (it disappears behind them); dust-devil towers over everything
       try{drawCacti(now);}catch(e){}
       try{drawDevil(now);}catch(e){}
