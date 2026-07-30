@@ -717,14 +717,9 @@
     ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
     ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
 
-    /* THE END ZONE: the patrolling roamers (clear the ball out of a defensive third) and, on hard, the
-       breathing goalposts whose gap opens and closes. Drawn in the hazard-tick pass, under the ball. */
+    /* THE END ZONE: the patrolling roamers that clear the ball out of a defensive third. Drawn in the
+       hazard-tick pass, under the ball. */
     function drawGridiron(ctx,now){ if(typeof gridArena!=='function'||!gridArena()) return; if(!gridOn) initGridiron();
-    var gap=(typeof gridBreathGap==='function')?gridBreathGap():0;
-    if(gap>0){ for(var e=0;e<2;e++){ var lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
-    for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
-    ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
-    ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
     for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i], hot=r.flash>0, rx=r.x, ry=r.y;
     ctx.save();
     ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.beginPath(); ctx.ellipse(rx,ry+GRID_ROAM_R*0.55,GRID_ROAM_R*0.85,GRID_ROAM_R*0.42,0,0,6.283); ctx.fill();

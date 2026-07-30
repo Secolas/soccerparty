@@ -1466,35 +1466,41 @@
     if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
     return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
     // ================= THE END ZONE (gridiron) =================
-    // ROAMING DEFENDERS: loose players patrol left<->right across the pitch. When a MOVING ball comes close
-    // to one inside a defensive third, that defender CLEARS it — boots it back up the pitch toward midfield.
-    // Settle-safe: a clear only fires on a moving ball, sends it OUT of the defensive third, and each roamer
-    // has a cooldown, so the ball can't be juggled forever and the turn always ends. HARD adds a BREATHING
-    // GOAL: posts at each mouth whose gap opens and closes on a slow sine — time your shot for the wide phase.
-    // Tiers: easy 2 roamers, med 4, hard 6 + breathing goal.
-    var gridOn=false, gridRoam=[], gridBreathPh=0, GRID_ROAM_R=7;
+    // ROAMING DEFENDERS: token blockers patrol left<->right across the pitch and BOUNCE off any player token
+    // they run into (and off each other), so they weave through the formation instead of sliding under it.
+    // When a MOVING ball comes close to one inside a defensive third, that roamer CLEARS it — boots it back
+    // up the pitch toward midfield. Nothing here is bouncy for the ball: it passes over the roamers untouched
+    // except for that one directed clear (no rebound). Settle-safe: a clear only fires on a moving ball,
+    // sends it OUT of the defensive third, and each roamer has a cooldown, so the turn always ends.
+    // Tiers: easy 2 roamers, med 4, hard 6.
+    var gridOn=false, gridRoam=[], GRID_ROAM_R=7;
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { roamN:(t>=2)?6:(t>=1?4:2), roamSpd:(t>=2)?1.5:(t>=1?1.25:1.0), clearR:GRID_ROAM_R+COIN_R+6,
-    clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42, breathing:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
+    clearPow:(t>=2)?8.5:(t>=1?7.5:6.5), cd:42 }; }
     function initGridiron(){ if(!gridArena()) return; var c=gridCfg();
-    gridOn=true; gridRoam=[]; gridBreathPh=0;
+    gridOn=true; gridRoam=[];
     var top=NET_DEPTH+GOAL_AREA_D+8, bot=H-NET_DEPTH-GOAL_AREA_D-8, n=c.roamN;
     for(var i=0;i<n;i++){ var fr=(n<=1)?0.5:(i/(n-1)), y=top+fr*(bot-top), dir=(i%2)?1:-1;
     gridRoam.push({x:(dir>0)?(WALL+GRID_ROAM_R+2):(W-WALL-GRID_ROAM_R-2), y:y, dir:dir, cd:0, flash:0}); } }
-    // roamer patrol + breathing phase — every render frame (so they keep pacing between turns too).
+    // roamer patrol — every render frame. Bounces at the walls, off any player token in its lane, and off
+    // another roamer sharing its lane, reversing direction each time it is turned back.
     function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
-    var c=gridCfg(), lft=WALL+GRID_ROAM_R, rgt=W-WALL-GRID_ROAM_R;
-    gridBreathPh+=c.breathFreq;
+    var c=gridCfg(), lft=WALL+GRID_ROAM_R, rgt=W-WALL-GRID_ROAM_R, gap=GRID_ROAM_R+NAIL_R, rg=GRID_ROAM_R*2;
     for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.flash>0) r.flash--; if(r.cd>0) r.cd--;
     r.x+=r.dir*c.roamSpd;
-    if(r.x<lft){ r.x=lft; r.dir=1; } else if(r.x>rgt){ r.x=rgt; r.dir=-1; } } }
-    // clearance + breathing-goal posts — physics rate, only on a moving ball (settle-safe).
+    if(r.x<lft){ r.x=lft; r.dir=1; } else if(r.x>rgt){ r.x=rgt; r.dir=-1; }
+    if(typeof nails!=='undefined'&&nails){ for(var j=0;j<nails.length;j++){ var nn=nails[j];   // bounce off tokens in this lane
+    if(Math.abs(r.y-nn.y)<gap && Math.abs(r.x-nn.x)<gap){ var side=(r.x>=nn.x)?1:-1; r.x=nn.x+side*gap; r.dir=side; } } }
+    for(var k=0;k<gridRoam.length;k++){ if(k===i) continue; var o=gridRoam[k];   // and off another roamer sharing the lane
+    if(Math.abs(r.y-o.y)<rg && Math.abs(r.x-o.x)<rg){ var s2=(r.x>=o.x)?1:-1; r.x=o.x+s2*rg; r.dir=s2; } }
+    r.x=Math.max(lft,Math.min(rgt,r.x)); } }
+    // clearance — physics rate, only on a moving ball (settle-safe). The ball is never reflected off a
+    // roamer; it is only cleared when it enters a defensive third close to one.
     function gridironStep(){ if(!gridArena()||!moving||scoring) return;
     if(typeof ghosting!=='undefined'&&ghosting) return;
     if(!gridOn) initGridiron();
     var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
-    // CLEARANCE: a roamer that catches a moving ball inside a defensive third boots it back toward midfield.
     if(air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
     if(inDef){ for(var i=0;i<gridRoam.length;i++){ var r=gridRoam[i]; if(r.cd>0) continue;
     var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
@@ -1503,17 +1509,7 @@
     coin.vx=vx/m*c.clearPow; coin.vy=vy/m*c.clearPow;
     coin.x=r.x+dx/d*(GRID_ROAM_R+COIN_R+1); coin.y=r.y+dy/d*(GRID_ROAM_R+COIN_R+1);
     try{ spawnSparks(r.x,r.y,null,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
-    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } }
-    // BREATHING GOAL (hard): posts at each mouth whose gap breathes; a ball hitting one rebounds.
-    if(c.breathing){ var gap=c.breathBase+c.breathAmp*Math.sin(gridBreathPh);
-    for(var e=0;e<2;e++){ var gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1);
-    for(var s=-1;s<=1;s+=2){ var px=W/2+s*gap, pdx=coin.x-px, pdy=coin.y-gy, pd=Math.hypot(pdx,pdy), R2=3+COIN_R;
-    if(pd<R2 && pd>0.001){ var nx=pdx/pd, ny=pdy/pd, vn=coin.vx*nx+coin.vy*ny;
-    if(vn<0){ coin.vx-=2*vn*nx; coin.vy-=2*vn*ny; } coin.x=px+nx*R2; coin.y=gy+ny*R2;
-    coin.vx+=nx*2.2; coin.vy+=ny*2.2;
-    try{ spawnSparks(px,gy,null,6); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
-    // current breathing-goal half-gap, so the renderer can draw the posts where the physics has them.
-    function gridBreathGap(){ var c=gridCfg(); return c.breathing?(c.breathBase+c.breathAmp*Math.sin(gridBreathPh)):0; }
+    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

@@ -544,23 +544,23 @@ layout working. When an aggregate reads exactly zero, trace one shot before beli
 `stadium`). The design went through two cut passes (separate rusher/drag/upright sprites; then a live defence
 that moved the player tokens). The **current** design (all in `11-physics.js`, drawn from `12-draw.js`):
 
-**ROAMING DEFENDERS + CLEARANCE.** Loose grey blocker sprites patrol left↔right across the pitch on spread
-lanes (`gridRoam`, moved by `gridironTick` every frame, bouncing at the walls). When a **moving** ball comes
-within `cfg.clearR` of a roamer **inside a defensive third**, that roamer **clears** it — boots it back
-toward midfield (`gridironStep`, physics rate). Separate entities, so the player's own formation is never
-disturbed.
+**ROAMING BLOCKERS + CLEARANCE.** Grey blocker tokens patrol left↔right across the pitch on spread lanes
+(`gridRoam`, moved by `gridironTick` every frame). They **bounce off the walls, off any player token in
+their lane, and off each other** (reversing direction each time), so they weave through the formation
+instead of sliding under it. When a **moving** ball comes within `cfg.clearR` of a roamer **inside a
+defensive third**, that roamer **clears** it — boots it back toward midfield (`gridironStep`, physics rate).
+Separate entities, so the teams' own formations are never disturbed.
 
+- **Nothing is bouncy for the ball:** it passes over the roamers untouched — the only interaction is the one
+  directed clear, never a rebound. (The earlier breathing-goal bumper posts were cut for this reason.)
 - **Settle-safe:** a clear only fires on a moving ball (`sp>0.8`), sends it *out* of the defensive third
   (toward centre), and each roamer has a `cfg.cd`-frame cooldown — so the ball can't be juggled forever and
   the turn always ends.
-- **BREATHING GOAL (hard):** bumper posts at each mouth whose half-gap breathes on a slow sine
-  (`base 23 ± 15`, `freq 0.02`); a ball hitting a post rebounds, so you time your shot for the wide phase.
-  `gridBreathGap()` hands the renderer the same gap the physics uses.
-- By tier: **easy** 2 roamers, slow; **med** 4; **hard** 6 **+ breathing goal**. Clear power 6.5 / 7.5 / 8.5.
+- By tier: **easy** 2 roamers, slow; **med** 4; **hard** 6. Clear power 6.5 / 7.5 / 8.5.
 
 Verified in royale (headless drive to stadium 5, hard): enters with zero errors; the 6 roamers patrol their
-lanes and the breathing posts render at both mouths. Roamers drawn neutral grey so they never blend into a
-red or blue kit.
+lanes, no goalposts, and the ball is only cleared (never rebounds). Roamers drawn neutral grey so they never
+blend into a team kit.
 
 **Fantasy:** a scrappy gridiron — loose defenders roam the field and boot any ball that strays into their
 zone, and on hard the posts themselves won't hold still.
