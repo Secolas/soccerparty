@@ -66,7 +66,9 @@
       {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
       'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
       {name:'CRAZY GOLF',pitch:'minigolf',ab:['cannon',
-      'curve','sniper'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach and a tree guards each goal, so there is no straight line: you play the left lane or the right, and the shot dies where it lands in the water (easy); a fairway bunker guards the short route, and only a firm strike ploughs through the sand (medium); a cup opens at the end of each flank, and holing out earns you one more flick (hard).'}
+      'curve','sniper'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
+      {name:'THE END ZONE',pitch:'gridiron',ab:['cannon',
+      'sniper','wall'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

@@ -538,7 +538,13 @@ underneath you); and check the hazard is the only thing on the line you are test
 approach to the tree and a defender was intercepting the sand shot, so two "broken" readings were the
 layout working. When an aggregate reads exactly zero, trace one shot before believing it.
 
-### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4)
+### 5. 🏈 THE END ZONE — "GRIDIRON" (med–hard, ~d3–4) — FIELD BUILT, HAZARDS TBD
+
+**Build status:** registered as Season 3 stadium #5 (`pitch:'gridiron'`, board in `03-boards.js`,
+ambience → `stadium`). Board-first per the guiding idea: a striped green field with yard lines, end-zone
+bands and sidelines, playing as a plain pitch for now. Hazards are the next passes, in order:
+**rushers** (the pursuing-tackler type — the season's big new mechanic) → **yard-line drag** → **uprights**,
+each layered on and tuned against the preview.
 
 **Fantasy:** a gridiron — linebackers rush your ball, yard lines drag it as you
 push upfield, narrow uprights guard the goal.

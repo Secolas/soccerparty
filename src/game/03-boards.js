@@ -567,6 +567,42 @@
         g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
         } },
 
+      /* THE END ZONE — gridiron. Board-first: a striped green field with yard lines, end zones and
+         sidelines. The hazards (pursuing tacklers, yard-line drag, narrow uprights) are layered on in
+         follow-up passes; for now it plays as a plain pitch with a football field's markings. */
+      gridiron:{ name:'THE END ZONE', surround:'#10251a', stand:'#1b3a27', tier:'rgba(255,255,255,0.05)',
+        frame:'#6f4a26',frameHi:'#a06f3c',frameLo:'#452a12',post:'#f4f8ea',   // painted-steel stadium frame
+        line:'rgba(255,255,255,0.9)',line2:'rgba(255,255,255,0.55)',
+        netRecess:'#123f1d',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
+        surface(g){ var TURF='#2f8f42', TURF2='#2a8038', CHALK='rgba(255,255,255,0.9)', CHALK2='rgba(255,255,255,0.5)';
+        g.fillStyle=TURF; g.fillRect(0,0,W,H);
+        // mown cross-bands — a football field is striped across the yard lines, not down the pitch
+        for(var bi=0,by=WALL; by<H-WALL; by+=16,bi++){ g.fillStyle=(bi%2)?'rgba(255,255,255,0.045)':'rgba(0,0,0,0.05)';
+        g.fillRect(WALL,by,W-WALL*2,Math.min(8,H-WALL-by)); }
+        for(var n=0;n<1200;n++){ g.fillStyle=(Math.random()>0.5)?TURF2:'rgba(255,255,255,0.04)';
+        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+        // END ZONES: a tinted band in front of each goal (home red / away blue)
+        var ezD=GOAL_AREA_D, top=NET_DEPTH+ezD, bot=H-NET_DEPTH-ezD;
+        g.fillStyle='rgba(212,64,50,0.16)'; g.fillRect(WALL,NET_DEPTH,W-WALL*2,ezD);
+        g.fillStyle='rgba(64,120,212,0.16)'; g.fillRect(WALL,H-NET_DEPTH-ezD,W-WALL*2,ezD);
+        // YARD LINES across the field, brighter every 5th (the 10-yard lines)
+        var step=(bot-top)/10;
+        for(var i=0;i<=10;i++){ var ly=Math.round(top+step*i);
+        g.fillStyle=(i%5===0)?CHALK:CHALK2; g.fillRect(WALL+3,ly,W-WALL*2-6,1); }
+        // hash-mark ticks down two central columns
+        g.fillStyle=CHALK2;
+        for(var hy=Math.round(top); hy<=bot; hy+=Math.round(step/2)){ g.fillRect(Math.round(W*0.5)-18,hy,3,1); g.fillRect(Math.round(W*0.5)+15,hy,3,1); }
+        // sidelines
+        g.fillStyle=CHALK; g.fillRect(WALL+2,WALL,1,H-WALL*2); g.fillRect(W-WALL-3,WALL,1,H-WALL*2);
+        },
+        preview(g,w,h){ g.fillStyle='#2f8f42'; g.fillRect(0,0,w,h);
+        g.fillStyle='rgba(212,64,50,0.35)'; g.fillRect(0,0,w,Math.max(2,h*0.14));
+        g.fillStyle='rgba(64,120,212,0.35)'; g.fillRect(0,h-Math.max(2,h*0.14),w,Math.max(2,h*0.14));
+        g.fillStyle='rgba(255,255,255,0.85)';
+        for(var i=1;i<6;i++) g.fillRect(2,Math.round(h*(0.14+0.72*i/6)),w-4,1);
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -702,7 +738,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
