@@ -1801,16 +1801,34 @@
     //   med   + HEAVY BAGS — sand-filled bags that ABSORB a shot instead of bouncing it (a hit dies on them),
     //                        and SHIFT a little on every hit and stay put, so the pitch layout drifts as the
     //                        match goes on
-    //   hard  + CANVAS DRAG — the scuffed centre bogs the ball down, forcing play out to the chaotic ropes
+    //   hard  + SPRUNG GLOVES — four spring-loaded boxing gloves in the end frames (two per end) that punch out
+    //                        into the pitch on a fixed, staggered LOOP. They swat a shot away from goal and
+    //                        leave the ball WOBBLING on the next flick.
     // Settle-safe: the ropes only add interest above a speed gate and are capped (friction across the pitch
-    // dominates, so a rally converges), the bag's punch is capped, and the drag only ever slows.
-    var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[];
+    // dominates, so a rally converges), the bag absorbs rather than adds, and a glove can only ever strike a
+    // MOVING ball (ringStep returns unless `moving`), so nothing can stop a ball settling and ending the turn.
+    //
+    // Gloves LOOP rather than track the ball on purpose: the standing telegraph rule is that a hazard has to be
+    // readable BEFORE it acts, and a glove that homed in could not be dodged, only suffered. A fixed rhythm with
+    // a visible wind-up can be learned and shot around.
+    var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[], rgGloves=[];
+    var rgWobPend=0, rgWobOn=false, rgWobBase=0, rgWobPhase=0, _rgPrevMoving=false;
+    var RG_WOB=0.20, RG_WOB_FREQ=0.19;   // how far the punched ball's line wanders, and how fast
     var RG_BAG_R=6, RG_ZONE_R=26, RG_ROPE_FLEX=16;
     function rgArena(){ return (typeof boardKey!=='undefined')&&boardKey==='ring'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { ropes:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
     bag:(t>=1), bagAbsorb:0.26, bagSlide:0.30, bagShove:2.2, bagShoveMax:6,
-    drag:(t>=2), dragMul:0.93, gate:0.4 }; }
+    gloves:(t>=2), gloveReach:26, glovePow:4.6, gloveCap:11, gate:0.4 }; }
+    // The glove's punch cycle, in frames: wind up (cocks back), snap out, hold at full stretch, retract, idle.
+    // Returns 0..1 = how far out of the frame the glove is, and whether it is live (able to connect).
+    var RG_GL_P=132, RG_GL_WIND=26, RG_GL_OUT=10, RG_GL_HOLD=12, RG_GL_BACK=22;
+    function rgGlovePhase(ph){ var t=((rgT+ph)%RG_GL_P);
+    if(t<RG_GL_WIND) return { ext:-0.18*Math.sin(t/RG_GL_WIND*Math.PI), live:false, wind:t/RG_GL_WIND };
+    t-=RG_GL_WIND; if(t<RG_GL_OUT) return { ext:t/RG_GL_OUT, live:true, wind:1 };
+    t-=RG_GL_OUT; if(t<RG_GL_HOLD) return { ext:1, live:true, wind:1 };
+    t-=RG_GL_HOLD; if(t<RG_GL_BACK) return { ext:1-t/RG_GL_BACK, live:false, wind:0 };
+    return { ext:0, live:false, wind:0 }; }
     // The x of the INNERMOST rope strand on a side (0=left,1=right) — the same line the ball collides on, and
     // the same math the board art uses, so the bounce always lands visually on the rope.
     function rgRopeX(side){ return side?(W-WALL-COIN_R):(WALL+COIN_R); }
@@ -1833,7 +1851,17 @@
     // a 180deg-rotationally symmetric PAIR of bags, so neither end is favoured. tx/ty is where a bag is being
     // shoved to; x/y eases toward it, then it just stays there — every hit nudges it again.
     rgBags=[ {x:Math.round(W/2), y:Math.round(H*0.30), tx:Math.round(W/2), ty:Math.round(H*0.30), hit:0, nx:0, ny:0},
-    {x:Math.round(W/2), y:Math.round(H*0.70), tx:Math.round(W/2), ty:Math.round(H*0.70), hit:0, nx:0, ny:0} ]; }
+    {x:Math.round(W/2), y:Math.round(H*0.70), tx:Math.round(W/2), ty:Math.round(H*0.70), hit:0, nx:0, ny:0} ];
+    // FOUR gloves — two per end frame, either side of the goal mouth, 180deg-rotationally symmetric so neither
+    // end is favoured. Phases are staggered around the loop so they read as a rhythm rather than a single beat.
+    var _gL=Math.round((W-GOAL_W)/2), _gx=[Math.round((WALL+_gL)/2), W-Math.round((WALL+_gL)/2)];
+    rgGloves=[ {x:_gx[0], base:WALL, dir:1, ph:0, hit:0},
+    {x:_gx[1], base:WALL, dir:1, ph:Math.round(RG_GL_P*0.5)},
+    {x:_gx[1], base:H-WALL, dir:-1, ph:Math.round(RG_GL_P*0.25), hit:0},
+    {x:_gx[0], base:H-WALL, dir:-1, ph:Math.round(RG_GL_P*0.75), hit:0} ];
+    for(var g=0;g<rgGloves.length;g++){ rgGloves[g].hit=0; rgGloves[g].ext=0; }
+    rgWobPend=0; rgWobOn=false; _rgPrevMoving=false; }
+    function rgGloveY(g,ext){ return g.base+g.dir*(2+ext*rgCfg().gloveReach); }
     // A bag can be shoved around midfield but never into a goal area — a bag parked in the box would wall the
     // goal off for the rest of the match.
     function rgBagClampX(x){ return Math.max(WALL+COIN_R+RG_BAG_R+2, Math.min(W-WALL-COIN_R-RG_BAG_R-2, x)); }
@@ -1847,6 +1875,15 @@
     if(Math.abs(b.tx-b.x)<0.05) b.x=b.tx; if(Math.abs(b.ty-b.y)<0.05) b.y=b.ty;
     if(b.hit>0) b.hit--; }
     for(var r=0;r<2;r++){ if(rgRope[r].t>0) rgRope[r].t--; }
+    for(var g2=0;g2<rgGloves.length;g2++){ var gv=rgGloves[g2];
+    var gp=rgGlovePhase(gv.ph); gv.ext=c.gloves?gp.ext:0; gv.live=c.gloves&&gp.live; gv.wind=gp.wind;
+    if(gv.hit>0) gv.hit--; }
+    // A punched ball comes back WOBBLING: at the moment the next shot starts, the pending punch converts into an
+    // active wobble for that shot only (its heading wanders, like a boxer who has been rattled).
+    if(moving && !_rgPrevMoving){ if(rgWobPend>0){ rgWobPend=0; rgWobOn=true; rgWobBase=Math.atan2(coin.vy,coin.vx); rgWobPhase=0;
+    try{ setStatus('RATTLED — WOBBLY SHOT'); }catch(e){} } else { rgWobOn=false; } }
+    if(!moving) rgWobOn=false;
+    _rgPrevMoving=moving;
     try{ rgSeparate(); }catch(e){}
     for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
     // A bag eases into wherever it was shoved, so it can drift onto a resting ball or a peg. While the ball is
@@ -1890,11 +1927,26 @@
     try{ if(typeof haptic==='function') haptic(Math.round(8+imp*10)); }catch(e){} }
     coin.x=b.x+nx*R; coin.y=b.y+ny*R;
     coin.vx*=c.bagAbsorb; coin.vy*=c.bagAbsorb; } } }
-    // CANVAS DRAG — the scuffed centre bogs a rolling ball down, so the safe lanes are out by the ropes. Only
-    // slows, never redirects, so it can never trap the turn. Kicks up canvas scuff while it drags.
-    if(c.drag && sp>c.gate && Math.hypot(coin.x-W/2,coin.y-H/2)<RG_ZONE_R){ coin.vx*=c.dragMul; coin.vy*=c.dragMul;
-    if(rgScuff.length<34){ var a2=Math.atan2(-coin.vy,-coin.vx)+(Math.random()-0.5)*1.4, m2=0.4+Math.random()*0.9;
-    rgScuff.push({x:coin.x,y:coin.y,vx:Math.cos(a2)*m2,vy:Math.sin(a2)*m2,life:14+(Math.random()*8|0),max:22}); } } }
+    // WOBBLE — a ball that was punched last turn wanders off its line for this whole shot (same treatment WET
+    // uses: rotate the heading around its launch angle, speed untouched, so it still decays and settles).
+    if(rgWobOn && sp>0.5){ rgWobPhase+=RG_WOB_FREQ;
+    var wa=rgWobBase+RG_WOB*Math.cos(rgWobPhase);
+    coin.vx=Math.cos(wa)*sp; coin.vy=Math.sin(wa)*sp; }
+    // SPRUNG GLOVES — while a glove is at full stretch it swats a MOVING ball away from its goal and rattles it
+    // for the next flick. Only ever acts on a moving ball, and the result is capped.
+    if(c.gloves){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi]; if(!g.live) continue;
+    var gy=rgGloveY(g,g.ext), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=6+COIN_R;
+    if(gd<GR && gd>0.001){ var gnx=gdx/gd, gny=gdy/gd;
+    // punch: reflect off the glove, then add the punch itself straight down the glove's line of travel
+    var gvn=coin.vx*gnx+coin.vy*gny;
+    if(gvn<0){ coin.vx-=(1+RESTITUTION)*gvn*gnx; coin.vy-=(1+RESTITUTION)*gvn*gny; }
+    coin.vy+=g.dir*c.glovePow;
+    var gs=Math.hypot(coin.vx,coin.vy); if(gs>c.gloveCap){ var gk=c.gloveCap/gs; coin.vx*=gk; coin.vy*=gk; }
+    coin.x=g.x+gnx*GR; coin.y=gy+gny*GR;
+    g.hit=14; rgWobPend=1;
+    try{ spawnSparks(g.x,gy,null,8); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(8); }catch(e){}
+    try{ setStatus('PUNCHED!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,18,24,30]); }catch(e){}
+    break; } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }

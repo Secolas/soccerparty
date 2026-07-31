@@ -870,16 +870,34 @@
        bowed. Drawn with the ground FX (under the nails); the ball stays on top. */
     function drawRing(ctx,now){ if(typeof rgArena!=='function'||!rgArena()) return;
     var c=(typeof rgCfg==='function')?rgCfg():null; if(!c) return;
-    // CANVAS DRAG zone (hard) — a scuffed, darker patch of mat you want to stay out of
-    if(c.drag){ var Z=RG_ZONE_R, zx=Math.round(W/2), zy=Math.round(H/2);
-    for(var yy=-Z;yy<=Z;yy++){ for(var xx=-Z;xx<=Z;xx++){ var dd=Math.hypot(xx,yy); if(dd>Z) continue;
-    if(((xx+yy)&1)===0 && _cgRnd(xx*2.7+yy*1.9)>0.35) continue;
-    ctx.fillStyle=(dd>Z-2)?'rgba(112,92,78,0.34)':'rgba(126,104,88,0.26)';
-    ctx.fillRect(zx+xx,zy+yy,1,1); } } }
-    // scuff kicked up while the ball is being dragged
-    if(typeof rgScuff!=='undefined'){ for(var si=0;si<rgScuff.length;si++){ var sc=rgScuff[si], sa=sc.life/sc.max;
-    ctx.fillStyle=(si&1)?('rgba(196,178,152,'+(0.8*sa).toFixed(3)+')'):('rgba(120,100,84,'+(0.8*sa).toFixed(3)+')');
-    ctx.fillRect(Math.round(sc.x),Math.round(sc.y),1,1); } }
+    // SPRUNG GLOVES (hard) — four spring-loaded gloves in the end frames, two per end. Each runs a fixed,
+    // staggered loop: cock back (wind-up tell), snap out into the pitch, hold, retract. Drawn as a coil zigzag
+    // out of the frame with a pixel glove on the end; the glove flares on the frames right after it connects.
+    if(c.gloves && typeof rgGloves!=='undefined'){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
+    var gy=(typeof rgGloveY==='function')?rgGloveY(g,g.ext||0):g.base, X=Math.round(g.x), Y=Math.round(gy);
+    // SPRING — a zigzag coil from the frame out to the glove, tighter when cocked, stretched when punching
+    var y0=g.base, steps=Math.max(2,Math.round(Math.abs(Y-y0)/3));
+    for(var q=0;q<=steps;q++){ var t2=q/steps, cy2=Math.round(y0+(Y-y0)*t2), off=((q&1)?2:-2);
+    ctx.fillStyle='#8c8f98'; ctx.fillRect(X+off,cy2,2,1);
+    ctx.fillStyle='#5a5d66'; ctx.fillRect(X+off,cy2+g.dir,2,1); }
+    ctx.fillStyle='#3a3d44'; ctx.fillRect(X-3,y0-(g.dir>0?0:2),6,2);      // the mount plate on the frame
+    // GLOVE — a red mitt: rounded knuckle face toward the pitch, a cuff behind it, thumb to one side
+    var kn=g.dir;                                                          // punch direction (+1 top, -1 bottom)
+    var kf=Y+kn*3, kb=Y-kn*3;                                              // knuckle face / cuff (spring) side
+    ctx.fillStyle='#0d0d10'; ctx.fillRect(X-5,Y-4,10,8);                   // dark outline block
+    ctx.fillStyle=(typeof board!=='undefined'&&board&&board.surfaceKey)?'#c8b9a6':'#c8b9a6';
+    ctx.fillRect(X-5,kf+kn,1,1); ctx.fillRect(X+4,kf+kn,1,1);              // knock the leading corners off
+    ctx.fillStyle='#c02a24'; ctx.fillRect(X-4,Y-3,8,6);                    // glove body
+    ctx.fillStyle='#e0483a'; ctx.fillRect(X-4,Y-3+(kn>0?0:4),8,2);         // lit side toward the punch
+    ctx.fillStyle='#8d1a16'; ctx.fillRect(X-4,Y-3+(kn>0?4:0),8,2);         // shaded side
+    ctx.fillStyle='#c02a24'; ctx.fillRect(X-6,Y-1,2,3);                    // thumb
+    ctx.fillStyle='#e9e2d2'; ctx.fillRect(X-3,kb,6,1);                     // white cuff trim, spring side
+    var gh=(g.hit>0)?(g.hit/14):0;
+    if(gh>0){ ctx.fillStyle='rgba(255,236,170,'+(gh*0.75).toFixed(3)+')';   // impact flare
+    for(var f2=0;f2<12;f2++){ var fa2=f2/12*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa2)*(7+(1-gh)*6)),Math.round(Y+Math.sin(fa2)*(7+(1-gh)*6)),1,1); } }
+    if((g.wind||0)>0.55 && (g.ext||0)<=0){ ctx.fillStyle='rgba(255,210,120,0.45)';   // wind-up tell
+    ctx.fillRect(X-4,Y-(kn>0?2:0)+kn*6,8,1); } } }
     // ROPE FLEX — bow the three strands inward around the contact point, decaying with a damped snap-back
     if(typeof rgRope!=='undefined'){ for(var r=0;r<2;r++){ var fl=rgRope[r]; if(!fl||fl.t<=0) continue;
     var k=fl.t/RG_ROPE_FLEX, amp=Math.sin(k*Math.PI*2.4)*k*(3.2+2.6*(fl.s||0)), inward=r?-1:1;

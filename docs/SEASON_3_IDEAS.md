@@ -806,7 +806,7 @@ only — the top and bottom are the goal mouths, so ropes there would read as bl
 |---|---|
 | **Easy** | **ROPES** — the side walls are elastic and hand the ball back *with interest* |
 | **Med** | + **HEAVY BAGS** — sand-filled, they kill a shot dead and shift where they are hit |
-| **Hard** | + **CANVAS DRAG** — the scuffed centre bogs you down, forcing play out to the ropes |
+| **Hard** | + **SPRUNG GLOVES** — four spring-loaded gloves in the end frames punch out on a loop |
 
 **ROPES (the signature — a fully elastic boundary).** The side walls *are* the ropes: a bounce returns at
 `ropeRest 1.08` instead of the pitch's 0.75, so the edge hands the ball back with interest and becomes a weapon
@@ -842,21 +842,30 @@ converge. A **chip sails over** them.
 the bag a *deflector* (the arena's third), and the swing read as a bouncy toy rather than dead weight — so it
 became the heavy bag above.
 
-**CANVAS DRAG (hard).** Within `RG_ZONE_R 26` of the centre spot the ball is **dragged down** (`0.93` per
-frame), so the safe lanes are out by the chaotic ropes. Drawn as a **dithered scuff patch** and it **kicks up
-canvas scuff** while dragging. Only ever slows, so it can never trap the turn.
+**SPRUNG GLOVES (hard).** **Four** spring-loaded boxing gloves mounted in the **end frames — two per end**,
+either side of each goal mouth, 180°-rotationally symmetric. Each runs a fixed cycle: **cock back** (the
+wind-up tell) → **snap out** into the pitch → **hold** at full stretch → **retract** → idle, with phases
+**staggered** around the loop so the four read as a rhythm rather than one beat.
 
-**Fantasy:** a boxing ring — the ropes fling you back in with interest, a
-speed-bag jabs on the beat, the canvas centre drags you down.
+- **They LOOP, they do not track the ball.** Deliberate: the standing telegraph rule is that a hazard must be
+  readable *before* it acts, and a glove that homed in could not be dodged, only suffered. A fixed rhythm with a
+  visible wind-up can be learned and shot around — that is the skill the arena asks for.
+- **The punch** reflects the ball off the glove then adds the punch itself straight down the glove's line of
+  travel (`glovePow`, capped), swatting a shot **away from that goal**. Because they sit either side of the goal
+  mouth they guard the approach without ever walling the goal off.
+- **A punched ball comes back RATTLED.** The hit sets a pending wobble; at the moment the **next flick** starts it
+  converts into an active wobble for **that shot only** — the ball's heading wanders around its launch angle
+  (`RG_WOB`, the same treatment WET uses; speed untouched, so it still decays and settles) and the status reads
+  *RATTLED — WOBBLY SHOT*. So a punch costs you the *following* turn's accuracy, not just this one.
+- **Settle-safe:** a glove can only ever strike a **moving** ball (`ringStep` returns unless `moving`), so it can
+  never keep nudging a resting ball and stall the turn. The wobble only rotates the heading, never adds speed.
+- **Art:** a **zigzag spring coil** running out of the frame to a pixel glove — dark outline, red body with a lit
+  face toward the punch, shaded back, thumb, and a cream **cuff** on the spring side with the leading corners
+  knocked off. An **impact flare** rings the glove for a few frames after it connects, and a bar flashes at the
+  knuckles during the wind-up.
 
-*New mechanic:* a **fully elastic boundary** (the ropes) that returns shots
-amplified — turns the whole pitch edge into a weapon (brutal with bounce builds).
-
-| Condition | Easy | Med | Hard |
-|---|---|---|---|
-| **Ring ropes** (elastic edge) | +10% on wall bounce | +25% | +40% (pinball edges) |
-| **Speed-bag** (beat jab) | OFF | 1, slow beat, small deflection | 1 fast + a 2nd bag, bigger jab |
-| **Canvas drag** (centre slow zone) | OFF | mild | strong (forces play out to the chaotic ropes) |
+*Cut on playtest:* the **canvas drag** zone was removed. With the heavy bags already absorbing shots, the arena
+had two dampers and nothing that redirected on a beat — the gloves fill that gap instead.
 
 *Reuse:* ropes = high-restitution boundary (Candy jelly applied along the edge);
 speed-bag = reuses the Baseball bat's swinging + timing tech (blocking flavor);
