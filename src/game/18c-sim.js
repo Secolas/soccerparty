@@ -72,7 +72,7 @@
               air: coin.air || 0, moving: !!moving, phase: phase, turn: current,
               red: score.red, blue: score.blue,
               // the pegs, so a test can check nothing was placed standing in a hazard
-              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie}; }),
+              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie, shock:!!n._aftShock}; }),
               // CPU aim-telegraph state, so a test can catch a wind-up frame
               aiPending: (typeof aiPending!=='undefined') ? !!aiPending : false,
               aiAim: (typeof aiAim!=='undefined' && aiAim) ? {x:aiAim.x, y:aiAim.y} : null,
@@ -80,7 +80,8 @@
               // AFTERSHOCK: whether this flick's riposte has been spent, and whether its blast ring is
               // live. Neither can be read from the pixels — the ring is 1px debris over a busy board.
               aftUsed: (typeof aftUsed!=='undefined') ? !!aftUsed : null,
-              aftFx: (typeof aftFx!=='undefined') ? !!aftFx : null
+              aftFx: (typeof aftFx!=='undefined') ? !!aftFx : null,
+              aftStun: (typeof aftStun!=='undefined' && aftStun) ? aftStun.state : null
             };
           } catch (e) { return { err: String(e) }; }
         },
@@ -97,12 +98,14 @@
             o = o || {};
             // Clear the per-flick flags first, so a placed shot behaves like a real flick — otherwise a
             // once-per-flick ability (chip, drill, AFTERSHOCK) stays spent from the previous placement and
-            // the second probe silently measures nothing. Pass reset:false to keep them.
+            // the second probe silently measures nothing. Pass reset:false to keep them. The turn is set
+            // BEFORE the reset, matching real play, where the turn changes between flicks and the next
+            // flick's trioReset already sees the new owner — the AFTERSHOCK stun lifecycle depends on it.
+            if (o.turn) current = o.turn;
             if (o.reset !== false) { try { trioReset(); } catch (e) {} }
             coin.x = o.x; coin.y = o.y;
             coin.vx = o.vx || 0; coin.vy = o.vy || 0;
             coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
-            if (o.turn) current = o.turn;
             moving = !!(coin.vx || coin.vy);
             return true;
           } catch (e) { return String(e); }

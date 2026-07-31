@@ -608,7 +608,7 @@
     }},{id:'trio',icon:'🔺',name:'TIKI-TAKA',desc:'Bounce a single shot off 3 of your own players and it re-launches at full speed off the third — a passing move that never dies.',apply:function(t){t.trio=true;
     }},{id:'varcheck',icon:'📺',name:'VAR CHECK',desc:'Once per match your first own goal is reviewed and ruled out. No goal!',apply:function(t){t.varcheck=true;
     }},{id:'rewind',icon:'⏪',name:'REWIND',desc:'On your turn, tap to undo your last flick — the ball goes back to where you shot and you get the flick again — but not on your final flick of the turn, since that hands the ball over. One use, and it recharges every time a goal is scored.',apply:function(t){t.rewind=true;
-    }},{id:'aftershock',icon:'💥',name:'AFTERSHOCK',desc:'When their keeper or a wall blocks your shot, the impact BLASTS their nearby players away from the goal and your ball keeps its pace off the rebound — so a save hands you the second chance instead of killing the move. One riposte per flick.',apply:function(t){t.aftershock=true;
+    }},{id:'aftershock',icon:'💥',name:'AFTERSHOCK',desc:'Your shot carries a charge: the first opponent piece it strikes is SHOCKED until the end of your NEXT flick — a keeper freezes on the spot (still a body, but it stops tracking), a defender loses its tricks, a roaming guard stops dead. Off a keeper the rebound also keeps its pace. Land the shock, keep the ball alive, then punish. One shock per flick, lost if your turn ends first.',apply:function(t){t.aftershock=true;
     }}]; var TACTIC_MAP={}; TACTICS.forEach(function(c){TACTIC_MAP[c.id]=c;
     }); var COUNTRY_AB={Brazil:['curve',
     'serpent','striker'],Argentina:['guided',
@@ -1144,7 +1144,7 @@
     if(!muted) sfxJackpot();
     } else { if(!muted) sfxSlotLand();
     } }catch(e){} if(done) done();
-    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4,aftershock:4};
+    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4,aftershock:3};
     function abWeight(id){ return (AB_WEIGHT[id]!=null)?AB_WEIGHT[id]:4;
     } var AB_EXCLUSIVE=[['curve',
     'serpent']], AB_TOGGLE=['curve',
@@ -1533,6 +1533,7 @@
     royGustPhase=0; roySnow=[];
     shieldUsed.red=false; shieldUsed.blue=false;
     shieldFx=null; wallHP={red:null,blue:null};
+    try{ if(typeof aftClearStun==='function') aftClearStun(); }catch(e){}
     strategistUsed={red:false,blue:false};
     strategistArm=null; pmDrag=false;
     medicUsed={red:false,blue:false};

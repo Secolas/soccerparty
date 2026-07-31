@@ -1293,7 +1293,7 @@
     {i:'magnet',t:'MAGNET: near their goal the ball curves toward the net.'},
     {i:'freeze',t:'FREEZE: the opponent power bar is capped at half.'},
     {i:'ghost',t:'GHOST: your shot phases through the players it hits.'},
-    {i:'aftershock',t:'AFTERSHOCK: a save blasts their players back and your ball keeps its pace.'},
+    {i:'aftershock',t:'AFTERSHOCK: your shot shocks the first piece it hits — even the keeper — frozen for your next flick.'},
     {i:'wall',t:'WALL: a brick wall guards your goal. Three hits and it shatters.'},
     {i:'sticky',t:'STICKY: hit an opponent player for a bonus flick each turn.'},
     {i:'sniper',t:'SNIPER: shows a long aim line to line up the perfect shot.'},
@@ -1574,6 +1574,7 @@
       if(phase!=='play'||winner) return;
       const gl=(W-GOAL_W)/2+NAIL_R, gr=(W+GOAL_W)/2-NAIL_R;
       for(const n of nails){ if(!n.goalie) continue;
+      if(n._aftShock) continue;   // AFTERSHOCK: a shocked keeper stands still — a body on its spot, never a mover
       var _lf=((sideAb[n.team]||[]).indexOf('reflex')>=0)?0.24:0.12;
       var _isRk=(n.team==='red');
       var _atkX=moving&&(_isRk?(coin.vy>0.15):(coin.vy<-0.15));
@@ -1600,9 +1601,9 @@
       if(!_cSt && _threat && !clearUsed[_ctm]){ var _cb=null;
       for(var _ci=0;_ci<nails.length;_ci++){ var _cn=nails[_ci];
       if(_cn.team===_ctm && _cn.clearer){ _cb=_cn;
-      break; } } if(_cb && Math.hypot(_cb.x-coin.x,_cb.y-coin.y)<56){ _clrSt[_ctm]={n:_cb,hx:_cb.x,hy:_cb.y};
+      break; } } if(_cb && !_cb._aftShock && Math.hypot(_cb.x-coin.x,_cb.y-coin.y)<56){ _clrSt[_ctm]={n:_cb,hx:_cb.x,hy:_cb.y};
       clearUsed[_ctm]=true; _cSt=_clrSt[_ctm];
-      try{syncSlots();}catch(e){} } } if(_cSt){ var _n=_cSt.n, _cap=3.4, _maxOff=18;
+      try{syncSlots();}catch(e){} } } if(_cSt && !_cSt.n._aftShock){ var _n=_cSt.n, _cap=3.4, _maxOff=18;
       if(_threat){ var _tx=coin.x+coin.vx*1.5, _dx=_tx-_n.x, _step=Math.max(-_cap,Math.min(_cap,_dx*0.4)), _nx=_n.x+_step, _off=_nx-_cSt.hx;
       if(_off>_maxOff) _nx=_cSt.hx+_maxOff;
       else if(_off<-_maxOff) _nx=_cSt.hx-_maxOff;

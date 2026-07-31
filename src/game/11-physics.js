@@ -240,6 +240,7 @@
     } }
     function _devilRetarget(){ if(!royDevil) return; royDevil.tx=WALL+34+Math.random()*(W-2*WALL-68); royDevil.ty=NET_DEPTH+GOAL_AREA_D+30+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-60); }
     function royDevilTick(dt){ if(!royDevil||royDevil.hasBall) return;
+    if(royDevil._aftShock) return;   // AFTERSHOCK froze it mid-spin
     var _st=dt/16.67; if(_st>3)_st=3;
     if(_st<0.2)_st=0.2; var s=royDevil;
     s.phase+=0.18*_st*s.spin;
@@ -270,7 +271,11 @@
       30,40,60]); }catch(e){} } return;
       }
       if(s.cd>0){ s.cd--; return; }
+      if(s._aftShock) return;   // a shocked devil cannot catch
       var dx=coin.x-s.x, dy=coin.y-s.y, d=Math.hypot(dx,dy), R=DEVIL_R*0.5+COIN_R;
+      // AFTERSHOCK: a charged shot cannot be eaten — it ZAPS the devil instead, freezing it for a flick
+      if(d<R && TAC.aftershock && !aftUsed){ try{ aftShock([s], s.x, s.y, Math.hypot(coin.vx,coin.vy), false); }catch(e){}
+      s.cd=60; return; }
       if(d<R){ s.hasBall=true;
       s.eatT=0; s.eatDur=42; try{ spawnSparks(s.x,s.y,'#f2ddab',12);
       }catch(e){} try{ if(!muted&&typeof sfxGuided==='function') sfxGuided();
@@ -678,6 +683,7 @@
     } } else if(royBoulder){ royBoulder=null;
     } }
     function royBoulderTick(dt){ if(!royBoulder) return;
+    if(royBoulder._aftShock) return;   // AFTERSHOCK: the boulder stops rolling for a flick
     var _st=dt/16.67; if(_st>3)_st=3;
     var s=royBoulder, lo=WALL+BOULDER_R, hi=W-WALL-BOULDER_R, spd=1.25*_st;
     s.x+=s.dir*spd; s.roll+=s.dir*spd/BOULDER_R;
@@ -698,7 +704,7 @@
     } try{ if(typeof sfxWall==='function') sfxWall();
     }catch(e){} try{ spawnSparks(s.x+ux*BOULDER_R,s.y+uy*BOULDER_R,'#8a8078',10);
     }catch(e){} try{ if(typeof haptic==='function') haptic([0,
-    24,14,24]); }catch(e){} } }
+    24,14,24]); }catch(e){} if(TAC.aftershock && !aftUsed){ try{ aftShock([s], s.x+ux*BOULDER_R, s.y+uy*BOULDER_R, _tv||4, false); }catch(e){} } } }
     function drawBoulder(now){ if(!royBoulder) return;
     var s=royBoulder, R=BOULDER_R;
     ctx.save(); ctx.imageSmoothingEnabled=false;
@@ -1539,6 +1545,7 @@
     _gridPrevMoving=moving;
     var lft=WALL+NAIL_R, rgt=W-WALL-NAIL_R, gap=NAIL_R*2;
     for(var i2=0;i2<nails.length;i2++){ var r=nails[i2]; if(!r._gridRoam) continue;
+    if(r._aftShock) continue;   // AFTERSHOCK: a shocked roamer stands where it was zapped
     if(r._gridCd>0) r._gridCd--;
     if(fast && !(typeof dragNail!=='undefined'&&dragNail===r)){
     r.x+=r._gridDir*c.roamSpd;
@@ -1557,7 +1564,7 @@
     if(!gridOn||typeof nails==='undefined'||!nails) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(c.clear && air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
-    if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0) continue;
+    if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0 || r._aftShock) continue;
     var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
     if(d<c.clearR && d>0.001){ r._gridCd=c.cd;
     // clear at the pace the ball ARRIVED (tiny nudge so it leaves the third), capped — not a fixed boost,
@@ -2166,6 +2173,7 @@
     _beEnsure(); var _bt=hzTier();
     if(_bt>=1){ var _cyT=NET_DEPTH+GOAL_AREA_D+12, _cyB=H-NET_DEPTH-GOAL_AREA_D-12;
     for(var _ci=0;_ci<beachCrabs.length;_ci++){ var _cr=beachCrabs[_ci];
+    if(_cr._aftShock) continue;   // AFTERSHOCK: a zapped crab stops scuttling for a flick
     if((_cr.turn=(_cr.turn||0)-1)<=0){ var _na=Math.atan2(_cr.vy,_cr.vx)+(Math.random()-0.5)*2.2;
     _cr.vx=Math.cos(_na)*_cr.sp;
     _cr.vy=Math.sin(_na)*_cr.sp;
@@ -2535,7 +2543,7 @@
       if(_crd<COIN_R+9&&_crd>0){ coin.vx+=(_crdx/_crd)*2.6;
       coin.vy+=(_crdy/_crd)*2.6;
       try{ if(typeof sfxBump==='function') sfxBump(5);
-      }catch(e){} } } }
+      }catch(e){} if(TAC.aftershock&&!aftUsed){ try{ aftShock([_cr],_cr.x,_cr.y,4,false); }catch(e){} } } } }
       else if(Hz.beach==='beachball'&&_air){ for(var _bbi=0;_bbi<beachBalls.length;_bbi++){ var _bb=beachBalls[_bbi],_dxb=coin.x-_bb.x,_dyb=coin.y-_bb.y,_ddb=Math.hypot(_dxb,_dyb),_mnb=COIN_R+_bb.r;
       if(_ddb<_mnb&&_ddb>0){ var _uxb=_dxb/_ddb,_uyb=_dyb/_ddb;
       coin.x+=_uxb*(_mnb-_ddb);
@@ -3128,7 +3136,7 @@
       coin.vx+=(_crdx/_crd)*_crf;
       coin.vy+=(_crdy/_crd)*_crf;
       try{ if(typeof sfxBump==='function') sfxBump(5);
-      }catch(e){} } } } } } if(royBlizzard() && moving && !scoring){ var _gst=royGust()*ROY_GUST_MAX;
+      }catch(e){} if(TAC.aftershock&&!aftUsed){ try{ aftShock([_cr],_cr.x,_cr.y,4,false); }catch(e){} } } } } } } if(royBlizzard() && moving && !scoring){ var _gst=royGust()*ROY_GUST_MAX;
       coin.vx+=Math.cos(royGustDir)*_gst;
       coin.vy+=Math.sin(royGustDir)*_gst;
       } const f=scoring?NET_FRICTION:Math.min(0.995,(FRICTION+TAC.glide+royFloorFric()+((typeof boardKey!=='undefined'&&stadiumHazards())?((boardKey==='space')?0.007:(boardKey==='skate'?0.005:(boardKey==='minigolf'?-0.006:0))):0)+((typeof bananaSlip!=='undefined'&&bananaSlip>0)?0.012:0)));
@@ -3153,7 +3161,7 @@
       if(current===_mt) continue;
       if((sideAb[_mt]||[]).indexOf('magnet')<0) continue;
       var _mg=null; for(var _mi=0;_mi<nails.length;_mi++){ if(nails[_mi].team===_mt&&nails[_mi].goalie){ _mg=nails[_mi];
-      break; } } if(!_mg) continue;
+      break; } } if(!_mg||_mg._aftShock) continue;
       var _mdx=_mg.x-coin.x, _mdy=_mg.y-coin.y, _md=Math.hypot(_mdx,_mdy)||1, _mR=GOAL_W*0.95;
       var _mgl=(_mt==='red')?(H-NET_DEPTH-COIN_R):(NET_DEPTH+COIN_R);
       var _mtow=(_mt==='red')?(coin.vy>0.05):(coin.vy<-0.05), _mon=false;
@@ -3348,7 +3356,7 @@
     if(current===_mt) continue;
     if((sideAb[_mt]||[]).indexOf('magnet')<0) continue;
     var _mg=null; for(var _mi=0;_mi<nails.length;_mi++){ if(nails[_mi].team===_mt&&nails[_mi].goalie){ _mg=nails[_mi];
-    break; } } if(!_mg) continue;
+    break; } } if(!_mg||_mg._aftShock) continue;
     if(Math.hypot(_mg.x-coin.x,_mg.y-coin.y)>=GOAL_W*0.95) continue;
     var col=(_mt==='red')?'rgba(255,90,90,0.5)':'rgba(120,180,255,0.55)';
     ctx.save(); ctx.strokeStyle=col;
@@ -3381,41 +3389,37 @@
     ctx.stroke(); } ctx.restore();
     f.life--; if(f.life<=0) shieldFx=null;
     } }
-    /* AFTERSHOCK — fired when the shooter's ball is stopped by the OPPONENT's keeper or their wall.
-       Two effects, both aimed at turning a save into a live second chance:
-         1. the blast SHOVES their nearby outfield players away from the impact, clearing the traffic in
-            front of the goal. The KEEPER is never shoved — knocking it off its line would turn the
-            ability into a goal-opener, which is a different (and much stronger) thing.
-         2. the rebound keeps AFT_KEEP of the speed the ball arrived with, as a FLOOR not a cap: a
-            glancing save that already rebounds faster is left alone.
-       Once per flick (aftUsed), so the speed floor can never stop the ball settling. */
-    function aftershockFire(hx,hy,pre,vsTeam){ if(aftUsed) return; aftUsed=true;
-    var moved=0;
-    for(var _ai=0;_ai<nails.length;_ai++){ var n=nails[_ai];
-    if(n.team===current||n.goalie) continue;
-    var dx=n.x-hx, dy=n.y-hy, d=Math.hypot(dx,dy);
-    if(d>AFT_R) continue;
-    if(d<0.001){ dx=0; dy=(current==='red')?-1:1; d=1; }
-    var f=1-(d/AFT_R), push=AFT_PUSH*(0.45+0.55*f);   // nearer players are thrown further
-    n.x+=(dx/d)*push; n.y+=(dy/d)*push;
-    try{ var _ac=clampToPitch(n.x,n.y); n.x=_ac.x; n.y=_ac.y; }catch(e){}
-    try{ spawnSparks(n.x,n.y,n.team,8); }catch(e){}
-    moved++; }
-    var _an=Math.hypot(coin.vx,coin.vy), want=(pre||0)*AFT_KEEP;
-    if(want>0.2){ if(_an<0.05){ var ux=coin.x-hx, uy=coin.y-hy, ul=Math.hypot(ux,uy)||1;
-    coin.vx=(ux/ul)*want; coin.vy=(uy/ul)*want;
-    } else if(_an<want){ var k=want/_an; coin.vx*=k; coin.vy*=k; } }
+    /* AFTERSHOCK — the shot carries a charge: the FIRST opponent piece it strikes is SHOCKED until the
+       end of the shooter's next flick (lifecycle lives in trioReset). What a shock means depends on what
+       was hit, but it is always "stops doing its job, stays a body":
+         keeper            stops tracking / sweeping / magnet-catching; still physically blocks
+         outfield token    its tricks are off — no clearance lunge, no anchor damp, no gridiron roam/punt
+         roaming hazard    (dust devil, boulder, crabs) freezes on the spot
+       Off a KEEPER the rebound additionally keeps AFT_KEEP of the arrival speed, as a FLOOR not a cap, so
+       the riposte ball comes back out far enough to keep the turn alive — that pace floor is what makes
+       the intended combo playable: shock the keeper, catch the rebound on your own token, then shoot at a
+       keeper that cannot move. Once per flick (aftUsed), so nothing here can stop the ball settling. */
+    function aftShock(list,hx,hy,pre,isKeeper){ if(aftUsed||!list||!list.length) return; aftUsed=true;
+    for(var _si=0;_si<list.length;_si++){ list[_si]._aftShock=true; }
+    aftStun={by:current,state:'pending',list:list.slice()};
+    if(isKeeper){ var _an=Math.hypot(coin.vx,coin.vy), want=(pre||0)*AFT_KEEP;
+    if(want>0.2){ if(_an<0.05){ var ux2=coin.x-hx, uy2=coin.y-hy, ul=Math.hypot(ux2,uy2)||1;
+    coin.vx=(ux2/ul)*want; coin.vy=(uy2/ul)*want;
+    } else if(_an<want){ var k=want/_an; coin.vx*=k; coin.vy*=k; } } }
     aftFx={x:hx,y:hy,life:AFT_FX_DUR,team:current};
-    try{ spawnSparks(hx,hy,current,18); }catch(e){}
+    try{ spawnSparks(hx,hy,current,16); }catch(e){}
     try{ if(typeof nsKick==='function') nsKick(Math.min(9,(pre||4)*1.2)); }catch(e){}
-    try{ setStatus(moved?'AFTERSHOCK - BLASTED THROUGH!':'AFTERSHOCK!'); }catch(e){}
+    try{ setStatus(isKeeper?'AFTERSHOCK - KEEPER SHOCKED!':'AFTERSHOCK - SHOCKED!'); }catch(e){}
     try{ if(typeof sfxAftershock==='function') sfxAftershock(pre); }catch(e){}
     try{ if(typeof abilitySlotPop==='function') abilitySlotPop(current,'aftershock',1.3); }catch(e){}
     }
-    /* The blast ring: an expanding PIXEL ring (integer radius, so it steps frame to frame like sprite
-       animation) plus debris pixels thrown along it — same idiom as the oil splash. */
-    function drawAftershock(now){ if(!aftFx) return;
-    var f=aftFx, p=1-(f.life/AFT_FX_DUR), a=Math.max(0,f.life/AFT_FX_DUR);
+    function aftClearStun(){ if(!aftStun) return;
+    try{ for(var _ci=0;_ci<aftStun.list.length;_ci++){ aftStun.list[_ci]._aftShock=false; } }catch(e){}
+    aftStun=null; }
+    /* Impact ring (expanding PIXEL ring + debris, the oil-splash idiom) plus the stun tell: jittering
+       bolt pixels over every shocked piece for as long as the stun lasts, so both players can see exactly
+       what is frozen and for how long. */
+    function drawAftershock(now){ if(aftFx){ var f=aftFx, p=1-(f.life/AFT_FX_DUR), a=Math.max(0,f.life/AFT_FX_DUR);
     var R=3+Math.round(p*AFT_R), big=(p<0.4);
     ctx.save();
     ctx.fillStyle='rgba(255,232,150,'+(0.85*a).toFixed(3)+')';
@@ -3428,7 +3432,20 @@
     if(p<0.5){ ctx.fillStyle='rgba(255,250,225,'+(0.75*a).toFixed(3)+')';
     ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,4,4); }
     ctx.restore();
-    f.life--; if(f.life<=0) aftFx=null;
+    f.life--; if(f.life<=0) aftFx=null; }
+    if(aftStun&&aftStun.list){ var _ph=Math.floor((now||0)/90)%3;
+    ctx.save();
+    for(var _ti=0;_ti<aftStun.list.length;_ti++){ var t=aftStun.list[_ti];
+    if(!t||!t._aftShock||t.x==null) continue;
+    var bx=Math.round(t.x), by=Math.round(t.y)-NAIL_R-5;
+    // a tiny 3-step lightning zigzag, hopping between three poses so it reads as crackling
+    ctx.fillStyle='#ffe98a';
+    if(_ph===0){ ctx.fillRect(bx-2,by-3,1,2); ctx.fillRect(bx-1,by-1,1,2); ctx.fillRect(bx-2,by+1,1,1); }
+    else if(_ph===1){ ctx.fillRect(bx+1,by-3,1,2); ctx.fillRect(bx,by-1,1,2); ctx.fillRect(bx+1,by+1,1,1); }
+    else { ctx.fillRect(bx-1,by-2,1,2); ctx.fillRect(bx,by,1,1); ctx.fillRect(bx+1,by-3,1,1); }
+    ctx.fillStyle='rgba(255,250,225,0.9)'; ctx.fillRect(bx+((_ph===1)?-2:2),by-1,1,1);
+    }
+    ctx.restore(); }
     } function drawPortals(now){ var _t=(now||0)*0.006;
     ['red','blue'].forEach(function(tm){ if((sideAb[tm]||[]).indexOf('portal')<0) return;
     var pp=portalPts(tm); [[pp.ex,
@@ -3660,11 +3677,11 @@
       coin.vx=_tvx-dot*ux*RESTITUTION;
       coin.vy=_tvy-dot*uy*RESTITUTION;
       } if(n.goalie&&pen&&pen.active) pen.keeperHit=true;
-      // AFTERSHOCK: their keeper blocking a firm shot is the riposte trigger. _cv is the speed the ball
-      // arrived with, captured above before the bounce reversed it.
-      if(TAC.aftershock && !aftUsed && n.goalie && n.team!==current && _cv>1.2 && !(pen&&pen.active)){
-      try{ aftershockFire(n.x+ux*NAIL_R, n.y+uy*NAIL_R, _cv, n.team); }catch(e){} }
-      if(n.damp && n.team!==current && !TAC.wet){ coin.vx*=0.18;
+      // AFTERSHOCK: the first opponent token the shot strikes — keeper or outfielder — takes the shock.
+      // _cv is the speed the ball arrived with, captured above before the bounce reversed it.
+      if(TAC.aftershock && !aftUsed && n.team!==current && _cv>1.2 && !(pen&&pen.active)){
+      try{ aftShock([n], n.x+ux*NAIL_R, n.y+uy*NAIL_R, _cv, !!n.goalie); }catch(e){} }
+      if(n.damp && n.team!==current && !TAC.wet && !n._aftShock){ coin.vx*=0.18;
       coin.vy*=0.18; if(!n._acd){ try{sfxAnchorHit();
       }catch(e){} n._acd=8; } } spawnSparks(n.x+ux*NAIL_R,n.y+uy*NAIL_R,n.team,n.team===current?16:9);
       struck=true; if(n.team!==current && typeof _clrSt!=='undefined' && _clrSt[n.team] && _clrSt[n.team].n===n){ _clrBlocked=true;
@@ -3687,7 +3704,7 @@
       'blue'].forEach(function(tm){ if((sideAb[tm]||[]).indexOf('wall')<0) return;
       var _hp=(wallHP[tm]==null)?WALL_MAX:wallHP[tm];
       if(_hp<=0) return; var bw=Math.round(GOAL_W*0.30), bh=24, bx=Math.round(W/2-bw/2), isTop=(tm==='blue'), by=isTop?(NET_DEPTH+GOAL_AREA_D-Math.round(bh/2)):(H-NET_DEPTH-GOAL_AREA_D-Math.round(bh/2)), cyb=by+bh/2;
-      if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null, _wcv=Math.hypot(coin.vx,coin.vy);
+      if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null;
       if(m===oT&&coin.vy>0) hf='T';
       else if(m===oB&&coin.vy<0) hf='B';
       else if(m===oL&&coin.vx>0) hf='L';
@@ -3708,8 +3725,6 @@
       coin.vy*=0.98; } else { coin.x=bx+bw+COIN_R;
       coin.vx=-coin.vx*RESTITUTION;
       coin.vy*=0.98; } spawnSparks(coin.x,coin.y,null,6);
-      // AFTERSHOCK: their brick wall counts as a block too — the same riposte comes off it.
-      if(TAC.aftershock && !aftUsed && current!==tm && _wcv>1.2){ try{ aftershockFire(coin.x,coin.y,_wcv,tm); }catch(e){} }
       } } } } }); if(typeof royaleArena!=='undefined' && royaleArena && royaleArena.cust==='fortress'){ var _fw=royWallRects();
       for(var _fi=0;_fi<_fw.length;_fi++){ var r=_fw[_fi], bx=r.x, by=r.y, bw=r.w, bh=r.h, cyb=by+bh/2;
       if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null;
@@ -3959,6 +3974,11 @@
     _boomUsed=false; chipUsed=false;
     _clrBlocked=false; drillUsed=false;
     aftUsed=false;
+    /* AFTERSHOCK stun lifecycle. A shock lands as 'pending' during the flick that caused it, is 'active'
+       for the shocker's NEXT flick, and clears after that — or immediately if the turn changed hands, so
+       a stun can never carry into a turn its owner did not plan for. */
+    try{ if(aftStun){ if(aftStun.state==='pending' && current===aftStun.by){ aftStun.state='active'; }
+    else { aftClearStun(); } } }catch(e){}
     if(typeof coin!=='undefined'&&coin) coin.air=0;
     if(typeof nails!=='undefined'&&nails){ for(var _tri=0;_tri<nails.length;_tri++) nails[_tri]._trioHit=false;
     } try{ var _tb=document.querySelectorAll('.ns_triob');
