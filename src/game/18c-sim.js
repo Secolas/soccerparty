@@ -107,6 +107,12 @@
             coin.vx = o.vx || 0; coin.vy = o.vy || 0;
             coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
             moving = !!(coin.vx || coin.vy);
+            // BACKSPIN is now a manual drag-back gesture (bsPull 0..1), impossible to inject through the
+            // pointer path in a headless test. Arm it here from the placed velocity so a test can verify the
+            // ball bites back. o.bs omitted -> a plain shot (bsPull 0), matching a flick with no drag.
+            var _bsp = Math.hypot(coin.vx, coin.vy) || 1;
+            backspinFx = coin.vx / _bsp; backspinFy = coin.vy / _bsp; backspinPhase = 0;
+            bsPull = (typeof o.bs === 'number') ? o.bs : 0;
             return true;
           } catch (e) { return String(e); }
         },

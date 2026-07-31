@@ -615,7 +615,7 @@
     }},{id:'drunk',icon:'🍺',name:'DRUNK SHOT',desc:'The opponent aim wobbles and every flick they take veers off at a random angle.',apply:function(t){t.drunk=true;
     }},{id:'injury',icon:'🤕',name:'INJURY',desc:'Your opponent plays hurt — they get only 2 flicks per turn instead of 3.',apply:function(t){t.injury=true;
     }},{id:'drill',icon:'🔩',name:'DRILL SHOT',desc:'Your shot barges the first opponent player aside and powers through (keepers still block), losing just a little pace. The player springs back to its spot afterward.',apply:function(t){t.drill=true;
-    }},{id:'backspin',icon:'↩️',name:'BACKSPIN',desc:'Your shot flies forward, then the backspin bites and draws it back a bit toward you. Read the aim guide to see the return. Tap the icon to switch it on or off.',apply:function(t){t.backspin=true;
+    }},{id:'backspin',icon:'↩️',name:'BACKSPIN',desc:'A skill shot. Flick, then DRAG BACK toward yourself while the ball is travelling — the backspin bites and pulls it home. The harder you drag, the stronger the pull; flick without dragging for a normal shot. Tap the icon to switch it on or off.',apply:function(t){t.backspin=true;
     }},{id:'serpent',icon:'🐍',name:'SERPENT SHOT',desc:'Your shot snakes down the pitch in a smooth S. Tap the icon in a match to turn it on or off; only one shot style (Serpent or Curveball) can be on at a time.',apply:function(t){t.serpent=true;
     }},{id:'wet',icon:'💧',name:'WET SHOT',desc:'Your ball is super slippery! When it bumps a wall or a player it skids off in a surprise direction — but it always slides toward the other goal, never back at yours. Sneaky for bouncing past the keeper. Same speed, just slidey.',apply:function(t){t.wet=true;
     }},{id:'chip',icon:'🪂',name:'CHIP SHOT',desc:'After you flick, tap once to lob the ball up and over the players and the keeper, then it drops back down. Great for chipping over a crowd or a rushing keeper.',apply:function(t){t.chip=true;
@@ -1733,7 +1733,7 @@
     shotTrail=[]; hitSparks=[];
     struck=false; if(coin) coin.squish=0;
     stickyUsed=false; steerHold=null;
-    steerBudget=0; slowPhase=0;
+    steerBudget=0; slowPhase=0; bsPull=0; bsCap=false; bsAnchor=null;
     wallCD=0; ghostUsed=false;
     ghosting=false; portalUsed=false;
     ricochetUsed=false; serpentPhase=0;

@@ -160,7 +160,7 @@
       backspinFx=coin.vx/_bsp;
       backspinFy=coin.vy/_bsp;
       backspinPhase=0; })(); steerBudget=(TAC.guided?40:0);
-      steerHold=null; try{ ecoFlickStart();
+      steerHold=null; bsPull=0; bsCap=false; bsAnchor=null;   /* the AI never plays the manual drag, so its backspin stays at 0 = a plain shot */ try{ ecoFlickStart();
       }catch(e){} try{ trioReset();
       }catch(e){} turnFlash=Math.max(turnFlash,10);
     }
