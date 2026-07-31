@@ -677,10 +677,24 @@ gutters = directional lane funnel (conveyor); oiled lane = pace-preserving strip
 **checkered start/finish stripe** in front of each goal, and a faint **dashed racing lane** down the middle.
 The hazards (all in `11-physics.js` + `drawRaceway` in `12-draw.js`):
 
-**OIL SLICKS (splash + smear trail).** Dark puddles that **inject spin** so the ball curves off-line (Magnus
-does the bending; spin bounded ±4). Crossing one throws a **splash** built like CRAZY GOLF's water splash — an
-expanding contact ring plus a dozen droplets that arc out and fall back, seeded off a fixed hash so the pattern
-is stable — and **coats the ball**, which then drags a fading **oily smear trail** behind it for ~34 frames.
+**OIL SLICKS (pixel sprite + splash + a trail that stays wet).** Dark puddles that **inject spin** so the ball
+curves off-line (Magnus does the bending; spin bounded ±4).
+
+- **The slick is a pixel sprite, not a circle.** `rcOilShape()` builds a **lobed blob on the integer grid** once
+  per spill — flat dark core, a blue-grey sheen patch, and a **1×1 dithered rim** — stable per seed so it never
+  shimmers. An anti-aliased `arc()` looked out of place against the board's pixel art; this matches the idiom
+  the rest of the game uses.
+- **The splash is stepped pixel animation**: an expanding ring at **integer radius** (so it pops frame to frame
+  like sprite frames rather than sliding), 2×2 chunks early then 1×1, plus a dozen droplets that arc out and
+  fall back — all seeded off a fixed hash so a given burst is identical every time.
+- **The trail stays WET until it dries.** Crossing a slick **coats the ball** (`RC_OILY` frames), and while
+  coated it lays oil **smear pixels** along its path at a fixed px spacing (so a slow ball doesn't blot and a
+  fast one still draws a continuous line). Each patch stays **wet for `RC_WET_DRY` (~260 frames)**: the blue
+  sheen goes first, then the stain fades to a faint dry mark. So the circuit gets **progressively oily** as a
+  rally runs on.
+- **Drive back through a patch that is still wet and the ball picks the oil up again** — the trail carries on,
+  with a small slip nudge (30% of a fresh slick, bounded, on a per-patch cooldown so one patch can never pump
+  the spin up). A **dried** patch is inert.
 Off easy, **1** med, **2** hard (`oilSpin` 1.6 / 2.2) — two slicks max, placed 180°-rotationally symmetric
 about the centre so neither end is favoured.
 

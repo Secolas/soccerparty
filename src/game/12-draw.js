@@ -769,11 +769,16 @@
     ctx.fillStyle='rgba(150,130,90,0.5)'; ctx.fillRect(gv.x,gv.y,gv.w,gv.h);
     ctx.fillStyle='rgba(110,95,65,0.55)';
     for(var yy=gv.y; yy<gv.y+gv.h; yy+=2){ for(var xx=gv.x+((yy&2)?1:0); xx<gv.x+gv.w; xx+=3){ ctx.fillRect(xx,yy,1,1); } } } }
-    // OIL SMEAR trail — the oily ball drags fading dark streaks along its path
+    // OIL SMEAR trail — pixel blobs of oil the ball has dragged onto the track. They stay WET (dark, with a
+    // blue sheen pixel) and DRY OFF over RC_WET_DRY frames: the sheen goes first, then the stain fades to a
+    // faint dry mark. Drawn on the integer grid — 2x2/1x1 pixels, no arcs — to match the board's art.
     if(typeof rcSmear!=='undefined'){ for(var si=0;si<rcSmear.length;si++){ var sm=rcSmear[si], sa=sm.life/sm.max;
-    ctx.fillStyle='rgba(14,10,20,'+(0.5*sa).toFixed(3)+')';
-    ctx.beginPath(); ctx.arc(sm.x,sm.y,sm.r,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(80,110,170,'+(0.22*sa).toFixed(3)+')'; ctx.fillRect(Math.round(sm.x)-1,Math.round(sm.y)-1,1,1); } }
+    var wet=sa>0.35, sx=Math.round(sm.x), sy=Math.round(sm.y), sh=(sm.seed||si);
+    ctx.fillStyle='rgba(14,10,20,'+(0.55*sa).toFixed(3)+')';
+    ctx.fillRect(sx-1,sy-1,2,2);
+    if(_cgRnd(sh)>0.4) ctx.fillRect(sx+1,sy-1+((_cgRnd(sh+0.5)>0.5)?1:0),1,1);
+    if(_cgRnd(sh+0.9)>0.5) ctx.fillRect(sx-2,sy+((_cgRnd(sh+1.4)>0.5)?0:1),1,1);
+    if(wet){ ctx.fillStyle='rgba(96,132,196,'+(0.30*sa).toFixed(3)+')'; ctx.fillRect(sx-1,sy-1,1,1); } } }
     // GRAVEL RUTS — the gouge the ball ploughs through the stones, fading as they settle back
     if(typeof rcRuts!=='undefined'){ for(var ri=0;ri<rcRuts.length;ri++){ var ru=rcRuts[ri], ra=ru.life/ru.max;
     ctx.save(); ctx.translate(ru.x,ru.y); ctx.rotate(ru.a);
@@ -791,19 +796,26 @@
     // OIL slicks — dark glossy puddles with a cool sheen; a crossing throws a proper splash (expanding ring +
     // droplets that arc out and fall back, seeded off a fixed hash so the pattern is stable per splash).
     if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
-    ctx.fillStyle='rgba(10,8,16,0.72)'; ctx.beginPath(); ctx.arc(ol.x,ol.y,RC_OIL_R,0,6.283); ctx.fill();
-    ctx.fillStyle='rgba(90,120,180,0.28)'; ctx.beginPath(); ctx.arc(ol.x-2,ol.y-2,RC_OIL_R*0.5,0,6.283); ctx.fill();
-    if(ol.sp>0){ var oa=ol.sp/26, age=1-oa, ex=(ol.hx==null?ol.x:ol.hx), ey=(ol.hy==null?ol.y:ol.hy);
-    ctx.fillStyle='rgba(120,150,215,'+(0.75*oa).toFixed(3)+')';                 // expanding contact ring
-    var orr=Math.round(3+12*age);
-    for(var k=0;k<10;k++){ var a3=k/10*Math.PI*2;
-    ctx.fillRect(Math.round(ex+Math.cos(a3)*orr),Math.round(ey+Math.sin(a3)*orr*0.7),1,1); }
+    // the slick itself: a PIXEL SPRITE (lobed blob built once at init, see rcOilShape) laid down 1x1 at a time
+    // on the integer grid — flat bands + a dithered rim, no anti-aliased arc.
+    var _ox=Math.round(ol.x), _oy=Math.round(ol.y), _px=ol.px;
+    if(_px){ for(var q=0;q<_px.length;q++){ var pp=_px[q];
+    ctx.fillStyle=(pp[2]===2)?'rgba(18,14,26,0.60)':((pp[2]===1)?'rgba(96,132,196,0.34)':'rgba(10,8,16,0.80)');
+    ctx.fillRect(_ox+pp[0],_oy+pp[1],1,1); }
+    ctx.fillStyle='rgba(150,186,240,0.30)'; ctx.fillRect(_ox-3,_oy-3,1,1); ctx.fillRect(_ox-2,_oy-4,1,1); }
+    // SPLASH: a stepped pixel ring (integer radius, so it pops frame to frame like sprite animation) plus
+    // droplets that arc out and fall back, all seeded off a fixed hash so the burst is stable per splash.
+    if(ol.sp>0){ var oa=ol.sp/26, age=1-oa, ex=Math.round(ol.hx==null?ol.x:ol.hx), ey=Math.round(ol.hy==null?ol.y:ol.hy);
+    var orr=3+Math.round(age*11), _big=(age<0.35);
+    ctx.fillStyle='rgba(120,150,215,'+(0.8*oa).toFixed(3)+')';
+    for(var k=0;k<16;k++){ var a3=k/16*Math.PI*2, rx=Math.round(ex+Math.cos(a3)*orr), ry=Math.round(ey+Math.sin(a3)*orr*0.72);
+    if(_cgRnd(k+0.2)>0.25) ctx.fillRect(rx,ry,_big?2:1,_big?2:1); }
     for(var dj=0;dj<12;dj++){                                                    // droplets: out, up, fall back
     var ang=(dj/12)*Math.PI*2+_cgRnd(dj)*0.4, dist=(5+_cgRnd(dj+0.3)*9)*age;
-    var dx2=ex+Math.cos(ang)*dist, dy2=ey+Math.sin(ang)*dist*0.7-Math.sin(age*Math.PI)*(4+_cgRnd(dj+0.6)*5);
+    var dx2=Math.round(ex+Math.cos(ang)*dist), dy2=Math.round(ey+Math.sin(ang)*dist*0.7-Math.sin(age*Math.PI)*(4+_cgRnd(dj+0.6)*5));
     ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?('rgba(30,24,40,'+(0.9*oa).toFixed(3)+')'):('rgba(110,140,205,'+(0.9*oa).toFixed(3)+')');
-    ctx.fillRect(Math.round(dx2),Math.round(dy2),1,1);
-    if(age<0.5) ctx.fillRect(Math.round(dx2),Math.round(dy2)+1,1,1); } } } }
+    ctx.fillRect(dx2,dy2,1,1);
+    if(age<0.5) ctx.fillRect(dx2,dy2+1,1,1); } } } }
     // START-LIGHTS gantries — mounted in the FRAME either side of each net (the most visible spot on the board).
     // Reds fill 1..5, hold, then all OUT = GREEN: release then for full stamina, miss it and the flick is halved.
     if(c&&c.lights){ var _on=RC_LIGHT_BUILD+RC_LIGHT_HOLD, _green=(rcLightT>=_on&&rcLightT<_on+c.lightGreen),

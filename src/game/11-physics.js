@@ -1641,6 +1641,20 @@
     // the turn; a chip clears the track.
     var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0, rcLightFlash=0, rcDust=[], rcSmear=[], rcRuts=[];
     var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
+    var RC_WET_DRY=260, RC_OILY=40;   // frames a spilt patch stays wet / frames the ball keeps carrying oil
+    function _rcRnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    /* The slick is a PIXEL SPRITE, not a circle: a lobed blob built once per spill on the integer grid, so it
+       matches the game's pixel-art idiom (flat bands + 1x1 dither) instead of an anti-aliased arc. Shades:
+       0 = core, 1 = sheen (up-left), 2 = dithered rim. Stable per seed, so a slick never shimmers. */
+    function rcOilShape(seed){ var pts=[], R=RC_OIL_R;
+    for(var dy=-R-1;dy<=R+1;dy++){ for(var dx=-R-1;dx<=R+1;dx++){
+    var d=Math.hypot(dx,dy*1.12)||0.001, a=Math.atan2(dy,dx);
+    var lobe=0.78+0.30*_rcRnd(seed+Math.round((a+Math.PI)*2.7));
+    var lim=R*lobe; if(d>lim) continue;
+    var rim=(d>lim-1.7), sheen=(!rim && dx+dy<-2 && _rcRnd(seed+dx*7.1+dy*3.3)>0.45);
+    if(rim && ((dx+dy)&1) && _rcRnd(seed+dx*2.3+dy*5.7)>0.55) continue;   // 1x1 dither on the edge
+    pts.push([dx,dy,rim?2:(sheen?1:0)]); } }
+    return pts; }
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { oilN:(t>=2)?2:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
@@ -1649,8 +1663,8 @@
     lights:(t>=1), lightMiss:0.5, lightGreen:(t>=2)?20:34, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
-    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0}); }
-    if(c.oilN>=2){ rcOils.push({x:Math.round(W/2-28),y:Math.round(H*0.64),cd:0,sp:0}); }
+    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0,px:rcOilShape(3.7)}); }
+    if(c.oilN>=2){ rcOils.push({x:Math.round(W/2-28),y:Math.round(H*0.64),cd:0,sp:0,px:rcOilShape(11.3)}); }
     // TYRE stacks on the OUTER corners of each penalty area (the box corners facing midfield), so they guard
     // the approach instead of sitting in the dead pitch corners.
     rcTyres=[]; try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
@@ -1677,7 +1691,7 @@
     for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; }
     for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=du.puff?0.94:0.90; du.vy*=du.puff?0.94:0.90;
     if(du.puff) du.r+=0.26; if(--du.life<=0) rcDust.splice(d,1); }
-    for(var s=rcSmear.length-1;s>=0;s--){ if(--rcSmear[s].life<=0) rcSmear.splice(s,1); }
+    for(var s=rcSmear.length-1;s>=0;s--){ var _sm=rcSmear[s]; if(_sm.cd>0) _sm.cd--; if(--_sm.life<=0) rcSmear.splice(s,1); }
     for(var r=rcRuts.length-1;r>=0;r--){ if(--rcRuts[r].life<=0) rcRuts.splice(r,1); }
     try{ rcSweepNails(); }catch(e){} }
     // START-LIGHTS: the flick's power multiplier at the current phase — full on GREEN, HALF if you miss it. So
@@ -1724,11 +1738,23 @@
     // along its path for a short while afterwards.
     for(var j=0;j<rcOils.length;j++){ var ol=rcOils[j];
     if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_OIL_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30; ol.sp=26;
-    ol.hx=coin.x; ol.hy=coin.y; coin._rcOily=34;   // frames of oil still on the ball
+    ol.hx=coin.x; ol.hy=coin.y; coin._rcOily=RC_OILY;   // frames of oil still on the ball
     try{ spawnSparks(ol.x,ol.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
-    // the oily ball drags a fading smear behind it
+    // The oily ball SMEARS the track behind it, and those patches stay WET for a while (RC_WET_DRY frames)
+    // before they dry off — so the circuit gets progressively oily as a rally runs on. Laid down at a spacing
+    // in px (not per frame) so a slow ball doesn't pile up a blob and a fast one still leaves a continuous line.
     if(coin._rcOily>0){ coin._rcOily--;
-    if(sp>c.gate&&rcSmear.length<70) rcSmear.push({x:coin.x,y:coin.y,r:1.6+Math.random()*1.4,life:30,max:30}); }
+    if(sp>c.gate){ var _lastS=rcSmear.length?rcSmear[rcSmear.length-1]:null;
+    if(!_lastS || Math.hypot(coin.x-_lastS.x,coin.y-_lastS.y)>2.6){
+    if(rcSmear.length>=90) rcSmear.shift();
+    rcSmear.push({x:coin.x,y:coin.y,seed:rcSmear.length*3.1+coin.x*0.7,life:RC_WET_DRY,max:RC_WET_DRY,cd:14}); } } }
+    // Drive back through a patch that is still WET and the ball picks the oil up again — the trail carries on,
+    // with a small slip nudge (a fraction of a fresh slick, bounded and on a per-patch cooldown, so a single
+    // patch can never pump the spin up). A dried patch is inert.
+    else if(sp>c.gate){ for(var w=0;w<rcSmear.length;w++){ var wsm=rcSmear[w];
+    if(wsm.cd<=0 && Math.hypot(coin.x-wsm.x,coin.y-wsm.y)<COIN_R+2){ coin._rcOily=Math.round(RC_OILY*0.55); wsm.cd=26;
+    coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=wsm.x)?1:-1)*c.oilSpin*0.3));
+    break; } } }
     // TYRE walls — springy bounce (restitution up to 1.15 on hard), capped so it can't run away. Arms the recoil
     // animation (the stack is knocked along the impact normal and springs back).
     for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
