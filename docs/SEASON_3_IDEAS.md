@@ -1030,7 +1030,7 @@ a tour of the roster and each trio is that sport's idea of how to play:
 | 5 | 🏈 THE END ZONE | `drill` | `anchor` | `clearance` | barge the line · the heavy linebacker · the last-ditch tackle |
 | 6 | 🎳 THE ALLEY | `glide` | `bumper` | `wall` | the ball that keeps rolling · bumper rails · a wall of pins |
 | 7 | 🏎️ THE GRAND PRIX | `guided` | `slowmo` | `wet` | steering · slow-motion cornering · a wet track |
-| 8 | 🥊 THE RING | `cannon` | `injury` | `shield` | the puncher · you play hurt · the champion's guard |
+| 8 | 🥊 THE RING | `cannon` | `ghost` | `shield` | the puncher · slipping punches · the champion's guard |
 | 9 | 🏟️ SPORTS DAY | `sweeper` | `trio` | `bigkeeper` | keeper off the line · the relay pass · the big man in goal |
 
 Notes for anyone re-cutting these:
@@ -1039,8 +1039,11 @@ Notes for anyone re-cutting these:
 - **An arena cannot borrow an ability its own hazards already apply.** The ring first carried `drunk` at med —
   but its hard-tier gloves rattle the ball with exactly that effect (a `DRUNK_SPREAD` launch jitter plus the
   swaying aim guide), so the ability was invisible on the tier that mattered: the player would read the wobble
-  as the gloves. It carries `injury` instead — the most boxing-native curse in the roster, and one nothing on
-  the board duplicates.
+  as the gloves. `injury` was tried next, then `ghost` settled it: of everything that fits, it is the only one
+  that raises the arena without taxing the player's own turn. Your outfield blockers stop mattering, so the
+  keeper and your shape have to do the defending — and on a board where the ropes fire the ball back into
+  traffic, the CPU's counters get genuinely dangerous. A curse (`injury`, `freeze`) takes actions away from the
+  player instead, which is the wrong shape for a penultimate stadium that already has punching gloves.
 - **Tennis holds both shot toggles** (`curve` + `serpent`) on hard, which is the one case where the AI actually
   switches an `AB_TOGGLE` on and off rather than leaving it permanently ON.
 - **Every ability an arena uses needs a line in `_oppD`** (the opponent-voice card text). Without one the card

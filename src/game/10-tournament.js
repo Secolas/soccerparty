@@ -72,9 +72,11 @@
          gridiron  barge the line / the heavy linebacker / the last-ditch tackle
          alley     the ball that keeps rolling / bumper rails / a wall of pins
          prix      steering / slow-motion cornering / a wet track
-         ring      the puncher / you play hurt / the champion's guard
+         ring      the puncher / slipping punches / the champion's guard
        (the ring cannot use DRUNK: its hard-tier gloves already apply that exact effect on a punch, so the
-        ability was invisible there — a wobbling arrow the player would read as the gloves)
+        ability was invisible there — a wobbling arrow the player would read as the gloves. GHOST holds the
+        med slot because it is the only fit that raises the arena without taxing the player's own turn: your
+        blockers stop mattering, so the keeper and your shape have to do the defending.)
          podium    keeper off the line / the relay pass / the big man in goal
        Arena ab[] is NOT limited to ROYALE_DRAFT_POOL — glide, wall and bumper are never drafted, so a stadium
        is the only place they are ever seen. */
@@ -94,7 +96,7 @@
       {name:'THE GRAND PRIX',pitch:'raceway',ab:['guided',
       'slowmo','wet'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
       {name:'THE RING',pitch:'ring',ab:['cannon',
-      'injury','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      'ghost','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
       {name:'SPORTS DAY',pitch:'podium',ab:['sweeper',
       'trio','bigkeeper'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
     ];
