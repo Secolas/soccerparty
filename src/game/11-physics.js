@@ -1812,8 +1812,7 @@
     // readable BEFORE it acts, and a glove that homed in could not be dodged, only suffered. A fixed rhythm with
     // a visible wind-up can be learned and shot around.
     var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[], rgGloves=[];
-    var rgWobPend=0, rgWobOn=false, rgWobBase=0, rgWobPhase=0, _rgPrevMoving=false;
-    var RG_WOB=0.20, RG_WOB_FREQ=0.19;   // how far the punched ball's line wanders, and how fast
+    var rgWobPend=0, _rgPrevMoving=false;
     var RG_BAG_R=6, RG_ZONE_R=26, RG_ROPE_FLEX=16;
     function rgArena(){ return (typeof boardKey!=='undefined')&&boardKey==='ring'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
@@ -1865,7 +1864,9 @@
     {x:_gx[0], base:H-WALL, dir:-1, ph:Math.round(RG_GL_P*0.75), hit:0} ];
     for(var g=0;g<rgGloves.length;g++){ rgGloves[g].hit=0; rgGloves[g].ext=0; }
     rgWobPend=0; rgWobOn=false; _rgPrevMoving=false; }
-    function rgGloveY(g,ext){ return g.base+g.dir*(2+ext*rgCfg().gloveReach); }
+    // Retracted, the glove sits ON the pitch wall — its back flush to the boundary and its whole body inside the
+    // play area, rather than half-buried in the timber frame. It extends inward from there.
+    function rgGloveY(g,ext){ return g.base+g.dir*(RG_GLOVE_R+ext*rgCfg().gloveReach); }
     /* The glove is a hand-authored PIXEL SPRITE rather than a procedural blob — at 11x11 the silhouette matters
        more than any formula, so it is drawn as a little bitmap: cuff + white trim at the wrist, a swelling
        knuckle mass, a thumb bump on one side, and a lace seam. Laid out punching DOWN (+y); mirrored vertically
@@ -1911,11 +1912,14 @@
     for(var g2=0;g2<rgGloves.length;g2++){ var gv=rgGloves[g2];
     var gp=rgGlovePhase(gv.ph); gv.ext=c.gloves?gp.ext:0; gv.live=c.gloves&&gp.live; gv.wind=gp.wind;
     if(gv.hit>0) gv.hit--; }
-    // A punched ball comes back WOBBLING: at the moment the next shot starts, the pending punch converts into an
-    // active wobble for that shot only (its heading wanders, like a boxer who has been rattled).
-    if(moving && !_rgPrevMoving){ if(rgWobPend>0){ rgWobPend=0; rgWobOn=true; rgWobBase=Math.atan2(coin.vy,coin.vx); rgWobPhase=0;
-    try{ setStatus('RATTLED — WOBBLY SHOT'); }catch(e){} } else { rgWobOn=false; } }
-    if(!moving) rgWobOn=false;
+    // A punched ball comes back RATTLED: the next shot is thrown off exactly the way the DRUNK debuff does it —
+    // the launch angle takes a random kick of up to DRUNK_SPREAD at the moment of release. Applied here, at the
+    // idle->moving transition, so it covers the human and the CPU with one hook.
+    if(moving && !_rgPrevMoving && rgWobPend>0){ rgWobPend=0;
+    var _rj=(Math.random()-0.5)*DRUNK_SPREAD, _rc=Math.cos(_rj), _rs=Math.sin(_rj);
+    var _rvx=coin.vx*_rc-coin.vy*_rs, _rvy=coin.vx*_rs+coin.vy*_rc;
+    coin.vx=_rvx; coin.vy=_rvy;
+    try{ setStatus('RATTLED!'); }catch(e){} try{ if(!muted&&typeof sfxDrunk==='function') sfxDrunk(); }catch(e){} }
     _rgPrevMoving=moving;
     try{ rgSeparate(); }catch(e){}
     for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
@@ -1932,7 +1936,13 @@
     var ndx=q.x-b.x, ndy=q.y-b.y, nd=Math.hypot(ndx,ndy), NR=RG_BAG_R+NAIL_R+1;
     if(nd<NR){ if(nd<0.001){ ndx=1; ndy=0; nd=1; }
     q.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,b.x+ndx/nd*NR));
-    q.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,b.y+ndy/nd*NR)); } } } } }
+    q.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,b.y+ndy/nd*NR)); } } } }
+    // a glove punches outward into the pitch, so it can reach a ball that has come to rest in its lane
+    if(!moving && rgCfg().gloves && typeof coin!=='undefined' && coin){ for(var gi2=0;gi2<rgGloves.length;gi2++){ var gg=rgGloves[gi2];
+    var ggy=rgGloveY(gg,gg.ext||0), gx2=coin.x-gg.x, gy2=coin.y-ggy, gd2=Math.hypot(gx2,gy2), GR2=RG_GLOVE_R+COIN_R+1;
+    if(gd2<GR2){ if(gd2<0.001){ gx2=0; gy2=gg.dir; gd2=1; }
+    coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,gg.x+gx2/gd2*GR2));
+    coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,ggy+gy2/gd2*GR2)); } } } }
     // Called from the side-wall bounce in collideStep: the ropes hand the ball back with interest above a speed
     // gate (a dying ball keeps the normal restitution so it still settles), and the strand flexes where it hit.
     function rgRopeRest(vabs,cy,side){ var c=rgCfg(); if(!c.ropes) return RESTITUTION;
@@ -1960,25 +1970,22 @@
     try{ if(typeof haptic==='function') haptic(Math.round(8+imp*10)); }catch(e){} }
     coin.x=b.x+nx*R; coin.y=b.y+ny*R;
     coin.vx*=c.bagAbsorb; coin.vy*=c.bagAbsorb; } } }
-    // WOBBLE — a ball that was punched last turn wanders off its line for this whole shot (same treatment WET
-    // uses: rotate the heading around its launch angle, speed untouched, so it still decays and settles).
-    if(rgWobOn && sp>0.5){ rgWobPhase+=RG_WOB_FREQ;
-    var wa=rgWobBase+RG_WOB*Math.cos(rgWobPhase);
-    coin.vx=Math.cos(wa)*sp; coin.vy=Math.sin(wa)*sp; }
     // SPRUNG GLOVES — while a glove is at full stretch it swats a MOVING ball away from its goal and rattles it
     // for the next flick. Only ever acts on a moving ball, and the result is capped.
-    if(c.gloves){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi]; if(!g.live) continue;
-    var gy=rgGloveY(g,g.ext), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=RG_GLOVE_R+COIN_R;
-    if(gd<GR && gd>0.001){ var gnx=gdx/gd, gny=gdy/gd;
-    // punch: reflect off the glove, then add the punch itself straight down the glove's line of travel
-    var gvn=coin.vx*gnx+coin.vy*gny;
+    // The glove is a SOLID object whether or not it is mid-punch — it sits on the wall, so a ball that reaches it
+    // always bounces. Only a LIVE glove (out or holding) adds the punch and rattles the ball for the next flick.
+    if(c.gloves){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
+    var gy=rgGloveY(g,g.ext||0), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=RG_GLOVE_R+COIN_R;
+    if(gd<GR && gd>0.001){ var gnx=gdx/gd, gny=gdy/gd, gvn=coin.vx*gnx+coin.vy*gny;
     if(gvn<0){ coin.vx-=(1+RESTITUTION)*gvn*gnx; coin.vy-=(1+RESTITUTION)*gvn*gny; }
-    coin.vy+=g.dir*c.glovePow;
-    var gs=Math.hypot(coin.vx,coin.vy); if(gs>c.gloveCap){ var gk=c.gloveCap/gs; coin.vx*=gk; coin.vy*=gk; }
     coin.x=g.x+gnx*GR; coin.y=gy+gny*GR;
+    if(g.live){ coin.vy+=g.dir*c.glovePow;                     // the punch itself, straight down its travel
+    var gs=Math.hypot(coin.vx,coin.vy); if(gs>c.gloveCap){ var gk=c.gloveCap/gs; coin.vx*=gk; coin.vy*=gk; }
     g.hit=14; rgWobPend=1;
     try{ spawnSparks(g.x,gy,null,8); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(8); }catch(e){}
     try{ setStatus('PUNCHED!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,18,24,30]); }catch(e){}
+    } else { g.hit=Math.max(g.hit,6);                          // a dead glove just thuds
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} }
     break; } } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;

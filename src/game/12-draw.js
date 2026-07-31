@@ -2021,7 +2021,10 @@
       ctx.fill(); ctx.restore();
       } if(aiming&&aimStart&&aimNow&&!debuffActive(current,'fog')){
         const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,rawP=Math.hypot(dx,dy),power=Math.min(rawP,(pen&&pen.active)?32:(TAC.frozen?35:70)),ang=Math.atan2(dy,dx);
-        var _dw=(debuffActive(current,'drunk'))?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
+        // A RATTLED ball (punched in THE RING last turn) aims exactly like DRUNK does — the guide sways, because
+        // the real deviation is a random kick at release and a fixed arrow would be a promise the shot cannot keep.
+        var _rgw=false; try{ _rgw=(typeof rgWobArmed==='function')&&rgWobArmed(); }catch(e){}
+        var _dw=(debuffActive(current,'drunk')||_rgw)?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
         drawAimGuide(angD,power,rawP,1,true);
       }
       // The aim guide: pull-back marker, stamina-coloured power line, the predicted bounce/curve path, and
@@ -2042,11 +2045,7 @@
         var _gh=-gvx, _ghd=(_gh>0.05)?1:((_gh<-0.05)?-1:((W/2-coin.x)>=0?1:-1));
         var gspin=(TAC.curve&&power>=12)?(_ghd*((gvy<0)?1:-1)*1.9):0;
         var ff=FRICTION+(TAC.glide||0)+royFloorFric(), lft=WALL+COIN_R, rgt=W-WALL-COIN_R, tp=WALL+COIN_R, bt=H-WALL-COIN_R;
-        // THE RING: a punched ball is RATTLED, so the next shot's line wanders — trace that in the guide too, or
-        // the arrow would promise a straight shot the ball will not take.
-        var _rgw=false; try{ _rgw=(typeof rgWobArmed==='function')&&rgWobArmed(); }catch(e){}
-        var gRgBase=Math.atan2(gvy,gvx), gRgPhase=0;
-        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.backspin||TAC.wet||_rgw), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
+        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.backspin||TAC.wet), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
         for(var gs=0; gs<80 && acc<L && !_bk && !_stop; gs++){ var gsp=Math.hypot(gvx,gvy);
         if(gsp<(TAC.backspin?0.12:0.3)) break;
         if(gspin){ var gpx=-gvy/gsp, gpy=gvx/gsp;
@@ -2054,7 +2053,7 @@
         gvy+=gpy*gspin*gsp*0.05;
         var _gcm=Math.hypot(gvx,gvy)||1;
         gvx=gvx/_gcm*gsp; gvy=gvy/_gcm*gsp;
-        gspin*=0.984; } var _subs=(TAC.serpent||TAC.wet||_rgw||((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()))?Math.max(1,Math.ceil(Math.hypot(gvx,gvy)/MAX_STEP)):1;
+        gspin*=0.984; } var _subs=(TAC.serpent||TAC.wet||((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()))?Math.max(1,Math.ceil(Math.hypot(gvx,gvy)/MAX_STEP)):1;
         for(var _su=0; _su<_subs && acc<L && !_bk && !_stop; _su++){ var _hw=false;
         if(TAC.serpent){ var _gsp2=Math.hypot(gvx,gvy);
         if(_gsp2>0.3){ var _gang=gBase+gDir*SERPENT_SWING*Math.cos(gPh);
@@ -2064,11 +2063,7 @@
         if(_gws>0.3){ var _gwa=gWetBase+WET_WOBBLE*Math.cos(gWetPhase);
         gvx=Math.cos(_gwa)*_gws;
         gvy=Math.sin(_gwa)*_gws;
-        gWetPhase+=WET_WFREQ; } }
-        if(_rgw&&!TAC.serpent&&!TAC.wet){ var _grs=Math.hypot(gvx,gvy);
-        if(_grs>0.5){ gRgPhase+=RG_WOB_FREQ;
-        var _gra=gRgBase+RG_WOB*Math.cos(gRgPhase);
-        gvx=Math.cos(_gra)*_grs; gvy=Math.sin(_gra)*_grs; } } var _px0=gx, _py0=gy;
+        gWetPhase+=WET_WFREQ; } } var _px0=gx, _py0=gy;
         gx+=gvx/_subs; gy+=gvy/_subs;
         var _inMouth=(gx>_gmL&&gx<_gmR);
         if(gx<lft){gx=lft;gvx=-gvx*RESTITUTION;

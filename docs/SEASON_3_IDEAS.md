@@ -850,13 +850,23 @@ wind-up tell) → **snap out** into the pitch → **hold** at full stretch → *
 - **They LOOP, they do not track the ball.** Deliberate: the standing telegraph rule is that a hazard must be
   readable *before* it acts, and a glove that homed in could not be dodged, only suffered. A fixed rhythm with a
   visible wind-up can be learned and shot around — that is the skill the arena asks for.
+- **They sit ON the pitch wall.** Retracted, a glove's back is flush to the boundary with its whole body inside
+  the play area (`rgGloveY` = `base + dir*RG_GLOVE_R`), not half-buried in the timber frame, and it extends inward
+  from there. It is therefore **solid at all times**: a ball that reaches a *dead* glove simply thuds off it,
+  while a **live** one (out or holding) adds the punch and rattles the ball. That keeps art and physics honest —
+  no rolling through a glove you can see. `rgSeparate()` also pushes a resting ball out of a glove's space, since
+  a glove punches outward into the pitch.
 - **The punch** reflects the ball off the glove then adds the punch itself straight down the glove's line of
   travel (`glovePow`, capped), swatting a shot **away from that goal**. Because they sit either side of the goal
   mouth they guard the approach without ever walling the goal off.
-- **A punched ball comes back RATTLED.** The hit sets a pending wobble; at the moment the **next flick** starts it
-  converts into an active wobble for **that shot only** — the ball's heading wanders around its launch angle
-  (`RG_WOB`, the same treatment WET uses; speed untouched, so it still decays and settles) and the status reads
-  *RATTLED — WOBBLY SHOT*. So a punch costs you the *following* turn's accuracy, not just this one.
+- **A punched ball comes back RATTLED — the DRUNK effect.** The hit sets a pending flag; at the moment the **next
+  flick** starts, the launch angle takes a **random kick of up to `DRUNK_SPREAD`**, exactly the way the Drunk
+  debuff throws a shot off. Applied at the idle→moving transition so one hook covers the human and the CPU, with
+  a *RATTLED!* status and Drunk's own sound. So a punch costs you the *following* turn's accuracy.
+- **The aim guide sways, like Drunk's.** `rgWobArmed()` reports a pending punch and the guide's angle takes the
+  same `sin` sway Drunk already uses. That is deliberately *not* a traced wobbly path: the real deviation is a
+  random kick at release, so a fixed curved arrow would be a promise the shot cannot keep — a swaying arrow reads
+  as "your aim is unreliable", which is the truth.
 - **Settle-safe:** a glove can only ever strike a **moving** ball (`ringStep` returns unless `moving`), so it can
   never keep nudging a resting ball and stall the turn. The wobble only rotates the heading, never adds speed.
 - **Art:** the glove is a **hand-authored 15×15 pixel sprite** (`RG_GLOVE_ART`) — at this size the silhouette
