@@ -969,6 +969,32 @@ friendly opener), then **BASKETBALL** (the dribble ball is the marquee ball-feel
 **GRIDIRON**'s pursuing rushers are the riskiest to get settle-safe — prototype
 that one early to de-risk the pursuer primitive. **THE PODIUM** ships last.
 
+## Gauntlet-final BOSSES + CANNON nerf — DONE
+
+**Cannon nerfed 1.5x -> 1.2x.** It was the only power multiplier in the game, so 1.2x is now the hard
+ceiling on flick power. Description, the loading tip, the opponent-voice card line and a code comment all
+updated from "50% / twice as hard" to "20% harder".
+
+**The three season finals now have BOSS LOADOUTS.** Previously the finals granted the opponent nothing
+(ab:[]) — the challenge was purely the hazards, which made the difficulty depend entirely on the player's
+own earned loadout (walkover if over-equipped, brutal if under-equipped). Each final now also fields a
+distinct champion with a full 3-ability loadout that SCALES BY RARITY per difficulty (roughly
+common -> rare/uncommon -> epic), curated defensive-first so it stacks FAIRLY with the symmetric hazards
+(hazards tax the boss's offense too; curses, which only hurt the player, are kept to <=1):
+
+  S1 THE FINAL  "THE WALL"        easy defender/anchor/clearance | med sweeper/reflex/magnet | hard bigkeeper/wall/shield
+  S2 THE TURF   "THE TRICKSTER"   easy ricochet/bumper/striker   | med serpent/sniper/freeze | hard cannon/curve/ghost
+  S3 SPORTS DAY "THE ALL-ROUNDER" easy striker/magnet/volley     | med aftershock/sweeper/reflex | hard cannon/bigkeeper/drill
+
+Wiring: a `bossAb:{easy,med,hard}` field on the final arenas, read by the loadout builder (a new branch
+before aiKeeper/ab) and by royArenaConds so the map card's OPPONENT CARRIES section shows the tier's three.
+_oppD gained freeze + aftershock opponent-voice lines. The dormant aiKeeper/aiExtraTier path is untouched.
+
+Notes on the rarity ladder (from the brainstorm): RARE has only 6 abilities total, so med necessarily mixes
+rare + uncommon; and the EPIC pool is almost all OFFENSE (bigkeeper is the only defensive epic), so a
+purely-defensive boss (THE WALL) tops out at bigkeeper+wall+shield rather than three epics — curated by
+POWER, not strict tier. Every ability chosen is AI-native (no chip/rewind/swap the CPU can't drive).
+
 ## SPORTS DAY is a true gauntlet final — DONE
 
 The Season 1 (THE FINAL) and Season 2 (THE TURF) finals grant the opponent NO abilities: the whole

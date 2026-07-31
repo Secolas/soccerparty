@@ -41,7 +41,10 @@
     'defender','magnet'],d:4,cust:'traps',blurb:'Webs stop and vanish when the ball hits them, a skittering spider keeps weaving new ones, and crates crash down from above.'},
     {name:'THE FORTRESS',pitch:'stone',ab:['bigkeeper',
     'clearance','sweeper'],d:5,cust:'fortress',blurb:'Stone walls cage each goal box on the sides, an iron portcullis gates the front on a timer, and a boulder rolls across midfield.'},
-    {name:'THE FINAL',pitch:'grass',ab:[],d:5,gauntlet:1,blurb:'The Season 1 final — a gauntlet of the whole run. Frozen ice, the Thicket, Sandstorm and the Web Warehouse all bare their teeth at once, turning from a nuisance on Easy into chaos on Hard. No keeper tricks; just survive it and score.'}];
+    {name:'THE FINAL',pitch:'grass',ab:[],d:5,gauntlet:1,bossAb:{easy:['defender',
+    'anchor','clearance'],med:['sweeper',
+    'reflex','magnet'],hard:['bigkeeper',
+    'wall','shield']},blurb:'The Season 1 final — a gauntlet of the whole run. Frozen ice, the Thicket, Sandstorm and the Web Warehouse all bare their teeth at once. And the champion is THE WALL: an immovable defence that fortifies with the difficulty — extra bodies on easy, a hyperactive catching keeper on med, a big keeper behind a brick wall and a shield on hard.'}];
     // Map 2 — Season 2 stadiums. Hazards are boardKey-driven and scale by ladder position (aiLevel).
     var ROYALE_ARENAS_1=ROYALE_ARENAS, royMap=1;
     /* ============================ TEST HATCH — REMOVE BEFORE RELEASE ============================
@@ -63,7 +66,10 @@
       {name:'VINE RUINS',pitch:'jungle',ab:['serpent','striker','ghost'],d:6,blurb:'A mossy temple where swinging vines snatch the ball and fling it across the pitch.'},
       {name:'THE SHORE',pitch:'beach',ab:['sweeper',
       'clearance','anchor'],d:6,blurb:'A sunny beach — tide waves sweep the ball down the sand, drifting beach balls bounce it around, and crabs scuttle across the pitch.'},
-      {name:'THE TURF',pitch:'turf',ab:[],d:7,blurb:'The Season 2 final — a gauntlet of the whole run. Four stadiums strike at once: wind, orbit, jungle and shore — a nuisance on Easy, a maelstrom on Hard. No keeper tricks; survive the chaos and score.'}
+      {name:'THE TURF',pitch:'turf',ab:[],d:7,bossAb:{easy:['ricochet',
+      'bumper','striker'],med:['serpent',
+      'sniper','freeze'],hard:['cannon',
+      'curve','ghost']},blurb:'The Season 2 final — a gauntlet of the whole run: wind, orbit, jungle and shore strike at once. And the champion is THE TRICKSTER: shots off odd angles on easy, snaking precision plus a freeze on med, and a banana-cannon that phases through your players on hard.'}
     ];
     /* Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
 
@@ -105,7 +111,10 @@
       'curve','serpent'],d:7,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
       {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
       'backspin','magnet'],d:8,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
-      {name:'SPORTS DAY',pitch:'podium',ab:[],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. No keeper tricks: four borrowed hazards strike at once, a different quartet of sports at each difficulty. Just survive the medley and score.'}
+      {name:'SPORTS DAY',pitch:'podium',ab:[],d:9,bossAb:{easy:['striker',
+      'magnet','volley'],med:['aftershock',
+      'sweeper','reflex'],hard:['cannon',
+      'bigkeeper','drill']},blurb:'The Season 3 final — a decathlon of four borrowed hazards at once, a different quartet of sports each difficulty. And the champion is THE ALL-ROUNDER: attacker, catcher and counter on easy; the season\u2019s own Aftershock plus an active keeper on med; and on hard a keeper that scores hard, saves big and barges through.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
@@ -200,7 +209,11 @@
       matchMs=0; timeUp=false;
       timerRunning=false; aiEnabled={red:false,blue:true};
       pendingAb=(function(){ var _b;
-      if(ar.aiKeeper){ _b=ar.aiKeeper.slice();
+      if(ar.bossAb){ /* GAUNTLET-FINAL BOSS: a full 3-ability loadout per difficulty, scaling by rarity
+      (easy common / med rare+uncommon / hard epic), curated defensive-first so it stacks fairly with the
+      hazards. Distinct per season — see ROYALE_ARENAS[_1/_2/_3]'s final entry. */
+      _b=(ar.bossAb[royaleLevel]||ar.bossAb.easy||[]).slice(0,3);
+      } else if(ar.aiKeeper){ _b=ar.aiKeeper.slice();
       if(ar.aiExtraTier){ var _tk=ar.aiExtraTier[royaleLevel]||'common';
       var _ex=(typeof ROY_EXTRA_ABILITY!=='undefined')?ROY_EXTRA_ABILITY[_tk]:null;
       if(_ex && _b.indexOf(_ex)<0) _b.push(_ex);
@@ -741,14 +754,17 @@
       'Crash down and knock the ball. (Web Warehouse)']);
       } }
       var _opp=[]; if(incOpp){ var _n=(lvl==='easy')?1:((lvl==='med')?2:3);
-      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 50% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.',
+      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 20% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.',
       // Season 3 spends 27 different abilities across its 9 stadiums, so every one of them needs a line in
       // the OPPONENT's voice — without one the card falls back to the player-voice text ("Your ball is super
       // slippery!") under an "OPPONENT ·" heading, which reads like it is describing you.
-      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.',injury:'YOU play hurt — 2 flicks per turn instead of 3.'};
+      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.',injury:'YOU play hurt — 2 flicks per turn instead of 3.',
+      freeze:'YOUR power bar is capped at half.',aftershock:'Their shot shocks the first of your pieces it hits — frozen until your turn ends.'};
       // Rows are TAGGED 'opp' (c[4]) rather than label-prefixed: the map card renders the two groups
       // under their own section headers, so a prefix on every line would just repeat the header.
-      (ar.ab||[]).slice(0,_n).forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
+      // A gauntlet-final BOSS carries a full per-tier loadout (bossAb); everything else slices ab[] by tier.
+      var _ol=ar.bossAb?((ar.bossAb[lvl]||[]).slice(0,3)):((ar.ab||[]).slice(0,_n));
+      _ol.forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
       '✨',((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
       (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||'')),'opp']);
       }); } return _opp.concat(c);
@@ -1588,7 +1604,7 @@
     ov.appendChild(track); var pct=mk('div',FS(8,'#9a8fb0')+'letter-spacing:1px;','LOADING  0%');
     ov.appendChild(pct); var TIPS=[{i:null,t:'Drag back from the coin and release to flick. Pull further for more power.'},
     {i:'slowmo',t:'SLOW MO + JOYSTICK: steer the ball in slow motion after you flick.'},
-    {i:'cannon',t:'CANNON: your flicks hit twice as hard and smash through walls.'},
+    {i:'cannon',t:'CANNON: your flicks hit 20% harder and smash through walls.'},
     {i:null,t:'Tap the gear top-right, then SOUND, to turn the music off.'},
     {i:'curve',t:'CURVEBALL: while you aim, nudge left or right and the shot banana-curves that way.'},
     {i:null,t:'Score goals to earn abilities. Equip up to 3 before kickoff.'},

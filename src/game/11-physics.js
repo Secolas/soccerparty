@@ -3146,7 +3146,7 @@
       coin.vy+=Math.sin(royGustDir)*_gst;
       } const f=scoring?NET_FRICTION:Math.min(0.995,(FRICTION+TAC.glide+royFloorFric()+((typeof boardKey!=='undefined'&&stadiumHazards())?((boardKey==='space')?0.007:(boardKey==='skate'?0.005:(boardKey==='minigolf'?-0.006:0))):0)+((typeof bananaSlip!=='undefined'&&bananaSlip>0)?0.012:0)));
       /* GRASS DRAG on CRAZY GOLF: a golf course rolls slower than a hard pitch, and the arena's ability
-         pool includes Cannon (1.5x power -> launches up to ~15 px/frame), which on the standard 0.984
+         pool includes Cannon (1.2x power -> launches up to ~12 px/frame), which on the standard 0.984
          friction rockets around for ~2.8s and is hard to track. The -0.006 delta (f~=0.978) settles a
          cannon shot in ~1.9s and still lets a normal flick roll the length of the pitch, so scoring is
          unaffected but the ball is followable. */

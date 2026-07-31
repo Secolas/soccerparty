@@ -588,7 +588,7 @@
     var activeTactics=[]; var tacticsChosen=false;
     var struck=false; var stickyUsed=false;
     var sideAb={red:[],blue:[]};
-    var sbReady=false; var TACTICS=[{id:'cannon',icon:'⚡',name:'CANNON',desc:'Your flicks hit 50% harder, and break walls faster. Tap the icon to switch it on or off for a softer, precise shot.',apply:function(t){t.power=1.5;
+    var sbReady=false; var TACTICS=[{id:'cannon',icon:'⚡',name:'CANNON',desc:'Your flicks hit 20% harder, and break walls faster. Tap the icon to switch it on or off for a softer, precise shot.',apply:function(t){t.power=1.2;
     }},{id:'curve',icon:'🍌',name:'CURVEBALL',desc:'Your shot bends like a banana — nudge left or right as you aim to steer the curve. Tap the icon in a match to turn it on or off; only one shot style (Curveball or Serpent) can be on at a time.',apply:function(t){t.curve=true;
     }},{id:'glide',icon:'🧊',name:'GLIDE',desc:'The ball glides — it barely slows.',apply:function(t){t.glide=0.011;
     }},{id:'magnet',icon:'🧲',name:'MAGNET',desc:'Your keeper is magnetic — soft or slow shots bend toward it and get caught. Beat it with a hard shot aimed at the corners.',apply:function(t){t.magnet=true;
