@@ -552,6 +552,80 @@
     for(var y=Math.round(cy-r);y<=Math.round(cy+r);y++){ var dy=(y-cy)/r;
     if(dy<-1||dy>1) continue; var hw=Math.round(r*Math.sqrt(Math.max(0,1-dy*dy)));
     if(hw>0) g.fillRect(Math.round(cx)-hw,y,hw*2,1); } }
+    /* BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the HOOPS (hard).
+       This function was deleted by accident when the tennis volleyers were spliced out, so the court's
+       furniture stopped being drawn: on hard the hoops still DENIED the goal, invisibly. Both call sites
+       sit inside a try/catch, so the ReferenceError was swallowed every frame instead of surfacing. */
+    function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
+    // the boards and the hoops are standing furniture, so lay them out from the draw side too —
+    // stepPhysics has not run yet at kickoff, and waiting for it left the court bare until first touch
+    if(!bkOn){ try{ initCourt(); }catch(e){} }
+    for(var i=0;i<bkBoards.length;i++){ var b=bkBoards[i];
+    ctx.save(); ctx.lineCap='round';
+    ctx.strokeStyle='rgba(20,12,4,0.35)'; ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1+1.5); ctx.lineTo(b.x2,b.y2+1.5); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ffe9a8':'#f4efe0'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ff9c3c':'#d2542c'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.restore(); }
+    if(bkBoardFlash>0) bkBoardFlash--;
+    // trampolines — a springy pad with a hooped frame, flashing on a bad hop
+    for(var t=0;t<bkTramps.length;t++){ var tr=bkTramps[t], lit=tr.flash>0;
+    ctx.save(); ctx.translate(tr.x,tr.y);
+    ctx.fillStyle='rgba(16,10,4,0.28)'; ctx.beginPath();
+    ctx.ellipse(0,2.5,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.fillStyle=lit?'#3f6fd8':'#26407e'; ctx.beginPath();
+    ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.strokeStyle=lit?'#9fd0ff':'#6b8fd8'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.stroke();
+    ctx.strokeStyle='rgba(180,215,255,0.5)'; ctx.lineWidth=1;
+    for(var s=0;s<6;s++){ var a=s/6*6.283;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*tr.r*0.45,Math.sin(a)*tr.r*0.28);
+    ctx.lineTo(Math.cos(a)*tr.r,Math.sin(a)*tr.r*0.62); ctx.stroke(); }
+    ctx.restore(); }
+    // the hoops: a basketball rim seen from above — an orange ring with a net cinching below it, and
+    // a small backboard plate on the goal side. Drawn as a ring, not a bar, so it reads as a hoop.
+    // Lane dividers: chalk lines fanning out of the goal mouth between the hoops, so each hoop owns
+    // a visible slice of the penalty area and you can see which lane you are shooting down.
+    if(bkRims.length){ ctx.save();
+    ctx.strokeStyle='rgba(255,252,242,0.52)'; ctx.lineWidth=1.2;
+    ctx.setLineDash([4,3]);
+    for(var ei=0;ei<2;ei++){ var team=ei?'blue':'red', gy=ei?H-NET_DEPTH:NET_DEPTH;
+    var row=bkRims.filter(function(r){return r.for===team;}).sort(function(a,b){return a.x-b.x;});
+    for(var di=0;di+1<row.length;di++){ var mx=(row[di].x+row[di+1].x)/2, my=(row[di].y+row[di+1].y)/2;
+    var vx=mx-W/2, vy=my-gy, vl=Math.hypot(vx,vy)||1;   // goal mouth -> gap, run a little past it
+    ctx.beginPath(); ctx.moveTo(W/2+vx/vl*9,gy+vy/vl*9);
+    ctx.lineTo(W/2+vx/vl*(vl+7),gy+vy/vl*(vl+7)); ctx.stroke(); } }
+    ctx.setLineDash([]); ctx.restore(); }
+    // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the
+    // GOAL side is -Y: the net hangs that way (the ball drops through and out toward the goal) with
+    // the backboard beyond it, which is the way round a hoop actually reads.
+    for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0, armed=bkRimPass[rm.for];
+    var rx=rm.half, ry=rm.half*0.52;
+    ctx.save(); ctx.translate(rm.x,rm.y);
+    ctx.rotate(Math.atan2(rm.fy,rm.fx)+Math.PI/2);
+    ctx.fillStyle='rgba(24,14,4,0.30)';                                   // contact shadow
+    ctx.beginPath(); ctx.ellipse(0,2,rx,ry,0,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(252,248,240,0.45)'; ctx.lineWidth=1;            // net, cinching goalwards
+    for(var n=0;n<7;n++){ var a=Math.PI*(n/6);
+    var sx=Math.cos(a)*rx, sy=Math.sin(a)*ry;
+    ctx.beginPath(); ctx.moveTo(sx,sy);
+    ctx.quadraticCurveTo(sx*0.55,-3.2,sx*0.20,-6.6); ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(0,-6.6,rx*0.30,ry*0.36,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=2.6;                                                     // the rim itself
+    ctx.strokeStyle=hot?'#ffe98a':(armed?'#9fe06a':'#e2622c');
+    ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=1; ctx.strokeStyle=hot?'#fffbe0':'rgba(255,190,120,0.85)';
+    ctx.beginPath(); ctx.ellipse(0,0.6,rx*0.92,ry*0.72,0,0,Math.PI); ctx.stroke();
+    ctx.restore(); }
+    if(bkNoBasket>0){ bkNoBasket--;
+    ctx.save(); ctx.globalAlpha=Math.min(1,bkNoBasket/22);
+    ctx.fillStyle='rgba(10,6,14,0.72)'; ctx.fillRect(W/2-46,H/2-11,92,22);
+    ctx.strokeStyle='#e05a4a'; ctx.lineWidth=1.5; ctx.strokeRect(W/2-46.5,H/2-11.5,93,23);
+    ctx.fillStyle='#ff8a72'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+    ctx.fillText('NO BASKET',W/2,H/2+3); ctx.restore(); }
+    }
     function drawMinigolf(ctx,now){ if(typeof cgWater==='undefined') return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     // ---- SAND: a dug hollow. Dark grass collar, shaded overhanging lip at the top, lit sand below.
@@ -1523,7 +1597,7 @@
     try{ if(_pd('water')||_pd('cups')) minigolfTick(); }catch(e){}
     try{ if(_pd('ropes')||_pd('gloves')){ ringTick(); drawRing(ctx,now); } }catch(e){}
     try{ if(_pd('roam')){ gridironTick(); drawGridiron(ctx,now); } }catch(e){}
-    try{ if(_pd('oil')){ racewayTick(); drawRaceway(ctx,now); } }catch(e){}
+    try{ if(_pd('oil')||_pd('lights')){ racewayTick(); drawRaceway(ctx,now); } }catch(e){}
     try{ if(_pd('rake')) bowlingTick(); }catch(e){}
     try{ if(_pd('net')) tennisTick(); }catch(e){}
     return;

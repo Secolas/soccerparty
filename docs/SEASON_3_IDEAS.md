@@ -909,18 +909,23 @@ service lines, a baseball diamond at centre — so the pitch reads as *marked ou
 |---|---|
 | **Easy** | ⛳ **Water** (golf) · 🥊 **Ropes** (ring) · 🏈 **Roaming defence** (gridiron) |
 | **Med** | 🏎️ **Oil** (prix) · 🎳 **Rake gate** (alley) · 🎾 **Net + rackets** (tennis) |
-| **Hard** | 🏀 **Hoops** (court) · 🥊 **Sprung gloves** (ring) · ⛳ **Cups** (golf) |
+| **Hard** | 🏀 **Hoops** (court) · 🥊 **Sprung gloves** (ring) · 🏎️ **Start-lights** (prix) |
 
 Each source config is gated so **only** the borrowed piece runs here — golf brings the pond *or* the cups but
 never its full field, the alley brings the rake with no rack/bumpers/gutters, the ring brings ropes *or* gloves
-but never the bags, and so on.
+but never the bags, the prix brings the oil *or* the lights but never the tyre walls, and so on.
 
 **Two design rules this trio set had to respect:**
 - **Easy disrupts, it never denies** — the same rule all 16 Season 1–2 easy tiers follow. Water, ropes and
   roamers change how you play without making a goal impossible.
 - **Never stack three denials on hard.** Hoops, gates and the rake can each make a goal *not count*; three of
-  those is unwinnable, not hard. So hard is one denial (hoops) + one redirect (gloves) + one **reward** (cups,
-  which pay a refreshed flick) — it ends the season on the mechanic that gives something back.
+  those is unwinnable, not hard. So hard is one denial (hoops) + one redirect (gloves) + one **tax** (the
+  start-lights, which never stop a goal — they charge half power for a mistimed release).
+
+The hard trio's third slot first held the golf **cups**. It was replaced because a second swallow-the-ball
+denial sat awkwardly beside the hoops, and because a sprint start reads far better than a putting green on an
+athletics infield — the lights' four gantries live in the frame beside each net, which is also the one place
+no borrowed furniture can collide. `_pd('cups')` still works if we ever want them back.
 
 **Borrowing gotchas found and fixed** (worth knowing before adding more borrows):
 - Some conditions are **modifiers on their own arena's base** and cannot be lifted alone: tennis's red-racket
@@ -933,6 +938,16 @@ but never the bags, and so on.
   you cannot see breaks the telegraph rule. `drawRing` now draws the strands live on any borrowing board.
 - The borrowed draws first shared **one `try/catch`**, so a throw in the first silently swallowed every one
   after it (the cups vanished while the hoops drew). Each borrow now has its own guard.
+- **A per-borrow `try/catch` can still hide a missing function.** The hoops did not appear on the podium's hard
+  tier — and, it turned out, had not appeared on **THE HARDWOOD** either since `b114d91`: splicing the tennis
+  volleyers out of `12-draw.js` also deleted `drawCourt`, and both call sites are wrapped in `try/catch`, so the
+  `ReferenceError` was swallowed every frame instead of surfacing. The court's backboards, trampolines and rims
+  had been invisible for six commits while `bkGoalDenied` still denied goals through hoops nobody could see.
+  `drawCourt` is restored (it self-inits like `drawMinigolf`, so the furniture stands before the first touch).
+  The lesson: when a borrow shows nothing, check the draw function **exists** before suspecting the dispatch.
+- Borrowing a condition can still drag its neighbours' *invisible* geometry along: `initRaceway` laid out the
+  four tyre stacks unconditionally, so on the podium `rcSweepNails` shoved pegs off their formation to clear
+  stacks that were never drawn. The stacks are now built only when `c.tyres` is on.
 
 **Fantasy:** a decathlon finale — the arena cycles through every sport's signature
 gimmick against a boss keeper.

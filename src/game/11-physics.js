@@ -1692,25 +1692,29 @@
     if(rim && ((dx+dy)&1) && _rcRnd(seed+dx*2.3+dy*5.7)>0.55) continue;   // 1x1 dither on the edge
     pts.push([dx,dy,rim?2:(sheen?1:0)]); } }
     return pts; }
-    function rcArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='raceway'||_pd('oil'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rcArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='raceway'||_pd('oil')||_pd('lights'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     // ADDITIVE tiers, fixed intensities — nothing gets turned up, each tier adds a CONDITION:
     //   easy  TYRE WALLS only
     //   med   + OIL SLICKS + GRAVEL RUN-OFF
     //   hard  + START-LIGHTS (miss the green and the flick is worth half its stamina)
     // Oil is always the symmetric PAIR when it is on — a single slick would favour one end.
-    var _pO=_pd('oil');   // SPORTS DAY borrows the oil alone — no tyre walls, no gravel, no start-lights
-    return { oil:_pO?true:(t>=1), oilN:(_pO||t>=1)?2:0, oilSpin:2.0,
-    tyres:!_pO, tyreRest:1.0, tyreCap:12,
-    gravel:_pO?false:(t>=1), gravelDrag:0.90,
-    lights:_pO?false:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
+    // SPORTS DAY borrows ONE of these at a time — the oil (med) or the start-lights (hard) — and never the
+    // tyre walls or the gravel, which belong to the raceway's own layout.
+    var _pO=_pd('oil'), _pL=_pd('lights'), _prc=(_pO||_pL);
+    return { oil:_prc?_pO:(t>=1), oilN:(_prc?(_pO?2:0):(t>=1?2:0)), oilSpin:2.0,
+    tyres:!_prc, tyreRest:1.0, tyreCap:12,
+    gravel:_prc?false:(t>=1), gravelDrag:0.90,
+    lights:_prc?_pL:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
     rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0,px:rcOilShape(3.7)}); }
     if(c.oilN>=2){ rcOils.push({x:Math.round(W/2-28),y:Math.round(H*0.64),cd:0,sp:0,px:rcOilShape(11.3)}); }
     // TYRE stacks on the OUTER corners of each penalty area (the box corners facing midfield), so they guard
     // the approach instead of sitting in the dead pitch corners.
-    rcTyres=[]; try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
+    // Only when the stacks are actually ON: SPORTS DAY borrows the oil/lights without them, and an invisible
+    // stack still shoved the pegs off their formation via rcSweepNails.
+    rcTyres=[]; if(c.tyres) try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
     rcTyres.push({x:Math.round(_br.x),y:Math.round(_bF),hit:0,nx:0,ny:0});
     rcTyres.push({x:Math.round(_br.x+_br.w),y:Math.round(_bF),hit:0,nx:0,ny:0});
     rcTyres.push({x:Math.round(_rr.x),y:Math.round(_rF),hit:0,nx:0,ny:0});
@@ -2419,12 +2423,14 @@
                                                                                 wall, a living obstacle; none
                                                                                 of them can deny a goal
          med   OIL (prix)     + RAKE GATE (alley) + NET & RACKETS (tennis)
-         hard  HOOPS (court)  + GLOVES (ring)  + CUPS (golf)
-       The hard trio is deliberately one denial + one redirect + one REWARD (the cups pay a refreshed flick):
-       three denials stacked would make the final unwinnable rather than hard. */
+         hard  HOOPS (court)  + GLOVES (ring)  + START-LIGHTS (prix)
+       The hard trio is deliberately one denial + one redirect + one TAX: the lights never stop a goal, they
+       charge for a mistimed release, so the final stays winnable. (The golf CUPS sat in this slot first —
+       a second swallow-the-ball denial next to the hoops, and on an athletics infield a sprint start reads
+       far better than a putting green. The 'cups' key still works if we ever want them back.) */
     function _podHaz(){ if(!((typeof boardKey!=='undefined')&&boardKey==='podium'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
     var t=(typeof hzTier==='function')?hzTier():1;
-    return [['water','ropes','roam'],['oil','rake','net'],['hoops','gloves','cups']][t]; }
+    return [['water','ropes','roam'],['oil','rake','net'],['hoops','gloves','lights']][t]; }
     function _pd(n){ var h=_podHaz(); return !!(h&&h.indexOf(n)>=0); }
     // GRASS FINAL — season-1 gauntlet. THE FINAL (royaleArena.gauntlet) pulls one hazard per tier from
     // clean-porting Season 1 stadiums. Each stadium's arena predicate is generalized with || _g1('x'),
