@@ -714,6 +714,49 @@
         g.strokeStyle='rgba(0,0,0,0.28)'; g.strokeRect(1.5,1.5,w-3,h-3);
         } },
 
+      /* SPORTS DAY — the decathlon finale. Board-first: an athletics infield ringed by a red running track with
+         white lane lines and a gold inner kerb, and the GHOST MARKINGS of the season's other sports laid faintly
+         over the grass (a basketball key at each end, tennis service lines, a baseball diamond at centre) so the
+         pitch reads as "every sport at once". The medley hazards are layered on in a follow-up pass. */
+      podium:{ name:'SPORTS DAY', surround:'#1b1f2a', stand:'#2c3242', tier:'rgba(255,255,255,0.06)',
+        frame:'#6a6f7d',frameHi:'#9aa0b0',frameLo:'#3f434f',post:'#f4f7ff',   // brushed-steel showpiece frame
+        line:'rgba(252,252,255,0.92)',line2:'rgba(252,252,255,0.58)',
+        netRecess:'#24283a',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(240,244,255,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(240,244,255,0.56)',netOverlay:'rgba(14,16,24,0.44)',
+        surface(g){ var TURF='#2f7d46', TURF2='#2a7040', TRACK='#b5432c', TRACK2='#a03b26', GHOST='rgba(255,255,255,0.10)';
+        g.fillStyle=TURF; g.fillRect(0,0,W,H);
+        for(var n=0;n<900;n++){ g.fillStyle=(Math.random()>0.5)?TURF2:'rgba(255,255,255,0.035)';
+        g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // GHOST MARKINGS — the season's other sports, faint, so the infield looks marked out for all of them
+        g.strokeStyle=GHOST; g.lineWidth=1;
+        var tk=9, iL=WALL+tk, iR=W-WALL-tk, iT=WALL+tk, iB=H-WALL-tk;   // infield bounds (inside the track)
+        for(var e=0;e<2;e++){ var ky=e?(H-NET_DEPTH-GOAL_AREA_D-6):(NET_DEPTH+GOAL_AREA_D+6);
+        g.beginPath(); g.arc(W/2,ky,17,0,Math.PI*2); g.stroke();                       // basketball key circle
+        g.beginPath(); g.moveTo(iL+6,ky); g.lineTo(iR-6,ky); g.stroke(); }             // tennis service line
+        g.beginPath();                                                                  // baseball diamond, centre
+        g.moveTo(W/2,H/2-16); g.lineTo(W/2+16,H/2); g.lineTo(W/2,H/2+16); g.lineTo(W/2-16,H/2); g.closePath(); g.stroke();
+        // RUNNING TRACK — a red band inside the walls with three lanes, plus lane ticks
+        g.fillStyle=TRACK;
+        g.fillRect(WALL,WALL,W-WALL*2,tk); g.fillRect(WALL,H-WALL-tk,W-WALL*2,tk);
+        g.fillRect(WALL,WALL,tk,H-WALL*2); g.fillRect(W-WALL-tk,WALL,tk,H-WALL*2);
+        for(var d=0;d<600;d++){ var _dx=(WALL+Math.random()*(W-WALL*2))|0, _dy=(WALL+Math.random()*(H-WALL*2))|0;
+        if(_dx>iL&&_dx<iR&&_dy>iT&&_dy<iB) continue;
+        g.fillStyle=TRACK2; g.fillRect(_dx,_dy,1,1); }
+        g.fillStyle='rgba(255,255,255,0.55)';                                           // lane divider lines
+        for(var ln=3;ln<tk;ln+=3){ g.fillRect(WALL+ln,WALL+ln,W-WALL*2-ln*2,1); g.fillRect(WALL+ln,H-WALL-ln-1,W-WALL*2-ln*2,1);
+        g.fillRect(WALL+ln,WALL+ln,1,H-WALL*2-ln*2); g.fillRect(W-WALL-ln-1,WALL+ln,1,H-WALL*2-ln*2); }
+        // GOLD inner kerb — the podium nod, separating the track from the infield
+        g.fillStyle='#e8c451';
+        g.fillRect(iL-1,iT-1,iR-iL+2,1); g.fillRect(iL-1,iB,iR-iL+2,1);
+        g.fillRect(iL-1,iT-1,1,iB-iT+2); g.fillRect(iR,iT-1,1,iB-iT+2);
+        },
+        preview(g,w,h){ g.fillStyle='#2f7d46'; g.fillRect(0,0,w,h);
+        var tk=Math.max(2,Math.round(Math.min(w,h)*0.12)); g.fillStyle='#b5432c';
+        g.fillRect(0,0,w,tk); g.fillRect(0,h-tk,w,tk); g.fillRect(0,0,tk,h); g.fillRect(w-tk,0,tk,h);
+        g.fillStyle='#e8c451'; g.strokeStyle='#e8c451'; g.lineWidth=1; g.strokeRect(tk+0.5,tk+0.5,w-tk*2-1,h-tk*2-1);
+        g.strokeStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.arc(w/2,h/2,Math.max(3,h*0.12),0,6.283); g.stroke();
+        g.strokeStyle='rgba(0,0,0,0.3)'; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -849,7 +892,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium', ring:'arena' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium', ring:'arena', podium:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){

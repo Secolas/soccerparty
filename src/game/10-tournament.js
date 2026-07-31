@@ -74,7 +74,9 @@
       {name:'THE GRAND PRIX',pitch:'raceway',ab:['cannon',
       'glide','sniper'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
       {name:'THE RING',pitch:'ring',ab:['cannon',
-      'ricochet','wall'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'}
+      'ricochet','wall'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      {name:'SPORTS DAY',pitch:'podium',ab:['cannon',
+      'sniper','reflex'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',

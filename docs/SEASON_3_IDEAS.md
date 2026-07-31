@@ -892,7 +892,31 @@ had two dampers and nothing that redirected on a beat — the gloves fill that g
 speed-bag = reuses the Baseball bat's swinging + timing tech (blocking flavor);
 canvas drag = drag zone (puddle/caramel).
 
-### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties)
+### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties) — BOARD BUILT (medley TBD)
+
+**Build status:** registered as Season 3 stadium #9 (`pitch:'podium'`, board in `03-boards.js`, ambience →
+`stadium`) — the ladder's ninth and last node. Board-first, matching arenas 5–8: an athletics **infield** ringed
+by a red **running track** with white lane lines and a **gold inner kerb** (the podium nod), and the **ghost
+markings** of the season's other sports laid faintly over the grass — a basketball key at each end, tennis
+service lines, a baseball diamond at centre — so the pitch reads as *marked out for every sport at once*.
+
+**Medley hazards — the next pass.** The two earlier finals set the pattern to follow: `THE FINAL` (S1) and
+`THE TURF` (S2) both **borrow** conditions from earlier stadiums rather than inventing new ones, by generalising
+each hazard's arena predicate (`_g1('bush')`, `_tHaz()`) so the existing roll/step/draw code fires on the final
+board too. For Season 3 that means picking Season-3 conditions and turning them on here.
+
+Note the doc's original table below **predates the additive rule** now standing for arenas 5+: it scaled a
+rotation speed and an overlap count. The additive version is simply **how many borrowed conditions are live**:
+
+| Tier | Medley |
+|---|---|
+| **Easy** | **1** borrowed condition |
+| **Med** | **2** |
+| **Hard** | **3** |
+
+Recommended three, chosen so each tier adds a different *kind* of threat and each comes from a different sport:
+**ropes** (THE RING — adds energy, denies nothing) → **+ roaming defence** (THE END ZONE — living interference)
+→ **+ the rake gate** (THE ALLEY — a timed goal gate, the boss-level denial).
 
 **Fantasy:** a decathlon finale — the arena cycles through every sport's signature
 gimmick against a boss keeper.
