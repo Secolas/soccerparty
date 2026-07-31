@@ -72,7 +72,9 @@
          gridiron  barge the line / the heavy linebacker / the last-ditch tackle
          alley     the ball that keeps rolling / bumper rails / a wall of pins
          prix      steering / slow-motion cornering / a wet track
-         ring      the puncher / punch-drunk / the champion's guard
+         ring      the puncher / you play hurt / the champion's guard
+       (the ring cannot use DRUNK: its hard-tier gloves already apply that exact effect on a punch, so the
+        ability was invisible there — a wobbling arrow the player would read as the gloves)
          podium    keeper off the line / the relay pass / the big man in goal
        Arena ab[] is NOT limited to ROYALE_DRAFT_POOL — glide, wall and bumper are never drafted, so a stadium
        is the only place they are ever seen. */
@@ -92,7 +94,7 @@
       {name:'THE GRAND PRIX',pitch:'raceway',ab:['guided',
       'slowmo','wet'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
       {name:'THE RING',pitch:'ring',ab:['cannon',
-      'drunk','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      'injury','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
       {name:'SPORTS DAY',pitch:'podium',ab:['sweeper',
       'trio','bigkeeper'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
     ];
@@ -642,7 +644,7 @@
       // Season 3 spends 27 different abilities across its 9 stadiums, so every one of them needs a line in
       // the OPPONENT's voice — without one the card falls back to the player-voice text ("Your ball is super
       // slippery!") under an "OPPONENT ·" heading, which reads like it is describing you.
-      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.'};
+      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.',injury:'YOU play hurt — 2 flicks per turn instead of 3.'};
       (ar.ab||[]).slice(0,_n).forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
       '✨','OPPONENT · '+((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
       (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||''))]);
