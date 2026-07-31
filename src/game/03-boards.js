@@ -844,7 +844,10 @@
       gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
       bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
       bowlRakePh=0; bowlGutter=null;
-      rcOn=false; rcLightT=0; if(typeof rcOils!=='undefined'&&rcOils) rcOils.length=0;
+      rcOn=false; rcLightT=0; if(typeof rcRuts!=='undefined'&&rcRuts) rcRuts.length=0;
+      if(typeof rcDust!=='undefined'&&rcDust) rcDust.length=0;
+      if(typeof rcSmear!=='undefined'&&rcSmear) rcSmear.length=0;
+      if(typeof rcOils!=='undefined'&&rcOils) rcOils.length=0;
       if(typeof rcTyres!=='undefined'&&rcTyres) rcTyres.length=0;
       if(typeof rcGravels!=='undefined'&&rcGravels) rcGravels.length=0;
       }catch(e){}

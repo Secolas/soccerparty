@@ -1639,17 +1639,18 @@
     // ball down, kicking up dust), and the START-LIGHTS gate — release on GREEN for your full stamina, miss it
     // and the flick is worth HALF. All act only on a MOVING grounded ball, are bounded/capped, and never trap
     // the turn; a chip clears the track.
-    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0, rcLightFlash=0, rcDust=[], rcSmear=[];
+    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0, rcLightFlash=0, rcDust=[], rcSmear=[], rcRuts=[];
     var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { oilN:(t>=2)?3:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
+    return { oilN:(t>=2)?2:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
     tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12,
     gravelDrag:(t>=2)?0.86:(t>=1?0.90:0.93),
     lights:(t>=1), lightMiss:0.5, lightGreen:(t>=2)?20:34, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
-    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.5),cd:0,sp:0}); }
-    if(c.oilN>=3){ rcOils.push({x:Math.round(W/2-30),y:Math.round(H*0.33),cd:0,sp:0}); rcOils.push({x:Math.round(W/2+22),y:Math.round(H*0.70),cd:0,sp:0}); }
+    // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
+    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0}); }
+    if(c.oilN>=2){ rcOils.push({x:Math.round(W/2-28),y:Math.round(H*0.64),cd:0,sp:0}); }
     // TYRE stacks on the OUTER corners of each penalty area (the box corners facing midfield), so they guard
     // the approach instead of sitting in the dead pitch corners.
     rcTyres=[]; try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
@@ -1658,7 +1659,7 @@
     rcTyres.push({x:Math.round(_rr.x),y:Math.round(_rF),hit:0,nx:0,ny:0});
     rcTyres.push({x:Math.round(_rr.x+_rr.w),y:Math.round(_rF),hit:0,nx:0,ny:0}); }catch(e){}
     var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ];
-    rcLightT=0; rcLightFlash=0; rcDust=[]; rcSmear=[]; }
+    rcLightT=0; rcLightFlash=0; rcDust=[]; rcSmear=[]; rcRuts=[]; }
     // Pegs are laid out BEFORE the arena's board is applied, so a formation nail can land inside a tyre stack.
     // Nudge any overlapping nail out to the stack's edge while the ball is at rest (the golf sweep's precedent).
     function rcSweepNails(){ if(moving||typeof nails==='undefined'||!nails) return;
@@ -1674,8 +1675,10 @@
     if(rcLightFlash>0) rcLightFlash--;
     for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
     for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; }
-    for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=0.90; du.vy*=0.90; if(--du.life<=0) rcDust.splice(d,1); }
+    for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=du.puff?0.94:0.90; du.vy*=du.puff?0.94:0.90;
+    if(du.puff) du.r+=0.26; if(--du.life<=0) rcDust.splice(d,1); }
     for(var s=rcSmear.length-1;s>=0;s--){ if(--rcSmear[s].life<=0) rcSmear.splice(s,1); }
+    for(var r=rcRuts.length-1;r>=0;r--){ if(--rcRuts[r].life<=0) rcRuts.splice(r,1); }
     try{ rcSweepNails(); }catch(e){} }
     // START-LIGHTS: the flick's power multiplier at the current phase — full on GREEN, HALF if you miss it. So
     // green pays your normal stamina for that flick (100%, then 75%, then 50%…) and a miss halves it.
@@ -1697,11 +1700,25 @@
     if(!air) return;   // airborne clears the track hazards
     // GRAVEL run-off — extra drag in the corner boxes; stray wide and the ball bogs down. Only slows, so safe.
     // Throws a couple of pebbles/dust motes per frame while the ball is ploughing through it.
+    var _inGrv=false;
     for(var g=0;g<rcGravels.length;g++){ var gv=rcGravels[g];
-    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag;
-    if(sp>c.gate && rcDust.length<40){ for(var q=0;q<2;q++){ var a=Math.atan2(-coin.vy,-coin.vx)+(Math.random()-0.5)*1.5, m=0.5+Math.random()*1.2;
-    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a)*m,vy:Math.sin(a)*m,life:12+(Math.random()*10|0),max:22}); } }
+    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ _inGrv=true;
+    coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag;
+    if(sp>c.gate){ var _back=Math.atan2(-coin.vy,-coin.vx);
+    // the moment it goes off-track: a hard spray of stones + a dust cloud, like a car hitting the run-off
+    if(!coin._rcGrv){ for(var q0=0;q0<9;q0++){ var a0=_back+(Math.random()-0.5)*2.0, m0=1.1+Math.random()*2.2;
+    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a0)*m0,vy:Math.sin(a0)*m0,life:16+(Math.random()*12|0),max:28,r:1}); }
+    for(var q1=0;q1<3;q1++){ rcDust.push({x:coin.x+(Math.random()-0.5)*4,y:coin.y+(Math.random()-0.5)*4,vx:Math.cos(_back)*(0.3+Math.random()*0.5),vy:Math.sin(_back)*(0.3+Math.random()*0.5),life:26+(Math.random()*10|0),max:36,r:2.5+Math.random()*2,puff:true});
+    }
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(3); }catch(e){} }
+    // and a steady trickle of stones + a rut gouged in the surface while it ploughs on
+    if(rcDust.length<52){ for(var q=0;q<2;q++){ var a=_back+(Math.random()-0.5)*1.5, m=0.5+Math.random()*1.3;
+    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a)*m,vy:Math.sin(a)*m,life:12+(Math.random()*10|0),max:22,r:1}); }
+    if(Math.random()<0.5) rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(_back)*0.25,vy:Math.sin(_back)*0.25,life:22,max:32,r:2+Math.random()*1.6,puff:true}); }
+    if(rcRuts.length<80) rcRuts.push({x:coin.x,y:coin.y,a:Math.atan2(coin.vy,coin.vx),life:70,max:70});
+    }
     break; } }
+    coin._rcGrv=_inGrv;
     // OIL spills — inject spin so the ball curves off-line (Magnus does the bending). Spin is bounded; friction
     // still settles the ball, so this never traps a turn. Arms the splash and coats the ball so it SMEARS oil
     // along its path for a short while afterwards.

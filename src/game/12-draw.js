@@ -774,10 +774,20 @@
     ctx.fillStyle='rgba(14,10,20,'+(0.5*sa).toFixed(3)+')';
     ctx.beginPath(); ctx.arc(sm.x,sm.y,sm.r,0,6.283); ctx.fill();
     ctx.fillStyle='rgba(80,110,170,'+(0.22*sa).toFixed(3)+')'; ctx.fillRect(Math.round(sm.x)-1,Math.round(sm.y)-1,1,1); } }
-    // GRAVEL DUST — pebbles/motes kicked up while the ball ploughs the run-off
+    // GRAVEL RUTS — the gouge the ball ploughs through the stones, fading as they settle back
+    if(typeof rcRuts!=='undefined'){ for(var ri=0;ri<rcRuts.length;ri++){ var ru=rcRuts[ri], ra=ru.life/ru.max;
+    ctx.save(); ctx.translate(ru.x,ru.y); ctx.rotate(ru.a);
+    ctx.fillStyle='rgba(74,62,40,'+(0.5*ra).toFixed(3)+')'; ctx.fillRect(-3,-2,6,4);
+    ctx.fillStyle='rgba(198,180,134,'+(0.35*ra).toFixed(3)+')'; ctx.fillRect(-3,-3,6,1); ctx.fillRect(-3,2,6,1);
+    ctx.restore(); } }
+    // GRAVEL DUST — a rising dust cloud plus the stones it spits out behind the ball
     if(typeof rcDust!=='undefined'){ for(var di=0;di<rcDust.length;di++){ var du=rcDust[di], da=du.life/du.max;
-    ctx.fillStyle=(di&1)?('rgba(206,188,142,'+(0.85*da).toFixed(3)+')'):('rgba(150,130,90,'+(0.85*da).toFixed(3)+')');
-    ctx.fillRect(Math.round(du.x),Math.round(du.y),1,1); } }
+    if(du.puff){ ctx.fillStyle='rgba(196,178,132,'+(0.30*da).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(du.x,du.y,du.r,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(222,208,168,'+(0.20*da).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(du.x-du.r*0.3,du.y-du.r*0.3,du.r*0.55,0,6.283); ctx.fill();
+    } else { ctx.fillStyle=(di&1)?('rgba(206,188,142,'+(0.9*da).toFixed(3)+')'):('rgba(132,114,78,'+(0.9*da).toFixed(3)+')');
+    var _dz=(du.life>du.max*0.6)?2:1; ctx.fillRect(Math.round(du.x),Math.round(du.y),_dz,_dz); } } }
     // OIL slicks — dark glossy puddles with a cool sheen; a crossing throws a proper splash (expanding ring +
     // droplets that arc out and fall back, seeded off a fixed hash so the pattern is stable per splash).
     if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
@@ -794,14 +804,6 @@
     ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?('rgba(30,24,40,'+(0.9*oa).toFixed(3)+')'):('rgba(110,140,205,'+(0.9*oa).toFixed(3)+')');
     ctx.fillRect(Math.round(dx2),Math.round(dy2),1,1);
     if(age<0.5) ctx.fillRect(Math.round(dx2),Math.round(dy2)+1,1,1); } } } }
-    // TYRE stacks — black rings on the penalty-box corners. A hit KNOCKS the stack along the impact normal and
-    // it springs back (damped), with a squash pulse and a bright rim.
-    if(typeof rcTyres!=='undefined'){ for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k2=(ty.hit>0)?(ty.hit/14):0;
-    var rec=Math.sin(k2*Math.PI)*3.5, ox=(ty.nx||0)*rec, oy=(ty.ny||0)*rec, R=RC_TYRE_R*(1+k2*0.28), X=ty.x+ox, Y=ty.y+oy;
-    if(k2>0){ ctx.strokeStyle='rgba(255,220,120,'+(k2*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(X,Y,R+2,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R,0,6.283); ctx.fill();
-    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(X,Y,R-2,0,6.283); ctx.fill();
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R-4,0,6.283); ctx.fill(); } }
     // START-LIGHTS gantries — mounted in the FRAME either side of each net (the most visible spot on the board).
     // Reds fill 1..5, hold, then all OUT = GREEN: release then for full stamina, miss it and the flick is halved.
     if(c&&c.lights){ var _on=RC_LIGHT_BUILD+RC_LIGHT_HOLD, _green=(rcLightT>=_on&&rcLightT<_on+c.lightGreen),
@@ -811,13 +813,27 @@
     for(var _yi=0;_yi<2;_yi++){ for(var _xi=0;_xi<2;_xi++){ var _cx=_fx[_xi], _cy=_fy[_yi];
     ctx.fillStyle='#0a0b0e'; ctx.fillRect(_cx-15,_cy-4,30,8);                    // gantry housing
     ctx.fillStyle='#3a3d42'; ctx.fillRect(_cx-15,_cy-4,30,1);
-    for(var _k=0;_k<5;_k++){ var _lx=_cx-12+_k*6;
+    // fill order mirrors on the bottom row so the four gantries are 180deg-rotationally symmetric, the same
+    // convention every Season 3 arena uses — light k at (x,y) has its twin at (W-x, H-y).
+    for(var _k=0;_k<5;_k++){ var _lx=_cx+((_yi?1:-1)*(12-_k*6));
     if(_green){ var _ga=0.45+(_fl>0?0.35*(_fl/16):0);
     ctx.fillStyle='rgba(90,255,130,'+Math.min(0.9,_ga).toFixed(3)+')'; ctx.beginPath(); ctx.arc(_lx,_cy,4,0,6.283); ctx.fill(); }
     ctx.fillStyle=_green?'#4bff72':((_k<_lit)?'#ff2a1a':'#3a1512');
     ctx.beginPath(); ctx.arc(_lx,_cy,2.2,0,6.283); ctx.fill();
     if(_green||_k<_lit){ ctx.fillStyle=_green?'rgba(220,255,225,0.85)':'rgba(255,190,180,0.7)'; ctx.fillRect(Math.round(_lx)-1,Math.round(_cy)-2,1,1); } } } } }
     }
+    /* THE GRAND PRIX tyre stacks sit ON the penalty-box corners, so they must be drawn AFTER the pitch markings
+       (drawEndMarks) — with the ground FX the white box line was painted straight across each stack. Same late
+       pass the bowling pins use. A hit knocks the stack along the impact normal and it springs back (damped),
+       with a squash pulse and a bright rim. */
+    function drawRacewayTyres(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
+    if(typeof rcTyres==='undefined'||!rcTyres) return;
+    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k2=(ty.hit>0)?(ty.hit/14):0;
+    var rec=Math.sin(k2*Math.PI)*3.5, ox=(ty.nx||0)*rec, oy=(ty.ny||0)*rec, R=RC_TYRE_R*(1+k2*0.28), X=ty.x+ox, Y=ty.y+oy;
+    if(k2>0){ ctx.strokeStyle='rgba(255,220,120,'+(k2*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(X,Y,R+2,0,6.283); ctx.stroke(); }
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R,0,6.283); ctx.fill();
+    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(X,Y,R-2,0,6.283); ctx.fill();
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R-4,0,6.283); ctx.fill(); } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1716,6 +1732,7 @@
       try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
       try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolf(ctx,now); }catch(e){}
       try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
+      try{ if(boardKey==='raceway'&&stadiumHazards()) drawRacewayTyres(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';

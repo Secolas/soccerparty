@@ -681,19 +681,25 @@ The hazards (all in `11-physics.js` + `drawRaceway` in `12-draw.js`):
 does the bending; spin bounded ±4). Crossing one throws a **splash** built like CRAZY GOLF's water splash — an
 expanding contact ring plus a dozen droplets that arc out and fall back, seeded off a fixed hash so the pattern
 is stable — and **coats the ball**, which then drags a fading **oily smear trail** behind it for ~34 frames.
-Off easy, **1** med, **3** hard (`oilSpin` 1.6 / 2.2).
+Off easy, **1** med, **2** hard (`oilSpin` 1.6 / 2.2) — two slicks max, placed 180°-rotationally symmetric
+about the centre so neither end is favoured.
 
 **TYRE WALLS on the PENALTY-BOX CORNERS (bounce + recoil).** Tyre stacks sit on the **outer corners of each
 penalty area** (the corners facing midfield) so they guard the approach instead of decorating the dead pitch
 corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). A hit **knocks the stack along
 the impact normal and springs it back** (damped recoil + squash pulse + bright rim). On every tier. Because pegs
 are laid out before the board is applied, `rcSweepNails()` nudges any formation nail out of a stack while the
-ball is at rest (the golf sweep's precedent).
+ball is at rest (the golf sweep's precedent). Drawn in the **late pass** (with the bowling pins), *after*
+`drawEndMarks` — with the ground FX the white penalty-box line was painted straight across each stack.
 
-**GRAVEL RUN-OFF (with dust kick-up).** Tan speckled patches in the four **pitch corners**; stray **wide** into
-one and the ball is **dragged down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose the
-shot. While the ball ploughs through, it **kicks up pebbles and dust** that fly out behind it and settle. On
-every tier, and it only slows, so always settle-safe.
+**GRAVEL RUN-OFF (run-off-real animation).** Tan speckled patches in the four **pitch corners**; stray **wide**
+into one and the ball is **dragged down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose
+the shot. Staged like a car actually hitting the run-off:
+- **On entry**, a hard **spray of stones** thrown backward along the travel line plus a **dust cloud** (soft
+  expanding puffs) and a thud.
+- **While ploughing on**, a steady trickle of stones, more rising dust, and a **rut gouged into the surface**
+  (a fading dark gouge with lighter thrown-up edges) marking the line it took.
+On every tier, and it only slows, so always settle-safe.
 
 **START-LIGHTS = A STAMINA GATE (the timing hazard).** A 5-light gantry cycles F1-style: reds fill **1→5**,
 hold, then all **OUT = GREEN**. Release on **green** and the flick is worth its **full stamina** for that flick
@@ -704,6 +710,8 @@ than just how hard you can hit.
 - **Mounted in the FRAME beside each net** (two gantries per end, left and right of the goal), the most visible
   spot on the board — the earlier in-pitch placement on the checkered stripe was easy to miss.
 - Off easy; green window **34f med / 20f hard** (tighter = harder).
+- The four gantries are **180°-rotationally symmetric**, fill order included (light *k* at `(x,y)` has its twin
+  at `(W-x, H-y)`), so both ends read identically — the game's standing symmetry convention.
 - **The CPU plays the same gate:** it revs and launches on green (`rcInGreen` gates its release) — but only
   *most* of the time on med (`aiLightWait`, ~70%), always on hard, so it mistimes like a human does instead of
   nailing every launch.
