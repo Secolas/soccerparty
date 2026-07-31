@@ -1992,6 +1992,13 @@
       // CPU AIM TELEGRAPH: the CPU has already locked in its shot (aiShot); the wind-up plays it out the
       // way a human would — a beat of "thinking", then a DRAG where the aim line pulls back and grows while
       // the angle wavers and settles onto target (a hand adjusting), then a brief locked hold before the
+      /* The "unsteady aim" sway, shared by the human guide and the CPU telegraph so the two can never drift
+         apart: a hand that cannot hold a line. It is on when the side to play is DRUNK, or RATTLED by a punch in
+         THE RING — in both cases the real deviation is a random kick at release, so the honest tell is an arrow
+         that will not sit still rather than a fixed line the shot cannot keep. */
+      function _aimSway(now){ var on=false;
+      try{ on=debuffActive(current,'drunk')||((typeof rgWobArmed==='function')&&rgWobArmed()); }catch(e){}
+      return on?Math.sin((now||0)*0.012)*0.4:0; }
       // fast flick fires at release. Same aim guide the player gets — stamina-coloured line, ability
       // trajectory (curve/serpent/wet/backspin) — so the shot drawn is the shot taken.
       if(typeof CPU_AIM_TELEGRAPH!=='undefined'&&CPU_AIM_TELEGRAPH&&aiPending&&aiEnabled&&aiEnabled[current]&&aiShot&&!aiShot.pen&&!moving&&!scoring&&phase==='play'&&!winner&&!debuffActive(current,'fog')){
@@ -2008,7 +2015,9 @@
       var _drag=Math.max(0,Math.min(1,(_tp-0.16)/0.62)), _dragE=_drag*_drag*(3-2*_drag);   // smoothstep: pull back slowly, ease into the lock, then a longer hold
       var _wob=(1-_dragE)*Math.sin((now||0)/85)*0.10;                 // aim waver that settles to 0 as it locks (true angle at release)
       var _cpow=_cpowFull*(0.30+0.70*_dragE);                         // power builds as the drag extends
-      drawAimGuide(_cang+_wob,_cpow,_cpow,0.6+0.4*_dragE,false);
+      // ...plus the drunk/rattled sway, which does NOT settle — the CPU's arrow wobbles exactly as the player's
+      // does when its own shot is the unreliable one.
+      drawAimGuide(_cang+_wob+_aimSway(now),_cpow,_cpow,0.6+0.4*_dragE,false);
       }
       }
       if(aiming&&aimStart&&aimNow&&debuffActive(current,'fog')){ ctx.save();
@@ -2021,10 +2030,7 @@
       ctx.fill(); ctx.restore();
       } if(aiming&&aimStart&&aimNow&&!debuffActive(current,'fog')){
         const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,rawP=Math.hypot(dx,dy),power=Math.min(rawP,(pen&&pen.active)?32:(TAC.frozen?35:70)),ang=Math.atan2(dy,dx);
-        // A RATTLED ball (punched in THE RING last turn) aims exactly like DRUNK does — the guide sways, because
-        // the real deviation is a random kick at release and a fixed arrow would be a promise the shot cannot keep.
-        var _rgw=false; try{ _rgw=(typeof rgWobArmed==='function')&&rgWobArmed(); }catch(e){}
-        var _dw=(debuffActive(current,'drunk')||_rgw)?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
+        var _dw=_aimSway(now), angD=ang+_dw;   // drunk / rattled: the arrow will not sit still (see _aimSway)
         drawAimGuide(angD,power,rawP,1,true);
       }
       // The aim guide: pull-back marker, stamina-coloured power line, the predicted bounce/curve path, and
