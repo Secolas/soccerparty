@@ -110,7 +110,8 @@
     'magnet','clearance','shield',
     'anchor','striker','defender',
     'freeze','injury','drunk',
-    'ricochet','serpent','wild'];
+    'ricochet','serpent','wild',
+    'aftershock'];
     var ROY_EXTRA_ABILITY={common:'fog',rare:'magnet',epic:'cannon'};
     function royaleRamp(i){ return i<3?'easy':(i<6?'med':'hard');
     } function cupSizesWon(){ try{ return spAchGet().cupSizes||[];
@@ -1292,6 +1293,7 @@
     {i:'magnet',t:'MAGNET: near their goal the ball curves toward the net.'},
     {i:'freeze',t:'FREEZE: the opponent power bar is capped at half.'},
     {i:'ghost',t:'GHOST: your shot phases through the players it hits.'},
+    {i:'aftershock',t:'AFTERSHOCK: a save blasts their players back and your ball keeps its pace.'},
     {i:'wall',t:'WALL: a brick wall guards your goal. Three hits and it shatters.'},
     {i:'sticky',t:'STICKY: hit an opponent player for a bonus flick each turn.'},
     {i:'sniper',t:'SNIPER: shows a long aim line to line up the perfect shot.'},

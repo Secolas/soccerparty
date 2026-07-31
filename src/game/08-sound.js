@@ -218,7 +218,14 @@
     } function sfxBumperHit(){ if(muted) return;
     tone(620,0.06,'sine',0.10,1180);
     setTimeout(function(){ tone(880,0.07,'triangle',0.05,560);
-    },45); haptic(16); } function sfxAnchorHit(){ if(muted) return;
+    },45); haptic(16); } function sfxAftershock(v){ if(muted) return;
+    var s=Math.min(1,(v||4)/9);
+    tone(150,0.13,'square',0.10+s*0.05,52);
+    tone(300,0.09,'sawtooth',0.06+s*0.04,120);
+    noise(0.16+s*0.08,0.09+s*0.05);
+    setTimeout(function(){ tone(760,0.06,'triangle',0.04,1500);
+    },70); haptic([0,32,16,26]);
+    } function sfxAnchorHit(){ if(muted) return;
     tone(120,0.16,'square',0.11,60);
     noise(0.08,0.06); haptic([0,
     25,15]); } function sfxJackpot(){ if(muted) return;
@@ -601,6 +608,7 @@
     }},{id:'trio',icon:'🔺',name:'TIKI-TAKA',desc:'Bounce a single shot off 3 of your own players and it re-launches at full speed off the third — a passing move that never dies.',apply:function(t){t.trio=true;
     }},{id:'varcheck',icon:'📺',name:'VAR CHECK',desc:'Once per match your first own goal is reviewed and ruled out. No goal!',apply:function(t){t.varcheck=true;
     }},{id:'rewind',icon:'⏪',name:'REWIND',desc:'On your turn, tap to undo your last flick — the ball goes back to where you shot and you get the flick again — but not on your final flick of the turn, since that hands the ball over. One use, and it recharges every time a goal is scored.',apply:function(t){t.rewind=true;
+    }},{id:'aftershock',icon:'💥',name:'AFTERSHOCK',desc:'When their keeper or a wall blocks your shot, the impact BLASTS their nearby players away from the goal and your ball keeps its pace off the rebound — so a save hands you the second chance instead of killing the move. One riposte per flick.',apply:function(t){t.aftershock=true;
     }}]; var TACTIC_MAP={}; TACTICS.forEach(function(c){TACTIC_MAP[c.id]=c;
     }); var COUNTRY_AB={Brazil:['curve',
     'serpent','striker'],Argentina:['guided',
@@ -620,7 +628,7 @@
     'bigkeeper','cannon'],Senegal:['bumper',
     'anchor','glide']}; var COUNTRY_PITCH={Brazil:'beach',Portugal:'cobble',Argentina:'street',Netherlands:'grass',France:'street',Mexico:'clay',Spain:'grass',England:'grass',Germany:'wood',Italy:'grass',Belgium:'grass',Croatia:'stone',Japan:'neon',USA:'turf',Iceland:'ice',Senegal:'savanna'};
     var COUNTRY_STYLE={Brazil:{f5:'1-3',f7:'3-3',aggr:1.0},Netherlands:{f5:'1-3',f7:'3-3',aggr:0.92},Argentina:{f5:'1-3',f7:'3-3',aggr:0.82},Portugal:{f5:'1-3',f7:'3-3',aggr:0.75},Spain:{f5:'1-3',f7:'3-3',aggr:0.68},Mexico:{f5:'1-2-1',f7:'2-3-1',aggr:0.58},France:{f5:'1-2-1',f7:'2-3-1',aggr:0.52},Germany:{f5:'1-2-1',f7:'2-3-1',aggr:0.46},Belgium:{f5:'1-2-1',f7:'2-3-1',aggr:0.42},Japan:{f5:'1-2-1',f7:'2-3-1',aggr:0.40},England:{f5:'1-2-1',f7:'2-3-1',aggr:0.38},USA:{f5:'2-2',f7:'3-2-1',aggr:0.30},Croatia:{f5:'2-2',f7:'3-2-1',aggr:0.24},Italy:{f5:'2-2',f7:'3-2-1',aggr:0.15},Iceland:{f5:'2-2',f7:'3-2-1',aggr:0.18},Senegal:{f5:'1-3',f7:'3-3',aggr:0.78}};
-    var ICON_SRC={cannon:'assets/generated/icon-cannon.png',curve:'assets/generated/icon-curveball.png',glide:'assets/generated/icon-glide.png',magnet:'assets/generated/icon-magnet.png',sticky:'assets/generated/icon-sticky.png',sniper:'assets/generated/icon-sniper.png',bigkeeper:'assets/generated/icon-bigkeeper.png',freeze:'assets/generated/icon-freeze.png',guided:'assets/generated/icon-joystick.png',wall:'assets/generated/icon-wall.png',slowmo:'assets/generated/icon-slowmo.png',ghost:'assets/generated/icon-ghost.png',reflex:'assets/generated/icon-reflex.png',clearance:'assets/generated/icon-clearance.png',wet:'assets/generated/icon-wet.png',chip:'assets/generated/icon-chip.png',striker:'assets/generated/icon-striker.png',defender:'assets/generated/icon-defender.png',boomerang:'assets/generated/icon-boomerang.png',anchor:'assets/generated/icon-anchor.png',portal:'assets/generated/icon-portal.png',sweeper:'assets/generated/icon-sweeper.png',strategist:'assets/generated/icon-strategist.png',volley:'assets/generated/icon-volley.png',medic:'assets/generated/icon-medic.png',trap:'assets/generated/icon-trap.png',shield:'assets/generated/icon-shield.png',bumper:'assets/generated/icon-bumper.png',ricochet:'assets/generated/icon-ricochet.png',fog:'assets/generated/icon-fog.png',drunk:'assets/generated/icon-drunk.png',injury:'assets/generated/icon-injury.png',drill:'assets/generated/icon-drill.png',backspin:'assets/generated/icon-backspin.png',serpent:'assets/generated/icon-serpent.png',swap:'assets/generated/icon-swap.png',wild:'assets/generated/icon-wild.png',market:'assets/generated/icon-market.png',trio:'assets/generated/icon-trio.png',varcheck:'assets/generated/icon-varcheck.png',rewind:'assets/generated/icon-rewind.png',flick:'assets/generated/icon-flick.png',home:'assets/generated/icon-home.png'};
+    var ICON_SRC={cannon:'assets/generated/icon-cannon.png',curve:'assets/generated/icon-curveball.png',glide:'assets/generated/icon-glide.png',magnet:'assets/generated/icon-magnet.png',sticky:'assets/generated/icon-sticky.png',sniper:'assets/generated/icon-sniper.png',bigkeeper:'assets/generated/icon-bigkeeper.png',freeze:'assets/generated/icon-freeze.png',guided:'assets/generated/icon-joystick.png',wall:'assets/generated/icon-wall.png',slowmo:'assets/generated/icon-slowmo.png',ghost:'assets/generated/icon-ghost.png',reflex:'assets/generated/icon-reflex.png',clearance:'assets/generated/icon-clearance.png',wet:'assets/generated/icon-wet.png',chip:'assets/generated/icon-chip.png',striker:'assets/generated/icon-striker.png',defender:'assets/generated/icon-defender.png',boomerang:'assets/generated/icon-boomerang.png',anchor:'assets/generated/icon-anchor.png',portal:'assets/generated/icon-portal.png',sweeper:'assets/generated/icon-sweeper.png',strategist:'assets/generated/icon-strategist.png',volley:'assets/generated/icon-volley.png',medic:'assets/generated/icon-medic.png',trap:'assets/generated/icon-trap.png',shield:'assets/generated/icon-shield.png',bumper:'assets/generated/icon-bumper.png',ricochet:'assets/generated/icon-ricochet.png',fog:'assets/generated/icon-fog.png',drunk:'assets/generated/icon-drunk.png',injury:'assets/generated/icon-injury.png',drill:'assets/generated/icon-drill.png',backspin:'assets/generated/icon-backspin.png',serpent:'assets/generated/icon-serpent.png',swap:'assets/generated/icon-swap.png',wild:'assets/generated/icon-wild.png',market:'assets/generated/icon-market.png',trio:'assets/generated/icon-trio.png',varcheck:'assets/generated/icon-varcheck.png',rewind:'assets/generated/icon-rewind.png',aftershock:'assets/generated/icon-aftershock.png',flick:'assets/generated/icon-flick.png',home:'assets/generated/icon-home.png'};
     var ICON_IMG={}; Object.keys(ICON_SRC).forEach(function(id){ var o={ok:false}, im=new Image();
     im.onload=function(){ o.ok=true;
     try{ if(typeof updateScoreboards==='function') updateScoreboards();
@@ -1136,7 +1144,7 @@
     if(!muted) sfxJackpot();
     } else { if(!muted) sfxSlotLand();
     } }catch(e){} if(done) done();
-    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4};
+    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4,aftershock:4};
     function abWeight(id){ return (AB_WEIGHT[id]!=null)?AB_WEIGHT[id]:4;
     } var AB_EXCLUSIVE=[['curve',
     'serpent']], AB_TOGGLE=['curve',

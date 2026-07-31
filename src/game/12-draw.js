@@ -1975,6 +1975,7 @@
       }catch(e){} try{drawBlizzard(now);
       }catch(e){} try{drawFrost(now);
       }catch(e){} try{drawTrapFx(now);
+      }catch(e){} try{drawAftershock(now);
       }catch(e){} try{drawShield(now);
       }catch(e){} try{drawMagnetPull(now);
       }catch(e){} // nails

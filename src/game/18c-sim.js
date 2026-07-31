@@ -76,7 +76,11 @@
               // CPU aim-telegraph state, so a test can catch a wind-up frame
               aiPending: (typeof aiPending!=='undefined') ? !!aiPending : false,
               aiAim: (typeof aiAim!=='undefined' && aiAim) ? {x:aiAim.x, y:aiAim.y} : null,
-              aiTp: (typeof aiThink0!=='undefined' && aiThink0) ? 1-Math.max(0,aiDelay)/aiThink0 : 0
+              aiTp: (typeof aiThink0!=='undefined' && aiThink0) ? 1-Math.max(0,aiDelay)/aiThink0 : 0,
+              // AFTERSHOCK: whether this flick's riposte has been spent, and whether its blast ring is
+              // live. Neither can be read from the pixels — the ring is 1px debris over a busy board.
+              aftUsed: (typeof aftUsed!=='undefined') ? !!aftUsed : null,
+              aftFx: (typeof aftFx!=='undefined') ? !!aftFx : null
             };
           } catch (e) { return { err: String(e) }; }
         },
@@ -91,12 +95,25 @@
         put: function(o){
           try {
             o = o || {};
+            // Clear the per-flick flags first, so a placed shot behaves like a real flick — otherwise a
+            // once-per-flick ability (chip, drill, AFTERSHOCK) stays spent from the previous placement and
+            // the second probe silently measures nothing. Pass reset:false to keep them.
+            if (o.reset !== false) { try { trioReset(); } catch (e) {} }
             coin.x = o.x; coin.y = o.y;
             coin.vx = o.vx || 0; coin.vy = o.vy || 0;
             coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
             if (o.turn) current = o.turn;
             moving = !!(coin.vx || coin.vy);
             return true;
+          } catch (e) { return String(e); }
+        },
+        // Move one peg, indexed as probe().nails is. Lets a test build the exact situation an ability
+        // needs (a defender inside AFTERSHOCK's blast radius, say) instead of waiting for a formation to
+        // drift into it and calling whatever happens the result.
+        nail: function(o){
+          try {
+            var n = nails[o.i]; if (!n) return 'no nail ' + o.i;
+            n.x = o.x; n.y = o.y; return true;
           } catch (e) { return String(e); }
         },
         // Every ability id, so the runner never hardcodes a list that can rot.

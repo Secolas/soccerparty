@@ -3380,7 +3380,56 @@
     ctx.lineTo(sx+(i-2.5)*3*sh, f.y+dir2*(6+sh*22));
     ctx.stroke(); } ctx.restore();
     f.life--; if(f.life<=0) shieldFx=null;
-    } } function drawPortals(now){ var _t=(now||0)*0.006;
+    } }
+    /* AFTERSHOCK — fired when the shooter's ball is stopped by the OPPONENT's keeper or their wall.
+       Two effects, both aimed at turning a save into a live second chance:
+         1. the blast SHOVES their nearby outfield players away from the impact, clearing the traffic in
+            front of the goal. The KEEPER is never shoved — knocking it off its line would turn the
+            ability into a goal-opener, which is a different (and much stronger) thing.
+         2. the rebound keeps AFT_KEEP of the speed the ball arrived with, as a FLOOR not a cap: a
+            glancing save that already rebounds faster is left alone.
+       Once per flick (aftUsed), so the speed floor can never stop the ball settling. */
+    function aftershockFire(hx,hy,pre,vsTeam){ if(aftUsed) return; aftUsed=true;
+    var moved=0;
+    for(var _ai=0;_ai<nails.length;_ai++){ var n=nails[_ai];
+    if(n.team===current||n.goalie) continue;
+    var dx=n.x-hx, dy=n.y-hy, d=Math.hypot(dx,dy);
+    if(d>AFT_R) continue;
+    if(d<0.001){ dx=0; dy=(current==='red')?-1:1; d=1; }
+    var f=1-(d/AFT_R), push=AFT_PUSH*(0.45+0.55*f);   // nearer players are thrown further
+    n.x+=(dx/d)*push; n.y+=(dy/d)*push;
+    try{ var _ac=clampToPitch(n.x,n.y); n.x=_ac.x; n.y=_ac.y; }catch(e){}
+    try{ spawnSparks(n.x,n.y,n.team,8); }catch(e){}
+    moved++; }
+    var _an=Math.hypot(coin.vx,coin.vy), want=(pre||0)*AFT_KEEP;
+    if(want>0.2){ if(_an<0.05){ var ux=coin.x-hx, uy=coin.y-hy, ul=Math.hypot(ux,uy)||1;
+    coin.vx=(ux/ul)*want; coin.vy=(uy/ul)*want;
+    } else if(_an<want){ var k=want/_an; coin.vx*=k; coin.vy*=k; } }
+    aftFx={x:hx,y:hy,life:AFT_FX_DUR,team:current};
+    try{ spawnSparks(hx,hy,current,18); }catch(e){}
+    try{ if(typeof nsKick==='function') nsKick(Math.min(9,(pre||4)*1.2)); }catch(e){}
+    try{ setStatus(moved?'AFTERSHOCK - BLASTED THROUGH!':'AFTERSHOCK!'); }catch(e){}
+    try{ if(typeof sfxAftershock==='function') sfxAftershock(pre); }catch(e){}
+    try{ if(typeof abilitySlotPop==='function') abilitySlotPop(current,'aftershock',1.3); }catch(e){}
+    }
+    /* The blast ring: an expanding PIXEL ring (integer radius, so it steps frame to frame like sprite
+       animation) plus debris pixels thrown along it — same idiom as the oil splash. */
+    function drawAftershock(now){ if(!aftFx) return;
+    var f=aftFx, p=1-(f.life/AFT_FX_DUR), a=Math.max(0,f.life/AFT_FX_DUR);
+    var R=3+Math.round(p*AFT_R), big=(p<0.4);
+    ctx.save();
+    ctx.fillStyle='rgba(255,232,150,'+(0.85*a).toFixed(3)+')';
+    for(var k=0;k<20;k++){ var ang=k/20*Math.PI*2;
+    var rx=Math.round(f.x+Math.cos(ang)*R), ry=Math.round(f.y+Math.sin(ang)*R);
+    if(_cgRnd(k+0.3)>0.2) ctx.fillRect(rx,ry,big?2:1,big?2:1); }
+    ctx.fillStyle='rgba(246,138,44,'+(0.7*a).toFixed(3)+')';
+    for(var d2=0;d2<10;d2++){ var a2=(d2/10)*Math.PI*2+_cgRnd(d2)*0.5, dd=R*(0.55+_cgRnd(d2+0.4)*0.4);
+    ctx.fillRect(Math.round(f.x+Math.cos(a2)*dd),Math.round(f.y+Math.sin(a2)*dd),1,1); }
+    if(p<0.5){ ctx.fillStyle='rgba(255,250,225,'+(0.75*a).toFixed(3)+')';
+    ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,4,4); }
+    ctx.restore();
+    f.life--; if(f.life<=0) aftFx=null;
+    } function drawPortals(now){ var _t=(now||0)*0.006;
     ['red','blue'].forEach(function(tm){ if((sideAb[tm]||[]).indexOf('portal')<0) return;
     var pp=portalPts(tm); [[pp.ex,
     pp.ey,'#7fdcff','#173a55'],
@@ -3611,6 +3660,10 @@
       coin.vx=_tvx-dot*ux*RESTITUTION;
       coin.vy=_tvy-dot*uy*RESTITUTION;
       } if(n.goalie&&pen&&pen.active) pen.keeperHit=true;
+      // AFTERSHOCK: their keeper blocking a firm shot is the riposte trigger. _cv is the speed the ball
+      // arrived with, captured above before the bounce reversed it.
+      if(TAC.aftershock && !aftUsed && n.goalie && n.team!==current && _cv>1.2 && !(pen&&pen.active)){
+      try{ aftershockFire(n.x+ux*NAIL_R, n.y+uy*NAIL_R, _cv, n.team); }catch(e){} }
       if(n.damp && n.team!==current && !TAC.wet){ coin.vx*=0.18;
       coin.vy*=0.18; if(!n._acd){ try{sfxAnchorHit();
       }catch(e){} n._acd=8; } } spawnSparks(n.x+ux*NAIL_R,n.y+uy*NAIL_R,n.team,n.team===current?16:9);
@@ -3634,7 +3687,7 @@
       'blue'].forEach(function(tm){ if((sideAb[tm]||[]).indexOf('wall')<0) return;
       var _hp=(wallHP[tm]==null)?WALL_MAX:wallHP[tm];
       if(_hp<=0) return; var bw=Math.round(GOAL_W*0.30), bh=24, bx=Math.round(W/2-bw/2), isTop=(tm==='blue'), by=isTop?(NET_DEPTH+GOAL_AREA_D-Math.round(bh/2)):(H-NET_DEPTH-GOAL_AREA_D-Math.round(bh/2)), cyb=by+bh/2;
-      if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null;
+      if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null, _wcv=Math.hypot(coin.vx,coin.vy);
       if(m===oT&&coin.vy>0) hf='T';
       else if(m===oB&&coin.vy<0) hf='B';
       else if(m===oL&&coin.vx>0) hf='L';
@@ -3655,6 +3708,8 @@
       coin.vy*=0.98; } else { coin.x=bx+bw+COIN_R;
       coin.vx=-coin.vx*RESTITUTION;
       coin.vy*=0.98; } spawnSparks(coin.x,coin.y,null,6);
+      // AFTERSHOCK: their brick wall counts as a block too — the same riposte comes off it.
+      if(TAC.aftershock && !aftUsed && current!==tm && _wcv>1.2){ try{ aftershockFire(coin.x,coin.y,_wcv,tm); }catch(e){} }
       } } } } }); if(typeof royaleArena!=='undefined' && royaleArena && royaleArena.cust==='fortress'){ var _fw=royWallRects();
       for(var _fi=0;_fi<_fw.length;_fi++){ var r=_fw[_fi], bx=r.x, by=r.y, bw=r.w, bh=r.h, cyb=by+bh/2;
       if(coin.x>bx-COIN_R && coin.x<bx+bw+COIN_R && Math.abs(coin.y-cyb)<COIN_R+bh/2){ var oL=coin.x-(bx-COIN_R), oR=(bx+bw+COIN_R)-coin.x, oT=coin.y-(by-COIN_R), oB=(by+bh+COIN_R)-coin.y, m=Math.min(oL,oR,oT,oB), hf=null;
@@ -3903,6 +3958,7 @@
     _trioDone=false; _boomFwd=false;
     _boomUsed=false; chipUsed=false;
     _clrBlocked=false; drillUsed=false;
+    aftUsed=false;
     if(typeof coin!=='undefined'&&coin) coin.air=0;
     if(typeof nails!=='undefined'&&nails){ for(var _tri=0;_tri<nails.length;_tri++) nails[_tri]._trioHit=false;
     } try{ var _tb=document.querySelectorAll('.ns_triob');

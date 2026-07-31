@@ -6,6 +6,14 @@
     let wallHP={red:null,blue:null},WALL_MAX=3,wallCD=0,ghostUsed=false,ghosting=false,portalUsed=false,PORTAL_R=COIN_R,trapUsed={red:false,blue:false},trapPos={red:null,blue:null},TRAP_R=COIN_R,trapFx=null,TRAP_FX_DUR=42,shieldUsed={red:false,blue:false},shieldFx=null,SHIELD_FX_DUR=34,ricochetUsed=false,serpentPhase=0,serpentBase=0,serpentDir=1,SERPENT_SWING=0.55,SERPENT_FREQ=0.22,wetBase=0,wetPhase=0,WET_WOBBLE=0.16, WET_REDIRECT_KEEP=0.85,WET_WFREQ=0.17,DRUNK_SPREAD=0.5,swapStolen={red:null,blue:null},swapSpent={red:{},blue:{}},flickCount=0,bumpPending=false,FLICK_CAP=3,STAMINA=[1,
     0.75,0.5,0.25],royPuddles=[],_puddleIn=-1,PUDDLE_R=15,royBushes=[],_bushIn=-1,BUSH_R=11,royMud=[],MUD_R=14,roySerp=[],SERP_STRIKE_R=22,SERP_ALERT_R=42,royBumpers=[],BUMPER_R=6,royOrbits=[],royFlippers=[],royCacti=[],CACTUS_R=9,royGeysers=[],royDevil=null,DEVIL_R=30,royLasers=[],royLaserT=0,royWall=null,ROY_WALL_HW=4,drainCD=0,DRAIN_R=7,roySpider=null,SPIDER_R=8,SPIDER_WEAVE_DUR=46,royCrates=[],crateT=0,CRATE_HALF=9,royPortcT=0,royBoulder=null,BOULDER_R=13,royGustDir=0,royGustPhase=0,ROY_GUST_MAX=0.22,ROY_GUST_FREQ=0.011,roySnow=[];
     let bikeUsed=false,strategistUsed={red:false,blue:false},strategistArm=null,pmDrag=false,medicUsed={red:false,blue:false},cleansed={red:[],blue:[]},comebackDone={red:false,blue:false},varUsed={red:false,blue:false},_trioN=0,_trioDone=false,rewindUsed={red:false,blue:false},_rwSnap=null,_boomFwd=false,_boomUsed=false,clearUsed={red:false,blue:false},_clrSt={red:null,blue:null},chipUsed=false,_clrBlocked=false,abOff={red:[],blue:[]},drillUsed=false,_drillDisp=[],backspinFx=0,backspinFy=0,backspinPhase=0;
+    /* AFTERSHOCK: one riposte per flick. aftUsed is cleared in trioReset() (the single per-flick reset
+       both the human and the AI flick paths call), which is also what keeps the ability settle-safe:
+       the speed floor can fire at most once, so the ball cannot pinball off a keeper forever. */
+    let aftUsed=false,aftFx=null,AFT_FX_DUR=24,AFT_R=30,AFT_PUSH=14,AFT_KEEP=0.85;
+    /* AFT_KEEP is 0.85, not the 0.6 the design note proposed: a head-on keeper block already rebounds at
+       0.73 of the arrival speed (RESTITUTION 0.75, less a frame of friction), measured in-engine, so a 0.6
+       floor would have been a no-op on exactly the save the ability is named for. 0.85 sits above the
+       natural bounce, so the ball genuinely comes back OUT rather than dying at the keeper's feet. */
     const GOAL_AREA_D=34;
     let useBall=false;
     // AI + modes
