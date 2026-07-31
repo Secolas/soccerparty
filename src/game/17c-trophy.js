@@ -44,17 +44,32 @@
     grid.appendChild(col); }
     srow.appendChild(grid); pad.appendChild(srow); }
     }catch(e){} }
-    /* Blit the best trophy a player has earned for `season` onto the Royale map
-       at canvas (x,y), scaled to `size`. Draws nothing until the sprite loads or
-       if the season is unwon, so the summit just shows the baked-in art. Picks
-       the highest difficulty cleared (gold>silver>bronze). */
-    function spTrophyMapBadge(g,x,y,size,season){ try{ var d=royDiffsFor(season)||[];
-    var ti=-1; for(var t=2;t>=0;t--){ if(d.indexOf(TROPHY_DIFFS[t])>=0){ ti=t; break; } }
-    if(ti<0) return false; var im=spTrophyImg(season-1,ti);
-    if(!im||!im.complete||!im.naturalWidth) return false;
-    var s2=size, hx=x-s2/2, hy=y-s2/2;
-    g.save(); g.beginPath(); g.arc(x,y,s2*0.5,0,6.28); g.closePath(); g.clip();
-    g.drawImage(im,hx,hy,s2,s2); g.restore();
-    g.strokeStyle='rgba(242,201,76,0.9)'; g.lineWidth=Math.max(1.5,size*0.03);
-    g.beginPath(); g.arc(x,y,s2*0.5,0,6.28); g.stroke();
-    return true; }catch(e){ return false; } }
+    /* Where the painted trophy sits in each season's map art (fractions of the
+       map canvas: x of width, y+r of height). The dynamic cup is drawn as a
+       medallion here to REPLACE the generic gold cup baked into the art, so the
+       summit always shows the real, difficulty-specific trophy. Tuned visually
+       against roymap*.png — re-check if a map is regenerated. */
+    var _ROY_SUMMIT={1:{x:0.843,y:0.078,r:0.084},2:{x:0.857,y:0.076,r:0.084},3:{x:0.808,y:0.092,r:0.100}};
+    var _TROPHY_RING=['#d0904a','#c8cdd6','#f2c94c'];  // bronze / silver / gold rim
+    /* Draw the CURRENT difficulty's cup for `season` as a summit medallion on the
+       Royale map, over the baked-in art trophy. Always shown (it is the prize on
+       offer); a green tick marks it once that difficulty is cleared. cw,ch are the
+       map canvas size. */
+    function spTrophyMapBadge(g,cw,ch,season){ try{ var C=_ROY_SUMMIT[season];
+    if(!C) return false; var lvl=(typeof royaleLevel!=='undefined'?royaleLevel:'med');
+    var ti=(lvl==='easy')?0:((lvl==='hard')?2:1);
+    var im=spTrophyImg(season-1,ti); if(!im||!im.complete||!im.naturalWidth) return false;
+    var x=C.x*cw, y=C.y*ch, R=C.r*ch;
+    var earned=(royDiffsFor(season)||[]).indexOf(lvl)>=0;
+    g.save();
+    g.globalAlpha=0.4; g.fillStyle='#000'; g.beginPath(); g.arc(x,y+R*0.12,R*1.03,0,6.28); g.fill(); g.globalAlpha=1;
+    g.fillStyle='#0e0b16'; g.beginPath(); g.arc(x,y,R,0,6.28); g.fill();
+    g.save(); g.beginPath(); g.arc(x,y,R*0.93,0,6.28); g.clip();
+    var d=R*2*1.04; g.drawImage(im,x-d/2,y-d/2,d,d); g.restore();
+    g.lineWidth=Math.max(2,R*0.11); g.strokeStyle=_TROPHY_RING[ti];
+    g.beginPath(); g.arc(x,y,R*0.95,0,6.28); g.stroke();
+    if(earned){ var bx=x+R*0.66, by=y+R*0.66, br=R*0.30;
+    g.fillStyle='#2a8a34'; g.beginPath(); g.arc(bx,by,br,0,6.28); g.fill();
+    g.lineWidth=Math.max(1.5,R*0.06); g.strokeStyle='#eafce0';
+    g.beginPath(); g.moveTo(bx-br*0.45,by); g.lineTo(bx-br*0.08,by+br*0.42); g.lineTo(bx+br*0.5,by-br*0.42); g.stroke();
+    } g.restore(); return true; }catch(e){ return false; } }

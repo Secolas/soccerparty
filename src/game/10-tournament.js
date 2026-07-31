@@ -475,10 +475,7 @@
     if(_op&&_op.kit){ var _fr=6, _fcy=p.y-R-_fr-3;
     g.globalAlpha=1; flagCoin(g,p.x,_fcy,_fr,_op.kit,false);
     } }catch(e){} g.restore();
-    } try{ if(typeof spTrophyMapBadge==='function' && NN>0){ var _sp=P(NN-1);
-    var _ts=Math.max(24,Math.min(cw,ch)*0.12);
-    var _ty=Math.max(_ts*0.5+2, _sp.y-14-_ts*0.5-6);  /* perch it above the summit node + boss flag, clamped inside the map */
-    spTrophyMapBadge(g,_sp.x,_ty,_ts,(typeof royMap!=='undefined'?royMap:1));
+    } try{ if(typeof spTrophyMapBadge==='function'){ spTrophyMapBadge(g,cw,ch,(typeof royMap!=='undefined'?royMap:1));
     } }catch(e){} var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
     var _cy=fy-17, _R=10, _ir=7;
     function _cn(cx,pr){ g.save();
