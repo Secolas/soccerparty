@@ -3389,19 +3389,22 @@
     ctx.stroke(); } ctx.restore();
     f.life--; if(f.life<=0) shieldFx=null;
     } }
-    /* AFTERSHOCK — the shot carries a charge: the FIRST opponent piece it strikes is SHOCKED until the
-       end of the shooter's next flick (lifecycle lives in trioReset). What a shock means depends on what
-       was hit, but it is always "stops doing its job, stays a body":
+    /* AFTERSHOCK — the shot carries a charge: the FIRST opponent piece it strikes is SHOCKED for the
+       REST of the shooter's turn (lifecycle lives in trioReset; the stun dies at the turn handover). What
+       a shock means depends on what was hit, but it is always "stops doing its job, stays a body":
          keeper            stops tracking / sweeping / magnet-catching; still physically blocks
          outfield token    its tricks are off — no clearance lunge, no anchor damp, no gridiron roam/punt
          roaming hazard    (dust devil, boulder, crabs) freezes on the spot
        Off a KEEPER the rebound additionally keeps AFT_KEEP of the arrival speed, as a FLOOR not a cap, so
        the riposte ball comes back out far enough to keep the turn alive — that pace floor is what makes
        the intended combo playable: shock the keeper, catch the rebound on your own token, then shoot at a
-       keeper that cannot move. Once per flick (aftUsed), so nothing here can stop the ball settling. */
+       keeper that cannot move for the rest of your turn. Once per flick (aftUsed), so nothing here can
+       stop the ball settling — and successive flicks MERGE into one stun set rather than replacing it,
+       because a replaced entity would keep its _aftShock flag with nobody left to clear it. */
     function aftShock(list,hx,hy,pre,isKeeper){ if(aftUsed||!list||!list.length) return; aftUsed=true;
     for(var _si=0;_si<list.length;_si++){ list[_si]._aftShock=true; }
-    aftStun={by:current,state:'pending',list:list.slice()};
+    if(aftStun && aftStun.by===current){ for(var _mi2=0;_mi2<list.length;_mi2++){ if(aftStun.list.indexOf(list[_mi2])<0) aftStun.list.push(list[_mi2]); } }
+    else { aftClearStun(); aftStun={by:current,list:list.slice()}; }
     if(isKeeper){ var _an=Math.hypot(coin.vx,coin.vy), want=(pre||0)*AFT_KEEP;
     if(want>0.2){ if(_an<0.05){ var ux2=coin.x-hx, uy2=coin.y-hy, ul=Math.hypot(ux2,uy2)||1;
     coin.vx=(ux2/ul)*want; coin.vy=(uy2/ul)*want;
@@ -3974,11 +3977,10 @@
     _boomUsed=false; chipUsed=false;
     _clrBlocked=false; drillUsed=false;
     aftUsed=false;
-    /* AFTERSHOCK stun lifecycle. A shock lands as 'pending' during the flick that caused it, is 'active'
-       for the shocker's NEXT flick, and clears after that — or immediately if the turn changed hands, so
-       a stun can never carry into a turn its owner did not plan for. */
-    try{ if(aftStun){ if(aftStun.state==='pending' && current===aftStun.by){ aftStun.state='active'; }
-    else { aftClearStun(); } } }catch(e){}
+    /* AFTERSHOCK stun lifecycle: the stun lives exactly as long as its owner's turn. Every flick start
+       checks the owner — the first flick that is not theirs (the turn switched hands) clears everything,
+       so a stun can never reach into the opponent's turn or a later turn of the shocker's own. */
+    try{ if(aftStun && current!==aftStun.by){ aftClearStun(); } }catch(e){}
     if(typeof coin!=='undefined'&&coin) coin.air=0;
     if(typeof nails!=='undefined'&&nails){ for(var _tri=0;_tri<nails.length;_tri++) nails[_tri]._trioHit=false;
     } try{ var _tb=document.querySelectorAll('.ns_triob');

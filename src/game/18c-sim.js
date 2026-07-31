@@ -81,7 +81,7 @@
               // live. Neither can be read from the pixels — the ring is 1px debris over a busy board.
               aftUsed: (typeof aftUsed!=='undefined') ? !!aftUsed : null,
               aftFx: (typeof aftFx!=='undefined') ? !!aftFx : null,
-              aftStun: (typeof aftStun!=='undefined' && aftStun) ? aftStun.state : null
+              aftStun: (typeof aftStun!=='undefined' && aftStun) ? aftStun.by : null
             };
           } catch (e) { return { err: String(e) }; }
         },

@@ -1293,7 +1293,7 @@
     {i:'magnet',t:'MAGNET: near their goal the ball curves toward the net.'},
     {i:'freeze',t:'FREEZE: the opponent power bar is capped at half.'},
     {i:'ghost',t:'GHOST: your shot phases through the players it hits.'},
-    {i:'aftershock',t:'AFTERSHOCK: your shot shocks the first piece it hits — even the keeper — frozen for your next flick.'},
+    {i:'aftershock',t:'AFTERSHOCK: your shot shocks the first piece it hits — even the keeper — frozen until your turn ends.'},
     {i:'wall',t:'WALL: a brick wall guards your goal. Three hits and it shatters.'},
     {i:'sticky',t:'STICKY: hit an opponent player for a bonus flick each turn.'},
     {i:'sniper',t:'SNIPER: shows a long aim line to line up the perfect shot.'},
