@@ -1822,7 +1822,11 @@
     gloves:(t>=2), gloveReach:26, glovePow:4.6, gloveCap:11, gate:0.4 }; }
     // The glove's punch cycle, in frames: wind up (cocks back), snap out, hold at full stretch, retract, idle.
     // Returns 0..1 = how far out of the frame the glove is, and whether it is live (able to connect).
-    var RG_GL_P=132, RG_GL_WIND=26, RG_GL_OUT=10, RG_GL_HOLD=12, RG_GL_BACK=22;
+    // RG_GLOVE_R is the strike radius AND the art's radius — the glove is a touch wider than the ball (COIN_R*2)
+    // so it reads as a real mitt. HOLD is deliberately long: with four gloves on a 17% duty cycle and a narrow
+    // corridor, a first pass at 12 frames of hold almost never connected, which made the whole condition inert.
+    var RG_GLOVE_R=7;
+    var RG_GL_P=112, RG_GL_WIND=24, RG_GL_OUT=10, RG_GL_HOLD=20, RG_GL_BACK=20;
     function rgGlovePhase(ph){ var t=((rgT+ph)%RG_GL_P);
     if(t<RG_GL_WIND) return { ext:-0.18*Math.sin(t/RG_GL_WIND*Math.PI), live:false, wind:t/RG_GL_WIND };
     t-=RG_GL_WIND; if(t<RG_GL_OUT) return { ext:t/RG_GL_OUT, live:true, wind:1 };
@@ -1862,6 +1866,35 @@
     for(var g=0;g<rgGloves.length;g++){ rgGloves[g].hit=0; rgGloves[g].ext=0; }
     rgWobPend=0; rgWobOn=false; _rgPrevMoving=false; }
     function rgGloveY(g,ext){ return g.base+g.dir*(2+ext*rgCfg().gloveReach); }
+    /* The glove is a hand-authored PIXEL SPRITE rather than a procedural blob — at 11x11 the silhouette matters
+       more than any formula, so it is drawn as a little bitmap: cuff + white trim at the wrist, a swelling
+       knuckle mass, a thumb bump on one side, and a lace seam. Laid out punching DOWN (+y); mirrored vertically
+       for the gloves in the bottom frame. Legend: K outline, R body, L lit, D shade, W cuff trim, S lace. */
+    var RG_GLOVE_ART=[
+    '.....KKKKK.....',
+    '....KWWWWWK....',
+    '...KKWWWWWKK...',
+    '...KWWWWWWWK...',
+    '..KKRRRRRRRKK..',
+    '..KRLRRRRRDRK..',
+    '.KKRLRRRRRDRKK.',
+    'KKRRLRRRRRDRRK.',
+    'KRRRLRRRRRDRRK.',
+    'KKRRRRRRRRRDRK.',
+    '.KKRRRSSSRRRRK.',
+    '..KRRRSSSRRRK..',
+    '..KKRRRRRRRKK..',
+    '...KKRRRRRKK...',
+    '.....KKKKK.....'];
+    var _rgGlovePx=null;
+    function rgGloveShape(){ if(_rgGlovePx) return _rgGlovePx; var up=[], dn=[], H2=RG_GLOVE_ART.length, W2=RG_GLOVE_ART[0].length;
+    for(var r=0;r<H2;r++){ for(var cx=0;cx<W2;cx++){ var ch=RG_GLOVE_ART[r].charAt(cx); if(ch==='.') continue;
+    var dx=cx-((W2-1)/2), dy=r-((H2-1)/2);
+    dn.push([dx,dy,ch]); up.push([dx,-dy,ch]); } }
+    return (_rgGlovePx={down:dn, up:up}); }
+    // True while a punch is pending, i.e. the NEXT flick will wobble — the aim guide asks this so it can draw
+    // the rattled trajectory instead of a clean one.
+    function rgWobArmed(){ return !!(rgArena() && rgCfg().gloves && rgWobPend>0); }
     // A bag can be shoved around midfield but never into a goal area — a bag parked in the box would wall the
     // goal off for the rest of the match.
     function rgBagClampX(x){ return Math.max(WALL+COIN_R+RG_BAG_R+2, Math.min(W-WALL-COIN_R-RG_BAG_R-2, x)); }
@@ -1935,7 +1968,7 @@
     // SPRUNG GLOVES — while a glove is at full stretch it swats a MOVING ball away from its goal and rattles it
     // for the next flick. Only ever acts on a moving ball, and the result is capped.
     if(c.gloves){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi]; if(!g.live) continue;
-    var gy=rgGloveY(g,g.ext), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=6+COIN_R;
+    var gy=rgGloveY(g,g.ext), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=RG_GLOVE_R+COIN_R;
     if(gd<GR && gd>0.001){ var gnx=gdx/gd, gny=gdy/gd;
     // punch: reflect off the glove, then add the punch itself straight down the glove's line of travel
     var gvn=coin.vx*gnx+coin.vy*gny;

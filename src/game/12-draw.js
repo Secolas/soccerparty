@@ -871,33 +871,33 @@
     function drawRing(ctx,now){ if(typeof rgArena!=='function'||!rgArena()) return;
     var c=(typeof rgCfg==='function')?rgCfg():null; if(!c) return;
     // SPRUNG GLOVES (hard) — four spring-loaded gloves in the end frames, two per end. Each runs a fixed,
-    // staggered loop: cock back (wind-up tell), snap out into the pitch, hold, retract. Drawn as a coil zigzag
-    // out of the frame with a pixel glove on the end; the glove flares on the frames right after it connects.
-    if(c.gloves && typeof rgGloves!=='undefined'){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
+    // staggered loop: cock back (wind-up tell), snap out into the pitch, hold, retract. The glove is a
+    // hand-authored pixel sprite (rgGloveShape) and the spring is a stack of coil turns that stretch as it
+    // punches and bunch up when it withdraws.
+    if(c.gloves && typeof rgGloves!=='undefined' && typeof rgGloveShape==='function'){ var GA=rgGloveShape();
+    for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
     var gy=(typeof rgGloveY==='function')?rgGloveY(g,g.ext||0):g.base, X=Math.round(g.x), Y=Math.round(gy);
-    // SPRING — a zigzag coil from the frame out to the glove, tighter when cocked, stretched when punching
-    var y0=g.base, steps=Math.max(2,Math.round(Math.abs(Y-y0)/3));
-    for(var q=0;q<=steps;q++){ var t2=q/steps, cy2=Math.round(y0+(Y-y0)*t2), off=((q&1)?2:-2);
-    ctx.fillStyle='#8c8f98'; ctx.fillRect(X+off,cy2,2,1);
-    ctx.fillStyle='#5a5d66'; ctx.fillRect(X+off,cy2+g.dir,2,1); }
-    ctx.fillStyle='#3a3d44'; ctx.fillRect(X-3,y0-(g.dir>0?0:2),6,2);      // the mount plate on the frame
-    // GLOVE — a red mitt: rounded knuckle face toward the pitch, a cuff behind it, thumb to one side
-    var kn=g.dir;                                                          // punch direction (+1 top, -1 bottom)
-    var kf=Y+kn*3, kb=Y-kn*3;                                              // knuckle face / cuff (spring) side
-    ctx.fillStyle='#0d0d10'; ctx.fillRect(X-5,Y-4,10,8);                   // dark outline block
-    ctx.fillStyle=(typeof board!=='undefined'&&board&&board.surfaceKey)?'#c8b9a6':'#c8b9a6';
-    ctx.fillRect(X-5,kf+kn,1,1); ctx.fillRect(X+4,kf+kn,1,1);              // knock the leading corners off
-    ctx.fillStyle='#c02a24'; ctx.fillRect(X-4,Y-3,8,6);                    // glove body
-    ctx.fillStyle='#e0483a'; ctx.fillRect(X-4,Y-3+(kn>0?0:4),8,2);         // lit side toward the punch
-    ctx.fillStyle='#8d1a16'; ctx.fillRect(X-4,Y-3+(kn>0?4:0),8,2);         // shaded side
-    ctx.fillStyle='#c02a24'; ctx.fillRect(X-6,Y-1,2,3);                    // thumb
-    ctx.fillStyle='#e9e2d2'; ctx.fillRect(X-3,kb,6,1);                     // white cuff trim, spring side
+    var kn=g.dir, y0=g.base, back=Y-kn*(RG_GLOVE_R-1);                       // `back` = the wrist end the spring feeds into
+    // SPRING — coil turns between the frame and the wrist: each turn is a lit bar over a dark bar, offset side
+    // to side so it reads as a helix, and the gap between turns grows as the glove extends.
+    var span=Math.abs(back-y0), turns=Math.max(3,Math.min(8,Math.round(span/4)));
+    for(var q=0;q<turns;q++){ var t2=(q+0.5)/turns, cy2=Math.round(y0+(back-y0)*t2), off=((q&1)?1:-1);
+    ctx.fillStyle='#9aa0aa'; ctx.fillRect(X-3+off,cy2,6,1);
+    ctx.fillStyle='#4a4e57'; ctx.fillRect(X-3+off,cy2+kn,6,1); }
+    ctx.fillStyle='#6e727b'; ctx.fillRect(X-1,Math.min(y0,back),2,Math.max(1,span));   // the core rod
+    ctx.fillStyle='#2f3238'; ctx.fillRect(X-4,y0-(kn>0?0:3),8,3);                       // mount plate on the frame
+    ctx.fillStyle='#585c66'; ctx.fillRect(X-4,y0-(kn>0?0:3),8,1);
+    // GLOVE — the pixel sprite, flipped to face its punch direction
+    var px=(kn>0)?GA.down:GA.up;
+    for(var q2=0;q2<px.length;q2++){ var pp=px[q2], ch=pp[2];
+    ctx.fillStyle=(ch==='K')?'#12060a':((ch==='W')?'#ece5d4':((ch==='L')?'#e8574a':((ch==='D')?'#8d1a16':((ch==='S')?'#f0d9c8':'#c02a24'))));
+    ctx.fillRect(X+pp[0],Y+pp[1],1,1); }
     var gh=(g.hit>0)?(g.hit/14):0;
-    if(gh>0){ ctx.fillStyle='rgba(255,236,170,'+(gh*0.75).toFixed(3)+')';   // impact flare
-    for(var f2=0;f2<12;f2++){ var fa2=f2/12*Math.PI*2;
-    ctx.fillRect(Math.round(X+Math.cos(fa2)*(7+(1-gh)*6)),Math.round(Y+Math.sin(fa2)*(7+(1-gh)*6)),1,1); } }
-    if((g.wind||0)>0.55 && (g.ext||0)<=0){ ctx.fillStyle='rgba(255,210,120,0.45)';   // wind-up tell
-    ctx.fillRect(X-4,Y-(kn>0?2:0)+kn*6,8,1); } } }
+    if(gh>0){ ctx.fillStyle='rgba(255,236,170,'+(gh*0.75).toFixed(3)+')';   // impact flare rings the knuckles
+    for(var f2=0;f2<14;f2++){ var fa2=f2/14*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),Math.round(Y+Math.sin(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),1,1); } }
+    if((g.wind||0)>0.5 && (g.ext||0)<=0){ ctx.fillStyle='rgba(255,206,110,'+(((g.wind-0.5)*1.6).toFixed(3))+')';
+    ctx.fillRect(X-5,Y+kn*(RG_GLOVE_R+1),10,1); ctx.fillRect(X-3,Y+kn*(RG_GLOVE_R+2),6,1); } } }   // wind-up tell at the knuckles
     // ROPE FLEX — bow the three strands inward around the contact point, decaying with a damped snap-back
     if(typeof rgRope!=='undefined'){ for(var r=0;r<2;r++){ var fl=rgRope[r]; if(!fl||fl.t<=0) continue;
     var k=fl.t/RG_ROPE_FLEX, amp=Math.sin(k*Math.PI*2.4)*k*(3.2+2.6*(fl.s||0)), inward=r?-1:1;
@@ -2042,7 +2042,11 @@
         var _gh=-gvx, _ghd=(_gh>0.05)?1:((_gh<-0.05)?-1:((W/2-coin.x)>=0?1:-1));
         var gspin=(TAC.curve&&power>=12)?(_ghd*((gvy<0)?1:-1)*1.9):0;
         var ff=FRICTION+(TAC.glide||0)+royFloorFric(), lft=WALL+COIN_R, rgt=W-WALL-COIN_R, tp=WALL+COIN_R, bt=H-WALL-COIN_R;
-        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.backspin||TAC.wet), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
+        // THE RING: a punched ball is RATTLED, so the next shot's line wanders — trace that in the guide too, or
+        // the arrow would promise a straight shot the ball will not take.
+        var _rgw=false; try{ _rgw=(typeof rgWobArmed==='function')&&rgWobArmed(); }catch(e){}
+        var gRgBase=Math.atan2(gvy,gvx), gRgPhase=0;
+        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.backspin||TAC.wet||_rgw), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
         for(var gs=0; gs<80 && acc<L && !_bk && !_stop; gs++){ var gsp=Math.hypot(gvx,gvy);
         if(gsp<(TAC.backspin?0.12:0.3)) break;
         if(gspin){ var gpx=-gvy/gsp, gpy=gvx/gsp;
@@ -2050,7 +2054,7 @@
         gvy+=gpy*gspin*gsp*0.05;
         var _gcm=Math.hypot(gvx,gvy)||1;
         gvx=gvx/_gcm*gsp; gvy=gvy/_gcm*gsp;
-        gspin*=0.984; } var _subs=(TAC.serpent||TAC.wet||((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()))?Math.max(1,Math.ceil(Math.hypot(gvx,gvy)/MAX_STEP)):1;
+        gspin*=0.984; } var _subs=(TAC.serpent||TAC.wet||_rgw||((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()))?Math.max(1,Math.ceil(Math.hypot(gvx,gvy)/MAX_STEP)):1;
         for(var _su=0; _su<_subs && acc<L && !_bk && !_stop; _su++){ var _hw=false;
         if(TAC.serpent){ var _gsp2=Math.hypot(gvx,gvy);
         if(_gsp2>0.3){ var _gang=gBase+gDir*SERPENT_SWING*Math.cos(gPh);
@@ -2060,7 +2064,11 @@
         if(_gws>0.3){ var _gwa=gWetBase+WET_WOBBLE*Math.cos(gWetPhase);
         gvx=Math.cos(_gwa)*_gws;
         gvy=Math.sin(_gwa)*_gws;
-        gWetPhase+=WET_WFREQ; } } var _px0=gx, _py0=gy;
+        gWetPhase+=WET_WFREQ; } }
+        if(_rgw&&!TAC.serpent&&!TAC.wet){ var _grs=Math.hypot(gvx,gvy);
+        if(_grs>0.5){ gRgPhase+=RG_WOB_FREQ;
+        var _gra=gRgBase+RG_WOB*Math.cos(gRgPhase);
+        gvx=Math.cos(_gra)*_grs; gvy=Math.sin(_gra)*_grs; } } var _px0=gx, _py0=gy;
         gx+=gvx/_subs; gy+=gvy/_subs;
         var _inMouth=(gx>_gmL&&gx<_gmR);
         if(gx<lft){gx=lft;gvx=-gvx*RESTITUTION;

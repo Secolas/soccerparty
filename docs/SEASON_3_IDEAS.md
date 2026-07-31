@@ -859,10 +859,20 @@ wind-up tell) → **snap out** into the pitch → **hold** at full stretch → *
   *RATTLED — WOBBLY SHOT*. So a punch costs you the *following* turn's accuracy, not just this one.
 - **Settle-safe:** a glove can only ever strike a **moving** ball (`ringStep` returns unless `moving`), so it can
   never keep nudging a resting ball and stall the turn. The wobble only rotates the heading, never adds speed.
-- **Art:** a **zigzag spring coil** running out of the frame to a pixel glove — dark outline, red body with a lit
-  face toward the punch, shaded back, thumb, and a cream **cuff** on the spring side with the leading corners
-  knocked off. An **impact flare** rings the glove for a few frames after it connects, and a bar flashes at the
-  knuckles during the wind-up.
+- **Art:** the glove is a **hand-authored 15×15 pixel sprite** (`RG_GLOVE_ART`) — at this size the silhouette
+  matters more than any formula, so it is a little bitmap rather than a procedural blob: cuff with white trim at
+  the wrist, a swelling knuckle mass, a thumb bump, a lace seam, and lit/shaded flanks. Laid out punching **down**
+  and mirrored vertically for the bottom frame. It is **wider than the ball** (`RG_GLOVE_R 7` vs `COIN_R 5`), which
+  is also its strike radius, so what you see is what hits you.
+  The **spring** is a stack of coil turns — a lit bar over a dark bar, offset side to side to read as a helix —
+  over a core rod, stretching as the glove punches and bunching up as it withdraws. An **impact flare** rings the
+  glove after it connects, and a bar flashes at the knuckles during the wind-up.
+- **The aim guide shows the rattle.** `rgWobArmed()` reports a pending punch, and `drawAimGuide` folds the same
+  wobble into its trajectory trace (the hook WET already used, with sub-stepping enabled), so the arrow **snakes**
+  instead of promising a straight shot the ball will not take.
+- **Tuning note:** the first pass held each glove out for only 12 frames on a 132-frame loop — roughly a 17% duty
+  cycle in a narrow corridor — and across 12 test flicks a punch never once landed, which made the whole condition
+  inert. Hold is now 20 frames on a 112-frame loop, and the bigger glove widens the corridor.
 
 *Cut on playtest:* the **canvas drag** zone was removed. With the heavy bags already absorbing shots, the arena
 had two dampers and nothing that redirected on a beat — the gloves fill that gap instead.
