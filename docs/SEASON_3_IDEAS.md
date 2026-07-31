@@ -703,9 +703,12 @@ of each penalty area** (the corners facing midfield) so they guard the approach 
 pitch corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). On every tier.
 
 - **The stack is a pixel sprite, not a circle.** `rcTyreShape()` builds it once on the integer grid and all four
-  share it (identical furniture must read identically): a **dithered outer wall**, a **tread band of 8
-  alternating notches**, a flat inner carcass, a **hub hole that shows the tarmac through it**, and a top-left
-  highlight for volume. No anti-aliased arcs.
+  share it (identical furniture must read identically): a **solid silhouette**, a dark **outer wall**, a **tread
+  band of 8 alternating notches**, a flat inner carcass, a **hub hole that shows the tarmac through it**, and a
+  contiguous **specular highlight arc** on the upper-left. No anti-aliased arcs, and nothing random — the shape
+  is fully deterministic.
+  *First pass dithered the outer edge and scattered the highlight randomly: at this size that bit visible holes
+  out of the stack's silhouette and left detached specks, so both are now solid and deliberate.*
 - **On a hit it recoils and wobbles.** The stack is knocked along the impact normal and springs back with a
   **damped two-bounce wobble** scaled by how hard it was hit (`ty.pow`), **squashes along that normal** (never
   stretched, so the sprite can't tear gaps), flashes a **bright pixel rim**, and spits a few **scuff pixels**

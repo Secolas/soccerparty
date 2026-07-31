@@ -1650,16 +1650,18 @@
     var _rcTyrePx=null;
     function rcTyreShape(){ if(_rcTyrePx) return _rcTyrePx; var pts=[], R=RC_TYRE_R;
     for(var dy=-R;dy<=R;dy++){ for(var dx=-R;dx<=R;dx++){
-    var d=Math.hypot(dx,dy); if(d>R+0.3) continue;
-    if(d>R-1.1 && ((dx+dy)&1) && _rcRnd(dx*3.1+dy*7.7)>0.5) continue;   // dithered outer edge
+    var d=Math.hypot(dx,dy); if(d>R) continue;   // SOLID silhouette — a dithered outline bit holes out of the
+                                                 // stack's edge at this size, which read as gaps, not softening
     var a=Math.atan2(dy,dx), sh;
-    if(d<2.7) sh=3;                                                      // hub hole (the track showing through)
-    else if(d>R-1.2) sh=2;                                               // dark outer wall
-    else if(d>R-3.4){ sh=(Math.round((a+Math.PI)/(Math.PI/4))%2===0)?1:5; }   // TREAD band, 8 notches
+    if(d<2.8) sh=3;                                                      // hub hole (the track showing through)
+    else if(d>R-1.3) sh=2;                                               // dark outer wall
+    else if(d>R-3.6){ sh=(Math.round((a+Math.PI)/(Math.PI/4))%2===0)?1:5; }   // TREAD band, 8 notches
     else sh=0;                                                           // inner carcass
-    if(sh===0 && d>3.2 && dx+dy<-3.5 && _rcRnd(dx*1.7+dy*2.9)>0.5) sh=4;      // top-left highlight
+    // one deliberate specular highlight: a contiguous arc on the upper-left of the tread, not scattered specks
+    if((sh===1||sh===5) && Math.abs(_rcAngDiff(a,-2.36))<0.55) sh=4;
     pts.push([dx,dy,sh]); } }
     return (_rcTyrePx=pts); }
+    function _rcAngDiff(a,b){ var d=a-b; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; return d; }
     /* The slick is a PIXEL SPRITE, not a circle: a lobed blob built once per spill on the integer grid, so it
        matches the game's pixel-art idiom (flat bands + 1x1 dither) instead of an anti-aliased arc. Shades:
        0 = core, 1 = sheen (up-left), 2 = dithered rim. Stable per seed, so a slick never shimmers. */
