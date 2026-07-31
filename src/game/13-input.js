@@ -251,7 +251,8 @@
     {id:'royaleall',n:'ROYALE MASTER',d:'Win Royale on Easy, Medium and Hard.'},
     {id:'season1',n:'SEASON ONE CLEARED',d:'Clear every stadium in the Season 1 Royale ladder.'},
     {id:'season2',n:'SEASON TWO CLEARED',d:'Clear every stadium in the Season 2 Royale ladder.'},
-    {id:'grandslam',n:'GRAND SLAM',d:'Clear both Season 1 and Season 2 Royale on Easy, Medium and Hard.'},
+    {id:'season3',n:'SEASON THREE CLEARED',d:'Clear every stadium in the Season 3 Royale ladder.'},
+    {id:'grandslam',n:'GRAND SLAM',d:'Clear all three Seasons of Royale on Easy, Medium and Hard.'},
     {id:'trick',n:'TRICK SHOT',d:'Score off a 3+ wall-bounce shot.'},
     {id:'clean',n:'CLEAN SHEET',d:'Win a match without conceding.'},
     {id:'hat',n:'HAT-TRICK',d:'Score 3 goals in one match.'},
@@ -280,6 +281,7 @@
     if(!o.royDiffs) o.royDiffs=[];
     if(!o.royDiffs1) o.royDiffs1=[];
     if(!o.royDiffs2) o.royDiffs2=[];
+    if(!o.royDiffs3) o.royDiffs3=[];
     if(!o.royUnlockSeen) o.royUnlockSeen=[];
     if(!o.royBest||typeof o.royBest!=='object') o.royBest={};
     if(!o.abils) o.abils=[];
@@ -327,6 +329,7 @@
     tx.appendChild(bar); tx.appendChild(mk('div',FS(6,'#7a7092')+'margin-top:2px;',Math.min(_cur,_tot)+' / '+_tot));
     } row.appendChild(tx); if(done) row.appendChild(mk('div',FS(9,'#a9c94b'),'✓'));
     pad.appendChild(row); });
+    try{ spTrophySection(pad); }catch(e){}
     ov.appendChild(pad); (document.body||document.documentElement).appendChild(ov);
     }catch(e){} } function spFindPreset(nm){ try{ if(!nm) return null;
     for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].name===nm) return PRESETS[i];

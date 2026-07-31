@@ -2293,7 +2293,10 @@
     try{ NS_ROYMAP2.src='assets/generated/roymap2.png'; }catch(e){}
     try{ NS_ROYMAP3.src='assets/generated/roymap3.png'; }catch(e){}
     try{ NS_ROYMAP.src='assets/generated/roymap.png';
-    }catch(e){} var NS_BUSH=[];
+    }catch(e){} var NS_TROPHIES={};
+    ['s1','s2','s3'].forEach(function(_s){ ['bronze','silver','gold'].forEach(function(_m){ var _im=new Image();
+    try{ _im.src='assets/generated/trophy-'+_s+'-'+_m+'.png'; }catch(e){} NS_TROPHIES[_s+'-'+_m]=_im;
+    }); }); var NS_BUSH=[];
     for(var _nbi=0;_nbi<4;_nbi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/sprite-bush-'+(_k+1)+'.png';
     }catch(e){} NS_BUSH[_k]=_im;

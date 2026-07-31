@@ -147,15 +147,15 @@
     } function cupTopSize(){ return cupSizeUnlocked(16)?16:(cupSizeUnlocked(8)?8:4);
     } function cupTopLvl(){ return cupLvlUnlocked('hard')?'hard':(cupLvlUnlocked('med')?'med':'easy');
     } function royDiffsFor(season){ try{ var o=spAchGet();
-    return ((season===2)?o.royDiffs2:o.royDiffs1)||[];
+    return ((season===3)?o.royDiffs3:(season===2)?o.royDiffs2:o.royDiffs1)||[];
     }catch(e){ return []; } } function royLvlUnlocked(season,lvl){ if(lvl==='easy') return true;
     if(_ROY_TEST_OPEN) return true;  /* TEST HATCH: all seasons open at every difficulty — see _ROY_TEST_OPEN */
     var d=royDiffsFor(season);
     if(lvl==='med') return d.indexOf('easy')>=0;
     if(lvl==='hard') return d.indexOf('med')>=0;
-    return true; } function roySeasonUnlocked(season){ if(season!==2) return true;
-    if(_ROY_TEST_OPEN) return true;  /* TEST HATCH: Season 2 selectable without clearing Season 1 */
-    try{ var o=spAchGet(); return !!(o.done&&o.done.season1);
+    return true; } function roySeasonUnlocked(season){ if(season<=1) return true;
+    if(_ROY_TEST_OPEN) return true;  /* TEST HATCH: every season selectable without clearing the one before */
+    try{ var o=spAchGet(); return !!(o.done&&o.done['season'+(season-1)]);  /* S2 needs S1 cleared, S3 needs S2 */
     }catch(e){ return false;
     } } function royTopUnlocked(season){ return royLvlUnlocked(season,'hard')?'hard':(royLvlUnlocked(season,'med')?'med':'easy');
     } function royKitClash(a,b){ try{ function _rgb(h){ h=(''+h).replace('#','');
@@ -241,24 +241,24 @@
       ROYALE.history.push({name:_hn,opp:_ho,r:(score&&score.red)||0,b:(score&&score.blue)||0,win:winner==='red',f:(ROYALE.af||0)});
       }catch(e){} if(winner!=='red'){ showRoyaleResult(false);
       return; } ROYALE.i++; if(ROYALE.i>=ROYALE_ARENAS.length){ try{ spAchUnlock('royale');
-      spAchUnlock(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?'season2':'season1');
+      var _sm=((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===3)?3:(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?2:1);
+      spAchUnlock('season'+_sm);
       if(royaleLevel==='hard') spAchUnlock('royalehard');
       try{ var _rd=spAchGet();
       var _rl=royaleLevel||'med';
       if(_rd.royDiffs.indexOf(_rl)<0){ _rd.royDiffs.push(_rl);
-      } var _sk=(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?'royDiffs2':'royDiffs1');
+      } var _sk='royDiffs'+_sm;
       if(!_rd[_sk]) _rd[_sk]=[];
       if(_rd[_sk].indexOf(_rl)<0){ _rd[_sk].push(_rl);
       } spAchSave(_rd); var _a3=function(a){ return !!a&&a.indexOf('easy')>=0&&a.indexOf('med')>=0&&a.indexOf('hard')>=0;
       }; if(_a3(_rd.royDiffs)) spAchUnlock('royaleall');
-      if(_a3(_rd.royDiffs1)&&_a3(_rd.royDiffs2)) spAchUnlock('grandslam');
+      if(_a3(_rd.royDiffs1)&&_a3(_rd.royDiffs2)&&_a3(_rd.royDiffs3)) spAchUnlock('grandslam');
       }catch(e){} try{ var _os=spAchGet();
       if(!_os.royUnlockSeen) _os.royUnlockSeen=[];
-      var _sn2=((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?2:1;
       var _un=[]; var _uc=function(k,lab){ if(_os.royUnlockSeen.indexOf(k)<0){ _os.royUnlockSeen.push(k);
-      _un.push(lab); } }; if(royLvlUnlocked(_sn2,'med')) _uc('s'+_sn2+'m','MEDIUM DIFFICULTY');
-      if(royLvlUnlocked(_sn2,'hard')) _uc('s'+_sn2+'h','HARD DIFFICULTY');
-      if(roySeasonUnlocked(2)) _uc('s2','SEASON 2');
+      _un.push(lab); } }; if(royLvlUnlocked(_sm,'med')) _uc('s'+_sm+'m','MEDIUM DIFFICULTY');
+      if(royLvlUnlocked(_sm,'hard')) _uc('s'+_sm+'h','HARD DIFFICULTY');
+      if(_sm<3 && roySeasonUnlocked(_sm+1)) _uc('s'+(_sm+1),'SEASON '+(_sm+1));
       spAchSave(_os); _royUnlockMsg=_un;
       }catch(e){} }catch(e){} showRoyaleResult(true);
       return; } showRoyaleDraft(function(){ showRoyaleMap(true);
@@ -475,7 +475,11 @@
     if(_op&&_op.kit){ var _fr=6, _fcy=p.y-R-_fr-3;
     g.globalAlpha=1; flagCoin(g,p.x,_fcy,_fr,_op.kit,false);
     } }catch(e){} g.restore();
-    } var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
+    } try{ if(typeof spTrophyMapBadge==='function' && NN>0){ var _sp=P(NN-1);
+    var _ts=Math.max(24,Math.min(cw,ch)*0.12);
+    var _ty=Math.max(_ts*0.5+2, _sp.y-14-_ts*0.5-6);  /* perch it above the summit node + boss flag, clamped inside the map */
+    spTrophyMapBadge(g,_sp.x,_ty,_ts,(typeof royMap!=='undefined'?royMap:1));
+    } }catch(e){} var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
     var _cy=fy-17, _R=10, _ir=7;
     function _cn(cx,pr){ g.save();
     g.globalAlpha=0.35; g.fillStyle='#000';
