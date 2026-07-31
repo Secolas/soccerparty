@@ -44,6 +44,14 @@
     {name:'THE FINAL',pitch:'grass',ab:[],d:5,gauntlet:1,blurb:'The Season 1 final — a gauntlet of the whole run. Frozen ice, the Thicket, Sandstorm and the Web Warehouse all bare their teeth at once, turning from a nuisance on Easy into chaos on Hard. No keeper tricks; just survive it and score.'}];
     // Map 2 — Season 2 stadiums. Hazards are boardKey-driven and scale by ladder position (aiLevel).
     var ROYALE_ARENAS_1=ROYALE_ARENAS, royMap=1;
+    /* ============================ TEST HATCH — REMOVE BEFORE RELEASE ============================
+       While Season 3 is in development, ALL THREE seasons are opened for playtesting: every difficulty
+       is selectable without clearing the one below (royLvlUnlocked), and any stadium node on the map can
+       be JUMPED to directly instead of won in order (_royJump), so the Season 1/2 FINAL bosses can be
+       reached at any difficulty without replaying eight stadiums first. Flip _ROY_TEST_OPEN to false (or
+       delete it and this block) to restore normal progression for release. Grep: TEST HATCH.
+       ============================================================================================ */
+    var _ROY_TEST_OPEN=true;
     var ROYALE_ARENAS_2=[
       {name:'SUGAR RUSH',pitch:'candy',ab:['sticky','striker','cannon'],d:1,blurb:'Jelly pads bounce the ball clean over players, sticky caramel bogs it down, and gumballs roll across.'},
       {name:'THUNDERDOME',pitch:'storm',ab:['reflex','clearance','volley'],d:2,blurb:'A rotating wind curves every shot, rain puddles drag the ball, and lightning scatters it from where it strikes.'},
@@ -133,11 +141,12 @@
     } function royDiffsFor(season){ try{ var o=spAchGet();
     return ((season===2)?o.royDiffs2:o.royDiffs1)||[];
     }catch(e){ return []; } } function royLvlUnlocked(season,lvl){ if(lvl==='easy') return true;
-    if(season===3) return true;  /* Season 3 is open at all difficulties for testing */
+    if(_ROY_TEST_OPEN) return true;  /* TEST HATCH: all seasons open at every difficulty — see _ROY_TEST_OPEN */
     var d=royDiffsFor(season);
     if(lvl==='med') return d.indexOf('easy')>=0;
     if(lvl==='hard') return d.indexOf('med')>=0;
     return true; } function roySeasonUnlocked(season){ if(season!==2) return true;
+    if(_ROY_TEST_OPEN) return true;  /* TEST HATCH: Season 2 selectable without clearing Season 1 */
     try{ var o=spAchGet(); return !!(o.done&&o.done.season1);
     }catch(e){ return false;
     } } function royTopUnlocked(season){ return royLvlUnlocked(season,'hard')?'hard':(royLvlUnlocked(season,'med')?'med':'easy');
@@ -1498,8 +1507,9 @@
       })(); }
       renderDesc(ROYALE.i);
       // Season 3 is the in-development ladder, so its map nodes are a JUMP, not just a preview —
-      // otherwise a new stadium can only be reached by winning every stadium before it.
-      var _royJump=(royMap===3);
+      // otherwise a new stadium can only be reached by winning every stadium before it. The test hatch
+      // extends the same jump to Seasons 1 and 2, so their FINAL bosses can be reached directly.
+      var _royJump=(royMap===3)||_ROY_TEST_OPEN;
       pad.appendChild(mk('div',FS(5,'#6f6684')+'text-align:center;margin-top:5px;',_royJump?'tap any stadium on the map to jump straight to it':'tap any stadium on the map to preview it'));
       cv.style.cursor='pointer';
       cv.addEventListener('click',function(ev){ try{ var r=cv.getBoundingClientRect(), fx=(ev.clientX-r.left)/r.width, fy=(ev.clientY-r.top)/r.height;
