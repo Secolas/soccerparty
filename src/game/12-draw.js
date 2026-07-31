@@ -733,14 +733,17 @@
     if(typeof bowlPins==='undefined'||!bowlPins) return;
     var c=(typeof bowlCfg==='function')?bowlCfg():null;
     // Re-paint the gutter channels OVER the pitch markings so the white lines don't cross the gutters — the
-    // lane lines belong to the lane, not the gutter. Matches the board's channel art (drawn under objects).
-    var _GUT='#241708', _GW=COIN_R*2+1;
+    // lane lines belong to the lane, not the gutter. This is BOWLING-BOARD art: when SPORTS DAY borrows just the
+    // rake gate there are no channels to restore, and painting them would drop dark lanes onto its infield.
+    var _onLane=(boardKey==='bowling');
+    if(_onLane){ var _GUT='#241708', _GW=COIN_R*2+1;
     ctx.fillStyle=_GUT; ctx.fillRect(WALL,WALL,_GW,H-WALL*2); ctx.fillRect(W-WALL-_GW,WALL,_GW,H-WALL*2);
     ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.fillRect(WALL+_GW,WALL,1,H-WALL*2); ctx.fillRect(W-WALL-_GW-1,WALL,1,H-WALL*2);
-    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(WALL,WALL,2,H-WALL*2); ctx.fillRect(W-WALL-2,WALL,2,H-WALL*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(WALL,WALL,2,H-WALL*2); ctx.fillRect(W-WALL-2,WALL,2,H-WALL*2); }
     // BUMPERS (easy/med): a raised padded rail fills each gutter so the ball bounces back instead of dropping
     // in. Off on hard — the bare dark channel above is the open gutter that eats the ball.
-    if(c&&c.bumpers){ for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_GW):WALL, _lit=_bs?(_bx+1):(_bx+_GW-4);
+    if(c&&c.bumpers){ var _GW2=COIN_R*2+1;
+    for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_GW2):WALL, _lit=_bs?(_bx+1):(_bx+_GW2-4);
     ctx.fillStyle='#2f6fa8'; ctx.fillRect(_bx+1,WALL,_GW-2,H-WALL*2);          // padded bumper body
     ctx.fillStyle='#6fb0e6'; ctx.fillRect(_lit,WALL,3,H-WALL*2);              // lane-facing highlight
     ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(_bs?(_bx+_GW-2):(_bx+1),WALL,1,H-WALL*2); } }   // wall-side shadow
@@ -898,14 +901,24 @@
     ctx.fillRect(Math.round(X+Math.cos(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),Math.round(Y+Math.sin(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),1,1); } }
     if((g.wind||0)>0.5 && (g.ext||0)<=0){ ctx.fillStyle='rgba(255,206,110,'+(((g.wind-0.5)*1.6).toFixed(3))+')';
     ctx.fillRect(X-5,Y+kn*(RG_GLOVE_R+1),10,1); ctx.fillRect(X-3,Y+kn*(RG_GLOVE_R+2),6,1); } } }   // wind-up tell at the knuckles
+    // BORROWED ROPES — on the ring the strands are part of the board, but when SPORTS DAY borrows them there is
+    // nothing to see, and an elastic wall you cannot see breaks the telegraph rule. Draw them live instead, at
+    // the same x the ring board uses (innermost strand on the collision line, see rgRopeX).
+    if(c.ropes && boardKey!=='ring'){ var _ry0=WALL+13, _rhh=H-WALL*2-26;
+    for(var _rs2=0;_rs2<2;_rs2++){ for(var _st2=0;_st2<3;_st2++){ var _rx2=_rs2?(W-WALL-1-_st2*2):(WALL+1+_st2*2);
+    ctx.fillStyle='rgba(70,56,38,0.45)'; ctx.fillRect(_rx2+(_rs2?-1:1),_ry0,1,_rhh);
+    ctx.fillStyle=(_st2===1)?'#f6ecd8':'#e2cfae'; ctx.fillRect(_rx2,_ry0,1,_rhh); }
+    ctx.fillStyle='#6a5230'; for(var _tb2=_ry0+14; _tb2<_ry0+_rhh-6; _tb2+=48){ ctx.fillRect(_rs2?(W-WALL-6):(WALL+1),_tb2,6,4); } } }
     // ROPE FLEX — bow the three strands inward around the contact point, decaying with a damped snap-back
     if(typeof rgRope!=='undefined'){ for(var r=0;r<2;r++){ var fl=rgRope[r]; if(!fl||fl.t<=0) continue;
     var k=fl.t/RG_ROPE_FLEX, amp=Math.sin(k*Math.PI*2.4)*k*(3.2+2.6*(fl.s||0)), inward=r?-1:1;
     var span=26, cy=Math.round(fl.y), y0=Math.max(WALL+13,cy-span), y1=Math.min(H-WALL-13,cy+span);
-    // repaint the strand band with canvas + weave, then draw the bowed strands over it
-    var bx=r?(W-WALL-6):(WALL+1);
+    // The ring board has the strands BAKED IN, so a flex has to repaint the span with canvas before redrawing
+    // it bowed. A borrowed board has no baked strands (they are drawn live below), so skip the repaint there —
+    // painting ring canvas onto another pitch would drop a beige band across it.
+    if(boardKey==='ring'){ var bx=r?(W-WALL-6):(WALL+1);
     for(var py=y0;py<=y1;py++){ for(var px2=0;px2<6;px2++){ var X=bx+px2;
-    ctx.fillStyle=(((X+py)&1)?'#bdae9a':'#c8b9a6'); ctx.fillRect(X,py,1,1); } }
+    ctx.fillStyle=(((X+py)&1)?'#bdae9a':'#c8b9a6'); ctx.fillRect(X,py,1,1); } } }
     for(var st=0;st<3;st++){ for(var py2=y0;py2<=y1;py2++){
     var t2=(py2-cy)/span, fall=Math.max(0,1-t2*t2), rx=(r?(W-WALL-1-st*2):(WALL+1+st*2))+inward*amp*fall;
     ctx.fillStyle='rgba(90,72,50,0.45)'; ctx.fillRect(Math.round(rx)+(r?-1:1),py2,1,1);
@@ -1503,6 +1516,17 @@
     }catch(e){} return;
     } if(boardKey==='ring'&&stadiumHazards()){ try{ ringTick(); drawRing(ctx,now);
     }catch(e){} return;
+    } if(boardKey==='podium'&&stadiumHazards()){
+    /* SPORTS DAY runs whichever hazards its tier borrowed, so unlike every other board it dispatches SEVERAL
+       arenas' ticks in one frame. Each is guarded by its own _pd() key; the furniture that belongs above the
+       pitch markings (golf, tennis, court, bowling) is drawn in the late pass, same as on its home board. */
+    try{ if(_pd('water')||_pd('cups')) minigolfTick(); }catch(e){}
+    try{ if(_pd('ropes')||_pd('gloves')){ ringTick(); drawRing(ctx,now); } }catch(e){}
+    try{ if(_pd('roam')){ gridironTick(); drawGridiron(ctx,now); } }catch(e){}
+    try{ if(_pd('oil')){ racewayTick(); drawRaceway(ctx,now); } }catch(e){}
+    try{ if(_pd('rake')) bowlingTick(); }catch(e){}
+    try{ if(_pd('net')) tennisTick(); }catch(e){}
+    return;
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
@@ -1832,6 +1856,12 @@
       try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
       try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
       try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolf(ctx,now); }catch(e){}
+      // SPORTS DAY: the borrowed furniture that belongs above the markings. Each gets its OWN try/catch — one
+      // shared guard meant a throw in the first borrow silently swallowed every borrow after it.
+      try{ if(_pd('hoops')) drawCourt(ctx,now); }catch(e){}
+      try{ if(_pd('net')) drawTennis(ctx,now); }catch(e){}
+      try{ if(_pd('water')||_pd('cups')) drawMinigolf(ctx,now); }catch(e){}
+      try{ if(_pd('rake')) drawBowling(ctx,now); }catch(e){}
       try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
       try{ if(boardKey==='raceway'&&stadiumHazards()) drawRacewayTyres(ctx,now); }catch(e){}
       // possession flash over the active team's half

@@ -892,7 +892,7 @@ had two dampers and nothing that redirected on a beat — the gloves fill that g
 speed-bag = reuses the Baseball bat's swinging + timing tech (blocking flavor);
 canvas drag = drag zone (puddle/caramel).
 
-### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties) — BOARD BUILT (medley TBD)
+### 9. 🏟️ SPORTS DAY — "THE PODIUM" (final boss, all difficulties) — BUILT (medley in; boss keeper TBD)
 
 **Build status:** registered as Season 3 stadium #9 (`pitch:'podium'`, board in `03-boards.js`, ambience →
 `stadium`) — the ladder's ninth and last node. Board-first, matching arenas 5–8: an athletics **infield** ringed
@@ -900,23 +900,39 @@ by a red **running track** with white lane lines and a **gold inner kerb** (the 
 markings** of the season's other sports laid faintly over the grass — a basketball key at each end, tennis
 service lines, a baseball diamond at centre — so the pitch reads as *marked out for every sport at once*.
 
-**Medley hazards — the next pass.** The two earlier finals set the pattern to follow: `THE FINAL` (S1) and
-`THE TURF` (S2) both **borrow** conditions from earlier stadiums rather than inventing new ones, by generalising
-each hazard's arena predicate (`_g1('bush')`, `_tHaz()`) so the existing roll/step/draw code fires on the final
-board too. For Season 3 that means picking Season-3 conditions and turning them on here.
+**THE MEDLEY.** Like `THE FINAL` (S1) and `THE TURF` (S2), this arena **invents nothing** — it borrows, via
+`_podHaz()`/`_pd(key)`, by widening each source arena's predicate (`cgArena`, `bkArena`, `tnArena`, `gridArena`,
+`bowlArena`, `rcArena`, `rgArena`) so that arena's own roll/step/draw fires on the podium board. Each tier is a
+**different trio at matching severity** — a decathlon, rather than the same arenas turned up:
 
-Note the doc's original table below **predates the additive rule** now standing for arenas 5+: it scaled a
-rotation speed and an overlap count. The additive version is simply **how many borrowed conditions are live**:
-
-| Tier | Medley |
+| Tier | Events |
 |---|---|
-| **Easy** | **1** borrowed condition |
-| **Med** | **2** |
-| **Hard** | **3** |
+| **Easy** | ⛳ **Water** (golf) · 🥊 **Ropes** (ring) · 🏈 **Roaming defence** (gridiron) |
+| **Med** | 🏎️ **Oil** (prix) · 🎳 **Rake gate** (alley) · 🎾 **Net + rackets** (tennis) |
+| **Hard** | 🏀 **Hoops** (court) · 🥊 **Sprung gloves** (ring) · ⛳ **Cups** (golf) |
 
-Recommended three, chosen so each tier adds a different *kind* of threat and each comes from a different sport:
-**ropes** (THE RING — adds energy, denies nothing) → **+ roaming defence** (THE END ZONE — living interference)
-→ **+ the rake gate** (THE ALLEY — a timed goal gate, the boss-level denial).
+Each source config is gated so **only** the borrowed piece runs here — golf brings the pond *or* the cups but
+never its full field, the alley brings the rake with no rack/bumpers/gutters, the ring brings ropes *or* gloves
+but never the bags, and so on.
+
+**Two design rules this trio set had to respect:**
+- **Easy disrupts, it never denies** — the same rule all 16 Season 1–2 easy tiers follow. Water, ropes and
+  roamers change how you play without making a goal impossible.
+- **Never stack three denials on hard.** Hoops, gates and the rake can each make a goal *not count*; three of
+  those is unwinnable, not hard. So hard is one denial (hoops) + one redirect (gloves) + one **reward** (cups,
+  which pay a refreshed flick) — it ends the season on the mechanic that gives something back.
+
+**Borrowing gotchas found and fixed** (worth knowing before adding more borrows):
+- Some conditions are **modifiers on their own arena's base** and cannot be lifted alone: tennis's red-racket
+  flip needs the rackets, gridiron's clearance needs the roamers, and the alley's gutters are literally
+  "bumpers off". The med trio therefore borrows tennis's **net + rackets** (its base) rather than the flip.
+- Two borrowed draws repainted with their **home board's** colours — bowling restoring its dark gutter channels
+  and the ring's rope-flex restoring ring canvas — which dropped brown lanes and a beige band onto the podium's
+  infield. Both are now gated to their own board.
+- The ring's rope strands are **baked into the ring board**, so borrowed ropes were invisible — an elastic wall
+  you cannot see breaks the telegraph rule. `drawRing` now draws the strands live on any borrowing board.
+- The borrowed draws first shared **one `try/catch`**, so a throw in the first silently swallowed every one
+  after it (the cups vanished while the hoops drew). Each borrow now has its own guard.
 
 **Fantasy:** a decathlon finale — the arena cycles through every sport's signature
 gimmick against a boss keeper.

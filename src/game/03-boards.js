@@ -933,6 +933,7 @@
       gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
       bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
       bowlRakePh=0; bowlGutter=null;
+      cgOn=false; bkOn=false; tnOn=false;   // SPORTS DAY borrows these, so a board change must re-init them
       rgOn=false; rgT=0; if(typeof rgBags!=='undefined'&&rgBags) rgBags.length=0; if(typeof rgScuff!=='undefined'&&rgScuff) rgScuff.length=0;
       rcOn=false; rcLightT=0; if(typeof rcRuts!=='undefined'&&rcRuts) rcRuts.length=0;
       if(typeof rcDust!=='undefined'&&rcDust) rcDust.length=0;

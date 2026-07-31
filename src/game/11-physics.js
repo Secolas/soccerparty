@@ -1088,7 +1088,11 @@
     var fx=gx-px, fy=gy-py, fl=Math.hypot(fx,fy)||1;
     bkRims.push({x:px,y:py,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
     // the hoop the AI should shoot through: the one closest to its natural line at goal
-    function bkAimTarget(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn)) return null;
+    // One predicate per borrowed arena, so SPORTS DAY can switch its hazards on without every call site knowing.
+    function cgArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='minigolf'||_pd('water')||_pd('cups'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bkArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='court'||_pd('hoops'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function tnArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='tennis'||_pd('net'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bkAimTarget(team){ if(!(bkArena()&&bkRimOn)) return null;
     if(!bkRims.length){ try{ initCourt(); }catch(e){} }
     var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH), gx=W/2;
     var vx=gx-coin.x, vy=gy-coin.y, vl=Math.hypot(vx,vy)||1; vx/=vl; vy/=vl;
@@ -1100,15 +1104,17 @@
     if(perp<bestD){ bestD=perp; best=r; } }
     return best; }
     function initCourt(){ var t=hzTier();
-    bkOn=true; bkTrampOn=(t>=1); bkRimOn=(t>=2);
+    // On SPORTS DAY only the hoops are borrowed — no backboards, no trampolines.
+    var _pH=_pd('hoops');
+    bkOn=true; bkTrampOn=_pH?false:(t>=1); bkRimOn=_pH?true:(t>=2);
     bkBoards=[]; bkTramps=[]; bkRims=[];
     bkRimPass={red:false,blue:false}; bkNoBasket=0;
     var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), _o=13, _d=17;
     // EASY backboards: one angled board outside each post, canted to turn a bank shot goalwards
-    bkBoards.push({x1:gL-_o,y1:NET_DEPTH+2,x2:gL-_o-_d,y2:NET_DEPTH+2+_d});
+    if(!_pH){ bkBoards.push({x1:gL-_o,y1:NET_DEPTH+2,x2:gL-_o-_d,y2:NET_DEPTH+2+_d});
     bkBoards.push({x1:gR+_o,y1:NET_DEPTH+2,x2:gR+_o+_d,y2:NET_DEPTH+2+_d});
     bkBoards.push({x1:gL-_o,y1:H-NET_DEPTH-2,x2:gL-_o-_d,y2:H-NET_DEPTH-2-_d});
-    bkBoards.push({x1:gR+_o,y1:H-NET_DEPTH-2,x2:gR+_o+_d,y2:H-NET_DEPTH-2-_d});
+    bkBoards.push({x1:gR+_o,y1:H-NET_DEPTH-2,x2:gR+_o+_d,y2:H-NET_DEPTH-2-_d}); }
     if(bkTrampOn){ for(var n=0;n<3;n++){ for(var tryN=0;tryN<70;tryN++){
     var ty=NET_DEPTH+GOAL_AREA_D+18+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-36);
     var tx=WALL+20+Math.random()*(W-WALL*2-40);
@@ -1149,7 +1155,9 @@
     function tnNetX1(){ return W-WALL-tnApron(); }
     function initTennis(){ var t=hzTier();
     tnOn=true; tnNetFlash=0; tnT=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
-    tnFlipOn=(t>=1); tnDoorOn=(t>=2);
+    // On SPORTS DAY only the net + rackets are borrowed — the red-racket flip and the sliding gates stay home.
+    var _pN=_pd('net');
+    tnFlipOn=_pN?false:(t>=1); tnDoorOn=_pN?false:(t>=2);
     // rackets: two per half, sitting just short of the net so you can run onto one and be lobbed over
     tnRackets=[]; var n=0; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
     tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s,off:n*Math.round(TN_FLIP/4)});
@@ -1163,7 +1171,7 @@
     tnDoors.push({side:1,off:0,flash:0}); }
     }
     // ball-kids shuffle along their line from the draw loop so they move between shots
-    function tennisTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
+    function tennisTick(){ if(!(tnArena())) return;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
     if(tnNetFlash>0) tnNetFlash--;
     tnT++;
@@ -1176,7 +1184,7 @@
     var p1=tnNetX1(); return {x0:p1,x1:p1+e*lane}; }
     // Does the net (or a closed gate) block a ground crossing at this x? Used by the AI so it can
     // tell "must go over" from "there is a lane open".
-    function tnBlocksAt(x){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return false;
+    function tnBlocksAt(x){ if(!(tnArena())) return false;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
     if(x>tnNetX0()&&x<tnNetX1()) return true;
     for(var i=0;i<tnDoors.length;i++){ var sp=tnDoorSpan(tnDoors[i]);
@@ -1186,7 +1194,7 @@
     //   - has Chip        -> null (shoot at goal; aiMaybeChip lifts it over the net in flight)
     //   - a lane is open  -> hug that lane, so a curve/banana can bend round the net
     //   - else a live racket that is roughly on the way -> run onto it and get lobbed over
-    function tnAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    function tnAimPlan(team){ if(!(tnArena())) return null;
     if(!tnOn){ try{ initTennis(); }catch(e){} }
     var ny=H/2, gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
     var mustCross=((coin.y-ny)*(gy-ny)<0);      // ball and target goal on opposite sides of the net
@@ -1294,20 +1302,22 @@
        extra flick was too quiet a reward for a target this small. */
     var cgFullFlick_=false;
     function initMinigolf(){ var t=hzTier();
+    // On SPORTS DAY only the borrowed piece exists: the pond on easy, the cups on hard — never golf's full field.
+    var _pW=_pd('water'), _pC=_pd('cups'), _pod=(_pW||_pC);
     cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null; cgStamBase=0;
-    cgCupOn=(t>=2);
+    cgCupOn=_pod?_pC:(t>=2);
     // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
     var rot=function(x,y){ return {x:W-x,y:H-y}; };
     cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[];
     // HAZARD TIERS: the pond is on at EVERY difficulty (easy is just the pond, to learn the routing);
     // bunkers + trees add on MEDIUM (the full hazard field); the cups add on HARD (cgCupOn, below).
-    // WATER: a central pond in the midfield belt — EASY and up.
-    cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
-    // TREES: a symmetric pair flanking the midfield belt — MEDIUM and up.
-    if(t>=1){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    // WATER: a central pond in the midfield belt — EASY and up (and the podium's easy borrow).
+    if(!_pod||_pW) cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
+    // TREES: a symmetric pair flanking the midfield belt — MEDIUM and up. Never borrowed by the podium.
+    if(t>=1&&!_pod){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
     cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0}); }
-    // SAND: a matched pair of bunkers flanking the pond — MEDIUM and up.
-    if(t>=1){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
+    // SAND: a matched pair of bunkers flanking the pond — MEDIUM and up. Never borrowed by the podium.
+    if(t>=1&&!_pod){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
     cgSand.push({x:CG_POND_X+CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}); }
     // Mirror the whole top-half set to the bottom. Every piece above is symmetric about W/2, so the 180
     // rotation and a vertical mirror give the same result — the pitch ends up balanced on both axes.
@@ -1344,7 +1354,7 @@
        is unfair on whoever drew that spot. Pushes radially clear of whichever hazard the piece is on and
        re-checks, since shoving a piece out of the water can land it in a bunker. Goalies are left alone:
        the green measures 100% clear, so a keeper on its line is never on a hazard. */
-    function cgClearSpot(x,y,rad){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    function cgClearSpot(x,y,rad){ if(!(cgArena())) return null;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     var R=rad||NAIL_R, lists=[cgWater,cgSand];
     for(var pass=0;pass<4;pass++){ var moved=false;
@@ -1375,7 +1385,7 @@
     if(found){ x=found.x; y=found.y; } }
     return {x:x,y:y}; }
     // read + spend the free full-power flick, from either flick path (13-input and 09-ai)
-    function cgFullFlick(){ return !!(cgFullFlick_&&(typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards()); }
+    function cgFullFlick(){ return !!(cgFullFlick_&&cgArena()); }
     function cgSpendFullFlick(){ cgFullFlick_=false; }
     function cgHoleOut(cup){ cgHoled=current; coin.x=cup.x; coin.y=cup.y;
     coin.vx=0; coin.vy=0; cup.flash=34;
@@ -1397,7 +1407,7 @@
     function cgCupLive(cup){ return true; }
     // the two flank lanes: WALL to the pond's edge, and the bunker's edge to the far wall
     function cgLaneX(side){ return (side<0)?((WALL+(CG_POND_X-CG_POND_RX))/2):(W-(WALL+(CG_POND_X-CG_POND_RX))/2); }
-    function minigolfTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
+    function minigolfTick(){ if(!(cgArena())) return;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     cgT++; if(cgSplash>0) cgSplash--;
     if(!moving&&typeof coin!=='undefined'&&coin){ cgPrevX=coin.x; cgPrevY=coin.y; }
@@ -1440,7 +1450,7 @@
     if(cgSandAt(px,py)) return true;
     for(var tr=0;tr<cgTrees.length;tr++){ if(Math.hypot(px-cgTrees[tr].x,py-cgTrees[tr].y)<cgTrees[tr].r+COIN_R) return true; } }
     return false; }
-    function cgAimPlan(team){ if(!((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    function cgAimPlan(team){ if(!(cgArena())) return null;
     if(!cgOn){ try{ initMinigolf(); }catch(e){} }
     var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
     // REACH THE HOLE: a live cup within putt range whose line is clear pays a bonus flick, so it is
@@ -1479,15 +1489,16 @@
     // moved this frame (used for the carry push).
     var gridOn=false, _gridPrevMoving=false, gridGap=[23,23], gridGapDir=[-1,-1], gridGapV=[0,0];
     var GRID_POST_HALF=2, GRID_POST_H=7, GRID_PUSH=1.6;   // post half-width / half-height, and sideways carry gain
-    function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function gridArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='gridiron'||_pd('roam'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     // ADDITIVE tiers, fixed intensities — a tier adds a CONDITION, it never turns the same knob up:
     //   easy  ROAMING DEFENCE only (they break formation and patrol, so they are moving blockers)
     //   med   + CLEARANCE      (a roamer now boots a ball that strays into its third back to midfield)
     //   hard  + BREATHING GOAL (the posts slide, carry the ball and bounce off their keeper)
+    var _pR=_pd('roam');   // SPORTS DAY borrows the roaming defence alone — no clearance, no breathing goal
     return { roamN:4, roamSpd:1.35, returnSpd:1.4, gate:1.0,
-    clearR:NAIL_R+COIN_R+6, clear:(t>=1), clearCap:6.0, cd:42,
-    breathing:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
+    clearR:NAIL_R+COIN_R+6, clear:_pR?false:(t>=1), clearCap:6.0, cd:42,
+    breathing:_pR?false:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
     // current breathing-goal half-gap for a mouth (HARD only) — 0 when off. Shared by physics + renderer.
     function gridBreathGap(e){ var c=gridCfg(); return c.breathing?(gridGap[e|0]||0):0; }
     // this mouth's keeper — the goalie nail nearest that goal line. Posts bounce off it.
@@ -1576,14 +1587,15 @@
     // MOVING grounded ball, knocked pins leave collision at once, and a guttered ball rolls to rest and the
     // turn passes through the normal settle.
     var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakePh=0, bowlGutter=null;
-    function bowlArena(){ return (typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bowlArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='bowling'||_pd('rake'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     // ADDITIVE tiers, fixed intensities — the 6-pin rack and the rake never change size or speed:
     //   easy  6-PIN RACK, sides are BUMPERS (they bounce you back in, no loss)
     //   med   + RAKE GATE (bumpers still up)
     //   hard  + GUTTERS   (the bumpers come off, so a wall touch is a lost ball)
-    return { rows:3, pinLoss:0.86,
-    bumpers:(t<2), gutter:(t>=2), rake:(t>=1), rakeW:56, rakeFreq:0.04, rakeCloseTh:0.5, gate:0.4 }; }
+    var _pK=_pd('rake');   // SPORTS DAY borrows the rake gate alone — no rack, no bumpers, no gutters
+    return { rows:_pK?0:3, pinLoss:0.86,
+    bumpers:_pK?false:(t<2), gutter:_pK?false:(t>=2), rake:_pK?true:(t>=1), rakeW:56, rakeFreq:0.04, rakeCloseTh:0.5, gate:0.4 }; }
     // THE RAKE gate: a bar spanning the goal mouth that rises and falls along the lane. DOWN (in front of the
     // pins) it blocks the whole mouth; UP (lifted toward the goal line) it is open and you can score. Timed on
     // bowlRakePh — the vertical motion is the tell. bowlRakeClosed(): 1 = fully down/block, 0 = fully up/open.
@@ -1680,17 +1692,18 @@
     if(rim && ((dx+dy)&1) && _rcRnd(seed+dx*2.3+dy*5.7)>0.55) continue;   // 1x1 dither on the edge
     pts.push([dx,dy,rim?2:(sheen?1:0)]); } }
     return pts; }
-    function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rcArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='raceway'||_pd('oil'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     // ADDITIVE tiers, fixed intensities — nothing gets turned up, each tier adds a CONDITION:
     //   easy  TYRE WALLS only
     //   med   + OIL SLICKS + GRAVEL RUN-OFF
     //   hard  + START-LIGHTS (miss the green and the flick is worth half its stamina)
     // Oil is always the symmetric PAIR when it is on — a single slick would favour one end.
-    return { oil:(t>=1), oilN:(t>=1)?2:0, oilSpin:2.0,
-    tyreRest:1.0, tyreCap:12,
-    gravel:(t>=1), gravelDrag:0.90,
-    lights:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
+    var _pO=_pd('oil');   // SPORTS DAY borrows the oil alone — no tyre walls, no gravel, no start-lights
+    return { oil:_pO?true:(t>=1), oilN:(_pO||t>=1)?2:0, oilSpin:2.0,
+    tyres:!_pO, tyreRest:1.0, tyreCap:12,
+    gravel:_pO?false:(t>=1), gravelDrag:0.90,
+    lights:_pO?false:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
     rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0,px:rcOilShape(3.7)}); }
@@ -1788,7 +1801,7 @@
     break; } } }
     // TYRE walls — springy bounce (restitution up to 1.15 on hard), capped so it can't run away. Arms the recoil
     // animation (the stack is knocked along the impact normal and springs back).
-    for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
+    if(c.tyres) for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
     if(td<TR && td>0.001){ var tnx=tdx/td, tny=tdy/td, tvn=coin.vx*tnx+coin.vy*tny;
     if(tvn<0){ coin.vx-=(1+c.tyreRest)*tvn*tnx; coin.vy-=(1+c.tyreRest)*tvn*tny;
     var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; }
@@ -1814,11 +1827,12 @@
     var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[], rgGloves=[];
     var rgWobPend=0, _rgPrevMoving=false;
     var RG_BAG_R=6, RG_ZONE_R=26, RG_ROPE_FLEX=16;
-    function rgArena(){ return (typeof boardKey!=='undefined')&&boardKey==='ring'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rgArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='ring'||_pd('ropes')||_pd('gloves'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { ropes:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
-    bag:(t>=1), bagAbsorb:0.26, bagSlide:0.30, bagShove:2.2, bagShoveMax:6,
-    gloves:(t>=2), gloveReach:26, glovePow:4.6, gloveCap:11, gate:0.4 }; }
+    var _pP=_pd('ropes'), _pG=_pd('gloves'), _pRg=(_pP||_pG);   // SPORTS DAY borrows one of the two, never the bags
+    return { ropes:_pRg?_pP:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
+    bag:_pRg?false:(t>=1), bagAbsorb:0.26, bagSlide:0.30, bagShove:2.2, bagShoveMax:6,
+    gloves:_pRg?_pG:(t>=2), gloveReach:26, glovePow:4.6, gloveCap:11, gate:0.4 }; }
     // The glove's punch cycle, in frames: wind up (cocks back), snap out, hold at full stretch, retract, idle.
     // Returns 0..1 = how far out of the frame the glove is, and whether it is live (able to connect).
     // RG_GLOVE_R is the strike radius AND the art's radius — the glove is a touch wider than the ball (COIN_R*2)
@@ -1988,7 +2002,7 @@
     } else { g.hit=Math.max(g.hit,6);                          // a dead glove just thuds
     try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} }
     break; } } } }
-    function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
+    function bkGoalDenied(side){ return bkArena()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
     else if(e===1){ sx=W-WALL-2; sy=pad+Math.random()*(H-2*pad); }
@@ -2397,6 +2411,21 @@
     for(var _bx=0;_bx<numBoxes.length;_bx++){ var _bb=numBoxes[_bx];
     if(Math.abs(_dx-_bb.x)<=_bb.w/2&&Math.abs(_dy-_bb.y)<=_bb.h/2){ _bb.n=0;
     break; } } } } }catch(e){} }
+    /* SPORTS DAY — the season-3 final. Like THE FINAL (S1) and THE TURF (S2) it does not invent hazards: it
+       BORROWS them, by widening each source arena's predicate with || _pd('key') so that arena's existing
+       roll/step/draw code fires on the podium board. Each tier is a different trio of events at matching
+       severity — a decathlon, not the same arenas turned up:
+         easy  WATER (golf)   + ROPES (ring)   + ROAMING DEFENCE (gridiron)   — a place to avoid, a changed
+                                                                                wall, a living obstacle; none
+                                                                                of them can deny a goal
+         med   OIL (prix)     + RAKE GATE (alley) + NET & RACKETS (tennis)
+         hard  HOOPS (court)  + GLOVES (ring)  + CUPS (golf)
+       The hard trio is deliberately one denial + one redirect + one REWARD (the cups pay a refreshed flick):
+       three denials stacked would make the final unwinnable rather than hard. */
+    function _podHaz(){ if(!((typeof boardKey!=='undefined')&&boardKey==='podium'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    var t=(typeof hzTier==='function')?hzTier():1;
+    return [['water','ropes','roam'],['oil','rake','net'],['hoops','gloves','cups']][t]; }
+    function _pd(n){ var h=_podHaz(); return !!(h&&h.indexOf(n)>=0); }
     // GRASS FINAL — season-1 gauntlet. THE FINAL (royaleArena.gauntlet) pulls one hazard per tier from
     // clean-porting Season 1 stadiums. Each stadium's arena predicate is generalized with || _g1('x'),
     // so the existing roll/step/draw all fire on the grass final for exactly the active tier's hazard.
@@ -2746,7 +2775,7 @@
       }catch(e){} try{ spawnSparks(_bhx,_bhy,current,8,true);
       }catch(e){} } }
       if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
-      } if((typeof boardKey!=='undefined')&&boardKey==='court'&&!scoring&&stadiumHazards()){ if(!bkOn) initCourt();
+      } if(bkArena()&&!scoring){ if(!bkOn) initCourt();
       var _ksp=Math.hypot(coin.vx,coin.vy), _kmov=(moving&&(!coin.air||coin.air<=0));
       // the hoops are fixed furniture now; only the "went through one" flag resets between attempts
       if(!moving){ bkRimPass.red=false; bkRimPass.blue=false; }
@@ -2796,7 +2825,7 @@
       }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
       }catch(e){} break; } } }
       bkPrev.x=coin.x; bkPrev.y=coin.y;
-      } if((typeof boardKey!=='undefined')&&boardKey==='tennis'&&!scoring&&stadiumHazards()){ if(!tnOn) initTennis();
+      } if(tnArena()&&!scoring){ if(!tnOn) initTennis();
       var _tsp=Math.hypot(coin.vx,coin.vy), _tair=(coin.air>0), _tmov=(moving&&!_tair);
       // EASY the net: a lob clears it; a hard grounded shot punches through and loses pace off the
       // cord; anything slower is stopped at the net and knocked back the way it came
@@ -2854,7 +2883,7 @@
       if(bowlArena()&&!scoring){ try{ bowlingStep(); }catch(e){} }
       if(rcArena()&&!scoring){ try{ racewayStep(); }catch(e){} }
       if(rgArena()&&!scoring){ try{ ringStep(); }catch(e){} }
-      if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
+      if(cgArena()&&!scoring){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
       // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
       // turn; a near-max strike from close range carries clean through, and a chip flies over. See
