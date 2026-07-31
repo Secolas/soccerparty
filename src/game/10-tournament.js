@@ -591,6 +591,86 @@
       if(lvl==='hard') c.push(['@beachball',
       '🏐','BEACH BALLS','Beach balls rest until struck, then bounce around.']);
       }
+      // --- Season 3 stadiums (SPORTS). Same additive-tier grammar as the configs in 11-physics:
+      // easy is the base row, med and hard each ADD a row — the card mirrors hzTier exactly. ---
+      if(ar.pitch==='baseball'){ c.push(['@bat',
+      '⚾','THE BATTER','A bat at each plate cracks a slow ball toward the far goal — strike hard past it.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@pitcher',
+      '🎯','PITCHING MACHINE','Fires stray balls onto the pitch from a random side.']);
+      if(lvl==='hard') c.push(['@mitt',
+      '🧤','THE MITT','The mound mitt claims any ball left short through the middle.']);
+      }
+      if(ar.pitch==='court'){ c.push(['@backboard',
+      '🏀','BACKBOARDS','Angled boards beside each post bank a shot goalwards.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@tramp',
+      '🔵','TRAMPOLINES','Throw the ball up and kick it off its line — a bad hop.']);
+      if(lvl==='hard') c.push(['@hoop',
+      '⭕','THE HOOPS','A hoop guards each goal — thread one first or the goal does not count.']);
+      }
+      if(ar.pitch==='tennis'){ c.push(['@tnet',
+      '🎾','THE NET','No ground ball crosses it — ride a racket over, chip, or round the open lanes.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@racketflip',
+      '🔴','RACKET FLIP','Rackets flip green to red on a loop — a red one swats you back.']);
+      if(lvl==='hard') c.push(['@tgate',
+      '🚧','SLIDING GATES','Shutters seal the side lanes in turn — switch wings to find the open one.']);
+      }
+      if(ar.pitch==='minigolf'){ c.push(['@pond',
+      '💧','WATER','The pond kills a shot at the bank it crossed — a chip carries clean over.']);
+      c.push([G+'sprite-bush-2.png',
+      '🌳','THE ROUGH','Trees kill the ball dead; greenside bunkers cost the shot.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@bunker',
+      '🟡','FAIRWAY BUNKER','Tolls the short left lane, so left is taxed and right is clean but long.']);
+      if(lvl==='hard') c.push(['@cup',
+      '⛳','THE CUPS','Hole out in a corner cup for a refreshed full-power flick — hit the pin hard and the ball stays out.']);
+      }
+      if(ar.pitch==='gridiron'){ c.push(['@roam',
+      '🏈','ROAMING DEFENCE','Their defenders break formation and patrol as moving blockers.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@punt',
+      '🦶','CLEARANCE','A roamer boots a ball that strays into its third back to midfield.']);
+      if(lvl==='hard') c.push(['@posts',
+      '🥅','BREATHING GOAL','The posts slide, carry the ball sideways and bounce off their keeper.']);
+      }
+      if(ar.pitch==='bowling'){ c.push(['@pins',
+      '🎳','PIN RACK','Six pins guard each goal and sap the ball; the side walls are bumpers.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@rake',
+      '🚪','RAKE GATE','A bar sweeps across the goal mouth on a loop — shoot as it lifts.']);
+      if(lvl==='hard') c.push(['@gutter',
+      '🕳️','GUTTERS','The bumpers come off — a touch of the side wall is a lost ball.']);
+      }
+      if(ar.pitch==='raceway'){ c.push(['@tyre',
+      '🛞','TYRE WALLS','Stacks guard the box corners and bounce the ball back into play.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@oil',
+      '🛢️','OIL & GRAVEL','Slicks spin the ball onto a surprise line; gravel corners bog it down.']);
+      if(lvl==='hard') c.push(['@lights',
+      '🚦','START-LIGHTS','Release on green for full power — jump the start and the flick is halved.']);
+      }
+      if(ar.pitch==='ring'){ c.push(['@ropes',
+      '🥊','THE ROPES','Elastic ropes line the sides and sling the ball back harder than it arrived.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@bag',
+      '🛍️','HEAVY BAGS','Soak up a shot\u2019s pace and get shoved along it — the layout drifts.']);
+      if(lvl==='hard') c.push(['@glove',
+      '🧤','SPRUNG GLOVES','Wall gloves punch a passing ball, and the hit leaves your next aim punch-drunk.']);
+      }
+      // SPORTS DAY final: a different borrowed TRIO per tier, attributed like the other finals
+      if(ar.pitch==='podium'){ if(lvl==='easy'){ c.push(['@pond',
+      '💧','WATER','Kills the shot at the bank it crossed. (Crazy Golf)']);
+      c.push(['@ropes','🥊','THE ROPES',
+      'Sling the ball back harder. (The Ring)']);
+      c.push(['@roam','🏈','ROAMING DEFENCE',
+      'Moving blockers on patrol. (The End Zone)']);
+      } else if(lvl==='med'){ c.push(['@oil',
+      '🛢️','OIL SLICKS','Spin the ball onto a surprise line. (Grand Prix)']);
+      c.push(['@rake','🚪','RAKE GATE',
+      'Sweeps the goal mouth — shoot as it lifts. (The Alley)']);
+      c.push(['@tnet','🎾','NET & RACKETS',
+      'No ground ball crosses; ride a racket over. (Centre Court)']);
+      } else { c.push(['@hoop',
+      '⭕','THE HOOPS','Thread one first or the goal does not count. (The Hardwood)']);
+      c.push(['@glove','🧤','SPRUNG GLOVES',
+      'Punch the ball and rattle your aim. (The Ring)']);
+      c.push(['@lights','🚦','START-LIGHTS',
+      'Miss the green and the flick is halved. (Grand Prix)']);
+      } }
       // --- gauntlet finals: show only the four hazards active at this difficulty ---
       if(ar.pitch==='turf'){ if(lvl==='easy'){ c.push(['@gust',
       '🌬️','CROSSWIND','Gusts nudge the ball. (Thunderdome)']);
@@ -1141,7 +1221,199 @@
     g.arc(cx,cy,r,0,6.283); g.stroke();
     g.fillStyle='rgba(255,255,255,0.5)';
     g.beginPath(); g.arc(cx-r*0.32,cy-r*0.32,r*0.26,0,6.283);
-    g.fill(); } g.restore();
+    g.fill(); }
+    // --- Season 3 (SPORTS) minis. Same idiom as above: chunky flat shapes, one read per icon. ---
+    else if(key==='bat'){ g.save(); g.translate(cx,cy); g.rotate(-0.7);
+    g.fillStyle='#8a5a2a'; g.beginPath();
+    g.moveTo(-S*0.30,S*0.10); g.lineTo(S*0.26,-S*0.06);
+    g.lineTo(S*0.30,S*0.02); g.lineTo(-S*0.26,S*0.18); g.closePath(); g.fill();
+    g.fillStyle='#b57b3d'; g.fillRect(S*0.10,-S*0.06,S*0.16,S*0.07);
+    g.fillStyle='#5a3a18'; g.fillRect(-S*0.34,S*0.08,S*0.09,S*0.11);
+    g.restore(); g.fillStyle='#f4efe0';
+    g.beginPath(); g.arc(cx+S*0.24,cy+S*0.24,S*0.12,0,6.283); g.fill();
+    g.strokeStyle='#c0392b'; g.lineWidth=1;
+    g.beginPath(); g.arc(cx+S*0.24,cy+S*0.24,S*0.07,2.2,4.2); g.stroke();
+    } else if(key==='pitcher'){ g.fillStyle='#3a3d46';
+    g.fillRect(cx-S*0.26,cy-S*0.18,S*0.36,S*0.36);
+    g.fillStyle='#22242c'; g.beginPath();
+    g.arc(cx+S*0.10,cy,S*0.11,0,6.283); g.fill();
+    g.fillStyle='#f4efe0'; g.beginPath();
+    g.arc(cx+S*0.30,cy,S*0.09,0,6.283); g.fill();
+    g.strokeStyle='rgba(255,255,255,0.55)'; g.lineWidth=1.2;
+    for(var _pl=0;_pl<2;_pl++){ g.beginPath();
+    g.moveTo(cx+S*0.42+_pl*3,cy-S*0.09); g.lineTo(cx+S*0.46+_pl*3,cy);
+    g.lineTo(cx+S*0.42+_pl*3,cy+S*0.09); g.stroke(); }
+    g.fillStyle='#6a6e7a'; g.fillRect(cx-S*0.22,cy+S*0.18,S*0.08,S*0.12);
+    g.fillRect(cx,cy+S*0.18,S*0.08,S*0.12);
+    } else if(key==='mitt'){ g.fillStyle='#8a4a22';
+    g.beginPath(); g.arc(cx,cy,S*0.32,2.7,0.45); g.fill();
+    g.beginPath(); g.arc(cx,cy,S*0.32,Math.PI*0.85,Math.PI*0.15,false); g.fill();
+    g.fillStyle='#a95c2e'; g.beginPath();
+    g.arc(cx,cy-S*0.04,S*0.24,0,6.283); g.fill();
+    g.fillStyle='#5c2f12'; g.beginPath();
+    g.arc(cx,cy-S*0.02,S*0.13,0,6.283); g.fill();
+    g.strokeStyle='#5c2f12'; g.lineWidth=1.2;
+    g.beginPath(); g.arc(cx,cy-S*0.30,S*0.16,0.5,2.6); g.stroke();
+    } else if(key==='backboard'){ g.save(); g.translate(cx,cy); g.rotate(0.6);
+    g.fillStyle='rgba(20,12,4,0.35)'; g.fillRect(-S*0.30+1,-S*0.09+2,S*0.60,S*0.18);
+    g.fillStyle='#f4efe0'; g.fillRect(-S*0.30,-S*0.09,S*0.60,S*0.18);
+    g.fillStyle='#d2542c'; g.fillRect(-S*0.30,-S*0.02,S*0.60,S*0.05);
+    g.restore(); g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx-S*0.36,cy+S*0.30); g.lineTo(cx-S*0.10,cy+S*0.14); g.stroke();
+    } else if(key==='tramp'){ g.fillStyle='rgba(16,10,4,0.28)';
+    g.beginPath(); g.ellipse(cx,cy+3,S*0.34,S*0.20,0,0,6.283); g.fill();
+    g.fillStyle='#26407e'; g.beginPath();
+    g.ellipse(cx,cy,S*0.34,S*0.20,0,0,6.283); g.fill();
+    g.strokeStyle='#6b8fd8'; g.lineWidth=1.6;
+    g.beginPath(); g.ellipse(cx,cy,S*0.34,S*0.20,0,0,6.283); g.stroke();
+    g.strokeStyle='rgba(180,215,255,0.6)'; g.lineWidth=1;
+    for(var _tspk=0;_tspk<6;_tspk++){ var _ta=_tspk/6*6.283;
+    g.beginPath(); g.moveTo(cx+Math.cos(_ta)*S*0.15,cy+Math.sin(_ta)*S*0.09);
+    g.lineTo(cx+Math.cos(_ta)*S*0.34,cy+Math.sin(_ta)*S*0.20); g.stroke(); }
+    } else if(key==='hoop'){ g.fillStyle='rgba(24,14,4,0.3)';
+    g.beginPath(); g.ellipse(cx,cy-S*0.06+2,S*0.30,S*0.16,0,0,6.283); g.fill();
+    g.strokeStyle='rgba(252,248,240,0.5)'; g.lineWidth=1;
+    for(var _hn=0;_hn<5;_hn++){ var _ha=Math.PI*(_hn/4);
+    g.beginPath(); g.moveTo(cx+Math.cos(_ha)*S*0.30,cy-S*0.06+Math.sin(_ha)*S*0.16);
+    g.quadraticCurveTo(cx+Math.cos(_ha)*S*0.14,cy+S*0.18,cx+Math.cos(_ha)*S*0.06,cy+S*0.30); g.stroke(); }
+    g.strokeStyle='#e2622c'; g.lineWidth=2.4;
+    g.beginPath(); g.ellipse(cx,cy-S*0.06,S*0.30,S*0.16,0,0,6.283); g.stroke();
+    g.strokeStyle='rgba(255,190,120,0.85)'; g.lineWidth=1;
+    g.beginPath(); g.ellipse(cx,cy-S*0.04,S*0.26,S*0.12,0,0,Math.PI); g.stroke();
+    } else if(key==='tnet'){ g.strokeStyle='#f4efe0'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(cx-S*0.4,cy-S*0.12); g.lineTo(cx+S*0.4,cy-S*0.12); g.stroke();
+    g.strokeStyle='rgba(244,239,224,0.55)'; g.lineWidth=1;
+    for(var _nv=-3;_nv<=3;_nv++){ g.beginPath();
+    g.moveTo(cx+_nv*S*0.11,cy-S*0.12); g.lineTo(cx+_nv*S*0.11,cy+S*0.16); g.stroke(); }
+    g.beginPath(); g.moveTo(cx-S*0.4,cy+S*0.02); g.lineTo(cx+S*0.4,cy+S*0.02); g.stroke();
+    g.beginPath(); g.moveTo(cx-S*0.4,cy+S*0.16); g.lineTo(cx+S*0.4,cy+S*0.16); g.stroke();
+    } else if(key==='racketflip'){ var _rr2=S*0.17;
+    g.save(); g.translate(cx-S*0.16,cy); g.rotate(-0.5);
+    g.strokeStyle='#7fce6a'; g.lineWidth=2;
+    g.beginPath(); g.ellipse(0,-S*0.08,_rr2*0.8,_rr2,0,0,6.283); g.stroke();
+    g.beginPath(); g.moveTo(0,_rr2-S*0.06); g.lineTo(0,S*0.30); g.stroke(); g.restore();
+    g.save(); g.translate(cx+S*0.18,cy); g.rotate(0.5);
+    g.strokeStyle='#e05a4a'; g.lineWidth=2;
+    g.beginPath(); g.ellipse(0,-S*0.08,_rr2*0.8,_rr2,0,0,6.283); g.stroke();
+    g.beginPath(); g.moveTo(0,_rr2-S*0.06); g.lineTo(0,S*0.30); g.stroke(); g.restore();
+    } else if(key==='tgate'){ g.fillStyle='#3a3d46';
+    g.fillRect(cx-S*0.42,cy-S*0.07,S*0.5,S*0.14);
+    g.fillStyle='#ffd23a';
+    for(var _tg=0;_tg<3;_tg++){ g.fillRect(cx-S*0.38+_tg*S*0.16,cy-S*0.05,S*0.07,S*0.10); }
+    g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx+S*0.16,cy-S*0.16); g.lineTo(cx+S*0.34,cy);
+    g.lineTo(cx+S*0.16,cy+S*0.16); g.stroke();
+    } else if(key==='pond'){ g.fillStyle='#173a55';
+    g.beginPath(); g.ellipse(cx,cy,S*0.36,S*0.24,0,0,6.283); g.fill();
+    g.fillStyle='#2b6a94'; g.beginPath();
+    g.ellipse(cx,cy,S*0.28,S*0.17,0,0,6.283); g.fill();
+    g.fillStyle='rgba(150,210,240,0.8)';
+    g.fillRect(cx-S*0.14,cy-S*0.07,S*0.10,2); g.fillRect(cx+S*0.02,cy+S*0.03,S*0.08,2);
+    } else if(key==='bunker'){ g.fillStyle='#15501f';
+    g.beginPath(); g.ellipse(cx,cy,S*0.37,S*0.25,0,0,6.283); g.fill();
+    g.fillStyle='#d8b46a'; g.beginPath();
+    g.ellipse(cx,cy+1,S*0.31,S*0.19,0,0,6.283); g.fill();
+    g.fillStyle='#efd28c'; g.beginPath();
+    g.ellipse(cx,cy+2,S*0.24,S*0.13,0,0,6.283); g.fill();
+    g.fillStyle='rgba(120,90,40,0.5)';
+    g.fillRect(cx-S*0.1,cy,2,1); g.fillRect(cx+S*0.06,cy+3,2,1);
+    } else if(key==='cup'){ g.fillStyle='#0c0e12';
+    g.beginPath(); g.ellipse(cx,cy+S*0.2,S*0.2,S*0.1,0,0,6.283); g.fill();
+    g.strokeStyle='#e8e2d0'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(cx,cy+S*0.18); g.lineTo(cx,cy-S*0.32); g.stroke();
+    g.fillStyle='#ffd23a'; g.beginPath();
+    g.moveTo(cx,cy-S*0.32); g.lineTo(cx+S*0.3,cy-S*0.23); g.lineTo(cx,cy-S*0.14);
+    g.closePath(); g.fill();
+    } else if(key==='roam'){ g.fillStyle='#e05a4a';
+    g.beginPath(); g.arc(cx,cy,S*0.2,0,6.283); g.fill();
+    g.strokeStyle='#f4e9c8'; g.lineWidth=1.4;
+    g.beginPath(); g.arc(cx,cy,S*0.2,0,6.283); g.stroke();
+    g.strokeStyle='rgba(255,255,255,0.75)'; g.lineWidth=1.4;
+    for(var _rm2=-1;_rm2<=1;_rm2+=2){ g.beginPath();
+    g.moveTo(cx+_rm2*S*0.3,cy-S*0.07); g.lineTo(cx+_rm2*S*0.42,cy);
+    g.lineTo(cx+_rm2*S*0.3,cy+S*0.07); g.stroke(); }
+    } else if(key==='punt'){ g.fillStyle='#2f3a4e';
+    g.beginPath(); g.moveTo(cx-S*0.34,cy-S*0.16); g.lineTo(cx-S*0.06,cy-S*0.16);
+    g.lineTo(cx+S*0.02,cy+S*0.06); g.lineTo(cx+S*0.14,cy+S*0.06);
+    g.lineTo(cx+S*0.14,cy+S*0.18) ; g.lineTo(cx-S*0.34,cy+S*0.18); g.closePath(); g.fill();
+    g.fillStyle='#f4efe0'; g.fillRect(cx-S*0.34,cy+S*0.12,S*0.48,2);
+    g.fillStyle='#f4e9c8'; g.beginPath();
+    g.arc(cx+S*0.3,cy-S*0.1,S*0.11,0,6.283); g.fill();
+    g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx+S*0.34,cy-S*0.2); g.lineTo(cx+S*0.44,cy-S*0.3); g.stroke();
+    } else if(key==='posts'){ g.strokeStyle='#f4efe0'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(cx-S*0.2,cy+S*0.3); g.lineTo(cx-S*0.2,cy-S*0.24); g.stroke();
+    g.beginPath(); g.moveTo(cx+S*0.2,cy+S*0.3); g.lineTo(cx+S*0.2,cy-S*0.24); g.stroke();
+    g.strokeStyle='rgba(255,255,255,0.7)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx-S*0.34,cy-S*0.34); g.lineTo(cx-S*0.44,cy-S*0.28);
+    g.moveTo(cx+S*0.34,cy-S*0.34); g.lineTo(cx+S*0.44,cy-S*0.28); g.stroke();
+    g.strokeStyle='rgba(150,220,255,0.6)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx-S*0.12,cy-S*0.3); g.lineTo(cx+S*0.12,cy-S*0.3); g.stroke();
+    } else if(key==='pins'){ var _pw2=[[cx-S*0.2,cy-S*0.12],[cx+S*0.2,cy-S*0.12],[cx,cy+S*0.08]];
+    for(var _pn2=0;_pn2<3;_pn2++){ var _pp2=_pw2[_pn2];
+    g.fillStyle='#f4efe0'; g.beginPath();
+    g.ellipse(_pp2[0],_pp2[1],S*0.10,S*0.16,0,0,6.283); g.fill();
+    g.fillStyle='#e05a4a'; g.fillRect(_pp2[0]-S*0.10,_pp2[1]-S*0.06,S*0.20,S*0.045);
+    } } else if(key==='rake'){ g.fillStyle='rgba(20,14,8,0.4)';
+    g.fillRect(cx-S*0.4,cy-S*0.02+2,S*0.8,S*0.12);
+    g.fillStyle='#8a8f9c'; g.fillRect(cx-S*0.4,cy-S*0.06,S*0.8,S*0.12);
+    g.fillStyle='#b8bec9'; g.fillRect(cx-S*0.4,cy-S*0.06,S*0.8,S*0.04);
+    g.strokeStyle='rgba(255,255,255,0.7)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx,cy-S*0.32); g.lineTo(cx,cy-S*0.12);
+    g.moveTo(cx-S*0.06,cy-S*0.18); g.lineTo(cx,cy-S*0.12); g.lineTo(cx+S*0.06,cy-S*0.18); g.stroke();
+    } else if(key==='gutter'){ g.fillStyle='#b57b3d';
+    g.fillRect(cx-S*0.44,cy-S*0.3,S*0.88,S*0.6);
+    g.fillStyle='#1c140c'; g.fillRect(cx-S*0.44,cy-S*0.3,S*0.2,S*0.6);
+    g.fillRect(cx+S*0.24,cy-S*0.3,S*0.2,S*0.6);
+    g.fillStyle='#f4e9c8'; g.beginPath();
+    g.arc(cx-S*0.34,cy+S*0.12,S*0.09,0,6.283); g.fill();
+    } else if(key==='tyre'){ g.fillStyle='#16181d';
+    g.beginPath(); g.arc(cx,cy,S*0.32,0,6.283); g.fill();
+    g.fillStyle='#2e323b'; g.beginPath();
+    g.arc(cx,cy,S*0.21,0,6.283); g.fill();
+    g.fillStyle='#0d0f13'; g.beginPath();
+    g.arc(cx,cy,S*0.1,0,6.283); g.fill();
+    g.strokeStyle='rgba(255,255,255,0.35)'; g.lineWidth=1.4;
+    g.beginPath(); g.arc(cx,cy,S*0.27,3.6,4.6); g.stroke();
+    } else if(key==='oil'){ g.fillStyle='#0a0810';
+    g.beginPath(); g.ellipse(cx,cy+1,S*0.34,S*0.2,0,0,6.283); g.fill();
+    g.beginPath(); g.ellipse(cx+S*0.2,cy-S*0.06,S*0.13,S*0.09,0,0,6.283); g.fill();
+    g.fillStyle='rgba(96,132,196,0.6)';
+    g.fillRect(cx-S*0.16,cy-S*0.04,S*0.09,2); g.fillRect(cx+S*0.04,cy+S*0.06,S*0.07,2);
+    } else if(key==='lights'){ g.fillStyle='#0a0b0e';
+    g.fillRect(cx-S*0.38,cy-S*0.12,S*0.76,S*0.24);
+    g.fillStyle='#3a3d42'; g.fillRect(cx-S*0.38,cy-S*0.12,S*0.76,S*0.05);
+    var _lc2=['#ff2a1a','#ff2a1a','#4bff72'];
+    for(var _lg=0;_lg<3;_lg++){ g.fillStyle=_lc2[_lg];
+    g.beginPath(); g.arc(cx-S*0.2+_lg*S*0.2,cy+S*0.02,S*0.075,0,6.283); g.fill(); }
+    g.fillStyle='rgba(90,255,130,0.35)'; g.beginPath();
+    g.arc(cx+S*0.2,cy+S*0.02,S*0.14,0,6.283); g.fill();
+    } else if(key==='ropes'){ g.strokeStyle='#f4efe0'; g.lineWidth=1.8;
+    for(var _rp2=0;_rp2<3;_rp2++){ var _ry2=cy-S*0.18+_rp2*S*0.18;
+    g.beginPath(); g.moveTo(cx-S*0.4,_ry2);
+    g.quadraticCurveTo(cx,_ry2+S*0.12,cx+S*0.4,_ry2); g.stroke(); }
+    g.fillStyle='#e05a4a';
+    g.fillRect(cx-S*0.44,cy-S*0.26,S*0.07,S*0.56); g.fillRect(cx+S*0.37,cy-S*0.26,S*0.07,S*0.56);
+    } else if(key==='bag'){ g.fillStyle='rgba(20,12,8,0.35)';
+    g.beginPath(); g.ellipse(cx,cy+S*0.3,S*0.2,S*0.08,0,0,6.283); g.fill();
+    g.fillStyle='#8e2b34'; g.beginPath();
+    g.moveTo(cx-S*0.16,cy-S*0.2); g.lineTo(cx+S*0.16,cy-S*0.2);
+    g.lineTo(cx+S*0.19,cy+S*0.26); g.lineTo(cx-S*0.19,cy+S*0.26); g.closePath(); g.fill();
+    g.fillStyle='#b0424e'; g.fillRect(cx-S*0.16,cy-S*0.2,S*0.1,S*0.44);
+    g.strokeStyle='#d8d2c0'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx-S*0.1,cy-S*0.2); g.lineTo(cx,cy-S*0.34);
+    g.lineTo(cx+S*0.1,cy-S*0.2); g.stroke();
+    g.fillStyle='#2b2b33'; g.fillRect(cx-S*0.16,cy-S*0.04,S*0.35,S*0.06);
+    } else if(key==='glove'){ g.fillStyle='#7e1f1f';
+    g.beginPath(); g.arc(cx+1,cy+1,S*0.28,0,6.283); g.fill();
+    g.fillStyle='#c0392b'; g.beginPath();
+    g.arc(cx,cy,S*0.28,0,6.283); g.fill();
+    g.fillStyle='#e05a4a'; g.beginPath();
+    g.arc(cx-S*0.08,cy-S*0.08,S*0.14,0,6.283); g.fill();
+    g.fillStyle='#c0392b'; g.beginPath();
+    g.arc(cx-S*0.24,cy+S*0.12,S*0.11,0,6.283); g.fill();
+    g.fillStyle='#f4efe0'; g.fillRect(cx-S*0.34,cy+S*0.2,S*0.3,S*0.12);
+    } g.restore();
     }
     // build a DOM icon (procedural canvas, sprite img, or emoji) for a condition entry
     function condIconEl(c,size){ var icon=c[0];

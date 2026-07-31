@@ -2008,7 +2008,7 @@
     if(g.live){ coin.vy+=g.dir*c.glovePow;                     // the punch itself, straight down its travel
     var gs=Math.hypot(coin.vx,coin.vy); if(gs>c.gloveCap){ var gk=c.gloveCap/gs; coin.vx*=gk; coin.vy*=gk; }
     g.hit=14; rgWobPend=1;
-    try{ spawnSparks(g.x,gy,null,8); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(8); }catch(e){}
+    try{ spawnSparks(g.x,gy,null,8); }catch(e){} try{ if(!muted&&typeof sfxPunch==='function') sfxPunch(8); }catch(e){}
     try{ setStatus('PUNCHED!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,18,24,30]); }catch(e){}
     } else { g.hit=Math.max(g.hit,6);                          // a dead glove just thuds
     try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} }
@@ -2802,7 +2802,7 @@
       var _d1=(coin.x-_rm.x)*_rm.fx+(coin.y-_rm.y)*_rm.fy;
       if(_d0<0&&_d1>=0){ var _lat=(coin.x-_rm.x)*(-_rm.fy)+(coin.y-_rm.y)*_rm.fx;
       if(Math.abs(_lat)<_rm.half-COIN_R*0.35){ bkRimPass[_rm.for]=true; _rm.flash=20;
-      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      try{ if(!muted&&typeof sfxSwish==='function') sfxSwish();
       }catch(e){} try{ spawnSparks(_rm.x,_rm.y,current,10,true); }catch(e){} } }
       for(var _pk=-1;_pk<=1;_pk+=2){ var _px=_rm.x+(-_rm.fy)*_rm.half*_pk, _py=_rm.y+_rm.fx*_rm.half*_pk;
       var _pdx=coin.x-_px, _pdy=coin.y-_py, _pd=Math.hypot(_pdx,_pdy), _pmin=COIN_R+BK_POST_R;
@@ -2810,7 +2810,8 @@
       coin.x+=_pux*(_pmin-_pd); coin.y+=_puy*(_pmin-_pd);
       var _pdot=coin.vx*_pux+coin.vy*_puy;
       if(_pdot<0){ coin.vx-=1.7*_pdot*_pux; coin.vy-=1.7*_pdot*_puy; }
-      try{ if(typeof sfxBump==='function') sfxBump(4); }catch(e){} } } } }
+      try{ if(!muted&&typeof sfxRimClang==='function') sfxRimClang(_ksp); }catch(e){}
+      try{ spawnSparks(_px,_py,null,5); }catch(e){} } } } }
       // MED trampoline: a BAD hop — it throws the ball up AND kicks it off its line, so unlike the
       // candy jelly pad (which launches you helpfully along your travel) it costs you control
       if(_kmov&&_ksp>0.9){ for(var _tri=0;_tri<bkTramps.length;_tri++){ var _tr=bkTramps[_tri];
@@ -2818,7 +2819,7 @@
       if(Math.hypot(coin.x-_tr.x,coin.y-_tr.y)<_tr.r+COIN_R*0.5){ coin.air=BK_HOP; coin.air0=BK_HOP;
       var _tang=Math.atan2(coin.vy,coin.vx)+(Math.random()-0.5)*1.15, _tsp=_ksp*0.86;
       coin.vx=Math.cos(_tang)*_tsp; coin.vy=Math.sin(_tang)*_tsp;
-      _tr.flash=14; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      _tr.flash=14; try{ if(!muted&&typeof sfxTramp==='function') sfxTramp();
       }catch(e){} try{ spawnSparks(_tr.x,_tr.y,current,9,true);
       }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
       else { for(var _tf=0;_tf<bkTramps.length;_tf++){ if(bkTramps[_tf].flash>0) bkTramps[_tf].flash--; } }

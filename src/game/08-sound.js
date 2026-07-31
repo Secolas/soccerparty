@@ -225,6 +225,26 @@
     noise(0.16+s*0.08,0.09+s*0.05);
     setTimeout(function(){ tone(760,0.06,'triangle',0.04,1500);
     },70); haptic([0,32,16,26]);
+    } function sfxSwish(){ if(muted) return;
+    noise(0.14,0.05); tone(880,0.08,'sine',0.05,1400);
+    setTimeout(function(){ tone(1320,0.10,'sine',0.06,1900);
+    },55); haptic(14);
+    } function sfxRimClang(v){ if(muted) return;
+    var s=Math.min(1,(v||4)/8);
+    tone(1180,0.09,'square',0.05+s*0.04,2400);
+    tone(1770,0.12,'triangle',0.04+s*0.03,2400);
+    haptic(Math.round(6+s*8));
+    } function sfxTramp(){ if(muted) return;
+    tone(220,0.05,'sine',0.09,90);
+    setTimeout(function(){ tone(440,0.09,'sine',0.07,700);
+    },40); setTimeout(function(){ tone(660,0.06,'sine',0.04,1100);
+    },90); haptic(12);
+    } function sfxPunch(v){ if(muted) return;
+    var s=Math.min(1,(v||6)/9);
+    tone(95,0.11,'square',0.11+s*0.04,45);
+    noise(0.10+s*0.05,0.10);
+    setTimeout(function(){ tone(330,0.05,'triangle',0.05,180);
+    },30); haptic([0,26,12,20]);
     } function sfxAnchorHit(){ if(muted) return;
     tone(120,0.16,'square',0.11,60);
     noise(0.08,0.06); haptic([0,

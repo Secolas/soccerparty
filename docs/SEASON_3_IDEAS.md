@@ -969,6 +969,21 @@ friendly opener), then **BASKETBALL** (the dribble ball is the marquee ball-feel
 **GRIDIRON**'s pursuing rushers are the riskiest to get settle-safe — prototype
 that one early to de-risk the pursuer primitive. **THE PODIUM** ships last.
 
+## Stadium cards + hazard sounds (finishing polish) — DONE
+
+Season 3's nine arenas now have `royArenaConds()` entries, so their pre-match cards list per-tier
+hazards with icons exactly like Season 1/2 instead of falling back to the blurb. The card mirrors the
+additive-tier grammar: easy is the base row, med and hard each ADD a row. SPORTS DAY shows its borrowed
+trio per tier with source attributions, the same style as THE FINAL and THE TURF. ~24 new hand-drawn
+`condMiniDraw` minis (`@bat`, `@hoop`, `@tnet`, `@cup`, `@lights`, `@glove`, …).
+
+Hazard audio: the court no longer plays the pinball bumper for everything — a made basket is a net
+**swish** (`sfxSwish`), clipping a rim post is a metallic **clang** (`sfxRimClang`, with a spark burst),
+a trampoline is a springy **boing** (`sfxTramp`), and the ring's glove punch is a real **punch**
+(`sfxPunch`) instead of a generic bump. Backboards keep `sfxBumperHit` (a bank shot genuinely is a
+bumper). Everything else already had bespoke or fitting audio (golf hole-out = jackpot, prix lights =
+whoosh/blocked, rake = wall).
+
 ## New national teams (Season 3 roster expansion)
 
 **Docs proposal only — not yet implemented.** Current roster (16): Brazil,
