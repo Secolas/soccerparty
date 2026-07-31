@@ -11,12 +11,6 @@
       }
       if(moving&&phase==='play'&&!aiming&&TAC.guided&&steerBudget>0){ steerHold=p.x;
       e.preventDefault(); return;
-      }
-      // BACKSPIN skill-shot: after the flick, press and drag back toward yourself to make the
-      // ball bite and draw home. No drag = a normal shot. (Skipped if Joystick owns the drag.)
-      if(moving&&phase==='play'&&!aiming&&TAC.backspin&&!TAC.guided&&!bsCap&&!backspinPhase&&Math.hypot(coin.vx,coin.vy)>0.5){ bsAnchor={x:p.x,y:p.y}; bsCap=true;
-      try{ if(typeof haptic==='function') haptic(8);
-      }catch(e){} e.preventDefault(); return;
       } if(strategistArm===current && phase==='play' && !moving && !aiming && !winner){ let _best=null,_bd=1e9;
       for(const n of nails){ if(n.goalie) continue;
       if(n.team!==current) continue;
@@ -51,12 +45,7 @@
       e.preventDefault();
     }
     function onMove(e){ const p=pos(e);
-    if(bsCap){ // pull = how far the pointer has moved OPPOSITE the shot's travel (i.e. dragged back toward you)
-    var _bx=p.x-bsAnchor.x, _by=p.y-bsAnchor.y, _bpk=-(_bx*backspinFx+_by*backspinFy);
-    bsPull=Math.max(0,Math.min(1,_bpk/64));
-    if(bsPull>0.04){ try{ setStatus('BACKSPIN — PULL!'); }catch(_e){} }
-    e.preventDefault(); return;
-    } if(steerHold!=null){ steerHold=p.x;
+    if(steerHold!=null){ steerHold=p.x;
     e.preventDefault(); return;
     } if(pmDrag){ if(!dragNail) return;
     const c=clampToPitch(p.x,p.y);
@@ -75,9 +64,6 @@
     } } }catch(e){} e.preventDefault();
     }
     function onUp(e){
-      if(bsCap){ bsCap=false; if(bsPull>0.04){ try{ if(!muted) sfxGuided(); }catch(e){} try{ if(typeof haptic==='function') haptic(14); }catch(e){} }
-      e.preventDefault(); return;
-      }
       if(steerHold!=null){ steerHold=null;
       e.preventDefault(); return;
       } if(pmDrag){ pmDrag=false;
@@ -140,10 +126,9 @@
       backspinFx=coin.vx/_bsp;
       backspinFy=coin.vy/_bsp;
       backspinPhase=0; })(); steerBudget=(TAC.guided?40:0);
-      steerHold=null; bsPull=0; bsCap=false; bsAnchor=null; try{ ecoFlickStart();
+      steerHold=null; try{ ecoFlickStart();
       }catch(e){} try{ trioReset();
       }catch(e){} if(TAC.guided) setStatus('DRAG TO STEER!');
-      else if(TAC.backspin) setStatus('DRAG BACK TO PULL!');
       var _ab=sideAb[current]||[];
       if(_ab.indexOf('cannon')>=0){ sfxCannon(power);
       } else if(_ab.indexOf('serpent')>=0){ sfxSerpent();

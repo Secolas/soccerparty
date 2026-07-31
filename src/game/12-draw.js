@@ -2152,15 +2152,15 @@
         var _stamMode=(mode!=='penalty' && !(pen&&pen.active));
         var L=(13+pEff*0.6)*(TAC.laser?2.4:1);
         var _stamIdx=Math.min(Math.max(0,flickCount-((typeof cgStamBase!=='undefined')?cgStamBase:0)),3);   // hole-out refreshes stamina from the hole (green again), then it decreases
-        const pcol=TAC.frozen?'#7fdcff':(_stamMode?['#5dff5d',
+        if(TAC.backspin) L=400; const pcol=TAC.frozen?'#7fdcff':(_stamMode?['#5dff5d',
         '#ffd21a','#ff2a1a','#b31414'][_stamIdx]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
         var v0=pEff*(FLICK_MAX/FLICK_POWER)*TAC.power, gvx=Math.cos(angD)*v0, gvy=Math.sin(angD)*v0, gx=coin.x, gy=coin.y;
         var _gh=-gvx, _ghd=(_gh>0.05)?1:((_gh<-0.05)?-1:((W/2-coin.x)>=0?1:-1));
         var gspin=(TAC.curve&&power>=12)?(_ghd*((gvy<0)?1:-1)*1.9):0;
         var ff=FRICTION+(TAC.glide||0)+royFloorFric(), lft=WALL+COIN_R, rgt=W-WALL-COIN_R, tp=WALL+COIN_R, bt=H-WALL-COIN_R;
-        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.wet), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
+        var gpts=[[gx,gy]], acc=0, ppx=gx, ppy=gy, _bk=null, _stop=false, _sg=!(TAC.curve||TAC.serpent||TAC.backspin||TAC.wet), _gmL=(W-GOAL_W)/2, _gmR=(W+GOAL_W)/2, gBase=Math.atan2(gvy,gvx), gDir=1, gPh=0, gbfx=Math.cos(angD), gbfy=Math.sin(angD), gBackPhase=0, gWetBase=Math.atan2(gvy,gvx), gWetPhase=0;
         for(var gs=0; gs<80 && acc<L && !_bk && !_stop; gs++){ var gsp=Math.hypot(gvx,gvy);
-        if(gsp<0.3) break;
+        if(gsp<(TAC.backspin?0.12:0.3)) break;
         if(gspin){ var gpx=-gvy/gsp, gpy=gvx/gsp;
         gvx+=gpx*gspin*gsp*0.05;
         gvy+=gpy*gspin*gsp*0.05;
@@ -2205,7 +2205,13 @@
         var _svx=gx-_px0, _svy=gy-_py0, _swx=_bn.x-_px0, _swy=_bn.y-_py0, _sden=(_svx*_svx+_svy*_svy)||1, _st=Math.max(0,Math.min(1,(_swx*_svx+_swy*_svy)/_sden)), _scx=_px0+_st*_svx, _scy=_py0+_st*_svy, _sdd=(_bn.x-_scx)*(_bn.x-_scx)+(_bn.y-_scy)*(_bn.y-_scy);
         if(_sdd<(COIN_R+_bnr)*(COIN_R+_bnr)){ _bk=[Math.round(_scx),
         Math.round(_scy)]; break;
-        } } } gvx*=ff; gvy*=ff; } if(_sg){ var _lp=gpts[gpts.length-1];
+        } } } gvx*=ff; gvy*=ff; if(TAC.backspin){ if(!gBackPhase){ gvx*=0.92;
+        gvy*=0.92; var _gbfv=gvx*gbfx+gvy*gbfy;
+        if(_gbfv<0.4){ gvx=-gbfx*3.0;
+        gvy=-gbfy*3.0; gBackPhase=1;
+        if(TAC.serpent){ gBase+=Math.PI;
+        gDir=-gDir; } } } else { gvx*=0.90;
+        gvy*=0.90; } } } if(_sg){ var _lp=gpts[gpts.length-1];
         if(!_lp||_lp[0]!==gx||_lp[1]!==gy) gpts.push([gx,
         gy]); } ctx.lineCap='round';
         ctx.lineJoin='miter'; ctx.miterLimit=2;

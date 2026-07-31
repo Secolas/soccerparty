@@ -3150,11 +3150,10 @@
          friction rockets around for ~2.8s and is hard to track. The -0.006 delta (f~=0.978) settles a
          cannon shot in ~1.9s and still lets a normal flick roll the length of the pitch, so scoring is
          unaffected but the ball is followable. */
-      coin.vx*=f; coin.vy*=f; if(TAC.backspin&&bsPull>0&&moving&&!scoring){ if(!backspinPhase){ var _bbr=0.93-0.05*bsPull;
-      coin.vx*=_bbr;   /* the drag-back gesture supplies bsPull (0..1); harder drag = fiercer brake + snap */
-      coin.vy*=_bbr; var _bfv=coin.vx*backspinFx+coin.vy*backspinFy;
-      if(_bfv<0.4){ var _bsnap=1.6+3.4*bsPull; coin.vx=-backspinFx*_bsnap;
-      coin.vy=-backspinFy*_bsnap;
+      coin.vx*=f; coin.vy*=f; if(TAC.backspin&&moving&&!scoring){ if(!backspinPhase){ coin.vx*=0.92;
+      coin.vy*=0.92; var _bfv=coin.vx*backspinFx+coin.vy*backspinFy;
+      if(_bfv<0.4){ coin.vx=-backspinFx*3.0;
+      coin.vy=-backspinFy*3.0;
       backspinPhase=1; if(TAC.serpent){ serpentBase+=Math.PI;
       serpentDir=-serpentDir; } try{ if(!muted) sfxCurl();
       }catch(e){} } } else { coin.vx*=0.90;
