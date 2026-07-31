@@ -1600,6 +1600,7 @@
     try{ if(_pd('oil')||_pd('lights')){ racewayTick(); drawRaceway(ctx,now); } }catch(e){}
     try{ if(_pd('rake')) bowlingTick(); }catch(e){}
     try{ if(_pd('net')) tennisTick(); }catch(e){}
+    try{ if(_pd('diamond')) baseballTick(); }catch(e){}
     return;
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
@@ -1936,6 +1937,7 @@
       try{ if(_pd('net')) drawTennis(ctx,now); }catch(e){}
       try{ if(_pd('water')||_pd('cups')) drawMinigolf(ctx,now); }catch(e){}
       try{ if(_pd('rake')) drawBowling(ctx,now); }catch(e){}
+      try{ if(_pd('diamond')) drawBaseball(ctx,now); }catch(e){}
       try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
       try{ if(boardKey==='raceway'&&stadiumHazards()) drawRacewayTyres(ctx,now); }catch(e){}
       // possession flash over the active team's half

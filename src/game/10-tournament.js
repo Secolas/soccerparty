@@ -105,8 +105,7 @@
       'curve','serpent'],d:7,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
       {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
       'backspin','magnet'],d:8,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
-      {name:'SPORTS DAY',pitch:'podium',ab:['sweeper',
-      'trio','bigkeeper'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
+      {name:'SPORTS DAY',pitch:'podium',ab:[],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. No keeper tricks: four borrowed hazards strike at once, a different quartet of sports at each difficulty. Just survive the medley and score.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
@@ -671,18 +670,24 @@
       'Sling the ball back harder. (The Ring)']);
       c.push(['@roam','🏈','ROAMING DEFENCE',
       'Moving blockers on patrol. (The End Zone)']);
+      c.push([G+'sprite-bat.png','⚾','THE BATTER',
+      'A bat cracks a soft shot toward the far goal. (The Diamond)']);
       } else if(lvl==='med'){ c.push(['@oil',
       '🛢️','OIL SLICKS','Spin the ball onto a surprise line. (Grand Prix)']);
       c.push(['@rake','🚪','RAKE GATE',
       'Sweeps the goal mouth — shoot as it lifts. (The Alley)']);
       c.push(['@tnet','🎾','NET & RACKETS',
       'No ground ball crosses; ride a racket over. (Centre Court)']);
+      c.push(['@pitcher','🎯','PITCHING MACHINE',
+      'Fires stray balls in from the sides. (The Diamond)']);
       } else { c.push(['@hoop',
       '⭕','THE HOOPS','Thread one first or the goal does not count. (The Hardwood)']);
       c.push(['@glove','🧤','SPRUNG GLOVES',
       'Punch the ball and rattle your aim. (The Ring)']);
       c.push(['@lights','🚦','START-LIGHTS',
       'Miss the green and the flick is halved. (Grand Prix)']);
+      c.push([G+'sprite-glove.png','🧤','THE MITT',
+      'Claims a ball left short through the middle. (The Diamond)']);
       } }
       // --- gauntlet finals: show only the four hazards active at this difficulty ---
       if(ar.pitch==='turf'){ if(lvl==='easy'){ c.push(['@gust',

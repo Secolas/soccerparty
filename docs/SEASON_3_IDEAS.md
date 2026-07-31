@@ -907,9 +907,9 @@ service lines, a baseball diamond at centre — so the pitch reads as *marked ou
 
 | Tier | Events |
 |---|---|
-| **Easy** | ⛳ **Water** (golf) · 🥊 **Ropes** (ring) · 🏈 **Roaming defence** (gridiron) |
-| **Med** | 🏎️ **Oil** (prix) · 🎳 **Rake gate** (alley) · 🎾 **Net + rackets** (tennis) |
-| **Hard** | 🏀 **Hoops** (court) · 🥊 **Sprung gloves** (ring) · 🏎️ **Start-lights** (prix) |
+| **Easy** | ⛳ **Water** (golf) · 🥊 **Ropes** (ring) · 🏈 **Roaming defence** (gridiron) · ⚾ **Bat** (diamond) |
+| **Med** | 🏎️ **Oil** (prix) · 🎳 **Rake gate** (alley) · 🎾 **Net + rackets** (tennis) · 🎯 **Pitching machine** (diamond) |
+| **Hard** | 🏀 **Hoops** (court) · 🥊 **Sprung gloves** (ring) · 🏎️ **Start-lights** (prix) · 🧤 **The mitt** (diamond) |
 
 Each source config is gated so **only** the borrowed piece runs here — golf brings the pond *or* the cups but
 never its full field, the alley brings the rake with no rack/bumpers/gutters, the ring brings ropes *or* gloves
@@ -968,6 +968,25 @@ bonus escalating by tier). Ship it last.
 friendly opener), then **BASKETBALL** (the dribble ball is the marquee ball-feel).
 **GRIDIRON**'s pursuing rushers are the riskiest to get settle-safe — prototype
 that one early to de-risk the pursuer primitive. **THE PODIUM** ships last.
+
+## SPORTS DAY is a true gauntlet final — DONE
+
+The Season 1 (THE FINAL) and Season 2 (THE TURF) finals grant the opponent NO abilities: the whole
+challenge is the borrowed hazards striking at once (four per tier). SPORTS DAY was originally a normal
+stadium with an opponent loadout (sweeper/trio/bigkeeper) and only THREE borrowed hazards per tier. It now
+matches the other finals: `ab:[]` (no opponent abilities, so the card drops its OPPONENT CARRIES section),
+and FOUR hazards per tier. The 4th is the **diamond** — the only one of the season's eight sports the medley
+never used — borrowed to contribute exactly one piece per tier along its own progression:
+
+  easy  + THE BATTER        (a bat cracks a soft shot away)
+  med   + PITCHING MACHINE  (stray balls fired in from the sides)
+  hard  + THE MITT          (claims a ball left short through the middle)
+
+Wiring: a new `bbArena()` predicate (`boardKey==='baseball' || _pd('diamond')`), `bbOn`/`bbBatsOn` init
+flags (the bats were previously unconditional, and `bbBats.length===0` had doubled as the init signal —
+which would have re-inited every tick once the bats could be empty), the podium ground-FX dispatch and
+late-pass draw both gated on `_pd('diamond')`, and a card row per tier. On the diamond's OWN board the
+borrow flag is off, so its additive bat+pitcher+mitt progression is unchanged.
 
 ## Ladder order + the Season 3 map — DONE
 

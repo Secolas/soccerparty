@@ -1030,12 +1030,12 @@
     //   HARD: + ONE catcher's glove on the pitcher's mound, which claims only a ball that has already
     //         slowed below BB_CATCH_MAX — a live shot blows straight through it.
     // Every effect only touches a MOVING ball, so the ball still settles and turns end.
-    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false;
+    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false, bbBatsOn=true, bbOn=false;
     var BB_RZ=40, BB_SWING=14, BB_ARC=Math.PI, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
     // A glove only claims a ball that is already dying. A real shot beats it, so the hazard reads as
     // "do not leave it short through the middle" — a skill test, not a random confiscation.
     var BB_CATCH_MAX=3.2;   /* a ball still rolling this slowly through the mound is claimed; a live shot blows through */
-    function initBaseball(){ var t=hzTier();
+    function initBaseball(){ var t=hzTier(); bbOn=true;
     // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
     // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
     // The bat stands AT home plate, which the board art draws NET_DEPTH+32 out from each goal —
@@ -1046,9 +1046,14 @@
     // isTop picks which half the 180-degree sweep arcs through: the top bat sweeps across its
     // downfield side, the bottom bat across its upfield side, so each always swings out over the
     // pitch and never back into its own net.
-    bbBats=[{x:W/2,y:_hp,rest:-1.03,tgt:H,isTop:1,swing:false,swT:0,cd:0,start:0,dir:1},
-    {x:W/2,y:H-_hp,rest:2.11,tgt:0,isTop:0,swing:false,swT:0,cd:0,start:0,dir:1}];
-    bbPitchOn=(t>=1); bbGlovesOn=(t>=2);
+    // SPORTS DAY borrows exactly ONE of the diamond's three pieces per tier (bat easy / pitching machine
+    // med / mitt hard), so the final shows one clean diamond row per difficulty instead of the additive
+    // stack the diamond's own board runs. bbBatsOn didn't exist before — the bats were unconditional.
+    var _pod=_pd('diamond');
+    bbBatsOn=_pod?(t===0):true;
+    bbBats=bbBatsOn?[{x:W/2,y:_hp,rest:-1.03,tgt:H,isTop:1,swing:false,swT:0,cd:0,start:0,dir:1},
+    {x:W/2,y:H-_hp,rest:2.11,tgt:0,isTop:0,swing:false,swT:0,cd:0,start:0,dir:1}]:[];
+    bbPitchOn=_pod?(t===1):(t>=1); bbGlovesOn=_pod?(t===2):(t>=2);
     bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
     // ONE glove, on the pitcher's mound. Four of them — sat at coordinates matching no drawn base —
     // turned midfield into four ball-traps that ate any shot passing through. It starts disarmed so
@@ -1095,6 +1100,7 @@
     bkRims.push({x:px,y:py,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
     // the hoop the AI should shoot through: the one closest to its natural line at goal
     // One predicate per borrowed arena, so SPORTS DAY can switch its hazards on without every call site knowing.
+    function bbArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='baseball'||_pd('diamond'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function cgArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='minigolf'||_pd('water')||_pd('cups'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bkArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='court'||_pd('hoops'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function tnArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='tennis'||_pd('net'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
@@ -2025,8 +2031,8 @@
     }
     // advance the pitching machine + glove flashes from the draw loop so they animate between shots.
     // The bat swing state machine runs from stepPhysics (it is triggered by and acts on the ball).
-    function baseballTick(){ if(!((typeof boardKey!=='undefined')&&boardKey==='baseball'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return;
-    if(bbBats.length===0){ try{ initBaseball(); }catch(e){} }
+    function baseballTick(){ if(!bbArena()) return;
+    if(!bbOn){ try{ initBaseball(); }catch(e){} }
     if(bbPitchOn){ for(var _pmi=bbPitchBalls.length-1;_pmi>=0;_pmi--){ var _pm=bbPitchBalls[_pmi];
     _pm.x+=_pm.vx; _pm.y+=_pm.vy;
     if(_pm.x>W-WALL+10||_pm.x<WALL-10||_pm.y<WALL-10||_pm.y>H-WALL+10) bbPitchBalls.splice(_pmi,1);
@@ -2423,22 +2429,20 @@
     for(var _bx=0;_bx<numBoxes.length;_bx++){ var _bb=numBoxes[_bx];
     if(Math.abs(_dx-_bb.x)<=_bb.w/2&&Math.abs(_dy-_bb.y)<=_bb.h/2){ _bb.n=0;
     break; } } } } }catch(e){} }
-    /* SPORTS DAY — the season-3 final. Like THE FINAL (S1) and THE TURF (S2) it does not invent hazards: it
-       BORROWS them, by widening each source arena's predicate with || _pd('key') so that arena's existing
-       roll/step/draw code fires on the podium board. Each tier is a different trio of events at matching
-       severity — a decathlon, not the same arenas turned up:
-         easy  WATER (golf)   + ROPES (ring)   + ROAMING DEFENCE (gridiron)   — a place to avoid, a changed
-                                                                                wall, a living obstacle; none
-                                                                                of them can deny a goal
-         med   OIL (prix)     + RAKE GATE (alley) + NET & RACKETS (tennis)
-         hard  HOOPS (court)  + GLOVES (ring)  + START-LIGHTS (prix)
-       The hard trio is deliberately one denial + one redirect + one TAX: the lights never stop a goal, they
-       charge for a mistimed release, so the final stays winnable. (The golf CUPS sat in this slot first —
-       a second swallow-the-ball denial next to the hoops, and on an athletics infield a sprint start reads
-       far better than a putting green. The 'cups' key still works if we ever want them back.) */
+    /* SPORTS DAY — the season-3 final. Like THE FINAL (S1) and THE TURF (S2) it invents no hazards and grants
+       the opponent NO abilities (ab:[]): the whole challenge is the borrowed hazards striking at once. Each
+       source arena's predicate is widened with || _pd('key') so its existing roll/step/draw fires on the
+       podium. To match the S1/S2 finals it runs FOUR hazards per tier — a rotating decathlon, a different
+       quartet of sports at each difficulty rather than the same arenas turned up:
+         easy  WATER (golf) + ROPES (ring) + ROAMING DEFENCE (gridiron) + BAT (diamond)
+         med   OIL (prix)   + RAKE (alley) + NET & RACKETS (tennis)     + PITCHING MACHINE (diamond)
+         hard  HOOPS (court)+ GLOVES (ring)+ START-LIGHTS (prix)        + THE MITT (diamond)
+       The diamond is the season's 8th sport and was the only one the medley never used; borrowed here it
+       contributes exactly ONE piece per tier (its own bat/pitcher/mitt progression), keeping the card at a
+       clean four rows. Like the other finals, hard stacks real denials — this is the final, meant to bite. */
     function _podHaz(){ if(!((typeof boardKey!=='undefined')&&boardKey==='podium'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
     var t=(typeof hzTier==='function')?hzTier():1;
-    return [['water','ropes','roam'],['oil','rake','net'],['hoops','gloves','lights']][t]; }
+    return [['water','ropes','roam','diamond'],['oil','rake','net','diamond'],['hoops','gloves','lights','diamond']][t]; }
     function _pd(n){ var h=_podHaz(); return !!(h&&h.indexOf(n)>=0); }
     // GRASS FINAL — season-1 gauntlet. THE FINAL (royaleArena.gauntlet) pulls one hazard per tier from
     // clean-porting Season 1 stadiums. Each stadium's arena predicate is generalized with || _g1('x'),
@@ -2723,7 +2727,7 @@
       }catch(e){} try{ spawnSparks(candyPatches[_ji].x,candyPatches[_ji].y,current,10,true);
       }catch(e){} try{ nsKick(5);
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
-      coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='baseball'&&!scoring&&stadiumHazards()){ if(bbBats.length===0) initBaseball();
+      coin.vy*=0.85; break; } } } } if(bbArena()&&!scoring){ if(!bbOn) initBaseball();
       var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
       // HARD glove: the mound glove claims a DYING ball that enters it. It re-arms only once the ball
       // has left, so the ball you flick off the mound is never re-caught in place.
