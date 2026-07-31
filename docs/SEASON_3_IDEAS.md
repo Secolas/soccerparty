@@ -791,7 +791,18 @@ you actually *want* to chase.
 boost = speed-lane/charge-node; oil = spin-injection (roulette spin / Serpent
 curve); tyre wall = high-restitution boundary (bumper along the edge).
 
-### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5)
+### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5) — BOARD BUILT (plain canvas, hazards TBD)
+
+**Build status:** registered as Season 3 stadium #8 (`pitch:'ring'`, board in `03-boards.js`, ambience →
+`arena`). Board-first, matching arenas 5–7: a **canvas mat** with a fine 1px weave dither and scuff specks, the
+red **ring apron** skirting all four sides, **three spaced rope strands** down each side wall (centre strand
+brightest, each with a shadow line) with **turnbuckles** along their length, **padded corner posts** in the
+classic blue/red pairing, and a **scuffed centre circle** where the fight is decided. Ropes run down the sides
+only — the top and bottom are the goal mouths, so ropes there would read as blocking the goal.
+
+No hazards yet. The three below (elastic ropes, speed-bag, canvas drag) are the next passes, and per the
+**additive** rule now standing for arenas 5+, they should each be a *condition* added by tier rather than the
+same knob turned up — e.g. easy **ropes**, med **+ speed-bag**, hard **+ canvas drag**, all at fixed intensity.
 
 **Fantasy:** a boxing ring — the ropes fling you back in with interest, a
 speed-bag jabs on the beat, the canvas centre drags you down.

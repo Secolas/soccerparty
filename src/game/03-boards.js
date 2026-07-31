@@ -668,6 +668,51 @@
         g.strokeStyle='rgba(0,0,0,0.3)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
         } },
 
+      /* THE RING — boxing. Board-first: a raised canvas with the ring APRON around the edge, taut ROPES down
+         each side (three strands with turnbuckles), a scuffed centre circle and corner pads. The hazards
+         (elastic ropes, a speed-bag on the beat, the canvas drag zone) are layered on in follow-up passes;
+         for now it plays as a plain canvas with a boxing ring's markings. */
+      ring:{ name:'THE RING', surround:'#1a1014', stand:'#2e1c22', tier:'rgba(255,225,235,0.05)',
+        frame:'#7b5a2e',frameHi:'#b98c46',frameLo:'#4a3418',post:'#f6efdc',   // timber ring-post frame
+        line:'rgba(250,244,238,0.9)',line2:'rgba(250,244,238,0.55)',
+        netRecess:'#3a2a20',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(255,246,238,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,246,238,0.56)',netOverlay:'rgba(26,14,18,0.44)',
+        surface(g){ var CAN='#c8b9a6', CAN2='#bdae9a', APRON='#8e2b34', SCUFF='rgba(120,100,88,0.30)';
+        g.fillStyle=CAN; g.fillRect(0,0,W,H);
+        // canvas weave: a fine 1px dither so the mat reads as fabric, not flat paint
+        for(var wy=WALL; wy<H-WALL; wy+=2){ for(var wx=WALL+((wy&2)?1:0); wx<W-WALL; wx+=2){ g.fillStyle=CAN2; g.fillRect(wx,wy,1,1); } }
+        for(var n=0;n<420;n++){ g.fillStyle=SCUFF; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // APRON — the red skirt just inside the ring posts, all four sides
+        var ap=5; g.fillStyle=APRON;
+        g.fillRect(WALL,WALL,W-WALL*2,ap); g.fillRect(WALL,H-WALL-ap,W-WALL*2,ap);
+        g.fillRect(WALL,WALL,ap,H-WALL*2); g.fillRect(W-WALL-ap,WALL,ap,H-WALL*2);
+        g.fillStyle='rgba(255,255,255,0.16)'; g.fillRect(WALL,WALL+ap,W-WALL*2,1); g.fillRect(WALL,H-WALL-ap-1,W-WALL*2,1);
+        // ROPES — three taut strands down each side, SPACED so they read as three separate ropes rather than
+        // one thick band, each with a shadow line under it, plus turnbuckles down the length.
+        for(var sd=0;sd<2;sd++){ var rbase=sd?(W-WALL-ap-6):(WALL+ap+1), y0=WALL+ap, hh=H-WALL*2-ap*2;
+        for(var st=0;st<3;st++){ var rx=rbase+st*3;
+        g.fillStyle='rgba(90,72,50,0.45)'; g.fillRect(rx+1,y0,1,hh);          // shadow under the strand
+        g.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; g.fillRect(rx,y0,1,hh); }
+        g.fillStyle='#6a5230'; for(var tb=y0+12; tb<y0+hh-6; tb+=46){ g.fillRect(rbase-1,tb,9,4);
+        g.fillStyle='#8f7040'; g.fillRect(rbase-1,tb,9,1); g.fillStyle='#6a5230'; } }
+        // CORNER PADS — the padded posts, one per corner, in the classic red/blue pairing
+        for(var cq=0;cq<4;cq++){ var cxp=(cq&1)?(W-WALL-ap-7):(WALL+ap), cyp=(cq<2)?(WALL+ap):(H-WALL-ap-13);
+        g.fillStyle=(cq<2)?'#2f4f92':'#8e2b34'; g.fillRect(cxp,cyp,7,13);
+        g.fillStyle='rgba(255,255,255,0.20)'; g.fillRect(cxp,cyp,7,1); g.fillRect(cxp,cyp,1,13);
+        g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(cxp+6,cyp,1,13); g.fillRect(cxp,cyp+12,7,1); }
+        // scuffed centre circle + a worn patch in the middle of the canvas
+        g.strokeStyle='rgba(140,118,104,0.55)'; g.lineWidth=1;
+        g.beginPath(); g.arc(W/2,H/2,26,0,6.283); g.stroke();
+        for(var m=0;m<160;m++){ var ma=Math.random()*6.283, mr=Math.random()*24;
+        g.fillStyle='rgba(150,128,112,0.22)'; g.fillRect((W/2+Math.cos(ma)*mr)|0,(H/2+Math.sin(ma)*mr)|0,1,1); }
+        },
+        preview(g,w,h){ g.fillStyle='#c8b9a6'; g.fillRect(0,0,w,h);
+        var ap=Math.max(2,Math.round(w*0.09)); g.fillStyle='#8e2b34';
+        g.fillRect(0,0,w,ap); g.fillRect(0,h-ap,w,ap); g.fillRect(0,0,ap,h); g.fillRect(w-ap,0,ap,h);
+        g.fillStyle='#e2cfae'; g.fillRect(ap,ap,1,h-ap*2); g.fillRect(w-ap-1,ap,1,h-ap*2);
+        g.strokeStyle='rgba(140,118,104,0.6)'; g.lineWidth=1; g.beginPath(); g.arc(w/2,h/2,Math.max(3,h*0.13),0,6.283); g.stroke();
+        g.strokeStyle='rgba(0,0,0,0.28)'; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
       court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
         frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
         line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
@@ -803,7 +848,7 @@
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium', ring:'arena' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
