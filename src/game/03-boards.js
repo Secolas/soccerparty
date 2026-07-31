@@ -686,16 +686,17 @@
         g.fillRect(WALL,WALL,W-WALL*2,ap); g.fillRect(WALL,H-WALL-ap,W-WALL*2,ap);
         g.fillRect(WALL,WALL,ap,H-WALL*2); g.fillRect(W-WALL-ap,WALL,ap,H-WALL*2);
         g.fillStyle='rgba(255,255,255,0.16)'; g.fillRect(WALL,WALL+ap,W-WALL*2,1); g.fillRect(WALL,H-WALL-ap-1,W-WALL*2,1);
-        // ROPES — three taut strands down each side, SPACED so they read as three separate ropes rather than
-        // one thick band, each with a shadow line under it, plus turnbuckles down the length.
-        for(var sd=0;sd<2;sd++){ var rbase=sd?(W-WALL-ap-6):(WALL+ap+1), y0=WALL+ap, hh=H-WALL*2-ap*2;
-        for(var st=0;st<3;st++){ var rx=rbase+st*3;
-        g.fillStyle='rgba(90,72,50,0.45)'; g.fillRect(rx+1,y0,1,hh);          // shadow under the strand
+        // ROPES — three strands down each side, sitting ON the apron so the INNERMOST strand lands exactly on
+        // the ball's collision line (WALL+COIN_R): the ball then visibly bounces off the rope, not off empty
+        // canvas short of it. Spanning between the corner pads. See rgRopeX() — physics and art share the math.
+        for(var sd=0;sd<2;sd++){ var y0=WALL+13, hh=H-WALL*2-26;
+        for(var st=0;st<3;st++){ var rx=sd?(W-WALL-1-st*2):(WALL+1+st*2);
+        g.fillStyle='rgba(90,72,50,0.45)'; g.fillRect(rx+(sd?-1:1),y0,1,hh);   // shadow beside the strand
         g.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; g.fillRect(rx,y0,1,hh); }
-        g.fillStyle='#6a5230'; for(var tb=y0+12; tb<y0+hh-6; tb+=46){ g.fillRect(rbase-1,tb,9,4);
-        g.fillStyle='#8f7040'; g.fillRect(rbase-1,tb,9,1); g.fillStyle='#6a5230'; } }
-        // CORNER PADS — the padded posts, one per corner, in the classic red/blue pairing
-        for(var cq=0;cq<4;cq++){ var cxp=(cq&1)?(W-WALL-ap-7):(WALL+ap), cyp=(cq<2)?(WALL+ap):(H-WALL-ap-13);
+        g.fillStyle='#6a5230'; for(var tb=y0+14; tb<y0+hh-6; tb+=48){ g.fillRect(sd?(W-WALL-6):(WALL+1),tb,6,4);
+        g.fillStyle='#8f7040'; g.fillRect(sd?(W-WALL-6):(WALL+1),tb,6,1); g.fillStyle='#6a5230'; } }
+        // CORNER PADS — the padded posts the ropes tie into, classic blue/red pairing
+        for(var cq=0;cq<4;cq++){ var cxp=(cq&1)?(W-WALL-7):WALL, cyp=(cq<2)?WALL:(H-WALL-13);
         g.fillStyle=(cq<2)?'#2f4f92':'#8e2b34'; g.fillRect(cxp,cyp,7,13);
         g.fillStyle='rgba(255,255,255,0.20)'; g.fillRect(cxp,cyp,7,1); g.fillRect(cxp,cyp,1,13);
         g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(cxp+6,cyp,1,13); g.fillRect(cxp,cyp+12,7,1); }
@@ -889,6 +890,7 @@
       gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
       bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
       bowlRakePh=0; bowlGutter=null;
+      rgOn=false; rgT=0; if(typeof rgBags!=='undefined'&&rgBags) rgBags.length=0; if(typeof rgScuff!=='undefined'&&rgScuff) rgScuff.length=0;
       rcOn=false; rcLightT=0; if(typeof rcRuts!=='undefined'&&rcRuts) rcRuts.length=0;
       if(typeof rcDust!=='undefined'&&rcDust) rcDust.length=0;
       if(typeof rcSmear!=='undefined'&&rcSmear) rcSmear.length=0;

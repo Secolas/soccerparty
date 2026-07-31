@@ -791,7 +791,7 @@ you actually *want* to chase.
 boost = speed-lane/charge-node; oil = spin-injection (roulette spin / Serpent
 curve); tyre wall = high-restitution boundary (bumper along the edge).
 
-### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5) — BOARD BUILT (plain canvas, hazards TBD)
+### 8. 🥊 THE RING — "BOXING" (hard, ~d4–5) — BUILT (hazards in, tuning on preview)
 
 **Build status:** registered as Season 3 stadium #8 (`pitch:'ring'`, board in `03-boards.js`, ambience →
 `arena`). Board-first, matching arenas 5–7: a **canvas mat** with a fine 1px weave dither and scuff specks, the
@@ -800,9 +800,38 @@ brightest, each with a shadow line) with **turnbuckles** along their length, **p
 classic blue/red pairing, and a **scuffed centre circle** where the fight is decided. Ropes run down the sides
 only — the top and bottom are the goal mouths, so ropes there would read as blocking the goal.
 
-No hazards yet. The three below (elastic ropes, speed-bag, canvas drag) are the next passes, and per the
-**additive** rule now standing for arenas 5+, they should each be a *condition* added by tier rather than the
-same knob turned up — e.g. easy **ropes**, med **+ speed-bag**, hard **+ canvas drag**, all at fixed intensity.
+**Tiers are ADDITIVE — no number is scaled** (ropes 1.08, bag swing 15/freq 0.05, drag 0.93, all fixed):
+
+| Tier | Conditions |
+|---|---|
+| **Easy** | **ROPES** — the side walls are elastic and hand the ball back *with interest* |
+| **Med** | + **SPEED-BAGS** — a swinging pair that punch hardest mid-arc |
+| **Hard** | + **CANVAS DRAG** — the scuffed centre bogs you down, forcing play out to the ropes |
+
+**ROPES (the signature — a fully elastic boundary).** The side walls *are* the ropes: a bounce returns at
+`ropeRest 1.08` instead of the pitch's 0.75, so the edge hands the ball back with interest and becomes a weapon
+(brutal with bounce builds). Applied at the side-wall bounce in `collideStep`, and only **above a speed gate**
+(`ropeGate 1.2`) — a dying ball keeps normal restitution so it still settles — with the result **capped**
+(`ropeCap 11`). Self-limiting: friction across the pitch width costs far more than 8% per crossing, so rallies
+converge. A **chip sails over** them.
+- **The art sits on the collision line.** The innermost strand is drawn at exactly `WALL+COIN_R`
+  (`rgRopeX()`, shared by art and physics), so the ball visibly bounces **off the rope** rather than off empty
+  canvas short of it.
+- **Rope flex animation:** on contact the three strands **bow inward** around the hit point and snap back with a
+  damped wobble, scaled by impact strength, plus a spark on the strand. Because the static strands are baked
+  into the board, the flexing span is repainted with canvas + weave first, then redrawn bowed.
+
+**SPEED-BAGS (med+).** A **180°-rotationally symmetric pair** at `H*0.30` / `H*0.70` swinging side to side.
+They are solid — the ball always reflects — and the bag **adds its own swing momentum** on contact
+(`coin.vx += bag.vx * bagPunch`, capped). Because the bag is a pendulum, it is **fastest through the middle of
+its arc and slowest at the ends**, so *the swing itself is the timing tell*: catch it mid-arc and you get
+jabbed, catch it at the end of its travel and it barely nudges. No arbitrary "jab window" needed. Drawn as a
+**pixel sprite** (`rgBagShape()` — solid pear-shaped leather blob, lit upper-left face, dark underside, lace
+seam, ground shadow) with **motion streaks** while swinging fast and a **flash ring** on the frames after a jab.
+
+**CANVAS DRAG (hard).** Within `RG_ZONE_R 26` of the centre spot the ball is **dragged down** (`0.93` per
+frame), so the safe lanes are out by the chaotic ropes. Drawn as a **dithered scuff patch** and it **kicks up
+canvas scuff** while dragging. Only ever slows, so it can never trap the turn.
 
 **Fantasy:** a boxing ring — the ropes fling you back in with interest, a
 speed-bag jabs on the beat, the canvas centre drags you down.

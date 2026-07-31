@@ -1795,6 +1795,82 @@
     ty.hit=18; ty.nx=-tnx; ty.ny=-tny; ty.pow=Math.min(1,Math.abs(tvn)/7); }
     coin.x=ty.x+tnx*TR; coin.y=ty.y+tny*TR;
     try{ spawnSparks(ty.x,ty.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
+    // ===== THE RING (boxing) — arena 8 hazards ================================================================
+    // ADDITIVE tiers, fixed intensities:
+    //   easy  ROPES        — the side walls are fully elastic and hand the ball back WITH INTEREST
+    //   med   + SPEED-BAG  — a pair of bags swinging on the beat; they punch hardest mid-swing, softest at the
+    //                        ends of the arc, so the swing itself is the timing tell
+    //   hard  + CANVAS DRAG — the scuffed centre bogs the ball down, forcing play out to the chaotic ropes
+    // Settle-safe: the ropes only add interest above a speed gate and are capped (friction across the pitch
+    // dominates, so a rally converges), the bag's punch is capped, and the drag only ever slows.
+    var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[];
+    var RG_BAG_R=6, RG_ZONE_R=26, RG_ROPE_FLEX=16;
+    function rgArena(){ return (typeof boardKey!=='undefined')&&boardKey==='ring'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
+    return { ropes:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
+    bag:(t>=1), bagSwing:15, bagFreq:0.05, bagPunch:2.6, bagCap:11,
+    drag:(t>=2), dragMul:0.93, gate:0.4 }; }
+    // The x of the INNERMOST rope strand on a side (0=left,1=right) — the same line the ball collides on, and
+    // the same math the board art uses, so the bounce always lands visually on the rope.
+    function rgRopeX(side){ return side?(W-WALL-COIN_R):(WALL+COIN_R); }
+    /* The speed-bag is a PIXEL SPRITE: a solid leather blob, slightly pear-shaped (wider low), with a lighter
+       top-left face, a dark underside and a lace seam. Solid silhouette — no edge dither, which at this size
+       reads as holes rather than softening (the tyre stack's lesson). Shades: 0 leather, 1 lit face, 2 shadow,
+       3 lace. Built once and shared by both bags. */
+    var _rgBagPx=null;
+    function rgBagShape(){ if(_rgBagPx) return _rgBagPx; var pts=[], R=RG_BAG_R;
+    for(var dy=-R;dy<=R;dy++){ for(var dx=-R;dx<=R;dx++){
+    var sy=dy*(dy<0?1.15:0.95);                       // pear: tapers toward the top, fuller at the bottom
+    if(Math.hypot(dx,sy)>R) continue;
+    var sh=0;
+    if(dx+dy<-3) sh=1; else if(dx+dy>4) sh=2;
+    if(dx===0 && dy>-3 && dy<4) sh=3;                  // lace seam down the middle
+    pts.push([dx,dy,sh]); } }
+    return (_rgBagPx=pts); }
+    function initRing(){ if(!rgArena()) return; rgOn=true; rgT=0; rgScuff=[];
+    rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}];
+    // a 180deg-rotationally symmetric PAIR of bags, so neither end is favoured
+    rgBags=[ {ax:Math.round(W/2), ay:Math.round(H*0.30), ph:0, x:Math.round(W/2), vx:0, hit:0},
+    {ax:Math.round(W/2), ay:Math.round(H*0.70), ph:Math.PI, x:Math.round(W/2), vx:0, hit:0} ]; }
+    // draw-loop: swing the bags, decay the rope flex + scuff puffs.
+    function ringTick(){ if(!rgArena()) return; if(!rgOn) initRing();
+    var c=rgCfg(); rgT++;
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    if(!c.bag){ b.x=b.ax; b.vx=0; continue; }
+    var ang=rgT*c.bagFreq+b.ph;
+    b.x=b.ax+Math.sin(ang)*c.bagSwing;
+    b.vx=Math.cos(ang)*c.bagSwing*c.bagFreq;   // pendulum speed: fastest through the middle of the arc
+    if(b.hit>0) b.hit--; }
+    for(var r=0;r<2;r++){ if(rgRope[r].t>0) rgRope[r].t--; }
+    for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
+    // Called from the side-wall bounce in collideStep: the ropes hand the ball back with interest above a speed
+    // gate (a dying ball keeps the normal restitution so it still settles), and the strand flexes where it hit.
+    function rgRopeRest(vabs,cy,side){ var c=rgCfg(); if(!c.ropes) return RESTITUTION;
+    rgRope[side]={t:RG_ROPE_FLEX, y:cy, s:Math.min(1,vabs/8)};
+    try{ if(!muted&&typeof sfxBounce==='function') sfxBounce(vabs); }catch(e){}
+    return (vabs>c.ropeGate)?c.ropeRest:RESTITUTION; }
+    // physics rate, moving grounded ball only. Bags punch; the canvas centre drags.
+    function ringStep(){ if(!rgArena()||!moving||scoring) return; if(!rgOn) initRing();
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    var c=rgCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    if(!air) return;   // a chip flies over the bags and clears the canvas
+    // SPEED-BAG — a solid swinging bag. It always reflects the ball, and ADDS the swing's own momentum on top,
+    // so a bag caught mid-arc (moving fast) jabs hard while one caught at the end of its arc barely nudges.
+    if(c.bag){ for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    var dx=coin.x-b.x, dy=coin.y-b.ay, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R;
+    if(d<R && d>0.001){ var nx=dx/d, ny=dy/d, vn=coin.vx*nx+coin.vy*ny;
+    if(vn<0){ coin.vx-=(1+RESTITUTION)*vn*nx; coin.vy-=(1+RESTITUTION)*vn*ny; }
+    coin.vx+=b.vx*c.bagPunch;                                   // the jab: the bag's own swing, scaled
+    var bs=Math.hypot(coin.vx,coin.vy); if(bs>c.bagCap){ var k=c.bagCap/bs; coin.vx*=k; coin.vy*=k; }
+    coin.x=b.x+nx*R; coin.y=b.ay+ny*R;
+    b.hit=12;
+    try{ spawnSparks(b.x,b.ay,null,6); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(Math.min(9,4+Math.abs(b.vx)*6)); }catch(e){}
+    try{ if(typeof haptic==='function') haptic(10); }catch(e){} } } }
+    // CANVAS DRAG — the scuffed centre bogs a rolling ball down, so the safe lanes are out by the ropes. Only
+    // slows, never redirects, so it can never trap the turn. Kicks up canvas scuff while it drags.
+    if(c.drag && sp>c.gate && Math.hypot(coin.x-W/2,coin.y-H/2)<RG_ZONE_R){ coin.vx*=c.dragMul; coin.vy*=c.dragMul;
+    if(rgScuff.length<34){ var a2=Math.atan2(-coin.vy,-coin.vx)+(Math.random()-0.5)*1.4, m2=0.4+Math.random()*0.9;
+    rgScuff.push({x:coin.x,y:coin.y,vx:Math.cos(a2)*m2,vy:Math.sin(a2)*m2,life:14+(Math.random()*8|0),max:22}); } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
     function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
     if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
@@ -2660,6 +2736,7 @@
       } if(gridArena()&&!scoring){ try{ gridironStep(); }catch(e){} }
       if(bowlArena()&&!scoring){ try{ bowlingStep(); }catch(e){} }
       if(rcArena()&&!scoring){ try{ racewayStep(); }catch(e){} }
+      if(rgArena()&&!scoring){ try{ ringStep(); }catch(e){} }
       if((typeof boardKey!=='undefined')&&boardKey==='minigolf'&&!scoring&&stadiumHazards()){ if(!cgOn) initMinigolf();
       var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
       // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
@@ -3274,6 +3351,9 @@
       // collision point, so even a fast cannon shot is caught (the once-per-frame gutter check missed it after
       // the bounce had already flung it back inward). Kill outward speed; it then rolls down the channel.
       var _bowlGut=((typeof bowlArena==='function')&&bowlArena()&&bowlCfg().gutter&&(!coin.air||coin.air<=0));
+      // THE RING: the side walls ARE the ropes — elastic, so they hand the ball back with interest (rgRopeRest
+      // also arms the strand's flex animation). Grounded ball only; a chip sails over them.
+      var _rgRope=((typeof rgArena==='function')&&rgArena()&&(!coin.air||coin.air<=0));
       if(coin.x<left&&!_skRamp){ if(_bowlGut){ coin.x=left; coin.vx=0; coin.spin=0;
       if(!bowlGutter){ bowlGutter={side:0};
       try{ setStatus('GUTTER BALL!');
@@ -3282,7 +3362,9 @@
       } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
       18,26,34]); }catch(e){} }
       } else { coin.x=left;
-      coin.vx=-coin.vx*RESTITUTION;
+      var _rL=_rgRope?rgRopeRest(Math.abs(coin.vx),coin.y,0):RESTITUTION;
+      coin.vx=-coin.vx*_rL;
+      if(_rgRope){ var _sL=Math.hypot(coin.vx,coin.vy), _cL=rgCfg().ropeCap; if(_sL>_cL){ var _kL=_cL/_sL; coin.vx*=_kL; coin.vy*=_kL; } }
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
       coin.vx*=1.5; coin.vy*=1.2;
@@ -3300,7 +3382,9 @@
       } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
       18,26,34]); }catch(e){} }
       } else { coin.x=right;
-      coin.vx=-coin.vx*RESTITUTION;
+      var _rR=_rgRope?rgRopeRest(Math.abs(coin.vx),coin.y,1):RESTITUTION;
+      coin.vx=-coin.vx*_rR;
+      if(_rgRope){ var _sR=Math.hypot(coin.vx,coin.vy), _cR=rgCfg().ropeCap; if(_sR>_cR){ var _kR=_cR/_sR; coin.vx*=_kR; coin.vy*=_kR; } }
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
       coin.vx*=1.5; coin.vy*=1.2;

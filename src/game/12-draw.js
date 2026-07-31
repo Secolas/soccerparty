@@ -864,6 +864,51 @@
     ctx.fillStyle='rgba(120,120,130,'+((k-0.45)*1.4).toFixed(3)+')';
     for(var d2=0;d2<5;d2++){ var da=_cgRnd(d2+t)*Math.PI*2;
     ctx.fillRect(Math.round(cxp+Math.cos(da)*spread),Math.round(cyp+Math.sin(da)*spread),1,1); } } } }
+    /* THE RING: the canvas drag zone (hard), the scuff it kicks up, the swinging speed-bags, and the ROPE FLEX —
+       when the ball hits a rope the strands bow inward around the contact point and snap back. Because the
+       static strands are baked into the board, the flexing span is repainted with canvas first, then redrawn
+       bowed. Drawn with the ground FX (under the nails); the ball stays on top. */
+    function drawRing(ctx,now){ if(typeof rgArena!=='function'||!rgArena()) return;
+    var c=(typeof rgCfg==='function')?rgCfg():null; if(!c) return;
+    // CANVAS DRAG zone (hard) — a scuffed, darker patch of mat you want to stay out of
+    if(c.drag){ var Z=RG_ZONE_R, zx=Math.round(W/2), zy=Math.round(H/2);
+    for(var yy=-Z;yy<=Z;yy++){ for(var xx=-Z;xx<=Z;xx++){ var dd=Math.hypot(xx,yy); if(dd>Z) continue;
+    if(((xx+yy)&1)===0 && _cgRnd(xx*2.7+yy*1.9)>0.35) continue;
+    ctx.fillStyle=(dd>Z-2)?'rgba(112,92,78,0.34)':'rgba(126,104,88,0.26)';
+    ctx.fillRect(zx+xx,zy+yy,1,1); } } }
+    // scuff kicked up while the ball is being dragged
+    if(typeof rgScuff!=='undefined'){ for(var si=0;si<rgScuff.length;si++){ var sc=rgScuff[si], sa=sc.life/sc.max;
+    ctx.fillStyle=(si&1)?('rgba(196,178,152,'+(0.8*sa).toFixed(3)+')'):('rgba(120,100,84,'+(0.8*sa).toFixed(3)+')');
+    ctx.fillRect(Math.round(sc.x),Math.round(sc.y),1,1); } }
+    // ROPE FLEX — bow the three strands inward around the contact point, decaying with a damped snap-back
+    if(typeof rgRope!=='undefined'){ for(var r=0;r<2;r++){ var fl=rgRope[r]; if(!fl||fl.t<=0) continue;
+    var k=fl.t/RG_ROPE_FLEX, amp=Math.sin(k*Math.PI*2.4)*k*(3.2+2.6*(fl.s||0)), inward=r?-1:1;
+    var span=26, cy=Math.round(fl.y), y0=Math.max(WALL+13,cy-span), y1=Math.min(H-WALL-13,cy+span);
+    // repaint the strand band with canvas + weave, then draw the bowed strands over it
+    var bx=r?(W-WALL-6):(WALL+1);
+    for(var py=y0;py<=y1;py++){ for(var px2=0;px2<6;px2++){ var X=bx+px2;
+    ctx.fillStyle=(((X+py)&1)?'#bdae9a':'#c8b9a6'); ctx.fillRect(X,py,1,1); } }
+    for(var st=0;st<3;st++){ for(var py2=y0;py2<=y1;py2++){
+    var t2=(py2-cy)/span, fall=Math.max(0,1-t2*t2), rx=(r?(W-WALL-1-st*2):(WALL+1+st*2))+inward*amp*fall;
+    ctx.fillStyle='rgba(90,72,50,0.45)'; ctx.fillRect(Math.round(rx)+(r?-1:1),py2,1,1);
+    ctx.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; ctx.fillRect(Math.round(rx),py2,1,1); } }
+    if(k>0.55){ ctx.fillStyle='rgba(255,244,214,'+((k-0.55)*1.4).toFixed(3)+')';   // impact spark on the rope
+    ctx.fillRect(Math.round(rgRopeX(r))+inward*2,cy-1,1,3); } } }
+    // SPEED-BAGS (med+) — pixel leather bags swinging on the beat, with motion streaks when moving fast and a
+    // bright flash on the frames right after a jab
+    if(c.bag && typeof rgBags!=='undefined' && typeof rgBagShape==='function'){ var px=rgBagShape();
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i], X=Math.round(b.x), Y=Math.round(b.ay), fast=Math.abs(b.vx);
+    ctx.fillStyle='rgba(90,74,58,0.22)';                                   // motion streaks behind the swing
+    if(fast>0.25){ for(var m=1;m<=3;m++){ var mx=X-Math.sign(b.vx)*m*2; ctx.fillRect(mx-1,Y-3,2,7); } }
+    ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.fillRect(X-RG_BAG_R+1,Y+RG_BAG_R-2,RG_BAG_R*2-2,2);   // ground shadow
+    var hf=(b.hit>0)?(b.hit/12):0;
+    for(var q=0;q<px.length;q++){ var pp=px[q], sh=pp[2];
+    ctx.fillStyle=(sh===1)?'#a9703c':((sh===2)?'#3d2413':((sh===3)?'#c8996a':'#7a4a26'));
+    ctx.fillRect(X+pp[0],Y+pp[1],1,1); }
+    if(hf>0){ ctx.fillStyle='rgba(255,232,160,'+(hf*0.6).toFixed(3)+')';
+    for(var f=0;f<12;f++){ var fa=f/12*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa)*(RG_BAG_R+2)),Math.round(Y+Math.sin(fa)*(RG_BAG_R+2)),1,1); } } } }
+    }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -1431,6 +1476,8 @@
     } if(boardKey==='bowling'&&stadiumHazards()){ try{ bowlingTick();
     }catch(e){} return;   /* the pins are drawn later, above the pitch lines (see drawBowling's call site) */
     } if(boardKey==='raceway'&&stadiumHazards()){ try{ racewayTick(); drawRaceway(ctx,now);
+    }catch(e){} return;
+    } if(boardKey==='ring'&&stadiumHazards()){ try{ ringTick(); drawRing(ctx,now);
     }catch(e){} return;
     } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
