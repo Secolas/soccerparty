@@ -57,26 +57,44 @@
       'clearance','anchor'],d:6,blurb:'A sunny beach — tide waves sweep the ball down the sand, drifting beach balls bounce it around, and crabs scuttle across the pitch.'},
       {name:'THE TURF',pitch:'turf',ab:[],d:7,blurb:'The Season 2 final — a gauntlet of the whole run. Four stadiums strike at once: wind, orbit, jungle and shore — a nuisance on Easy, a maelstrom on Hard. No keeper tricks; survive the chaos and score.'}
     ];
-    // Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
+    /* Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
+
+       ab[] is the OPPONENT's loadout, sliced by tier: easy takes ab[0], med ab[0..1], hard all three. So ab[0]
+       is the one every player meets on that stadium, whatever difficulty they picked — and six of the nine
+       stadiums used to open with CANNON, which is why an easy run was nine matches against the same ability.
+
+       The season now spends 27 DIFFERENT abilities across its 27 slots — no repeats at all — so a full ladder
+       is a tour of the roster, and each trio is that sport's idea of how to play:
+         diamond   batter / the swing / the catcher's mitt
+         hardwood  bank shot / rebound / the ball off the rim
+         tennis    the lob / topspin / the S-rally (both toggles, so the AI actually switches between them)
+         golf      the putting line / the check-up / the cup that swallows the ball
+         gridiron  barge the line / the heavy linebacker / the last-ditch tackle
+         alley     the ball that keeps rolling / bumper rails / a wall of pins
+         prix      steering / slow-motion cornering / a wet track
+         ring      the puncher / punch-drunk / the champion's guard
+         podium    keeper off the line / the relay pass / the big man in goal
+       Arena ab[] is NOT limited to ROYALE_DRAFT_POOL — glide, wall and bumper are never drafted, so a stadium
+       is the only place they are ever seen. */
     var ROYALE_ARENAS_3=[
       {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
-      'cannon','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'},
-      {name:'THE HARDWOOD',pitch:'court',ab:['volley',
-      'chip','reflex'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
+      'volley','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'},
+      {name:'THE HARDWOOD',pitch:'court',ab:['ricochet',
+      'sticky','boomerang'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
       {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
-      'sniper','curve'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
-      {name:'CRAZY GOLF',pitch:'minigolf',ab:['cannon',
-      'curve','sniper'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
-      {name:'THE END ZONE',pitch:'gridiron',ab:['cannon',
-      'sniper','wall'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
-      {name:'THE ALLEY',pitch:'bowling',ab:['cannon',
-      'sniper','ricochet'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
-      {name:'THE GRAND PRIX',pitch:'raceway',ab:['cannon',
-      'glide','sniper'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
+      'curve','serpent'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
+      {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
+      'backspin','magnet'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
+      {name:'THE END ZONE',pitch:'gridiron',ab:['drill',
+      'anchor','clearance'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
+      {name:'THE ALLEY',pitch:'bowling',ab:['glide',
+      'bumper','wall'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
+      {name:'THE GRAND PRIX',pitch:'raceway',ab:['guided',
+      'slowmo','wet'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
       {name:'THE RING',pitch:'ring',ab:['cannon',
-      'ricochet','wall'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
-      {name:'SPORTS DAY',pitch:'podium',ab:['cannon',
-      'sniper','reflex'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
+      'drunk','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      {name:'SPORTS DAY',pitch:'podium',ab:['sweeper',
+      'trio','bigkeeper'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
     ];
     var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
@@ -620,7 +638,11 @@
       'Crash down and knock the ball. (Web Warehouse)']);
       } }
       var _opp=[]; if(incOpp){ var _n=(lvl==='easy')?1:((lvl==='med')?2:3);
-      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 50% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.'};
+      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 50% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.',
+      // Season 3 spends 27 different abilities across its 9 stadiums, so every one of them needs a line in
+      // the OPPONENT's voice — without one the card falls back to the player-voice text ("Your ball is super
+      // slippery!") under an "OPPONENT ·" heading, which reads like it is describing you.
+      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.'};
       (ar.ab||[]).slice(0,_n).forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
       '✨','OPPONENT · '+((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
       (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||''))]);

@@ -1011,6 +1011,40 @@ Implementation checklist per country (for whoever picks this up later):
 
 ## Abilities
 
+### Opponent loadouts — one ability per slot, 27 different abilities across the season
+
+Each arena's `ab[]` in `ROYALE_ARENAS_3` is the **opponent's** loadout, sliced by tier: easy takes `ab[0]`,
+med `ab[0..1]`, hard all three (`showStadiumCard` slices the same way, so the card always shows exactly what
+you will face). `ab[0]` is therefore the ability *every* player meets on that stadium — and six of the nine
+stadiums opened with CANNON, so an easy run was nine matches against the same trick.
+
+The season now spends **27 different abilities across its 27 slots — no repeats at all**, so a full ladder is
+a tour of the roster and each trio is that sport's idea of how to play:
+
+| # | Stadium | Easy `ab[0]` | + Med | + Hard | Reading |
+|---|---|---|---|---|---|
+| 1 | ⚾ THE DIAMOND | `striker` | `volley` | `reflex` | batter deep · the swing · the catcher's mitt |
+| 2 | 🏀 THE HARDWOOD | `ricochet` | `sticky` | `boomerang` | bank shot · rebound flick · the ball off the rim |
+| 3 | 🎾 CENTRE COURT | `chip` | `curve` | `serpent` | the lob · topspin · the S-rally |
+| 4 | ⛳ CRAZY GOLF | `sniper` | `backspin` | `magnet` | the putting line · the check-up · the cup that swallows it |
+| 5 | 🏈 THE END ZONE | `drill` | `anchor` | `clearance` | barge the line · the heavy linebacker · the last-ditch tackle |
+| 6 | 🎳 THE ALLEY | `glide` | `bumper` | `wall` | the ball that keeps rolling · bumper rails · a wall of pins |
+| 7 | 🏎️ THE GRAND PRIX | `guided` | `slowmo` | `wet` | steering · slow-motion cornering · a wet track |
+| 8 | 🥊 THE RING | `cannon` | `drunk` | `shield` | the puncher · punch-drunk · the champion's guard |
+| 9 | 🏟️ SPORTS DAY | `sweeper` | `trio` | `bigkeeper` | keeper off the line · the relay pass · the big man in goal |
+
+Notes for anyone re-cutting these:
+- **Arena `ab[]` is not limited to `ROYALE_DRAFT_POOL`.** `glide`, `wall` and `bumper` are never drafted, so a
+  stadium is the only place a player ever sees them — good slots for showcasing the far corners of the roster.
+- **Tennis holds both shot toggles** (`curve` + `serpent`) on hard, which is the one case where the AI actually
+  switches an `AB_TOGGLE` on and off rather than leaving it permanently ON.
+- **Every ability an arena uses needs a line in `_oppD`** (the opponent-voice card text). Without one the card
+  falls back to the player-voice `TACTICS.desc` — "Your ball is super slippery!" printed under an
+  `OPPONENT · WET SHOT` heading, which reads as if it is describing you. Eleven new lines were added with this
+  cut; check the map when adding an ability to any arena in any season.
+- The AI drives all 27 natively except `backspin` (it does not compensate its aim) — per `CLAUDE.md` that is an
+  AI limitation, not evidence the ability is weak, and golf's med tier is the mildest place to carry it.
+
 Season 3's new ability ideas live in [`ABILITY_IDEAS.md`](./ABILITY_IDEAS.md)
 under **"Season 3 batch (2026)"** — several hook into the sports arenas above
 (Trailblazer ↔ Grand Prix boost/slipstream, Time Out ↔ any hazard arena,
