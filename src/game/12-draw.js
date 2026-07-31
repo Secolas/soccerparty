@@ -894,20 +894,26 @@
     ctx.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; ctx.fillRect(Math.round(rx),py2,1,1); } }
     if(k>0.55){ ctx.fillStyle='rgba(255,244,214,'+((k-0.55)*1.4).toFixed(3)+')';   // impact spark on the rope
     ctx.fillRect(Math.round(rgRopeX(r))+inward*2,cy-1,1,3); } } }
-    // SPEED-BAGS (med+) — pixel leather bags swinging on the beat, with motion streaks when moving fast and a
-    // bright flash on the frames right after a jab
+    // HEAVY BAGS (med+) — pixel leather sandbags. No swing: they sit where the last hit shoved them. A hit
+    // SQUASHES the bag along the impact normal (sand shifting inside, never a bounce) and bursts a puff of sand
+    // grains out of the seams, and the bag leans over toward where it is being pushed.
     if(c.bag && typeof rgBags!=='undefined' && typeof rgBagShape==='function'){ var px=rgBagShape();
-    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i], X=Math.round(b.x), Y=Math.round(b.ay), fast=Math.abs(b.vx);
-    ctx.fillStyle='rgba(90,74,58,0.22)';                                   // motion streaks behind the swing
-    if(fast>0.25){ for(var m=1;m<=3;m++){ var mx=X-Math.sign(b.vx)*m*2; ctx.fillRect(mx-1,Y-3,2,7); } }
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i], X=Math.round(b.x), Y=Math.round(b.y);
+    var hf=(b.hit>0)?(b.hit/16):0, imp=(b.imp==null?0.5:b.imp);
+    // squash along the impact normal only (never stretched, so the sprite cannot tear gaps)
+    var sq=1-0.26*hf*(0.5+imp), ax=Math.abs(b.nx||0), ay=Math.abs(b.ny||0);
+    var sx=1-(1-sq)*ax, sy=1-(1-sq)*ay;
     ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.fillRect(X-RG_BAG_R+1,Y+RG_BAG_R-2,RG_BAG_R*2-2,2);   // ground shadow
-    var hf=(b.hit>0)?(b.hit/12):0;
     for(var q=0;q<px.length;q++){ var pp=px[q], sh=pp[2];
     ctx.fillStyle=(sh===1)?'#a9703c':((sh===2)?'#3d2413':((sh===3)?'#c8996a':'#7a4a26'));
-    ctx.fillRect(X+pp[0],Y+pp[1],1,1); }
-    if(hf>0){ ctx.fillStyle='rgba(255,232,160,'+(hf*0.6).toFixed(3)+')';
-    for(var f=0;f<12;f++){ var fa=f/12*Math.PI*2;
-    ctx.fillRect(Math.round(X+Math.cos(fa)*(RG_BAG_R+2)),Math.round(Y+Math.sin(fa)*(RG_BAG_R+2)),1,1); } } } }
+    ctx.fillRect(X+Math.round(pp[0]*sx),Y+Math.round(pp[1]*sy),1,1); }
+    if(hf>0){ // sand bursting out of the seams, thrown along the shot's line and settling
+    var puff=(1-hf)*10;
+    for(var g=0;g<7;g++){ var ga=_cgRnd(g+i*3.3)*Math.PI*2, gr=2+puff*(0.4+_cgRnd(g+0.7)*0.8);
+    ctx.fillStyle=(g&1)?('rgba(214,193,148,'+(hf*0.85).toFixed(3)+')'):('rgba(168,146,104,'+(hf*0.85).toFixed(3)+')');
+    ctx.fillRect(Math.round(X+Math.cos(ga)*gr+(b.nx||0)*puff*0.5),Math.round(Y+Math.sin(ga)*gr+(b.ny||0)*puff*0.5),1,1); }
+    ctx.fillStyle='rgba(60,40,22,'+(hf*0.5).toFixed(3)+')';   // the dull thud mark where it landed
+    ctx.fillRect(Math.round(X-(b.nx||0)*RG_BAG_R),Math.round(Y-(b.ny||0)*RG_BAG_R),1,1); } } }
     }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;

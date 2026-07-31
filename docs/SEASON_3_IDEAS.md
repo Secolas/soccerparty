@@ -805,7 +805,7 @@ only — the top and bottom are the goal mouths, so ropes there would read as bl
 | Tier | Conditions |
 |---|---|
 | **Easy** | **ROPES** — the side walls are elastic and hand the ball back *with interest* |
-| **Med** | + **SPEED-BAGS** — a swinging pair that punch hardest mid-arc |
+| **Med** | + **HEAVY BAGS** — sand-filled, they kill a shot dead and shift where they are hit |
 | **Hard** | + **CANVAS DRAG** — the scuffed centre bogs you down, forcing play out to the ropes |
 
 **ROPES (the signature — a fully elastic boundary).** The side walls *are* the ropes: a bounce returns at
@@ -821,13 +821,26 @@ converge. A **chip sails over** them.
   damped wobble, scaled by impact strength, plus a spark on the strand. Because the static strands are baked
   into the board, the flexing span is repainted with canvas + weave first, then redrawn bowed.
 
-**SPEED-BAGS (med+).** A **180°-rotationally symmetric pair** at `H*0.30` / `H*0.70` swinging side to side.
-They are solid — the ball always reflects — and the bag **adds its own swing momentum** on contact
-(`coin.vx += bag.vx * bagPunch`, capped). Because the bag is a pendulum, it is **fastest through the middle of
-its arc and slowest at the ends**, so *the swing itself is the timing tell*: catch it mid-arc and you get
-jabbed, catch it at the end of its travel and it barely nudges. No arbitrary "jab window" needed. Drawn as a
-**pixel sprite** (`rgBagShape()` — solid pear-shaped leather blob, lit upper-left face, dark underside, lace
-seam, ground shadow) with **motion streaks** while swinging fast and a **flash ring** on the frames after a jab.
+**HEAVY BAGS (med+).** A **180°-rotationally symmetric pair** of sand-filled bags. They do **not** swing or roam
+— they sit where the last hit shoved them.
+
+- **A shot DIES on them — no bounce.** The component driving into the bag is killed outright and only a little
+  of the sideways slide survives (`bagSlide 0.30`, then `bagAbsorb 0.26` overall), so the ball thuds and slumps
+  beside it. That makes them the season's only pure **absorber**: every other obstacle hands energy back.
+- **Every hit SHOVES the bag and it stays there.** The bag is pushed along the shot's line by an amount that
+  scales with how hard it was struck (`bagShove`, eased over a few frames), then simply stays — so **the pitch
+  layout drifts over the course of a match**, and both sides are re-planning around bags that have moved.
+- **Clamped out of the goal areas** (`rgBagClampX/Y`) — a bag parked in the box would wall the goal off for the
+  rest of the match.
+- `rgSeparate()` pushes a resting ball or a formation peg back out of a bag's space, since a bag eases into
+  wherever it was shoved and could otherwise drift onto them.
+- **Art:** the same pixel leather sprite, but a hit **squashes** it along the impact normal (sand shifting
+  inside, never a rebound) and **bursts a puff of sand grains** out of the seams along the shot's line, with a
+  dull thud mark where the ball landed.
+
+*Cut on playtest:* the first build was a swinging **speed-bag** that punched the ball hardest mid-arc. It made
+the bag a *deflector* (the arena's third), and the swing read as a bouncy toy rather than dead weight — so it
+became the heavy bag above.
 
 **CANVAS DRAG (hard).** Within `RG_ZONE_R 26` of the centre spot the ball is **dragged down** (`0.93` per
 frame), so the safe lanes are out by the chaotic ropes. Drawn as a **dithered scuff patch** and it **kicks up

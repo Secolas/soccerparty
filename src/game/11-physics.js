@@ -1798,8 +1798,9 @@
     // ===== THE RING (boxing) — arena 8 hazards ================================================================
     // ADDITIVE tiers, fixed intensities:
     //   easy  ROPES        — the side walls are fully elastic and hand the ball back WITH INTEREST
-    //   med   + SPEED-BAG  — a pair of bags swinging on the beat; they punch hardest mid-swing, softest at the
-    //                        ends of the arc, so the swing itself is the timing tell
+    //   med   + HEAVY BAGS — sand-filled bags that ABSORB a shot instead of bouncing it (a hit dies on them),
+    //                        and SHIFT a little on every hit and stay put, so the pitch layout drifts as the
+    //                        match goes on
     //   hard  + CANVAS DRAG — the scuffed centre bogs the ball down, forcing play out to the chaotic ropes
     // Settle-safe: the ropes only add interest above a speed gate and are capped (friction across the pitch
     // dominates, so a rally converges), the bag's punch is capped, and the drag only ever slows.
@@ -1808,7 +1809,7 @@
     function rgArena(){ return (typeof boardKey!=='undefined')&&boardKey==='ring'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { ropes:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
-    bag:(t>=1), bagSwing:15, bagFreq:0.05, bagPunch:2.6, bagCap:11,
+    bag:(t>=1), bagAbsorb:0.26, bagSlide:0.30, bagShove:2.2, bagShoveMax:6,
     drag:(t>=2), dragMul:0.93, gate:0.4 }; }
     // The x of the INNERMOST rope strand on a side (0=left,1=right) — the same line the ball collides on, and
     // the same math the board art uses, so the bounce always lands visually on the rope.
@@ -1829,20 +1830,39 @@
     return (_rgBagPx=pts); }
     function initRing(){ if(!rgArena()) return; rgOn=true; rgT=0; rgScuff=[];
     rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}];
-    // a 180deg-rotationally symmetric PAIR of bags, so neither end is favoured
-    rgBags=[ {ax:Math.round(W/2), ay:Math.round(H*0.30), ph:0, x:Math.round(W/2), vx:0, hit:0},
-    {ax:Math.round(W/2), ay:Math.round(H*0.70), ph:Math.PI, x:Math.round(W/2), vx:0, hit:0} ]; }
+    // a 180deg-rotationally symmetric PAIR of bags, so neither end is favoured. tx/ty is where a bag is being
+    // shoved to; x/y eases toward it, then it just stays there — every hit nudges it again.
+    rgBags=[ {x:Math.round(W/2), y:Math.round(H*0.30), tx:Math.round(W/2), ty:Math.round(H*0.30), hit:0, nx:0, ny:0},
+    {x:Math.round(W/2), y:Math.round(H*0.70), tx:Math.round(W/2), ty:Math.round(H*0.70), hit:0, nx:0, ny:0} ]; }
+    // A bag can be shoved around midfield but never into a goal area — a bag parked in the box would wall the
+    // goal off for the rest of the match.
+    function rgBagClampX(x){ return Math.max(WALL+COIN_R+RG_BAG_R+2, Math.min(W-WALL-COIN_R-RG_BAG_R-2, x)); }
+    function rgBagClampY(y){ var m=NET_DEPTH+GOAL_AREA_D+RG_BAG_R+4; return Math.max(m, Math.min(H-m, y)); }
     // draw-loop: swing the bags, decay the rope flex + scuff puffs.
     function ringTick(){ if(!rgArena()) return; if(!rgOn) initRing();
     var c=rgCfg(); rgT++;
+    // the bags do not roam — they only ease into wherever the last hit shoved them, and stay
     for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
-    if(!c.bag){ b.x=b.ax; b.vx=0; continue; }
-    var ang=rgT*c.bagFreq+b.ph;
-    b.x=b.ax+Math.sin(ang)*c.bagSwing;
-    b.vx=Math.cos(ang)*c.bagSwing*c.bagFreq;   // pendulum speed: fastest through the middle of the arc
+    b.x+=(b.tx-b.x)*0.18; b.y+=(b.ty-b.y)*0.18;
+    if(Math.abs(b.tx-b.x)<0.05) b.x=b.tx; if(Math.abs(b.ty-b.y)<0.05) b.y=b.ty;
     if(b.hit>0) b.hit--; }
     for(var r=0;r<2;r++){ if(rgRope[r].t>0) rgRope[r].t--; }
+    try{ rgSeparate(); }catch(e){}
     for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
+    // A bag eases into wherever it was shoved, so it can drift onto a resting ball or a peg. While the ball is
+    // at REST, push whatever is overlapping a bag back out to its edge — the bag never displaces play by
+    // sliding, it just occupies the space it was pushed into.
+    function rgSeparate(){ if(!rgCfg().bag) return;
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    if(!moving && typeof coin!=='undefined' && coin){ var dx=coin.x-b.x, dy=coin.y-b.y, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R+1;
+    if(d<R){ if(d<0.001){ dx=1; dy=0; d=1; }
+    coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,b.x+dx/d*R));
+    coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,b.y+dy/d*R)); } }
+    if(typeof nails!=='undefined'&&nails){ for(var n=0;n<nails.length;n++){ var q=nails[n];
+    var ndx=q.x-b.x, ndy=q.y-b.y, nd=Math.hypot(ndx,ndy), NR=RG_BAG_R+NAIL_R+1;
+    if(nd<NR){ if(nd<0.001){ ndx=1; ndy=0; nd=1; }
+    q.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,b.x+ndx/nd*NR));
+    q.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,b.y+ndy/nd*NR)); } } } } }
     // Called from the side-wall bounce in collideStep: the ropes hand the ball back with interest above a speed
     // gate (a dying ball keeps the normal restitution so it still settles), and the strand flexes where it hit.
     function rgRopeRest(vabs,cy,side){ var c=rgCfg(); if(!c.ropes) return RESTITUTION;
@@ -1854,18 +1874,22 @@
     if(typeof ghosting!=='undefined'&&ghosting) return;
     var c=rgCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(!air) return;   // a chip flies over the bags and clears the canvas
-    // SPEED-BAG — a solid swinging bag. It always reflects the ball, and ADDS the swing's own momentum on top,
-    // so a bag caught mid-arc (moving fast) jabs hard while one caught at the end of its arc barely nudges.
+    // HEAVY BAGS — sand inside, so a shot DIES on them instead of bouncing: the component driving into the bag
+    // is killed outright (no rebound) and only a little of the sideways slide survives, so the ball thuds and
+    // slumps beside it. Every hit also SHOVES the bag along the shot's line, by an amount that scales with how
+    // hard it was struck, and the bag simply stays there — so the pitch layout drifts over the match.
     if(c.bag){ for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
-    var dx=coin.x-b.x, dy=coin.y-b.ay, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R;
+    var dx=coin.x-b.x, dy=coin.y-b.y, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R;
     if(d<R && d>0.001){ var nx=dx/d, ny=dy/d, vn=coin.vx*nx+coin.vy*ny;
-    if(vn<0){ coin.vx-=(1+RESTITUTION)*vn*nx; coin.vy-=(1+RESTITUTION)*vn*ny; }
-    coin.vx+=b.vx*c.bagPunch;                                   // the jab: the bag's own swing, scaled
-    var bs=Math.hypot(coin.vx,coin.vy); if(bs>c.bagCap){ var k=c.bagCap/bs; coin.vx*=k; coin.vy*=k; }
-    coin.x=b.x+nx*R; coin.y=b.ay+ny*R;
-    b.hit=12;
-    try{ spawnSparks(b.x,b.ay,null,6); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(Math.min(9,4+Math.abs(b.vx)*6)); }catch(e){}
-    try{ if(typeof haptic==='function') haptic(10); }catch(e){} } } }
+    if(vn<0){ var tvx=coin.vx-vn*nx, tvy=coin.vy-vn*ny;   // split off the sideways slide, drop the rest
+    coin.vx=tvx*c.bagSlide; coin.vy=tvy*c.bagSlide;
+    var imp=Math.min(1,Math.abs(vn)/8);                  // how hard it landed, 0..1
+    b.tx=rgBagClampX(b.tx-nx*c.bagShove*(0.4+imp)); b.ty=rgBagClampY(b.ty-ny*c.bagShove*(0.4+imp));
+    b.hit=16; b.nx=-nx; b.ny=-ny; b.imp=imp;
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(Math.min(7,2+imp*5)); }catch(e){}
+    try{ if(typeof haptic==='function') haptic(Math.round(8+imp*10)); }catch(e){} }
+    coin.x=b.x+nx*R; coin.y=b.y+ny*R;
+    coin.vx*=c.bagAbsorb; coin.vy*=c.bagAbsorb; } } }
     // CANVAS DRAG — the scuffed centre bogs a rolling ball down, so the safe lanes are out by the ropes. Only
     // slows, never redirects, so it can never trap the turn. Kicks up canvas scuff while it drags.
     if(c.drag && sp>c.gate && Math.hypot(coin.x-W/2,coin.y-H/2)<RG_ZONE_R){ coin.vx*=c.dragMul; coin.vy*=c.dragMul;
