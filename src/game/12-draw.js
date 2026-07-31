@@ -759,9 +759,15 @@
     ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
     ctx.fillStyle='#d0402e'; ctx.fillRect(Math.round(pn.x-pn.r),Math.round(pn.y-1),Math.round(pn.r*2),1);   // red neck stripe
     ctx.globalAlpha=1; } }
-    /* THE GRAND PRIX: oil slicks (splash when crossed) + springy tyre stacks (squash when hit) on the track.
-       Drawn with the ground FX (under the nails); the ball stays on top. */
+    /* THE GRAND PRIX: gravel run-off + oil slicks (splash) + springy tyre stacks (squash) + the start-lights
+       gantry. Drawn with the ground FX (under the nails); the ball stays on top. */
     function drawRaceway(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
+    var c=(typeof rcCfg==='function')?rcCfg():null;
+    // GRAVEL run-off — tan speckled corner patches (deterministic dither, no shimmer)
+    if(typeof rcGravels!=='undefined'){ for(var gi=0;gi<rcGravels.length;gi++){ var gv=rcGravels[gi];
+    ctx.fillStyle='rgba(150,130,90,0.5)'; ctx.fillRect(gv.x,gv.y,gv.w,gv.h);
+    ctx.fillStyle='rgba(110,95,65,0.55)';
+    for(var yy=gv.y; yy<gv.y+gv.h; yy+=2){ for(var xx=gv.x+((yy&2)?1:0); xx<gv.x+gv.w; xx+=3){ ctx.fillRect(xx,yy,1,1); } } } }
     // OIL slicks — dark glossy puddles with a cool sheen; a fresh crossing throws an expanding splash ring.
     if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
     ctx.fillStyle='rgba(10,8,16,0.72)'; ctx.beginPath(); ctx.arc(ol.x,ol.y,RC_OIL_R,0,6.283); ctx.fill();
@@ -777,7 +783,18 @@
     if(k>0){ ctx.strokeStyle='rgba(255,220,120,'+(k*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ty.x,ty.y,R+2,0,6.283); ctx.stroke(); }
     ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R,0,6.283); ctx.fill();
     ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-2,0,6.283); ctx.fill();
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-4,0,6.283); ctx.fill(); } } }
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-4,0,6.283); ctx.fill(); } }
+    // START-LIGHTS gantry — a 5-light bar on each checkered stripe; reds fill up (1..5), hold, then all OUT =
+    // GREEN (the launch window). Watch it and release on green for the power boost.
+    if(c&&c.lights){ var _on=RC_LIGHT_BUILD+RC_LIGHT_HOLD, _green=(rcLightT>=_on&&rcLightT<_on+c.lightGreen),
+    _lit=(rcLightT<RC_LIGHT_BUILD)?Math.min(5,Math.floor(rcLightT/(RC_LIGHT_BUILD/5))+1):((rcLightT<_on)?5:0),
+    _ys=[NET_DEPTH+GOAL_AREA_D+1, H-NET_DEPTH-GOAL_AREA_D-4];
+    for(var _li=0;_li<2;_li++){ var _ly=_ys[_li];
+    ctx.fillStyle='#0c0d10'; ctx.fillRect(Math.round(W/2)-15,_ly-3,30,6);
+    for(var _k=0;_k<5;_k++){ var _lx=Math.round(W/2)-12+_k*6;
+    if(_green){ ctx.fillStyle='rgba(90,255,130,0.45)'; ctx.beginPath(); ctx.arc(_lx,_ly,3.6,0,6.283); ctx.fill(); }
+    ctx.fillStyle=_green?'#37e05a':((_k<_lit)?'#ff2a1a':'#3a1512');
+    ctx.beginPath(); ctx.arc(_lx,_ly,2,0,6.283); ctx.fill(); } } } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);

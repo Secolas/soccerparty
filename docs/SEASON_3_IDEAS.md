@@ -685,15 +685,30 @@ bending; spin bounded ±4). Crossing one throws an **expanding splash ring + dro
 → 1.0 med → 1.15 hard, capped 12). A hit **squashes** the stack (a brief scale-pulse + bright rim). On every
 tier.
 
-**Settle-safe:** both act only on a **moving grounded** ball; oil adds only bounded spin (speed still decays);
-tyres are one-shot per contact and capped. A **chip clears** the track hazards. Symmetric.
+**GRAVEL RUN-OFF.** Tan speckled patches in the four corners; stray **wide** into one and the ball is **dragged
+down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose the shot. On every tier, so it
+pairs with the springy tyres in the same corners (sink vs. bounce). Only slows, so always settle-safe.
 
-*Cut on playtest — replacements TBD:* the **pace-car + slipstream** and the **DRS boost strips** were removed.
-Two motorsport hazards are needed to fill their slots (brainstorm: gravel run-off drag, marbles/off-line grip
-loss, a start-lights launch gate, a chicane of cones, a pit-lane speed-limit drag zone…).
+**START-LIGHTS LAUNCH GATE (the timing hazard).** A 5-light gantry on each checkered stripe cycles F1-style:
+reds fill **1→5**, hold, then all **OUT = GREEN**. Your flick's power depends on **when you release**: on
+**green** you get a **launch boost** (×1.15); while the **reds are lit** a jump-start **bogs** you (×`lightBog`
+0.75 med / 0.6 hard); otherwise normal. The **CPU revs at the lights and launches on green too**
+(`rcInGreen` gates its release), so it's fair — the gate rewards timing, it doesn't just nerf the AI. Off easy;
+green window 34f med / 20f hard (tighter = harder). Wired through `rcLaunchMul()` in both `13-input` (human)
+and `09-ai` (CPU).
 
-Verified in royale (headless to stadium 7): hard shows 3 oil slicks + corner tyre stacks (no car/DRS); zero
-page errors.
+**Tiers:** easy — tyre bounce + gentle gravel (learn the track). Med — + oil (1) + start-lights (lenient) +
+gravel (0.90). Hard — + oil (3) + start-lights (strict, tight green) + gravel (0.86) + springy tyres.
+
+**Settle-safe:** oil/tyres/gravel act only on a **moving grounded** ball; oil adds only bounded spin, gravel
+only slows, tyres are one-shot/capped; the launch gate only scales flick power. A **chip clears** the track
+hazards. Symmetric.
+
+*Cut on playtest:* the **pace-car + slipstream** and the **DRS boost strips** were removed; gravel + the
+start-lights gate replace them.
+
+Verified in royale (headless to stadium 7, hard): gravel corners + tyre stacks + 3 oil slicks + the start-light
+gantries all render; the CPU launches on green and scores; zero page errors.
 
 **Fantasy:** a race circuit — draft behind the pace-car for a tow, hit the DRS
 boost strips, mind the oil and the tyre walls.

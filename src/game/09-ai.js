@@ -248,7 +248,12 @@
       try{ aiShot=(CPU_AIM_TELEGRAPH && !(pen&&pen.active))?aiComputeShot():null; }catch(e){ aiShot=null; }
       try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
       return; }
-      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiAim=null; if(aiShot){ aiApplyShot(aiShot); aiShot=null; } else { aiFlick(); } }
+      aiDelay-=delta; if(aiDelay<=0){
+      // THE GRAND PRIX start-lights: rev while the reds are lit and launch on GREEN, so the CPU gets the same
+      // boost a well-timed player does instead of bogging on a jump-start.
+      if(typeof rcArena==='function'&&rcArena()&&typeof rcCfg==='function'&&rcCfg().lights&&typeof rcInGreen==='function'&&!rcInGreen()) return;
+      aiPending=false; aiAim=null; var _lm=(typeof rcLaunchMul==='function')?rcLaunchMul():1;
+      if(aiShot){ if(_lm!==1){ aiShot.vx*=_lm; aiShot.vy*=_lm; } aiApplyShot(aiShot); aiShot=null; } else { aiFlick(); } }
     }
     /* The point the CPU is lining up on, WITHOUT the random spread aiFlick adds — so the telegraph arrow
        shows its intent, not the jittered result. Mirrors the target-selection at the top of aiFlick

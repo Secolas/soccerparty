@@ -1634,30 +1634,46 @@
     try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } } }
 
     // ===== THE GRAND PRIX (raceway) — arena 7 hazards =========================================================
-    // Current hazards: OIL slicks that spin the ball off-line (with a splash), and springy TYRE walls at the
-    // corners that bounce it back (with a squash). Both act only on a MOVING grounded ball, are bounded/capped,
-    // and never trap the turn; a chip clears them. (The pace-car and DRS strips were cut — replacements TBD.)
-    var rcOn=false, rcOils=[], rcTyres=[];
-    var RC_TYRE_R=8, RC_OIL_R=8;
+    // Hazards: OIL slicks (spin off-line + splash), springy TYRE walls at the corners (bounce + squash),
+    // GRAVEL run-off in the corners (drags a wide ball to a stop), and the START-LIGHTS launch gate (your flick
+    // only gets full power on GREEN — a jump-start on red bogs you; the CPU revs and launches on green too).
+    // All act only on a MOVING grounded ball, are bounded/capped, and never trap the turn; a chip clears them.
+    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0;
+    var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { oilN:(t>=2)?3:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
-    tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12, gate:0.4 }; }
+    tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12,
+    gravelDrag:(t>=2)?0.86:(t>=1?0.90:0.93),
+    lights:(t>=1), lightBog:(t>=2)?0.6:0.75, lightBoost:1.15, lightGreen:(t>=2)?20:34, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.5),cd:0,sp:0}); }
     if(c.oilN>=3){ rcOils.push({x:Math.round(W/2-30),y:Math.round(H*0.33),cd:0,sp:0}); rcOils.push({x:Math.round(W/2+22),y:Math.round(H*0.70),cd:0,sp:0}); }
     rcTyres=[]; var ti=RC_TYRE_R+3;
     rcTyres.push({x:WALL+ti,y:WALL+ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:WALL+ti,hit:0});
-    rcTyres.push({x:WALL+ti,y:H-WALL-ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:H-WALL-ti,hit:0}); }
-    // draw-loop: tick the oil cooldowns + splash timers and the tyre squash timers so the animations play.
+    rcTyres.push({x:WALL+ti,y:H-WALL-ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:H-WALL-ti,hit:0});
+    var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ];
+    rcLightT=0; }
+    // draw-loop: advance the start-lights cycle, and tick the oil splash / tyre squash timers.
     function racewayTick(){ if(!rcArena()) return; if(!rcOn) initRaceway();
+    if(rcCfg().lights) rcLightT=(rcLightT+1)%RC_LIGHT_P;
     for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
     for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; } }
-    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash; tyres bounce + squash.
+    // START-LIGHTS: the flick's power multiplier at the current phase — bog while the reds are lit, boost in the
+    // green window just after they go out, normal otherwise. rcInGreen() is the CPU's cue to launch.
+    function rcLaunchMul(){ if(!rcArena()) return 1; var c=rcCfg(); if(!c.lights) return 1;
+    var on=RC_LIGHT_BUILD+RC_LIGHT_HOLD; if(rcLightT<on) return c.lightBog; if(rcLightT<on+c.lightGreen) return c.lightBoost; return 1; }
+    function rcInGreen(){ if(!rcArena()) return false; var c=rcCfg(); if(!c.lights) return false;
+    var on=RC_LIGHT_BUILD+RC_LIGHT_HOLD; return rcLightT>=on && rcLightT<on+c.lightGreen; }
+    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash; tyres bounce + squash;
+    // gravel run-off drags a wide ball.
     function racewayStep(){ if(!rcArena()||!moving||scoring) return; if(!rcOn) initRaceway();
     if(typeof ghosting!=='undefined'&&ghosting) return;
     var c=rcCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(!air) return;   // airborne clears the track hazards
+    // GRAVEL run-off — extra drag in the corner boxes; stray wide and the ball bogs down. Only slows, so safe.
+    for(var g=0;g<rcGravels.length;g++){ var gv=rcGravels[g];
+    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag; break; } }
     // OIL spills — inject spin so the ball curves off-line (Magnus does the bending). Spin is bounded; friction
     // still settles the ball, so this never traps a turn. Arms the splash animation.
     for(var j=0;j<rcOils.length;j++){ var ol=rcOils[j];
