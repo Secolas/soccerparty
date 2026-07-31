@@ -1481,8 +1481,12 @@
     var GRID_POST_HALF=2, GRID_POST_H=7, GRID_PUSH=1.6;   // post half-width / half-height, and sideways carry gain
     function gridArena(){ return (typeof boardKey!=='undefined')&&boardKey==='gridiron'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { roamN:(t>=2)?99:(t>=1?4:2), roamSpd:(t>=2)?1.7:(t>=1?1.35:1.05), returnSpd:1.4, gate:1.0,
-    clearR:NAIL_R+COIN_R+6, clearCap:(t>=2)?7.0:(t>=1?6.0:5.0), cd:42,
+    // ADDITIVE tiers, fixed intensities — a tier adds a CONDITION, it never turns the same knob up:
+    //   easy  ROAMING DEFENCE only (they break formation and patrol, so they are moving blockers)
+    //   med   + CLEARANCE      (a roamer now boots a ball that strays into its third back to midfield)
+    //   hard  + BREATHING GOAL (the posts slide, carry the ball and bounce off their keeper)
+    return { roamN:4, roamSpd:1.35, returnSpd:1.4, gate:1.0,
+    clearR:NAIL_R+COIN_R+6, clear:(t>=1), clearCap:6.0, cd:42,
     breathing:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
     // current breathing-goal half-gap for a mouth (HARD only) — 0 when off. Shared by physics + renderer.
     function gridBreathGap(e){ var c=gridCfg(); return c.breathing?(gridGap[e|0]||0):0; }
@@ -1541,7 +1545,7 @@
     if(typeof ghosting!=='undefined'&&ghosting) return;
     if(!gridOn||typeof nails==='undefined'||!nails) return;
     var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
-    if(air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
+    if(c.clear && air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
     if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0) continue;
     var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
     if(d<c.clearR && d>0.001){ r._gridCd=c.cd;
@@ -1574,10 +1578,12 @@
     var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakePh=0, bowlGutter=null;
     function bowlArena(){ return (typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    // easy: 6 pins + BUMPERS (sides bounce, no gutter loss). med: + the RAKE gate, bumpers still up.
-    // hard: bumpers OFF so the GUTTERS eat the ball, + rake, + the full 10-pin rack.
-    return { rows:(t>=2)?4:3, pinLoss:(t>=2)?0.82:(t>=1?0.86:0.90),
-    bumpers:(t<2), gutter:(t>=2), rake:(t>=1), rakeW:(t>=2)?66:56, rakeFreq:(t>=2)?0.05:0.036, rakeCloseTh:(t>=2)?0.58:0.5, gate:0.4 }; }
+    // ADDITIVE tiers, fixed intensities — the 6-pin rack and the rake never change size or speed:
+    //   easy  6-PIN RACK, sides are BUMPERS (they bounce you back in, no loss)
+    //   med   + RAKE GATE (bumpers still up)
+    //   hard  + GUTTERS   (the bumpers come off, so a wall touch is a lost ball)
+    return { rows:3, pinLoss:0.86,
+    bumpers:(t<2), gutter:(t>=2), rake:(t>=1), rakeW:56, rakeFreq:0.04, rakeCloseTh:0.5, gate:0.4 }; }
     // THE RAKE gate: a bar spanning the goal mouth that rises and falls along the lane. DOWN (in front of the
     // pins) it blocks the whole mouth; UP (lifted toward the goal line) it is open and you can score. Timed on
     // bowlRakePh — the vertical motion is the tell. bowlRakeClosed(): 1 = fully down/block, 0 = fully up/open.
@@ -1676,10 +1682,15 @@
     return pts; }
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
-    return { oilN:(t>=2)?2:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
-    tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12,
-    gravelDrag:(t>=2)?0.86:(t>=1?0.90:0.93),
-    lights:(t>=1), lightMiss:0.5, lightGreen:(t>=2)?20:34, gate:0.4 }; }
+    // ADDITIVE tiers, fixed intensities — nothing gets turned up, each tier adds a CONDITION:
+    //   easy  TYRE WALLS only
+    //   med   + OIL SLICKS + GRAVEL RUN-OFF
+    //   hard  + START-LIGHTS (miss the green and the flick is worth half its stamina)
+    // Oil is always the symmetric PAIR when it is on — a single slick would favour one end.
+    return { oil:(t>=1), oilN:(t>=1)?2:0, oilSpin:2.0,
+    tyreRest:1.0, tyreCap:12,
+    gravel:(t>=1), gravelDrag:0.90,
+    lights:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
     rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0,px:rcOilShape(3.7)}); }
@@ -1691,7 +1702,7 @@
     rcTyres.push({x:Math.round(_br.x+_br.w),y:Math.round(_bF),hit:0,nx:0,ny:0});
     rcTyres.push({x:Math.round(_rr.x),y:Math.round(_rF),hit:0,nx:0,ny:0});
     rcTyres.push({x:Math.round(_rr.x+_rr.w),y:Math.round(_rF),hit:0,nx:0,ny:0}); }catch(e){}
-    var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ];
+    rcGravels=[]; if(c.gravel){ var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ]; }
     rcLightT=0; rcLightFlash=0; rcDust=[]; rcSmear=[]; rcRuts=[]; }
     // Pegs are laid out BEFORE the arena's board is applied, so a formation nail can land inside a tyre stack.
     // Nudge any overlapping nail out to the stack's edge while the ball is at rest (the golf sweep's precedent).

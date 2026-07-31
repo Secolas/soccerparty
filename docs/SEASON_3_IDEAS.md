@@ -554,7 +554,7 @@ fully settled** (`!moving`) do they jog back to the spots they were placed on (h
 idle→moving transition; `_gridHomeNail` restores them). Jogging home during the slow-finish would make the
 return-path anti-overlap dodge the ball, which read as defenders fleeing on contact.
 
-- **Clear, not a bounce, not a boost:** `clearR` is a hair larger than the ball↔token contact radius, so a
+- **Clear, not a bounce, not a boost** (med+): `clearR` is a hair larger than the ball↔token contact radius, so a
   roaming defender redirects the ball *before* contact. The clear keeps the pace the ball ARRIVED at
   (`min(sp·1.05, clearCap)`) — a soft ball gets a soft clear, a firm shot a firm one — rather than the old
   fixed high-power boot that launched even a slow ball hard.
@@ -562,8 +562,13 @@ return-path anti-overlap dodge the ball, which read as defenders fleeing on cont
   cooldown; and jogging home a defender never enters a resting ball's space — so the turn always ends. Only
   the DEFENDING side's outfield roam (goalie excluded, dragged token skipped); the attacking formation is
   untouched.
-- By tier: **easy** 2 roam, **med** 4, **hard** all **+ a BREATHING GOAL**. Roam speed 1.05 / 1.35 / 1.7;
-  clear cap 5.0 / 6.0 / 7.0.
+- **Tiers are ADDITIVE — no number is scaled.** Four defenders roam at one fixed speed on every tier; a tier
+  adds a *condition*, it never turns the same knob up:
+  | Tier | Conditions |
+  |---|---|
+  | **Easy** | **ROAMING DEFENCE** — they break formation and patrol, so they are moving blockers |
+  | **Med** | + **CLEARANCE** — a roamer now boots a ball that strays into its third back toward midfield |
+  | **Hard** | + **BREATHING GOAL** — the posts slide, carry the ball and bounce off their keeper |
 
 **BREATHING GOAL (hard only) — moving posts.** Each mouth's two posts are **objects that slide**. The
 half-gap oscillates between `23 ± 15` under its own velocity (`gridBreatheStep`, per mouth `[top,bottom]`) —
@@ -641,10 +646,14 @@ killed wall bounces, cut. v2 was a freeze-then-teleport gutter ball — replaced
 (the ball actually rolls the channel to a stop). The **oiled centre strip**, the animated blue tells, and the
 side-to-side sweep rake were all cut along the way.
 
-**Tiers:** easy — **6-pin** rack (bleed 0.90) with **bumpers** up, no rake (*meet the sport — the sides keep
-you in*). Med — **6-pin** rack (0.86) + the **rake gate**, bumpers still up (*the sport bites*). Hard — full
-**10-pin** rack (0.82) + wider/faster rake with a tighter window + **bumpers OFF so the gutters eat the ball**
-(*hostile*).
+**Tiers are ADDITIVE — no number is scaled.** The 6-pin rack and the rake never change size, speed or bleed;
+each tier adds a *condition*:
+
+| Tier | Conditions |
+|---|---|
+| **Easy** | **6-PIN RACK**, and the sides are **BUMPERS** — they bounce you back into play, no loss |
+| **Med** | + **RAKE GATE** (bumpers still up) |
+| **Hard** | + **GUTTERS** — the bumpers come off, so a wall touch is a lost ball |
 
 **Settle-safe:** the rake and pins only touch a **moving grounded** ball and a knocked pin leaves collision at
 once; a guttered ball rolls to rest and the turn passes through the normal `STOP_V` settle. Symmetric
@@ -695,12 +704,12 @@ curves off-line (Magnus does the bending; spin bounded ±4).
 - **Drive back through a patch that is still wet and the ball picks the oil up again** — the trail carries on,
   with a small slip nudge (30% of a fresh slick, bounded, on a per-patch cooldown so one patch can never pump
   the spin up). A **dried** patch is inert.
-Off easy, **1** med, **2** hard (`oilSpin` 1.6 / 2.2) — two slicks max, placed 180°-rotationally symmetric
-about the centre so neither end is favoured.
+Off on easy; on med+ it is the **pair**, placed 180°-rotationally symmetric about the centre so neither end is
+favoured (`oilSpin` 2.0, fixed).
 
 **TYRE WALLS on the PENALTY-BOX CORNERS (pixel sprite + squash/wobble).** Tyre stacks sit on the **outer corners
 of each penalty area** (the corners facing midfield) so they guard the approach instead of decorating the dead
-pitch corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). On every tier.
+pitch corners. Springy bounce (`tyreRest` 1.0, fixed, capped 12) — noticeably livelier than the pitch's own 0.75. On every tier.
 
 - **The stack is a pixel sprite, not a circle.** `rcTyreShape()` builds it once on the integer grid and all four
   share it (identical furniture must read identically): a **solid silhouette**, a dark **outer wall**, a **tread
@@ -718,8 +727,8 @@ ball is at rest (the golf sweep's precedent). Drawn in the **late pass** (with t
 `drawEndMarks` — with the ground FX the white penalty-box line was painted straight across each stack.
 
 **GRAVEL RUN-OFF (run-off-real animation).** Tan speckled patches in the four **pitch corners**; stray **wide**
-into one and the ball is **dragged down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose
-the shot. Staged like a car actually hitting the run-off:
+into one and the ball is **dragged down** (`gravelDrag` 0.90 per frame, fixed) — you lose the shot. Off on easy;
+on med+ it is all four corners. Staged like a car actually hitting the run-off:
 - **On entry**, a hard **spray of stones** thrown backward along the travel line plus a **dust cloud** (soft
   expanding puffs) and a thud.
 - **While ploughing on**, a steady trickle of stones, more rising dust, and a **rut gouged into the surface**
@@ -734,18 +743,25 @@ than just how hard you can hit.
 
 - **Mounted in the FRAME beside each net** (two gantries per end, left and right of the goal), the most visible
   spot on the board — the earlier in-pitch placement on the checkered stripe was easy to miss.
-- Off easy; green window **34f med / 20f hard** (tighter = harder).
+- **Hard only**; green window 28f (fixed).
 - The four gantries are **180°-rotationally symmetric**, fill order included (light *k* at `(x,y)` has its twin
   at `(W-x, H-y)`), so both ends read identically — the game's standing symmetry convention.
 - **The CPU plays the same gate:** it revs and launches on green (`rcInGreen` gates its release) — but only
-  *most* of the time on med (`aiLightWait`, ~70%), always on hard, so it mistimes like a human does instead of
-  nailing every launch.
+  ~85% of the time (`aiLightWait`, decided once per turn), so it mistimes like a human does instead of nailing
+  every launch.
 - Wired through `rcLaunchApply()` (returns the multiplier and plays the GREEN LIGHT / JUMP START feedback) in
   both `13-input` (human) and `09-ai` (CPU).
 
-**Tiers:** easy — tyre bounce + gentle gravel, no oil, no lights (learn the track). Med — + oil (1) +
-start-lights (lenient green) + gravel (0.90). Hard — + oil (3) + start-lights (tight green) + gravel (0.86) +
-springy tyres.
+**Tiers are ADDITIVE — no number is scaled.** Every intensity is fixed (tyre restitution 1.0, oil spin 2.0,
+gravel drag 0.90, green window 28f); a tier adds a *condition*:
+
+| Tier | Conditions |
+|---|---|
+| **Easy** | **TYRE WALLS** only |
+| **Med** | + **OIL SLICKS** + **GRAVEL RUN-OFF** |
+| **Hard** | + **START-LIGHTS** (miss the green and the flick is worth half its stamina) |
+
+Oil is always the **symmetric pair** when it is on — a single slick would favour one end.
 
 **Settle-safe:** oil/tyres/gravel act only on a **moving grounded** ball; oil adds only bounded spin, gravel
 only slows, tyres are one-shot per contact and capped; the launch gate only scales flick power. A **chip

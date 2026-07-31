@@ -22,16 +22,16 @@
     // Mirror that ceiling for the CPU so it can't fire full power off a wall. `reach` models that the human
     // may start the drag slightly off-ball (within COIN_R+13). Only bites near a wall; far from walls the
     // available room dwarfs FLICK_POWER so the cap is a no-op. Returns a max speed in the same units as `speed`.
-    // Whether the CPU will WAIT for the start-lights green this turn (THE GRAND PRIX). Decided once per turn at
-    // think-start: always on hard, most of the time on med — so the CPU misses the lights sometimes like a human
-    // does, instead of nailing every launch.
-    var aiLightWait=true;
     function aiWallPowerCap(bx,by,ang){ var reach=COIN_R+13, cx=Math.cos(ang), cy=Math.sin(ang);
     var sx=Math.max(WALL,Math.min(W-WALL,bx+cx*reach)), sy=Math.max(WALL,Math.min(H-WALL,by+cy*reach));
     var tx=(cx>0.0001)?(sx-WALL)/cx:((cx<-0.0001)?(sx-(W-WALL))/cx:1e9);
     var ty=(cy>0.0001)?(sy-WALL)/cy:((cy<-0.0001)?(sy-(H-WALL))/cy:1e9);
     var tt=Math.max(0,Math.min(tx,ty,FLICK_POWER));
     return tt*(FLICK_MAX/FLICK_POWER)*(TAC.power||1)*staminaMul(); }
+    // Whether the CPU will WAIT for the start-lights green this turn (THE GRAND PRIX, hard only). Decided once
+    // per turn at think-start, and NOT always true — so the CPU mistimes the lights now and then like a human
+    // does, instead of nailing every launch.
+    var aiLightWait=true;
     // Compute the CPU's shot (target, angle, speed, curve spin, drunk jitter) WITHOUT touching the ball,
     // and return it as a plain object. Split out so the aim telegraph can lock the shot in at think-start
     // and render the very shot that will be released. aiPickShotMod runs here (it decides curve vs serpent).
@@ -251,7 +251,7 @@
       // computing at release — pen.dive can change during the wind-up, so a precomputed pen shot could go stale.
       try{ aiShot=(CPU_AIM_TELEGRAPH && !(pen&&pen.active))?aiComputeShot():null; }catch(e){ aiShot=null; }
       try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
-      try{ aiLightWait=((typeof hzTier==='function')&&hzTier()>=2)||Math.random()<0.7; }catch(e){ aiLightWait=true; }
+      try{ aiLightWait=Math.random()<0.85; }catch(e){ aiLightWait=true; }
       return; }
       aiDelay-=delta; if(aiDelay<=0){
       // THE GRAND PRIX start-lights: rev while the reds are lit and launch on GREEN, so the CPU gets the same
