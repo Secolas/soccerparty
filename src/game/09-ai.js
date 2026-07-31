@@ -22,6 +22,10 @@
     // Mirror that ceiling for the CPU so it can't fire full power off a wall. `reach` models that the human
     // may start the drag slightly off-ball (within COIN_R+13). Only bites near a wall; far from walls the
     // available room dwarfs FLICK_POWER so the cap is a no-op. Returns a max speed in the same units as `speed`.
+    // Whether the CPU will WAIT for the start-lights green this turn (THE GRAND PRIX). Decided once per turn at
+    // think-start: always on hard, most of the time on med — so the CPU misses the lights sometimes like a human
+    // does, instead of nailing every launch.
+    var aiLightWait=true;
     function aiWallPowerCap(bx,by,ang){ var reach=COIN_R+13, cx=Math.cos(ang), cy=Math.sin(ang);
     var sx=Math.max(WALL,Math.min(W-WALL,bx+cx*reach)), sy=Math.max(WALL,Math.min(H-WALL,by+cy*reach));
     var tx=(cx>0.0001)?(sx-WALL)/cx:((cx<-0.0001)?(sx-(W-WALL))/cx:1e9);
@@ -247,12 +251,13 @@
       // computing at release — pen.dive can change during the wind-up, so a precomputed pen shot could go stale.
       try{ aiShot=(CPU_AIM_TELEGRAPH && !(pen&&pen.active))?aiComputeShot():null; }catch(e){ aiShot=null; }
       try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
+      try{ aiLightWait=((typeof hzTier==='function')&&hzTier()>=2)||Math.random()<0.7; }catch(e){ aiLightWait=true; }
       return; }
       aiDelay-=delta; if(aiDelay<=0){
       // THE GRAND PRIX start-lights: rev while the reds are lit and launch on GREEN, so the CPU gets the same
       // boost a well-timed player does instead of bogging on a jump-start.
-      if(typeof rcArena==='function'&&rcArena()&&typeof rcCfg==='function'&&rcCfg().lights&&typeof rcInGreen==='function'&&!rcInGreen()) return;
-      aiPending=false; aiAim=null; var _lm=(typeof rcLaunchMul==='function')?rcLaunchMul():1;
+      if(aiLightWait&&typeof rcArena==='function'&&rcArena()&&typeof rcCfg==='function'&&rcCfg().lights&&typeof rcInGreen==='function'&&!rcInGreen()) return;
+      aiPending=false; aiAim=null; var _lm=(typeof rcLaunchApply==='function')?rcLaunchApply():1;
       if(aiShot){ if(_lm!==1){ aiShot.vx*=_lm; aiShot.vy*=_lm; } aiApplyShot(aiShot); aiShot=null; } else { aiFlick(); } }
     }
     /* The point the CPU is lining up on, WITHOUT the random spread aiFlick adds — so the telegraph arrow

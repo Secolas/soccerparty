@@ -101,7 +101,7 @@
       aiming=false; if(power<4){ aimStart=aimNow=null; return; }
       // CRAZY GOLF: holing out pays a FULL-POWER flick — you supply the aim, the game supplies the power
       var _cgFull=false; try{ _cgFull=(typeof cgFullFlick==='function')&&cgFullFlick(); }catch(e){}
-      const ang=Math.atan2(dy,dx),speed=(_cgFull?FLICK_MAX:power*(FLICK_MAX/FLICK_POWER))*TAC.power*staminaMul()*((typeof rcLaunchMul==='function')?rcLaunchMul():1);
+      const ang=Math.atan2(dy,dx),speed=(_cgFull?FLICK_MAX:power*(FLICK_MAX/FLICK_POWER))*TAC.power*staminaMul()*((typeof rcLaunchApply==='function')?rcLaunchApply():1);
       if(_cgFull){ try{ cgSpendFullFlick(); }catch(e){} try{ setStatus('FULL POWER!'); }catch(e){} }
       _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount};
       coin.vx=Math.cos(ang)*speed;

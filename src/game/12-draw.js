@@ -759,8 +759,9 @@
     ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
     ctx.fillStyle='#d0402e'; ctx.fillRect(Math.round(pn.x-pn.r),Math.round(pn.y-1),Math.round(pn.r*2),1);   // red neck stripe
     ctx.globalAlpha=1; } }
-    /* THE GRAND PRIX: gravel run-off + oil slicks (splash) + springy tyre stacks (squash) + the start-lights
-       gantry. Drawn with the ground FX (under the nails); the ball stays on top. */
+    /* THE GRAND PRIX: gravel run-off (with dust kick-up) + oil slicks (splash + a smear trail the ball drags)
+       + springy tyre stacks on the penalty-box corners (recoil on hit) + the start-lights gantries, which sit
+       in the FRAME beside each net so they read at a glance. Drawn with the ground FX (under the nails). */
     function drawRaceway(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
     var c=(typeof rcCfg==='function')?rcCfg():null;
     // GRAVEL run-off — tan speckled corner patches (deterministic dither, no shimmer)
@@ -768,33 +769,55 @@
     ctx.fillStyle='rgba(150,130,90,0.5)'; ctx.fillRect(gv.x,gv.y,gv.w,gv.h);
     ctx.fillStyle='rgba(110,95,65,0.55)';
     for(var yy=gv.y; yy<gv.y+gv.h; yy+=2){ for(var xx=gv.x+((yy&2)?1:0); xx<gv.x+gv.w; xx+=3){ ctx.fillRect(xx,yy,1,1); } } } }
-    // OIL slicks — dark glossy puddles with a cool sheen; a fresh crossing throws an expanding splash ring.
+    // OIL SMEAR trail — the oily ball drags fading dark streaks along its path
+    if(typeof rcSmear!=='undefined'){ for(var si=0;si<rcSmear.length;si++){ var sm=rcSmear[si], sa=sm.life/sm.max;
+    ctx.fillStyle='rgba(14,10,20,'+(0.5*sa).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(sm.x,sm.y,sm.r,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(80,110,170,'+(0.22*sa).toFixed(3)+')'; ctx.fillRect(Math.round(sm.x)-1,Math.round(sm.y)-1,1,1); } }
+    // GRAVEL DUST — pebbles/motes kicked up while the ball ploughs the run-off
+    if(typeof rcDust!=='undefined'){ for(var di=0;di<rcDust.length;di++){ var du=rcDust[di], da=du.life/du.max;
+    ctx.fillStyle=(di&1)?('rgba(206,188,142,'+(0.85*da).toFixed(3)+')'):('rgba(150,130,90,'+(0.85*da).toFixed(3)+')');
+    ctx.fillRect(Math.round(du.x),Math.round(du.y),1,1); } }
+    // OIL slicks — dark glossy puddles with a cool sheen; a crossing throws a proper splash (expanding ring +
+    // droplets that arc out and fall back, seeded off a fixed hash so the pattern is stable per splash).
     if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
     ctx.fillStyle='rgba(10,8,16,0.72)'; ctx.beginPath(); ctx.arc(ol.x,ol.y,RC_OIL_R,0,6.283); ctx.fill();
     ctx.fillStyle='rgba(90,120,180,0.28)'; ctx.beginPath(); ctx.arc(ol.x-2,ol.y-2,RC_OIL_R*0.5,0,6.283); ctx.fill();
-    if(ol.sp>0){ var op=1-ol.sp/18, rr=RC_OIL_R+op*9, a=(1-op)*0.6;   // splash: expanding ring + droplets
-    ctx.strokeStyle='rgba(150,180,230,'+a.toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ol.x,ol.y,rr,0,6.283); ctx.stroke();
-    ctx.fillStyle='rgba(120,150,210,'+a.toFixed(3)+')';
-    for(var d=0;d<6;d++){ var ang=d*1.047, dr=rr+2;
-    ctx.fillRect(Math.round(ol.x+Math.cos(ang)*dr)-1,Math.round(ol.y+Math.sin(ang)*dr)-1,2,2);
-    } } } }
-    // TYRE stacks — black rings at the corners; a hit squashes them briefly (scale pulse + a bright rim).
-    if(typeof rcTyres!=='undefined'){ for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k=(ty.hit>0)?(ty.hit/12):0, s=1+k*0.4, R=RC_TYRE_R*s;
-    if(k>0){ ctx.strokeStyle='rgba(255,220,120,'+(k*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ty.x,ty.y,R+2,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R,0,6.283); ctx.fill();
-    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-2,0,6.283); ctx.fill();
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(ty.x,ty.y,R-4,0,6.283); ctx.fill(); } }
-    // START-LIGHTS gantry — a 5-light bar on each checkered stripe; reds fill up (1..5), hold, then all OUT =
-    // GREEN (the launch window). Watch it and release on green for the power boost.
+    if(ol.sp>0){ var oa=ol.sp/26, age=1-oa, ex=(ol.hx==null?ol.x:ol.hx), ey=(ol.hy==null?ol.y:ol.hy);
+    ctx.fillStyle='rgba(120,150,215,'+(0.75*oa).toFixed(3)+')';                 // expanding contact ring
+    var orr=Math.round(3+12*age);
+    for(var k=0;k<10;k++){ var a3=k/10*Math.PI*2;
+    ctx.fillRect(Math.round(ex+Math.cos(a3)*orr),Math.round(ey+Math.sin(a3)*orr*0.7),1,1); }
+    for(var dj=0;dj<12;dj++){                                                    // droplets: out, up, fall back
+    var ang=(dj/12)*Math.PI*2+_cgRnd(dj)*0.4, dist=(5+_cgRnd(dj+0.3)*9)*age;
+    var dx2=ex+Math.cos(ang)*dist, dy2=ey+Math.sin(ang)*dist*0.7-Math.sin(age*Math.PI)*(4+_cgRnd(dj+0.6)*5);
+    ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?('rgba(30,24,40,'+(0.9*oa).toFixed(3)+')'):('rgba(110,140,205,'+(0.9*oa).toFixed(3)+')');
+    ctx.fillRect(Math.round(dx2),Math.round(dy2),1,1);
+    if(age<0.5) ctx.fillRect(Math.round(dx2),Math.round(dy2)+1,1,1); } } } }
+    // TYRE stacks — black rings on the penalty-box corners. A hit KNOCKS the stack along the impact normal and
+    // it springs back (damped), with a squash pulse and a bright rim.
+    if(typeof rcTyres!=='undefined'){ for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k2=(ty.hit>0)?(ty.hit/14):0;
+    var rec=Math.sin(k2*Math.PI)*3.5, ox=(ty.nx||0)*rec, oy=(ty.ny||0)*rec, R=RC_TYRE_R*(1+k2*0.28), X=ty.x+ox, Y=ty.y+oy;
+    if(k2>0){ ctx.strokeStyle='rgba(255,220,120,'+(k2*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(X,Y,R+2,0,6.283); ctx.stroke(); }
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R,0,6.283); ctx.fill();
+    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(X,Y,R-2,0,6.283); ctx.fill();
+    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R-4,0,6.283); ctx.fill(); } }
+    // START-LIGHTS gantries — mounted in the FRAME either side of each net (the most visible spot on the board).
+    // Reds fill 1..5, hold, then all OUT = GREEN: release then for full stamina, miss it and the flick is halved.
     if(c&&c.lights){ var _on=RC_LIGHT_BUILD+RC_LIGHT_HOLD, _green=(rcLightT>=_on&&rcLightT<_on+c.lightGreen),
     _lit=(rcLightT<RC_LIGHT_BUILD)?Math.min(5,Math.floor(rcLightT/(RC_LIGHT_BUILD/5))+1):((rcLightT<_on)?5:0),
-    _ys=[NET_DEPTH+GOAL_AREA_D+1, H-NET_DEPTH-GOAL_AREA_D-4];
-    for(var _li=0;_li<2;_li++){ var _ly=_ys[_li];
-    ctx.fillStyle='#0c0d10'; ctx.fillRect(Math.round(W/2)-15,_ly-3,30,6);
-    for(var _k=0;_k<5;_k++){ var _lx=Math.round(W/2)-12+_k*6;
-    if(_green){ ctx.fillStyle='rgba(90,255,130,0.45)'; ctx.beginPath(); ctx.arc(_lx,_ly,3.6,0,6.283); ctx.fill(); }
-    ctx.fillStyle=_green?'#37e05a':((_k<_lit)?'#ff2a1a':'#3a1512');
-    ctx.beginPath(); ctx.arc(_lx,_ly,2,0,6.283); ctx.fill(); } } } }
+    _gL=Math.round((W-GOAL_W)/2), _fy=[Math.round(WALL/2), H-Math.round(WALL/2)],
+    _fx=[Math.round((WALL+_gL)/2), W-Math.round((WALL+_gL)/2)], _fl=(typeof rcLightFlash!=='undefined')?rcLightFlash:0;
+    for(var _yi=0;_yi<2;_yi++){ for(var _xi=0;_xi<2;_xi++){ var _cx=_fx[_xi], _cy=_fy[_yi];
+    ctx.fillStyle='#0a0b0e'; ctx.fillRect(_cx-15,_cy-4,30,8);                    // gantry housing
+    ctx.fillStyle='#3a3d42'; ctx.fillRect(_cx-15,_cy-4,30,1);
+    for(var _k=0;_k<5;_k++){ var _lx=_cx-12+_k*6;
+    if(_green){ var _ga=0.45+(_fl>0?0.35*(_fl/16):0);
+    ctx.fillStyle='rgba(90,255,130,'+Math.min(0.9,_ga).toFixed(3)+')'; ctx.beginPath(); ctx.arc(_lx,_cy,4,0,6.283); ctx.fill(); }
+    ctx.fillStyle=_green?'#4bff72':((_k<_lit)?'#ff2a1a':'#3a1512');
+    ctx.beginPath(); ctx.arc(_lx,_cy,2.2,0,6.283); ctx.fill();
+    if(_green||_k<_lit){ ctx.fillStyle=_green?'rgba(220,255,225,0.85)':'rgba(255,190,180,0.7)'; ctx.fillRect(Math.round(_lx)-1,Math.round(_cy)-2,1,1); } } } } }
+    }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);

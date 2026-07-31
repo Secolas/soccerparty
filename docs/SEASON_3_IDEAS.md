@@ -677,38 +677,54 @@ gutters = directional lane funnel (conveyor); oiled lane = pace-preserving strip
 **checkered start/finish stripe** in front of each goal, and a faint **dashed racing lane** down the middle.
 The hazards (all in `11-physics.js` + `drawRaceway` in `12-draw.js`):
 
-**OIL SLICKS (with splash).** Dark puddles that **inject spin** so the ball curves off-line (Magnus does the
-bending; spin bounded ±4). Crossing one throws an **expanding splash ring + droplets**. Off easy, **1** med,
-**3** hard (`oilSpin` 1.6 / 2.2).
+**OIL SLICKS (splash + smear trail).** Dark puddles that **inject spin** so the ball curves off-line (Magnus
+does the bending; spin bounded ±4). Crossing one throws a **splash** built like CRAZY GOLF's water splash — an
+expanding contact ring plus a dozen droplets that arc out and fall back, seeded off a fixed hash so the pattern
+is stable — and **coats the ball**, which then drags a fading **oily smear trail** behind it for ~34 frames.
+Off easy, **1** med, **3** hard (`oilSpin` 1.6 / 2.2).
 
-**TYRE WALLS (with squash).** Tyre stacks at all four corners give a **springy** bounce (`tyreRest` 0.85 easy
-→ 1.0 med → 1.15 hard, capped 12). A hit **squashes** the stack (a brief scale-pulse + bright rim). On every
-tier.
+**TYRE WALLS on the PENALTY-BOX CORNERS (bounce + recoil).** Tyre stacks sit on the **outer corners of each
+penalty area** (the corners facing midfield) so they guard the approach instead of decorating the dead pitch
+corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). A hit **knocks the stack along
+the impact normal and springs it back** (damped recoil + squash pulse + bright rim). On every tier. Because pegs
+are laid out before the board is applied, `rcSweepNails()` nudges any formation nail out of a stack while the
+ball is at rest (the golf sweep's precedent).
 
-**GRAVEL RUN-OFF.** Tan speckled patches in the four corners; stray **wide** into one and the ball is **dragged
-down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose the shot. On every tier, so it
-pairs with the springy tyres in the same corners (sink vs. bounce). Only slows, so always settle-safe.
+**GRAVEL RUN-OFF (with dust kick-up).** Tan speckled patches in the four **pitch corners**; stray **wide** into
+one and the ball is **dragged down** (`gravelDrag` 0.93 easy → 0.90 med → 0.86 hard, per frame) — you lose the
+shot. While the ball ploughs through, it **kicks up pebbles and dust** that fly out behind it and settle. On
+every tier, and it only slows, so always settle-safe.
 
-**START-LIGHTS LAUNCH GATE (the timing hazard).** A 5-light gantry on each checkered stripe cycles F1-style:
-reds fill **1→5**, hold, then all **OUT = GREEN**. Your flick's power depends on **when you release**: on
-**green** you get a **launch boost** (×1.15); while the **reds are lit** a jump-start **bogs** you (×`lightBog`
-0.75 med / 0.6 hard); otherwise normal. The **CPU revs at the lights and launches on green too**
-(`rcInGreen` gates its release), so it's fair — the gate rewards timing, it doesn't just nerf the AI. Off easy;
-green window 34f med / 20f hard (tighter = harder). Wired through `rcLaunchMul()` in both `13-input` (human)
-and `09-ai` (CPU).
+**START-LIGHTS = A STAMINA GATE (the timing hazard).** A 5-light gantry cycles F1-style: reds fill **1→5**,
+hold, then all **OUT = GREEN**. Release on **green** and the flick is worth its **full stamina** for that flick
+(100%, then 75%, then 50%…); **miss the green and the flick is worth HALF of that** (`lightMiss` 0.5). So the
+lights do not add power — they **take it away when you mistime**, which is why they change how you play rather
+than just how hard you can hit.
 
-**Tiers:** easy — tyre bounce + gentle gravel (learn the track). Med — + oil (1) + start-lights (lenient) +
-gravel (0.90). Hard — + oil (3) + start-lights (strict, tight green) + gravel (0.86) + springy tyres.
+- **Mounted in the FRAME beside each net** (two gantries per end, left and right of the goal), the most visible
+  spot on the board — the earlier in-pitch placement on the checkered stripe was easy to miss.
+- Off easy; green window **34f med / 20f hard** (tighter = harder).
+- **The CPU plays the same gate:** it revs and launches on green (`rcInGreen` gates its release) — but only
+  *most* of the time on med (`aiLightWait`, ~70%), always on hard, so it mistimes like a human does instead of
+  nailing every launch.
+- Wired through `rcLaunchApply()` (returns the multiplier and plays the GREEN LIGHT / JUMP START feedback) in
+  both `13-input` (human) and `09-ai` (CPU).
+
+**Tiers:** easy — tyre bounce + gentle gravel, no oil, no lights (learn the track). Med — + oil (1) +
+start-lights (lenient green) + gravel (0.90). Hard — + oil (3) + start-lights (tight green) + gravel (0.86) +
+springy tyres.
 
 **Settle-safe:** oil/tyres/gravel act only on a **moving grounded** ball; oil adds only bounded spin, gravel
-only slows, tyres are one-shot/capped; the launch gate only scales flick power. A **chip clears** the track
-hazards. Symmetric.
+only slows, tyres are one-shot per contact and capped; the launch gate only scales flick power. A **chip
+clears** the track hazards. Symmetric.
 
 *Cut on playtest:* the **pace-car + slipstream** and the **DRS boost strips** were removed; gravel + the
-start-lights gate replace them.
+start-lights gate replace them. The lights' first build gave a *boost* on green (×1.15) and a bog on red — that
+made them a power-up rather than a hazard, so they became the stamina gate above.
 
-Verified in royale (headless to stadium 7, hard): gravel corners + tyre stacks + 3 oil slicks + the start-light
-gantries all render; the CPU launches on green and scores; zero page errors.
+Verified in royale (headless to stadium 7): hard and med both enter clean with the gantries lit in the frame,
+tyre stacks on the penalty-box corners, gravel in the pitch corners and the oil slicks on track; zero page
+errors on either tier.
 
 **Fantasy:** a race circuit — draft behind the pace-car for a tow, hit the DRS
 boost strips, mind the oil and the tyre walls.

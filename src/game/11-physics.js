@@ -1634,57 +1634,91 @@
     try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } } }
 
     // ===== THE GRAND PRIX (raceway) — arena 7 hazards =========================================================
-    // Hazards: OIL slicks (spin off-line + splash), springy TYRE walls at the corners (bounce + squash),
-    // GRAVEL run-off in the corners (drags a wide ball to a stop), and the START-LIGHTS launch gate (your flick
-    // only gets full power on GREEN — a jump-start on red bogs you; the CPU revs and launches on green too).
-    // All act only on a MOVING grounded ball, are bounded/capped, and never trap the turn; a chip clears them.
-    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0;
+    // Hazards: OIL slicks (spin off-line, a splash, and an oily TRAIL the ball drags after it), springy TYRE
+    // stacks on the PENALTY-AREA corners (bounce + recoil), GRAVEL run-off in the pitch corners (drags a wide
+    // ball down, kicking up dust), and the START-LIGHTS gate — release on GREEN for your full stamina, miss it
+    // and the flick is worth HALF. All act only on a MOVING grounded ball, are bounded/capped, and never trap
+    // the turn; a chip clears the track.
+    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0, rcLightFlash=0, rcDust=[], rcSmear=[];
     var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
     function rcArena(){ return (typeof boardKey!=='undefined')&&boardKey==='raceway'&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
     function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
     return { oilN:(t>=2)?3:(t>=1?1:0), oilSpin:(t>=2)?2.2:1.6,
     tyreRest:(t>=2)?1.15:(t>=1?1.0:0.85), tyreCap:12,
     gravelDrag:(t>=2)?0.86:(t>=1?0.90:0.93),
-    lights:(t>=1), lightBog:(t>=2)?0.6:0.75, lightBoost:1.15, lightGreen:(t>=2)?20:34, gate:0.4 }; }
+    lights:(t>=1), lightMiss:0.5, lightGreen:(t>=2)?20:34, gate:0.4 }; }
     function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
     rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.5),cd:0,sp:0}); }
     if(c.oilN>=3){ rcOils.push({x:Math.round(W/2-30),y:Math.round(H*0.33),cd:0,sp:0}); rcOils.push({x:Math.round(W/2+22),y:Math.round(H*0.70),cd:0,sp:0}); }
-    rcTyres=[]; var ti=RC_TYRE_R+3;
-    rcTyres.push({x:WALL+ti,y:WALL+ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:WALL+ti,hit:0});
-    rcTyres.push({x:WALL+ti,y:H-WALL-ti,hit:0}); rcTyres.push({x:W-WALL-ti,y:H-WALL-ti,hit:0});
+    // TYRE stacks on the OUTER corners of each penalty area (the box corners facing midfield), so they guard
+    // the approach instead of sitting in the dead pitch corners.
+    rcTyres=[]; try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
+    rcTyres.push({x:Math.round(_br.x),y:Math.round(_bF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_br.x+_br.w),y:Math.round(_bF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_rr.x),y:Math.round(_rF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_rr.x+_rr.w),y:Math.round(_rF),hit:0,nx:0,ny:0}); }catch(e){}
     var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ];
-    rcLightT=0; }
-    // draw-loop: advance the start-lights cycle, and tick the oil splash / tyre squash timers.
+    rcLightT=0; rcLightFlash=0; rcDust=[]; rcSmear=[]; }
+    // Pegs are laid out BEFORE the arena's board is applied, so a formation nail can land inside a tyre stack.
+    // Nudge any overlapping nail out to the stack's edge while the ball is at rest (the golf sweep's precedent).
+    function rcSweepNails(){ if(moving||typeof nails==='undefined'||!nails) return;
+    for(var i=0;i<nails.length;i++){ var n=nails[i];
+    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], dx=n.x-ty.x, dy=n.y-ty.y, d=Math.hypot(dx,dy), R=RC_TYRE_R+NAIL_R+1;
+    if(d<R){ if(d<0.001){ dx=1; dy=0; d=1; }
+    n.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,ty.x+dx/d*R));
+    n.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ty.y+dy/d*R)); } } } }
+    // draw-loop: advance the start-lights cycle, the oil splash / tyre recoil timers, the gravel dust puffs and
+    // the fading oil smears, and keep pegs out of the tyre stacks.
     function racewayTick(){ if(!rcArena()) return; if(!rcOn) initRaceway();
     if(rcCfg().lights) rcLightT=(rcLightT+1)%RC_LIGHT_P;
+    if(rcLightFlash>0) rcLightFlash--;
     for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
-    for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; } }
-    // START-LIGHTS: the flick's power multiplier at the current phase — bog while the reds are lit, boost in the
-    // green window just after they go out, normal otherwise. rcInGreen() is the CPU's cue to launch.
+    for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; }
+    for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=0.90; du.vy*=0.90; if(--du.life<=0) rcDust.splice(d,1); }
+    for(var s=rcSmear.length-1;s>=0;s--){ if(--rcSmear[s].life<=0) rcSmear.splice(s,1); }
+    try{ rcSweepNails(); }catch(e){} }
+    // START-LIGHTS: the flick's power multiplier at the current phase — full on GREEN, HALF if you miss it. So
+    // green pays your normal stamina for that flick (100%, then 75%, then 50%…) and a miss halves it.
     function rcLaunchMul(){ if(!rcArena()) return 1; var c=rcCfg(); if(!c.lights) return 1;
-    var on=RC_LIGHT_BUILD+RC_LIGHT_HOLD; if(rcLightT<on) return c.lightBog; if(rcLightT<on+c.lightGreen) return c.lightBoost; return 1; }
+    return rcInGreen()?1:c.lightMiss; }
     function rcInGreen(){ if(!rcArena()) return false; var c=rcCfg(); if(!c.lights) return false;
     var on=RC_LIGHT_BUILD+RC_LIGHT_HOLD; return rcLightT>=on && rcLightT<on+c.lightGreen; }
-    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash; tyres bounce + squash;
-    // gravel run-off drags a wide ball.
+    // Called at the moment of release (human + CPU) — returns the multiplier and plays the feedback.
+    function rcLaunchApply(){ if(!rcArena()) return 1; var c=rcCfg(); if(!c.lights) return 1;
+    var g=rcInGreen(); rcLightFlash=g?16:12;
+    try{ setStatus(g?'GREEN LIGHT — FULL POWER!':'JUMP START — HALF POWER'); }catch(e){}
+    try{ if(!muted){ if(g&&typeof sfxWhoosh==='function') sfxWhoosh(); else if(!g&&typeof sfxBlocked==='function') sfxBlocked(); } }catch(e){}
+    return g?1:c.lightMiss; }
+    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash + a trail; tyres bounce and
+    // recoil; gravel run-off drags a wide ball and kicks up dust.
     function racewayStep(){ if(!rcArena()||!moving||scoring) return; if(!rcOn) initRaceway();
     if(typeof ghosting!=='undefined'&&ghosting) return;
     var c=rcCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
     if(!air) return;   // airborne clears the track hazards
     // GRAVEL run-off — extra drag in the corner boxes; stray wide and the ball bogs down. Only slows, so safe.
+    // Throws a couple of pebbles/dust motes per frame while the ball is ploughing through it.
     for(var g=0;g<rcGravels.length;g++){ var gv=rcGravels[g];
-    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag; break; } }
+    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag;
+    if(sp>c.gate && rcDust.length<40){ for(var q=0;q<2;q++){ var a=Math.atan2(-coin.vy,-coin.vx)+(Math.random()-0.5)*1.5, m=0.5+Math.random()*1.2;
+    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a)*m,vy:Math.sin(a)*m,life:12+(Math.random()*10|0),max:22}); } }
+    break; } }
     // OIL spills — inject spin so the ball curves off-line (Magnus does the bending). Spin is bounded; friction
-    // still settles the ball, so this never traps a turn. Arms the splash animation.
+    // still settles the ball, so this never traps a turn. Arms the splash and coats the ball so it SMEARS oil
+    // along its path for a short while afterwards.
     for(var j=0;j<rcOils.length;j++){ var ol=rcOils[j];
-    if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_OIL_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30; ol.sp=18;
+    if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_OIL_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30; ol.sp=26;
+    ol.hx=coin.x; ol.hy=coin.y; coin._rcOily=34;   // frames of oil still on the ball
     try{ spawnSparks(ol.x,ol.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
-    // TYRE walls at the corners — springy bounce (restitution up to 1.15 on hard), capped so it can't run away.
-    // Arms the squash animation.
+    // the oily ball drags a fading smear behind it
+    if(coin._rcOily>0){ coin._rcOily--;
+    if(sp>c.gate&&rcSmear.length<70) rcSmear.push({x:coin.x,y:coin.y,r:1.6+Math.random()*1.4,life:30,max:30}); }
+    // TYRE walls — springy bounce (restitution up to 1.15 on hard), capped so it can't run away. Arms the recoil
+    // animation (the stack is knocked along the impact normal and springs back).
     for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
     if(td<TR && td>0.001){ var tnx=tdx/td, tny=tdy/td, tvn=coin.vx*tnx+coin.vy*tny;
     if(tvn<0){ coin.vx-=(1+c.tyreRest)*tvn*tnx; coin.vy-=(1+c.tyreRest)*tvn*tny;
-    var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; } ty.hit=12; }
+    var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; }
+    ty.hit=14; ty.nx=-tnx; ty.ny=-tny; }
     coin.x=ty.x+tnx*TR; coin.y=ty.y+tny*TR;
     try{ spawnSparks(ty.x,ty.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }
