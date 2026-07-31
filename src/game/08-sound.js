@@ -330,7 +330,8 @@
     tone(200,0.10,'square',0.10,120);
     return; case 'medic': tone(720,0.14,'sine',0.08);
     setTimeout(function(){ tone(560,0.16,'sine',0.08);
-    },120); return; default: tone(760,0.08,'sine',0.06,920);
+    },120); return; case 'aftershock': return sfxAftershock(6);
+    default: tone(760,0.08,'sine',0.06,920);
     return; } } var _announced={red:{},blue:{}};
     var COUNTRY_MUSIC={ _default:{tempo:118,wave:'triangle',notes:[[0,
     1],[4,1],[7,1],[4,1]]}, Brazil:{tempo:152,wave:'square',vol:0.05,notes:[[0,
