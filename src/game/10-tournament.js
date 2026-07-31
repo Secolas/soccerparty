@@ -728,9 +728,11 @@
       // the OPPONENT's voice — without one the card falls back to the player-voice text ("Your ball is super
       // slippery!") under an "OPPONENT ·" heading, which reads like it is describing you.
       ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.',injury:'YOU play hurt — 2 flicks per turn instead of 3.'};
+      // Rows are TAGGED 'opp' (c[4]) rather than label-prefixed: the map card renders the two groups
+      // under their own section headers, so a prefix on every line would just repeat the header.
       (ar.ab||[]).slice(0,_n).forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
-      '✨','OPPONENT · '+((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
-      (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||''))]);
+      '✨',((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
+      (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||'')),'opp']);
       }); } return _opp.concat(c);
       }
     // the opponent's "home boss" trait: immune to the stadium's signature hazard, or a granted
@@ -1460,14 +1462,23 @@
       descBox.appendChild(mk('div',FS(8,'#f4e9c8')+'text-align:center;margin:10px 0 2px;line-height:1.5;','STADIUM '+(idx+1)+': '+a2.name+(_cur?'':' — PREVIEW')));
       var conds=royArenaConds(a2,true);
       if(conds.length){ var list=mk('div','width:100%;max-width:'+CW+'px;margin:7px 0 2px;');
-      conds.forEach(function(c){ var row=mk('div','display:flex;align-items:center;gap:9px;padding:4px 8px;');
+      // Two SECTIONS, not one flat list: the stadium's hazards and the opponent's loadout are different
+      // kinds of trouble, and mixing them read as one — players took the rake gate for an enemy ability.
+      // Hazards lead (they describe the place); the loadout sits directly above the "YOU vs" row.
+      var _hz=conds.filter(function(c){ return c[4]!=='opp'; }), _op=conds.filter(function(c){ return c[4]==='opp'; });
+      function _sect(t,col){ list.appendChild(mk('div',FS(6,col)+'letter-spacing:1px;text-align:left;padding:5px 8px 1px;',t)); }
+      function _rows(arr,labCol){ arr.forEach(function(c){ var row=mk('div','display:flex;align-items:center;gap:9px;padding:4px 8px;');
       var icw=mk('div','width:26px;height:26px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;');
       icw.appendChild(condIconEl(c,26));
       row.appendChild(icw); var tx=mk('div','flex:1;min-width:0;text-align:left;');
-      tx.appendChild(mk('div',FS(6,'#a9c94b')+'line-height:1.4;',c[2]));
+      tx.appendChild(mk('div',FS(6,labCol)+'line-height:1.4;',c[2]));
       if(c[3]) tx.appendChild(mk('div','font-size:9px;line-height:1.4;color:#a6b6cc;font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin-top:1px;',c[3]));
       row.appendChild(tx); list.appendChild(row);
-      }); descBox.appendChild(list);
+      }); }
+      if(_hz.length){ _sect('\u26A0 STADIUM HAZARDS','#e0b04b'); _rows(_hz,'#e0b04b'); }
+      if(_hz.length&&_op.length) list.appendChild(mk('div','height:1px;background:rgba(74,58,94,0.55);margin:5px 8px;',''));
+      if(_op.length){ _sect('\u2694 OPPONENT CARRIES','#7fb2e0'); _rows(_op,'#7fb2e0'); }
+      descBox.appendChild(list);
       } else { descBox.appendChild(mk('div',FS(6,'#9a8fb0')+'text-align:center;line-height:1.5;max-width:'+CW+'px;',a2.blurb));
       } (function(){ var vrow=mk('div','display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;');
       vrow.appendChild(mk('span',FS(7,'#a9c94b'),'YOU vs'));
