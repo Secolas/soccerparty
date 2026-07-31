@@ -862,7 +862,8 @@ wind-up tell) → **snap out** into the pitch → **hold** at full stretch → *
 - **A punched ball comes back RATTLED — the DRUNK effect.** The hit sets a pending flag; at the moment the **next
   flick** starts, the launch angle takes a **random kick of up to `DRUNK_SPREAD`**, exactly the way the Drunk
   debuff throws a shot off. Applied at the idle→moving transition so one hook covers the human and the CPU, with
-  a *RATTLED!* status and Drunk's own sound. So a punch costs you the *following* turn's accuracy.
+  Drunk's own sound. So a punch costs you the *following* turn's accuracy. **No status text** — the swaying aim
+  guide already reads as a drunk shot, so announcing it would be noise.
 - **The aim guide sways, like Drunk's.** `rgWobArmed()` reports a pending punch and the guide's angle takes the
   same `sin` sway Drunk already uses. That is deliberately *not* a traced wobbly path: the real deviation is a
   random kick at release, so a fixed curved arrow would be a promise the shot cannot keep — a swaying arrow reads

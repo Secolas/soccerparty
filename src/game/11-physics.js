@@ -1919,7 +1919,8 @@
     var _rj=(Math.random()-0.5)*DRUNK_SPREAD, _rc=Math.cos(_rj), _rs=Math.sin(_rj);
     var _rvx=coin.vx*_rc-coin.vy*_rs, _rvy=coin.vx*_rs+coin.vy*_rc;
     coin.vx=_rvx; coin.vy=_rvy;
-    try{ setStatus('RATTLED!'); }catch(e){} try{ if(!muted&&typeof sfxDrunk==='function') sfxDrunk(); }catch(e){} }
+    // No status text: the swaying aim guide already reads as a drunk shot, so announcing it is noise.
+    try{ if(!muted&&typeof sfxDrunk==='function') sfxDrunk(); }catch(e){} }
     _rgPrevMoving=moving;
     try{ rgSeparate(); }catch(e){}
     for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
