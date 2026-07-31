@@ -434,6 +434,10 @@
       return (typeof royMap!=='undefined'&&royMap===2)
       ? [[0.16,0.83],[0.50,0.83],[0.84,0.81],[0.16,0.49],[0.50,0.49],[0.84,0.49],[0.16,0.16],[0.50,0.19],[0.85,0.17]]
       : [[0.17,0.82],[0.50,0.82],[0.81,0.82],[0.17,0.49],[0.50,0.49],[0.82,0.48],[0.18,0.18],[0.50,0.18],[0.84,0.17]]; })(); }
+    /* During a stadium advance this holds {target,playerFrom,t}: the player coin
+       runs in alone from playerFrom, clashes the opponent waiting at target, and
+       springs to rest. null the rest of the time (both coins sit at the node). */
+    var _royTravel=null;
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
     if(zoom&&zoom>1.001){ var _hw=(cw/2)/zoom, _hh=(ch/2)/zoom;
@@ -477,30 +481,47 @@
     } }catch(e){} g.restore();
     } try{ if(typeof spTrophyMapBadge==='function'){ spTrophyMapBadge(g,cw,ch,(typeof royMap!=='undefined'?royMap:1));
     } }catch(e){} var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
-    var _cy=fy-17, _R=10, _ir=7;
-    function _cn(cx,pr){ g.save();
+    var _R=10, _ir=7;
+    function _cn(cx,cy,pr){ g.save();
     g.globalAlpha=0.35; g.fillStyle='#000';
-    g.beginPath(); g.arc(cx,_cy+2,_R+1,0,6.283);
+    g.beginPath(); g.arc(cx,cy+2,_R+1,0,6.283);
     g.fill(); g.globalAlpha=1;
     g.fillStyle=COLORS.coin;
-    g.beginPath(); g.arc(cx,_cy,_R,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_R,0,6.283);
     g.fill(); try{ g.save();
-    g.beginPath(); g.arc(cx,_cy,_ir,0,6.283);
-    g.clip(); if(pr&&pr.kit) paintPattern(g,cx-_ir,_cy-_ir,_ir*2,_ir*2,pr.kit);
+    g.beginPath(); g.arc(cx,cy,_ir,0,6.283);
+    g.clip(); if(pr&&pr.kit) paintPattern(g,cx-_ir,cy-_ir,_ir*2,_ir*2,pr.kit);
     g.restore(); }catch(e){} g.lineWidth=2;
     g.strokeStyle=COLORS.coinEdge;
-    g.beginPath(); g.arc(cx,_cy,_R-1,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_R-1,0,6.283);
     g.stroke(); g.lineWidth=1;
     g.strokeStyle='rgba(0,0,0,0.45)';
-    g.beginPath(); g.arc(cx,_cy,_ir,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_ir,0,6.283);
     g.stroke(); g.restore();
-    } _cn(fx-11,pk); _cn(fx+11,opp);
+    } var _OFF=11, _px,_py,_ox,_oy,_showVS;
+    var _tv=_royTravel;
+    if(_tv){ /* the player coin runs in solo, clashes the opponent parked at the new stadium, then springs to rest */
+    var _TN=Math.min(NN-1,Math.max(0,_tv.target)), _PN=Math.min(NN-1,Math.max(0,_tv.playerFrom)), _t=_tv.t;
+    var _tp=P(_TN), _pp=P(_PN), _tcy=_tp.y-17, _pcy=_pp.y-17;
+    var _dir=(_tp.x>=_pp.x)?1:-1;                        /* which side the player arrives from */
+    var _clash=0.72, _pRest=_tp.x-_dir*_OFF, _oRest=_tp.x+_dir*_OFF, _clashX=_tp.x-_dir*(2*_R-_OFF);
+    _ox=_oRest; _oy=_tcy;
+    if(_t<=_clash){ var _e=1-Math.pow(1-_t/_clash,2);   /* ease-out run-in to the clash */
+    _px=_pp.x+(_clashX-_pp.x)*_e; _py=_pcy+(_tcy-_pcy)*_e;
+    } else { var _bt=(_t-_clash)/(1-_clash);            /* recoil away from the opponent, damped settle to rest */
+    _px=_pRest+Math.exp(-3.5*_bt)*((_clashX-_pRest)*Math.cos(_bt*7.0)-_dir*14*Math.sin(_bt*7.0));
+    _py=_tcy;
+    _ox=_oRest+_dir*_R*Math.max(0,Math.exp(-6*_bt)*Math.sin(_bt*7.0));  /* opponent knocked back a touch */
+    } _showVS=(_t>0.9);
+    } else { _px=fx-_OFF; _py=fy-17; _ox=fx+_OFF; _oy=fy-17; _showVS=true; }
+    _cn(_px,_py,pk); _cn(_ox,_oy,opp);
+    if(_showVS){ var _vx=(_px+_ox)/2, _vy=(_py+_oy)/2;
     g.save(); g.font='bold 7px sans-serif';
     g.textAlign='center'; g.textBaseline='middle';
     g.lineWidth=2.5; g.strokeStyle='#1a1330';
-    g.strokeText('VS',fx,_cy);
-    g.fillStyle='#ffe066'; g.fillText('VS',fx,_cy);
-    g.restore(); g.restore();
+    g.strokeText('VS',_vx,_vy);
+    g.fillStyle='#ffe066'; g.fillText('VS',_vx,_vy);
+    g.restore(); } g.restore();
     } function royArenaConds(ar,incOpp){ if(!ar) return [];
     var G='assets/generated/', lvl=(typeof royaleLevel!=='undefined'?royaleLevel:'med'), c=[];
       if(ar.floor==='ice'){ c.push([G+'icon-glide.png',
@@ -1546,7 +1567,7 @@
       try{ if(!muted) sfxClick();
       }catch(e){} } }catch(e){} });
       var go=mk('button','margin-top:10px;width:100%;max-width:'+CW+'px;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:12px;cursor:pointer;','ENTER STADIUM '+(ROYALE.i+1)+'  ▸');
-      go.onclick=function(){ var cn=(typeof NODES2!=='undefined'&&NODES2[ROYALE.i])?NODES2[ROYALE.i]:[0.5,
+      go.onclick=function(){ _royTravel=null; var cn=(typeof NODES2!=='undefined'&&NODES2[ROYALE.i])?NODES2[ROYALE.i]:[0.5,
       0.5]; var cpx=cn[0]*CW, cpy=cn[1]*CH, t0=null;
       go.disabled=true; try{sfxZoomIn();
       }catch(e){} function zin(ts){ if(t0===null)t0=ts;
@@ -1560,10 +1581,13 @@
       try{spClearRun('royale');
       }catch(e){} mode='royale';
       buildPre(); }; pad.appendChild(quit);
-      pre.appendChild(pad); var NODES2=royMapNodes(); var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850;
+      pre.appendChild(pad); var NODES2=royMapNodes(); var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850, _clashDone=false;
       function frame(ts){ if(t0===null) t0=ts;
       var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3), fpos=from+(to-from)*e;
       var zoom=1, camx=CW/2, camy=CH/2;
+      if(animate && to>from && p<1){ _royTravel={target:to,playerFrom:from,t:p};   /* solo run-in + clash; cleared once settled so the coins rest at the stadium */
+      if(!_clashDone && p>=0.72){ _clashDone=true; try{ if(!muted && typeof sfxPunch==='function') sfxPunch(); }catch(_e){} }
+      } else { _royTravel=null; }
       if(animate){ var zt=p<0.22?(p/0.22):(p>0.8?(1-(p-0.8)/0.2):1);
       zoom=1+1.0*zt; var lo=Math.max(0,Math.floor(fpos)), hi=Math.min(Math.min(NODES2.length,ROYALE_ARENAS.length)-1,lo+1), fr=fpos-lo;
       camx=(NODES2[lo][0]+(NODES2[hi][0]-NODES2[lo][0])*fr)*CW;
