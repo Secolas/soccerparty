@@ -842,7 +842,12 @@
     ov.id='ns_abinfo'; var panel=mk('div','position:relative;width:100%;max-width:300px;background:linear-gradient(#1a1330,#0e0a18);border:3px solid #4a3a5e;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6),inset 0 0 0 1px #3a3050;padding:12px 12px 14px;');
     panel.appendChild(mk('div',FS(9,'#f4e9c8')+'position:absolute;top:5px;right:7px;width:26px;height:26px;line-height:26px;text-align:center;cursor:pointer;border-radius:6px;background:#241a38;box-shadow:inset 0 0 0 1px #3a3050;','✕'));
     panel.appendChild(mk('div',FS(10,'#a9c94b')+'text-align:center;margin-bottom:9px;letter-spacing:1px;padding:0 22px;', kit+' ABILITIES'));
-    if(!arr.length){ panel.appendChild(mk('div','font-size:11px;text-align:center;color:#c7bcd8;line-height:1.6;','None yet — score a goal to win one!'));
+    if(!arr.length){ /* "score a goal to win one" is the PLAYER's prompt — the CPU never earns abilities that
+       way, so on a gauntlet final (SPORTS DAY / THE FINAL / THE TURF, ab:[]) it wrongly implied the boss
+       would gain some. The message is now side-aware: the boss says its hazards are the whole challenge. */
+    var _cpu=(typeof aiEnabled!=='undefined'&&aiEnabled&&aiEnabled[side]);
+    var _emsg=(!_cpu)?'None yet — score a goal to win one!':((typeof mode!=='undefined'&&mode==='royale')?'No boss abilities — the stadium hazards are the whole challenge.':'No abilities.');
+    panel.appendChild(mk('div','font-size:11px;text-align:center;color:#c7bcd8;line-height:1.6;',_emsg));
     } else { arr.forEach(function(id){ var t=TACTIC_MAP[id];
     if(!t) return; var row=mk('div','display:flex;align-items:center;gap:9px;margin-bottom:8px;');
     var ic=mk('div','width:40px;height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:20px;');
