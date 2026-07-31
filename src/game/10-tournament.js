@@ -83,20 +83,20 @@
     var ROYALE_ARENAS_3=[
       {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
       'volley','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'},
-      {name:'THE HARDWOOD',pitch:'court',ab:['ricochet',
-      'sticky','boomerang'],d:2,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
-      {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
-      'curve','serpent'],d:3,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
-      {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
-      'backspin','magnet'],d:4,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
-      {name:'THE END ZONE',pitch:'gridiron',ab:['drill',
-      'anchor','clearance'],d:5,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
       {name:'THE ALLEY',pitch:'bowling',ab:['glide',
-      'bumper','wall'],d:6,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
+      'bumper','wall'],d:2,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
       {name:'THE GRAND PRIX',pitch:'raceway',ab:['guided',
-      'slowmo','wet'],d:7,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
+      'slowmo','wet'],d:3,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
+      {name:'THE END ZONE',pitch:'gridiron',ab:['drill',
+      'anchor','clearance'],d:4,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
+      {name:'THE HARDWOOD',pitch:'court',ab:['ricochet',
+      'sticky','boomerang'],d:5,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
       {name:'THE RING',pitch:'ring',ab:['cannon',
-      'ghost','shield'],d:8,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      'ghost','shield'],d:6,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
+      'curve','serpent'],d:7,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
+      {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
+      'backspin','magnet'],d:8,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
       {name:'SPORTS DAY',pitch:'podium',ab:['sweeper',
       'trio','bigkeeper'],d:9,blurb:'The Season 3 final — a decathlon arena ringed by a running track, its infield marked out for every sport of the run at once. The medley of borrowed conditions builds with the difficulty.'}
     ];
@@ -401,12 +401,16 @@
     you.appendChild(royFlag(PRESETS[ROYALE.player],22,15));
     you.appendChild(mk('div',FS(5,'#a9c94b'),'YOU'));
     row.appendChild(you); } else if(done){ row.appendChild(mk('div',FS(7,'#7fd07f')+'flex:0 0 auto;','WON'));
-    } return row; } function royMapArt(){ try{ return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
+    } return row; } function royMapArt(){ try{ if(typeof royMap!=='undefined'&&royMap===3&&typeof NS_ROYMAP3!=='undefined') return NS_ROYMAP3;
+    return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
     function royMapAspect(){
       try{ var im=royMapArt();
         if(im&&im.naturalWidth&&im.naturalHeight) return im.naturalWidth/im.naturalHeight;
       }catch(e){} return 1; }
-    function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
+    function royMapNodes(){ return (function(){ if(typeof royMap!=='undefined'&&royMap===3)
+      /* measured on roymap3.png — bottom row = stadiums 1-3, middle 4-6, top 7-9, trophy over 9 */
+      return [[0.185,0.82],[0.50,0.82],[0.82,0.82],[0.185,0.51],[0.505,0.51],[0.81,0.49],[0.185,0.235],[0.50,0.21],[0.825,0.22]];
+      return (typeof royMap!=='undefined'&&royMap===2)
       ? [[0.16,0.83],[0.50,0.83],[0.84,0.81],[0.16,0.49],[0.50,0.49],[0.84,0.49],[0.16,0.16],[0.50,0.19],[0.85,0.17]]
       : [[0.17,0.82],[0.50,0.82],[0.81,0.82],[0.17,0.49],[0.50,0.49],[0.82,0.48],[0.18,0.18],[0.50,0.18],[0.84,0.17]]; })(); }
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);

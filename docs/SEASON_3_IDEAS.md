@@ -969,6 +969,28 @@ friendly opener), then **BASKETBALL** (the dribble ball is the marquee ball-feel
 **GRIDIRON**'s pursuing rushers are the riskiest to get settle-safe — prototype
 that one early to de-risk the pursuer primitive. **THE PODIUM** ships last.
 
+## Ladder order + the Season 3 map — DONE
+
+The nine stadiums were built in design order, not difficulty order, so the ladder ran gentle-hard-hard-hard
+in the middle. Reordered easy -> hard (the arena sections below keep their original build numbering):
+
+  1 THE DIAMOND    one bat redirect — gentlest opener
+  2 THE ALLEY      pins sap pace but the bumpers make the walls SAFE
+  3 THE GRAND PRIX tyres mild, oil playful; the start-light tax only arrives at hard
+  4 THE END ZONE   moving blockers — interference, never denial
+  5 THE HARDWOOD   banks help you, tramps mid; hoops at hard is a real denial
+  6 THE RING       ropes speed everything up, gloves + punch-drunk aim
+  7 CENTRE COURT   the net denies ALL ground balls from easy — structural
+  8 CRAZY GOLF     measured: zero straight lines to goal from your half, at any tier
+  9 SPORTS DAY     the final
+
+Season 3 also has its own journey map at last — it had been reusing Season 1's art. `tools/gen-roymap3.mjs`
+generates candidates with the same illustrated 3x3 treatment as maps 1/2 (regions in LADDER order, bottom row
+1-3 up to the trophy over 9) and only ships one on `--accept N`. Season 2's lesson held: no candidate got all
+nine regions perfect — the shipped one needed a surgical inpaint to remove an oil slick the model kept
+painting on the bowling lane (patched from the same planks above/below, then the halfway line redrawn).
+`royMapNodes()` gained a map-3 branch with node fracs measured on this artwork.
+
 ## Stadium cards + hazard sounds (finishing polish) — DONE
 
 Season 3's nine arenas now have `royArenaConds()` entries, so their pre-match cards list per-tier
