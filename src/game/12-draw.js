@@ -836,16 +836,34 @@
     }
     /* THE GRAND PRIX tyre stacks sit ON the penalty-box corners, so they must be drawn AFTER the pitch markings
        (drawEndMarks) — with the ground FX the white box line was painted straight across each stack. Same late
-       pass the bowling pins use. A hit knocks the stack along the impact normal and it springs back (damped),
-       with a squash pulse and a bright rim. */
+       pass the bowling pins use.
+
+       Drawn as a PIXEL SPRITE (rcTyreShape: dithered outer wall, a tread band of 8 alternating notches, a flat
+       inner carcass, a hub hole that shows the tarmac through it, and a top-left highlight) —
+       no anti-aliased arcs, matching the board's art. On a hit the stack RECOILS along the impact normal and
+       WOBBLES back with a damped bounce, SQUASHES along that normal (never stretched, so the sprite can't tear
+       gaps), flashes a bright rim, and spits a few scuff pixels off the contact point. */
     function drawRacewayTyres(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
     if(typeof rcTyres==='undefined'||!rcTyres) return;
-    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k2=(ty.hit>0)?(ty.hit/14):0;
-    var rec=Math.sin(k2*Math.PI)*3.5, ox=(ty.nx||0)*rec, oy=(ty.ny||0)*rec, R=RC_TYRE_R*(1+k2*0.28), X=ty.x+ox, Y=ty.y+oy;
-    if(k2>0){ ctx.strokeStyle='rgba(255,220,120,'+(k2*0.8).toFixed(3)+')'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(X,Y,R+2,0,6.283); ctx.stroke(); }
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R,0,6.283); ctx.fill();
-    ctx.fillStyle='#2a2a30'; ctx.beginPath(); ctx.arc(X,Y,R-2,0,6.283); ctx.fill();
-    ctx.fillStyle='#0d0d10'; ctx.beginPath(); ctx.arc(X,Y,R-4,0,6.283); ctx.fill(); } }
+    var px=(typeof rcTyreShape==='function')?rcTyreShape():null; if(!px) return;
+    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k=(ty.hit>0)?(ty.hit/18):0, pw=(ty.pow==null?1:ty.pow);
+    // damped wobble: two bounces that decay as the timer runs out
+    var wob=Math.sin(k*Math.PI*2.2)*k*(2.6+2.4*pw);
+    var ox=(ty.nx||0)*wob, oy=(ty.ny||0)*wob;
+    var sq=1-0.30*k*pw, ax=Math.abs(ty.nx||0), ay=Math.abs(ty.ny||0);
+    var sx=1-(1-sq)*ax, sy=1-(1-sq)*ay;                     // squash along the impact normal only
+    var X=Math.round(ty.x+ox), Y=Math.round(ty.y+oy);
+    if(k>0){ ctx.fillStyle='rgba(255,222,130,'+(k*0.55).toFixed(3)+')';   // rim flash, as pixels on the outline
+    for(var f=0;f<14;f++){ var fa=f/14*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa)*(RC_TYRE_R+1)*sx),Math.round(Y+Math.sin(fa)*(RC_TYRE_R+1)*sy),1,1); } }
+    for(var q=0;q<px.length;q++){ var pp=px[q], sh=pp[2];
+    ctx.fillStyle=(sh===3)?'#2c2e33':((sh===2)?'#08080b':((sh===1)?'#3b3c45':((sh===5)?'#2a2b33':((sh===4)?'#585a66':'#141519'))));
+    ctx.fillRect(X+Math.round(pp[0]*sx),Y+Math.round(pp[1]*sy),1,1); }
+    // scuff pixels kicked off the contact point while it recoils
+    if(k>0.45){ var cxp=X-(ty.nx||0)*RC_TYRE_R, cyp=Y-(ty.ny||0)*RC_TYRE_R, spread=(1-k)*9;
+    ctx.fillStyle='rgba(120,120,130,'+((k-0.45)*1.4).toFixed(3)+')';
+    for(var d2=0;d2<5;d2++){ var da=_cgRnd(d2+t)*Math.PI*2;
+    ctx.fillRect(Math.round(cxp+Math.cos(da)*spread),Math.round(cyp+Math.sin(da)*spread),1,1); } } } }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);

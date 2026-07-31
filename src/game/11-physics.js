@@ -1643,6 +1643,23 @@
     var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
     var RC_WET_DRY=260, RC_OILY=40;   // frames a spilt patch stays wet / frames the ball keeps carrying oil
     function _rcRnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    /* The tyre stack is a PIXEL SPRITE too — a rubber donut on the integer grid: dithered outer rim, flat black
+       carcass, a ring of lighter TREAD notches, a hub hole, and a highlight up-left for volume. Built once and
+       shared by all four stacks (identical furniture, so they must read identically). Shades:
+       0 = rubber, 1 = tread notch, 2 = dithered rim, 3 = hub hole, 4 = highlight. */
+    var _rcTyrePx=null;
+    function rcTyreShape(){ if(_rcTyrePx) return _rcTyrePx; var pts=[], R=RC_TYRE_R;
+    for(var dy=-R;dy<=R;dy++){ for(var dx=-R;dx<=R;dx++){
+    var d=Math.hypot(dx,dy); if(d>R+0.3) continue;
+    if(d>R-1.1 && ((dx+dy)&1) && _rcRnd(dx*3.1+dy*7.7)>0.5) continue;   // dithered outer edge
+    var a=Math.atan2(dy,dx), sh;
+    if(d<2.7) sh=3;                                                      // hub hole (the track showing through)
+    else if(d>R-1.2) sh=2;                                               // dark outer wall
+    else if(d>R-3.4){ sh=(Math.round((a+Math.PI)/(Math.PI/4))%2===0)?1:5; }   // TREAD band, 8 notches
+    else sh=0;                                                           // inner carcass
+    if(sh===0 && d>3.2 && dx+dy<-3.5 && _rcRnd(dx*1.7+dy*2.9)>0.5) sh=4;      // top-left highlight
+    pts.push([dx,dy,sh]); } }
+    return (_rcTyrePx=pts); }
     /* The slick is a PIXEL SPRITE, not a circle: a lobed blob built once per spill on the integer grid, so it
        matches the game's pixel-art idiom (flat bands + 1x1 dither) instead of an anti-aliased arc. Shades:
        0 = core, 1 = sheen (up-left), 2 = dithered rim. Stable per seed, so a slick never shimmers. */
@@ -1689,6 +1706,7 @@
     if(rcLightFlash>0) rcLightFlash--;
     for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
     for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; }
+    if(!_rcTyrePx) try{ rcTyreShape(); }catch(e){}
     for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=du.puff?0.94:0.90; du.vy*=du.puff?0.94:0.90;
     if(du.puff) du.r+=0.26; if(--du.life<=0) rcDust.splice(d,1); }
     for(var s=rcSmear.length-1;s>=0;s--){ var _sm=rcSmear[s]; if(_sm.cd>0) _sm.cd--; if(--_sm.life<=0) rcSmear.splice(s,1); }
@@ -1761,7 +1779,7 @@
     if(td<TR && td>0.001){ var tnx=tdx/td, tny=tdy/td, tvn=coin.vx*tnx+coin.vy*tny;
     if(tvn<0){ coin.vx-=(1+c.tyreRest)*tvn*tnx; coin.vy-=(1+c.tyreRest)*tvn*tny;
     var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; }
-    ty.hit=14; ty.nx=-tnx; ty.ny=-tny; }
+    ty.hit=18; ty.nx=-tnx; ty.ny=-tny; ty.pow=Math.min(1,Math.abs(tvn)/7); }
     coin.x=ty.x+tnx*TR; coin.y=ty.y+tny*TR;
     try{ spawnSparks(ty.x,ty.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
     function bkGoalDenied(side){ return (typeof boardKey!=='undefined')&&boardKey==='court'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&bkRimOn&&!bkRimPass[side]; }

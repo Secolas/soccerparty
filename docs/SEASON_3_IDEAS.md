@@ -698,10 +698,18 @@ curves off-line (Magnus does the bending; spin bounded ±4).
 Off easy, **1** med, **2** hard (`oilSpin` 1.6 / 2.2) — two slicks max, placed 180°-rotationally symmetric
 about the centre so neither end is favoured.
 
-**TYRE WALLS on the PENALTY-BOX CORNERS (bounce + recoil).** Tyre stacks sit on the **outer corners of each
-penalty area** (the corners facing midfield) so they guard the approach instead of decorating the dead pitch
-corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). A hit **knocks the stack along
-the impact normal and springs it back** (damped recoil + squash pulse + bright rim). On every tier. Because pegs
+**TYRE WALLS on the PENALTY-BOX CORNERS (pixel sprite + squash/wobble).** Tyre stacks sit on the **outer corners
+of each penalty area** (the corners facing midfield) so they guard the approach instead of decorating the dead
+pitch corners. Springy bounce (`tyreRest` 0.85 easy → 1.0 med → 1.15 hard, capped 12). On every tier.
+
+- **The stack is a pixel sprite, not a circle.** `rcTyreShape()` builds it once on the integer grid and all four
+  share it (identical furniture must read identically): a **dithered outer wall**, a **tread band of 8
+  alternating notches**, a flat inner carcass, a **hub hole that shows the tarmac through it**, and a top-left
+  highlight for volume. No anti-aliased arcs.
+- **On a hit it recoils and wobbles.** The stack is knocked along the impact normal and springs back with a
+  **damped two-bounce wobble** scaled by how hard it was hit (`ty.pow`), **squashes along that normal** (never
+  stretched, so the sprite can't tear gaps), flashes a **bright pixel rim**, and spits a few **scuff pixels**
+  off the contact point. Because pegs
 are laid out before the board is applied, `rcSweepNails()` nudges any formation nail out of a stack while the
 ball is at rest (the golf sweep's precedent). Drawn in the **late pass** (with the bowling pins), *after*
 `drawEndMarks` — with the ground FX the white penalty-box line was painted straight across each stack.
