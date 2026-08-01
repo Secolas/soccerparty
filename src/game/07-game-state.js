@@ -6,6 +6,15 @@
     let wallHP={red:null,blue:null},WALL_MAX=3,wallCD=0,ghostUsed=false,ghosting=false,portalUsed=false,PORTAL_R=COIN_R,trapUsed={red:false,blue:false},trapPos={red:null,blue:null},TRAP_R=COIN_R,trapFx=null,TRAP_FX_DUR=42,shieldUsed={red:false,blue:false},shieldFx=null,SHIELD_FX_DUR=34,ricochetUsed=false,serpentPhase=0,serpentBase=0,serpentDir=1,SERPENT_SWING=0.55,SERPENT_FREQ=0.22,wetBase=0,wetPhase=0,WET_WOBBLE=0.16, WET_REDIRECT_KEEP=0.85,WET_WFREQ=0.17,DRUNK_SPREAD=0.5,swapStolen={red:null,blue:null},swapSpent={red:{},blue:{}},flickCount=0,bumpPending=false,FLICK_CAP=3,STAMINA=[1,
     0.75,0.5,0.25],royPuddles=[],_puddleIn=-1,PUDDLE_R=15,royBushes=[],_bushIn=-1,BUSH_R=11,royMud=[],MUD_R=14,roySerp=[],SERP_STRIKE_R=22,SERP_ALERT_R=42,royBumpers=[],BUMPER_R=6,royOrbits=[],royFlippers=[],royCacti=[],CACTUS_R=9,royGeysers=[],royDevil=null,DEVIL_R=30,royLasers=[],royLaserT=0,royWall=null,ROY_WALL_HW=4,drainCD=0,DRAIN_R=7,roySpider=null,SPIDER_R=8,SPIDER_WEAVE_DUR=46,royCrates=[],crateT=0,CRATE_HALF=9,royPortcT=0,royBoulder=null,BOULDER_R=13,royGustDir=0,royGustPhase=0,ROY_GUST_MAX=0.22,ROY_GUST_FREQ=0.011,roySnow=[];
     let bikeUsed=false,strategistUsed={red:false,blue:false},strategistArm=null,pmDrag=false,medicUsed={red:false,blue:false},cleansed={red:[],blue:[]},comebackDone={red:false,blue:false},varUsed={red:false,blue:false},_trioN=0,_trioDone=false,rewindUsed={red:false,blue:false},_rwSnap=null,_boomFwd=false,_boomUsed=false,clearUsed={red:false,blue:false},_clrSt={red:null,blue:null},chipUsed=false,_clrBlocked=false,abOff={red:[],blue:[]},drillUsed=false,_drillDisp=[],backspinFx=0,backspinFy=0,backspinPhase=0;
+    /* AFTERSHOCK: the shot carries a charge — the first opponent piece it strikes is SHOCKED for the
+       REST of the shooter's turn, clearing the moment the turn switches hands (see trioReset). One shock
+       per flick (aftUsed), so shocks STACK across a turn: keeper on flick 1, a defender on flick 2, all
+       frozen until the handover. The ball still bounces off whatever it shocked, so turns always end.
+       AFT_KEEP is the keeper-rebound pace floor: a head-on save naturally rebounds at ~0.73 of arrival
+       speed (RESTITUTION 0.75 less a frame of friction, measured in-engine), so the floor sits above it —
+       the riposte ball must come back OUT far enough to reach the shooter's own token, or the combo
+       (shock the keeper, keep the ball alive, punish on the next flick) can never be played. */
+    let aftUsed=false,aftStun=null,aftFx=null,AFT_FX_DUR=24,AFT_R=30,AFT_KEEP=0.85;
     const GOAL_AREA_D=34;
     let useBall=false;
     // AI + modes
@@ -14,6 +23,10 @@
     // Shared flick tuning: full-power ball speed for BOTH player and CPU. Cannon x2, Freeze x0.5 derive from it.
     const FLICK_MAX=10, FLICK_POWER=70;
     let aiPending=false, aiDelay=0;
+    /* CPU AIM TELEGRAPH — a "thinking, then aiming" arrow shown while the CPU winds up, so its turn reads
+       as deliberate instead of an instant snap. aiAim is the point it is lining up on, aiThink0 the full
+       think time (to animate progress). CPU_AIM_TELEGRAPH is the game-wide on/off (ON for review). */
+    var CPU_AIM_TELEGRAPH=true, aiAim=null, aiThink0=1, aiShot=null;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='easy';
     let exhWin=5, exhTimer=0;
     let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null;
@@ -35,6 +48,9 @@
     const defaultFormation=size=>Object.keys(FORMATIONS[size])[0];
     // extra FX
     let shotTrail=[], hitSparks=[], turnFlash=0, frameTick=0;
+    // Turn-change transition: a short "whose turn" banner that slides in when possession rotates, so a
+    // CPU turn (which then winds up and flicks) doesn't start out of nowhere. null = idle.
+    let _turnBanner=null;
 
     // timer
     let matchMs=0,timerRunning=false,lastT=performance.now();

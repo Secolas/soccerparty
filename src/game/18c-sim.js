@@ -58,6 +58,67 @@
             };
           } catch (e) { return { done: false, err: String(e) }; }
         },
+        // Read the live ball and board, and place the ball with a velocity. A stadium hazard is often
+        // impossible to check from outside: whether a bank rail turned the ball back into play, or a
+        // sail launched it, or a cup claimed it, cannot be told apart from the pixels. With these a
+        // test can put the ball on one and read the result instead of flicking blindly and hoping.
+        // Behind ?sim=1 like the rest of this hook, and smoke.mjs asserts the hook is absent without it.
+        probe: function(){
+          try {
+            return {
+              board: (typeof boardKey !== 'undefined') ? boardKey : null,
+              mode: mode, tier: (typeof hzTier === 'function') ? hzTier() : -1,
+              x: coin.x, y: coin.y, vx: coin.vx, vy: coin.vy,
+              air: coin.air || 0, moving: !!moving, phase: phase, turn: current,
+              red: score.red, blue: score.blue,
+              // the pegs, so a test can check nothing was placed standing in a hazard
+              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie, shock:!!n._aftShock}; }),
+              // CPU aim-telegraph state, so a test can catch a wind-up frame
+              aiPending: (typeof aiPending!=='undefined') ? !!aiPending : false,
+              aiAim: (typeof aiAim!=='undefined' && aiAim) ? {x:aiAim.x, y:aiAim.y} : null,
+              aiTp: (typeof aiThink0!=='undefined' && aiThink0) ? 1-Math.max(0,aiDelay)/aiThink0 : 0,
+              // AFTERSHOCK: whether this flick's riposte has been spent, and whether its blast ring is
+              // live. Neither can be read from the pixels — the ring is 1px debris over a busy board.
+              aftUsed: (typeof aftUsed!=='undefined') ? !!aftUsed : null,
+              aftFx: (typeof aftFx!=='undefined') ? !!aftFx : null,
+              aftStun: (typeof aftStun!=='undefined' && aftStun) ? aftStun.by : null
+            };
+          } catch (e) { return { err: String(e) }; }
+        },
+        // Ask the ARENA whether a point is on a hazard, rather than having the test reimplement the
+        // shapes. A test that recomputed them as plain ellipses reported pegs as standing in the pond when
+        // the wobbled outline put them safely outside it — the fourth time a hand-rolled probe measured
+        // something other than what the game does.
+        hz: function(x, y, r){
+          try { return (typeof cgHazardAt === 'function') ? !!cgHazardAt(x, y, r || 0) : null; }
+          catch (e) { return null; }
+        },
+        put: function(o){
+          try {
+            o = o || {};
+            // Clear the per-flick flags first, so a placed shot behaves like a real flick — otherwise a
+            // once-per-flick ability (chip, drill, AFTERSHOCK) stays spent from the previous placement and
+            // the second probe silently measures nothing. Pass reset:false to keep them. The turn is set
+            // BEFORE the reset, matching real play, where the turn changes between flicks and the next
+            // flick's trioReset already sees the new owner — the AFTERSHOCK stun lifecycle depends on it.
+            if (o.turn) current = o.turn;
+            if (o.reset !== false) { try { trioReset(); } catch (e) {} }
+            coin.x = o.x; coin.y = o.y;
+            coin.vx = o.vx || 0; coin.vy = o.vy || 0;
+            coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
+            moving = !!(coin.vx || coin.vy);
+            return true;
+          } catch (e) { return String(e); }
+        },
+        // Move one peg, indexed as probe().nails is. Lets a test build the exact situation an ability
+        // needs (a defender inside AFTERSHOCK's blast radius, say) instead of waiting for a formation to
+        // drift into it and calling whatever happens the result.
+        nail: function(o){
+          try {
+            var n = nails[o.i]; if (!n) return 'no nail ' + o.i;
+            n.x = o.x; n.y = o.y; return true;
+          } catch (e) { return String(e); }
+        },
         // Every ability id, so the runner never hardcodes a list that can rot.
         abilities: function(){
           try { return TACTICS.map(function(t){ return t.id; }); } catch (e) { return []; }

@@ -556,7 +556,7 @@
     } function buildRoyaleSetup(host, forceNew){ fmtRefreshers=[];
     var _royRun=null; if(!forceNew){ try{ _royRun=spGetRun('royale');
     }catch(e){} } host.appendChild(mk('div',FS(9,'#a9c94b')+'text-align:center;margin:6px 0 6px;letter-spacing:1px;','STADIUM ROYALE'));
-    if(_royRun){ var _lm={easy:'EASY',med:'MEDIUM',hard:'HARD'}, _lvl=_lm[_royRun.royaleLevel]||'MEDIUM', _stg=(_royRun.royale&&typeof _royRun.royale.i==='number')?(_royRun.royale.i+1):1, _sn=(_royRun.royale&&_royRun.royale.map===2)?2:1, _rlen=((_sn===2)?ROYALE_ARENAS_2.length:ROYALE_ARENAS_1.length);
+    if(_royRun){ var _lm={easy:'EASY',med:'MEDIUM',hard:'HARD'}, _lvl=_lm[_royRun.royaleLevel]||'MEDIUM', _stg=(_royRun.royale&&typeof _royRun.royale.i==='number')?(_royRun.royale.i+1):1, _sn=(_royRun.royale&&_royRun.royale.map)||1, _rlen=(_sn===3?ROYALE_ARENAS_3.length:(_sn===2?ROYALE_ARENAS_2.length:ROYALE_ARENAS_1.length));
     host.appendChild(mk('div',FS(8,'#a9c94b')+'text-align:center;margin:8px 0 2px;','RUN IN PROGRESS'));
     host.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;line-height:1.9;margin:2px 0 6px;','SEASON '+_sn+'  •  STADIUM '+_stg+' OF '+_rlen+'  •  '+_lvl));
     var resume=mk('button','margin-top:10px;width:100%;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:11px;cursor:pointer;','RESUME ROYALE  ▸');
@@ -569,7 +569,7 @@
     return; } host.appendChild(mk('div',FS(8,'#9a8fb0')+'margin:2px 0 4px;','YOUR TEAM'));
     var trow=mk('div','display:flex;justify-content:center;');
     trow.appendChild(teamStepper('red','TEAM','#a9c94b'));
-    host.appendChild(trow); if(royMap===2&&!roySeasonUnlocked(2)) royMap=1;
+    host.appendChild(trow); while(royMap>1&&!roySeasonUnlocked(royMap)) royMap--;
     if(!royLvlUnlocked(royMap,royaleLevel)) royaleLevel=royTopUnlocked(royMap);
     var _diffRestyle=segRow(host,'DIFFICULTY',[['easy',
     'EASY'],['med','MEDIUM'],
@@ -581,8 +581,8 @@
     }); host.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;line-height:1.8;margin:10px 0 2px;','Each stadium has a wild twist that hits both sides. Win to advance — one loss ends the whole run. Can you go unbeaten?'));
     host.appendChild(mk('div',FS(8,'#9a8fb0')+'margin:10px 0 3px;text-align:center;','LADDER'));
     var mapRow=mk('div','display:flex;gap:6px;justify-content:center;');
-    var mapBtns=[]; function _s2lock(){ return !roySeasonUnlocked(2);
-    } function restyleMap(){ mapBtns.forEach(function(pr){ var lk=(pr[1]===2&&_s2lock());
+    var mapBtns=[]; function _seasonLock(n){ return !roySeasonUnlocked(n);
+    } function restyleMap(){ mapBtns.forEach(function(pr){ var lk=_seasonLock(pr[1]);
     var sel=(royMap===pr[1]&&!lk);
     pr[0].textContent=(lk?'🔒 ':'')+pr[2];
     pr[0].style.background=sel?'#a9c94b':'#0e0a16';
@@ -590,8 +590,8 @@
     pr[0].style.borderColor=sel?'#a9c94b':(lk?'#2a2438':'#3a3050');
     pr[0].style.opacity=lk?'0.6':'1';
     }); } [['SEASON 1',1],['SEASON 2',
-    2]].forEach(function(o){ var b=mk('button',SQBTN+'font-size:7px;padding:6px 10px;',o[0]);
-    b.onclick=function(){ if(o[1]===2&&_s2lock()){ try{ _lockMsg('CLEAR SEASON 1 TO UNLOCK SEASON 2');
+    2],['SEASON 3',3]].forEach(function(o){ var b=mk('button',SQBTN+'font-size:7px;padding:6px 10px;',o[0]);
+    b.onclick=function(){ if(_seasonLock(o[1])){ try{ _lockMsg('COMPLETE SEASON '+(o[1]-1)+' ON ALL DIFFICULTIES TO UNLOCK SEASON '+o[1]);
     }catch(e){} return; } royMap=o[1];
     if(!royLvlUnlocked(royMap,royaleLevel)) royaleLevel=royTopUnlocked(royMap);
     restyleMap(); try{ _diffRestyle();

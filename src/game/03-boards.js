@@ -6,7 +6,6 @@
     g.fillStyle=Math.random()>0.5?dark:light;
     g.fillRect(Math.round(x),Math.round(y),Math.round(len),1);
     } }
-
     const BOARDS={
       wood:{ name:'WOOD', surround:'#1c150d', stand:'#352619', tier:'rgba(0,0,0,0.25)',
         frame:'#6b4a28',frameHi:'#8a6338',frameLo:'#4a3018',post:'#d9d0be',
@@ -500,10 +499,400 @@
         g.lineTo(x+(Math.random()-0.5)*8,h);
         g.stroke(); } g.strokeStyle='rgba(240,235,200,0.7)';
         g.strokeRect(2,2,w-4,h-4);
+        } },
+
+      tennis:{ name:'CENTRE COURT', surround:'#123a2a', stand:'#1b5540', tier:'rgba(255,255,255,0.05)',
+        frame:'#1f6b4e',frameHi:'#37a074',frameLo:'#124a34',post:'#f4f8ff',
+        line:'rgba(255,255,255,0.92)',line2:'rgba(255,255,255,0.7)',
+        netRecess:'#123c50',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(235,246,255,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,246,255,0.56)',netOverlay:'rgba(8,30,44,0.46)',
+        surface(g){ g.fillStyle='#2f7a5a'; g.fillRect(0,0,W,H);            // green apron
+        var ix=WALL+tnApron(), iw=W-2*(WALL+tnApron());   // court edge == the net posts (see tnNetX0)
+        g.fillStyle='#2f6fae'; g.fillRect(ix,WALL,iw,H-WALL*2);            // blue court
+        g.fillStyle='rgba(255,255,255,0.06)';
+        for(var b=WALL;b<H-WALL;b+=22){ g.fillRect(ix,b,iw,11); }
+        g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=1.4;
+        g.strokeRect(ix+0.5,WALL+0.5,iw-1,H-WALL*2-1);                     // baseline + sidelines
+        var tl=10;                                                          // tramlines down each flank
+        g.beginPath(); g.moveTo(ix+tl+0.5,WALL); g.lineTo(ix+tl+0.5,H-WALL);
+        g.moveTo(ix+iw-tl-0.5,WALL); g.lineTo(ix+iw-tl-0.5,H-WALL); g.stroke();
+        var sb=52;                                                          // service boxes
+        g.beginPath(); g.moveTo(ix+tl,H/2-sb+0.5); g.lineTo(ix+iw-tl,H/2-sb+0.5);
+        g.moveTo(ix+tl,H/2+sb-0.5); g.lineTo(ix+iw-tl,H/2+sb-0.5);
+        g.moveTo(W/2+0.5,H/2-sb); g.lineTo(W/2+0.5,H/2+sb); g.stroke();
+        g.beginPath(); g.moveTo(W/2+0.5,WALL); g.lineTo(W/2+0.5,WALL+7);   // centre marks
+        g.moveTo(W/2+0.5,H-WALL-7); g.lineTo(W/2+0.5,H-WALL); g.stroke();
+        },
+        preview(g,w,h){ g.fillStyle='#2f7a5a'; g.fillRect(0,0,w,h);
+        g.fillStyle='#2f6fae'; g.fillRect(w*0.14,0,w*0.72,h);
+        g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=1;
+        g.strokeRect(w*0.14+0.5,1.5,w*0.72-1,h-3);
+        g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+        g.strokeRect(2,2,w-4,h-4);
+        } },
+
+      minigolf:{ name:'CRAZY GOLF', surround:'#0f3320', stand:'#1a5233', tier:'rgba(255,255,255,0.05)',
+        frame:'#8a5a2a',frameHi:'#c08a45',frameLo:'#5a3616',post:'#f4f8ea',   // timber course frame
+        line:'rgba(255,255,255,0.8)',line2:'rgba(255,255,255,0.52)',
+        netRecess:'#14401f',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
+        surface(g){
+        /* A PLAIN, EVEN FAIRWAY — no dark "rough lens". The earlier surface shaded a dark dead-zone down
+           the middle of each half to "show the route", but the central pond already shows the route, and
+           with the hazards sitting on top of it the dark lens read as a muddy, off-centre discolouration —
+           which is what kept making the pitch look misaligned even though it measures dead centre (the
+           ?nohz=1 bare pitch looked right, the shaded one did not). So the pitch is now clean, bright and
+           uniform: one green, faint mower stripes, and a slightly lighter apron ring at each green. The
+           hazards provide all the visual structure the hole needs. */
+        var FAIR='#2c9a41', FAIR2='#279038', APRON='#3fae4d';
+        g.fillStyle=FAIR; g.fillRect(0,0,W,H);
+        for(var n=0;n<1600;n++){ g.fillStyle=(Math.random()>0.5)?FAIR2:'rgba(255,255,255,0.05)';
+        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+        g.fillStyle=APRON;                                    // a mown apron ring at each green
+        for(var ai=0;ai<2;ai++){ var acy=ai?(H-NET_DEPTH-18):(NET_DEPTH+18);
+        for(var ay=acy-16;ay<=acy+16;ay++){ var aw=Math.round(Math.sqrt(Math.max(0,256-(ay-acy)*(ay-acy)))*2.0);
+        if(aw>0) g.fillRect(W/2-aw,ay,aw*2,1); } }
+        for(var sp3=0;sp3<500;sp3++){ g.fillStyle=(Math.random()>0.5)?FAIR:APRON;
+        g.fillRect(W/2-30+Math.random()*60|0,(Math.random()>0.5?NET_DEPTH+2:H-NET_DEPTH-34)+Math.random()*34|0,1,1); }
+        g.fillStyle='rgba(255,255,255,0.05)';                 // faint mower stripes, integer-aligned
+        for(var mx=WALL;mx<W-WALL;mx+=10) g.fillRect(mx,WALL,5,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.05)';
+        for(var mx2=WALL+5;mx2<W-WALL;mx2+=10) g.fillRect(mx2,WALL,5,H-WALL*2);
+        },
+        preview(g,w,h){ g.fillStyle='#2fa049'; g.fillRect(0,0,w,h);
+        for(var b=0;b<h;b+=6){ g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(0,b,w,3); }
+        g.fillStyle='#12240f'; g.beginPath();                           // a cup
+        g.arc(w*0.2,h*0.62,Math.max(2,h*0.075),0,Math.PI*2); g.fill();
+        g.fillStyle='rgba(255,255,255,0.5)'; g.fillRect(w*0.2-0.5,h*0.62-h*0.2,1,h*0.2);
+        g.fillStyle='#d64b3a'; g.beginPath(); g.moveTo(w*0.2,h*0.42);
+        g.lineTo(w*0.2+w*0.09,h*0.46); g.lineTo(w*0.2,h*0.5); g.fill();
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      /* THE END ZONE — gridiron. Board-first: a striped green field with yard lines, end zones and
+         sidelines. The hazards (pursuing tacklers, yard-line drag, narrow uprights) are layered on in
+         follow-up passes; for now it plays as a plain pitch with a football field's markings. */
+      gridiron:{ name:'THE END ZONE', surround:'#10251a', stand:'#1b3a27', tier:'rgba(255,255,255,0.05)',
+        frame:'#6f4a26',frameHi:'#a06f3c',frameLo:'#452a12',post:'#f4f8ea',   // painted-steel stadium frame
+        line:'rgba(255,255,255,0.9)',line2:'rgba(255,255,255,0.55)',
+        netRecess:'#123f1d',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(238,250,235,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(238,250,235,0.56)',netOverlay:'rgba(8,30,16,0.44)',
+        surface(g){ var TURF='#2f8f42', TURF2='#2a8038', CHALK='rgba(255,255,255,0.9)', CHALK2='rgba(255,255,255,0.5)';
+        g.fillStyle=TURF; g.fillRect(0,0,W,H);
+        // mown cross-bands — a football field is striped across the yard lines, not down the pitch
+        for(var bi=0,by=WALL; by<H-WALL; by+=16,bi++){ g.fillStyle=(bi%2)?'rgba(255,255,255,0.045)':'rgba(0,0,0,0.05)';
+        g.fillRect(WALL,by,W-WALL*2,Math.min(8,H-WALL-by)); }
+        for(var n=0;n<1200;n++){ g.fillStyle=(Math.random()>0.5)?TURF2:'rgba(255,255,255,0.04)';
+        g.fillRect(WALL+Math.random()*(W-WALL*2)|0,WALL+Math.random()*(H-WALL*2)|0,1,1); }
+        // END ZONES: an IDENTICAL darker mown band in front of each goal. A red/blue split read as a pale
+        // wash on the red end and nothing on the blue — both ends must look the same, so use one green tint.
+        var ezD=GOAL_AREA_D, top=NET_DEPTH+ezD, bot=H-NET_DEPTH-ezD;
+        g.fillStyle='rgba(16,60,30,0.30)'; g.fillRect(WALL,NET_DEPTH,W-WALL*2,ezD);
+        g.fillRect(WALL,H-NET_DEPTH-ezD,W-WALL*2,ezD);
+        // YARD LINES across the field, brighter every 5th (the 10-yard lines)
+        var step=(bot-top)/10;
+        for(var i=0;i<=10;i++){ var ly=Math.round(top+step*i);
+        g.fillStyle=(i%5===0)?CHALK:CHALK2; g.fillRect(WALL+3,ly,W-WALL*2-6,1); }
+        // hash-mark ticks down two central columns
+        g.fillStyle=CHALK2;
+        for(var hy=Math.round(top); hy<=bot; hy+=Math.round(step/2)){ g.fillRect(Math.round(W*0.5)-18,hy,3,1); g.fillRect(Math.round(W*0.5)+15,hy,3,1); }
+        // sidelines
+        g.fillStyle=CHALK; g.fillRect(WALL+2,WALL,1,H-WALL*2); g.fillRect(W-WALL-3,WALL,1,H-WALL*2);
+        },
+        preview(g,w,h){ g.fillStyle='#2f8f42'; g.fillRect(0,0,w,h);
+        g.fillStyle='rgba(16,60,30,0.5)'; g.fillRect(0,0,w,Math.max(2,h*0.14)); g.fillRect(0,h-Math.max(2,h*0.14),w,Math.max(2,h*0.14));
+        g.fillStyle='rgba(255,255,255,0.85)';
+        for(var i=1;i<6;i++) g.fillRect(2,Math.round(h*(0.14+0.72*i/6)),w-4,1);
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      /* THE ALLEY — bowling. Board-first: a polished maple lane with lengthwise board seams, dark side
+         gutters, a foul line at each end and the dovetail aiming arrows. The hazards (destructible pin
+         racks, gutter funnels, an oiled centre strip) are layered on in follow-up passes; for now it plays
+         as a plain lane with a bowling alley's markings. */
+      bowling:{ name:'THE ALLEY', surround:'#2a1a0c', stand:'#442a12', tier:'rgba(255,225,170,0.05)',
+        frame:'#7a4a24',frameHi:'#c48a44',frameLo:'#4a2a10',post:'#f6efdc',   // warm lacquered-wood frame
+        line:'rgba(252,244,224,0.9)',line2:'rgba(252,244,224,0.55)',
+        netRecess:'#3a2410',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(255,240,214,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,240,214,0.56)',netOverlay:'rgba(30,18,8,0.44)',
+        surface(g){ var LANE='#c98a3e', LANE2='#bd7d34', GUT='#241708', ARROW='rgba(46,28,12,0.6)', CHALK='rgba(252,244,224,0.85)';
+        g.fillStyle=LANE; g.fillRect(0,0,W,H);
+        // board seams run DOWN the lane — the boards a bowler lines up across
+        for(var sx=WALL+7; sx<W-WALL; sx+=7){ g.fillStyle='rgba(120,74,30,0.35)'; g.fillRect(sx,WALL,1,H-WALL*2); }
+        // subtle alternating plank tint
+        for(var bi=0,bx=WALL; bx<W-WALL; bx+=14,bi++){ if(bi%2){ g.fillStyle='rgba(255,222,150,0.05)'; g.fillRect(bx,WALL,7,H-WALL*2); } }
+        // maple grain speckle
+        for(var pn=0;pn<800;pn++){ g.fillStyle=(Math.random()>0.5)?LANE2:'rgba(92,56,24,0.16)'; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // GUTTERS — coin-width sunken channels just inside each side wall (the ball drops in and rolls down)
+        var GW=COIN_R*2+1;   // ~11px, a touch wider than the ball
+        g.fillStyle=GUT; g.fillRect(WALL,WALL,GW,H-WALL*2); g.fillRect(W-WALL-GW,WALL,GW,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.30)'; g.fillRect(WALL+GW,WALL,1,H-WALL*2); g.fillRect(W-WALL-GW-1,WALL,1,H-WALL*2);
+        g.fillStyle='rgba(0,0,0,0.18)'; g.fillRect(WALL,WALL,2,H-WALL*2); g.fillRect(W-WALL-2,WALL,2,H-WALL*2);   // inner shadow at the wall
+        // FOUL LINE at each end
+        var foulT=NET_DEPTH+GOAL_AREA_D+6, foulB=H-NET_DEPTH-GOAL_AREA_D-6;
+        g.fillStyle=CHALK; g.fillRect(WALL+6,foulT,W-WALL*2-12,1); g.fillRect(WALL+6,foulB,W-WALL*2-12,1);
+        // DOVETAIL AIMING ARROWS — a shallow V of chevrons at each end, centre chevron deepest toward its goal
+        g.fillStyle=ARROW;
+        for(var ai=0;ai<2;ai++){ var dir=ai?1:-1, baseY=ai?(H-NET_DEPTH-GOAL_AREA_D-20):(NET_DEPTH+GOAL_AREA_D+20);
+        for(var k=-2;k<=2;k++){ var ax=Math.round(W/2+k*11), ay=Math.round(baseY-dir*Math.abs(k)*5);
+        g.beginPath(); g.moveTo(ax-3,ay); g.lineTo(ax+3,ay); g.lineTo(ax,ay+dir*5); g.closePath(); g.fill(); } }
+        },
+        preview(g,w,h){ g.fillStyle='#c98a3e'; g.fillRect(0,0,w,h);
+        g.fillStyle='#241708'; g.fillRect(0,0,Math.max(2,w*0.1),h); g.fillRect(w-Math.max(2,w*0.1),0,Math.max(2,w*0.1),h);
+        g.fillStyle='rgba(120,74,30,0.4)'; for(var i=1;i<6;i++) g.fillRect(Math.round(w*i/6),0,1,h);
+        g.fillStyle='rgba(252,244,224,0.8)'; g.fillRect(2,Math.round(h*0.2),w-4,1); g.fillRect(2,Math.round(h*0.8),w-4,1);
+        g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      /* THE GRAND PRIX — motorsport. Board-first: a dark tarmac circuit with red-and-white kerbs down each
+         side, a checkered start/finish stripe in front of each goal and a dashed racing lane down the middle.
+         The hazards (a roaming pace-car + slipstream, DRS boost strips, oil spills, tyre walls) are layered on
+         in follow-up passes; for now it plays as a plain circuit with a racetrack's markings. */
+      raceway:{ name:'THE GRAND PRIX', surround:'#141518', stand:'#26282d', tier:'rgba(255,255,255,0.05)',
+        frame:'#3a3d42',frameHi:'#5a5e66',frameLo:'#222428',post:'#e8eaee',   // pit-wall steel frame
+        line:'rgba(245,247,250,0.9)',line2:'rgba(245,247,250,0.55)',
+        netRecess:'#1c1e22',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(230,235,240,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(230,235,240,0.56)',netOverlay:'rgba(10,11,14,0.44)',
+        surface(g){ var TAR='#2c2e33', TAR2='#26282d', KR='#c8402e', KW='#e8e2d8';
+        g.fillStyle=TAR; g.fillRect(0,0,W,H);
+        // tarmac speckle + faint patch tone
+        for(var pn=0;pn<1000;pn++){ g.fillStyle=(Math.random()>0.5)?TAR2:'rgba(255,255,255,0.03)'; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // dashed racing lane down the middle (two faint rails, offset from the halfway marking)
+        g.fillStyle='rgba(255,255,255,0.16)'; for(var dy=WALL+6; dy<H-WALL; dy+=16){ g.fillRect(Math.round(W/2)-8,dy,1,9); g.fillRect(Math.round(W/2)+7,dy,1,9); }
+        // RED/WHITE KERBS down each side wall
+        for(var ky=WALL; ky<H-WALL; ky+=7){ var kk=(((ky-WALL)/7)|0)%2, hh=Math.min(7,H-WALL-ky);
+        g.fillStyle=kk?KR:KW; g.fillRect(WALL,ky,4,hh); g.fillRect(W-WALL-4,ky,4,hh); }
+        // CHECKERED start/finish stripe just in front of each goal
+        for(var e=0;e<2;e++){ var by=e?(H-NET_DEPTH-GOAL_AREA_D-4):(NET_DEPTH+GOAL_AREA_D+1);
+        for(var cx=WALL+5; cx<W-WALL-5; cx+=5){ var cc=(((cx/5)|0)%2); g.fillStyle=cc?'#12140f':'#eef0ea'; g.fillRect(cx,by,5,3); } }
+        },
+        preview(g,w,h){ g.fillStyle='#2c2e33'; g.fillRect(0,0,w,h);
+        for(var ky=0;ky<h;ky+=4){ var kk=((ky/4)|0)%2; g.fillStyle=kk?'#c8402e':'#e8e2d8'; g.fillRect(0,ky,Math.max(2,w*0.09),4); g.fillRect(w-Math.max(2,w*0.09),ky,Math.max(2,w*0.09),4); }
+        for(var cx=0;cx<w;cx+=4){ if(((cx/4)|0)%2){ g.fillStyle='#eef0ea'; g.fillRect(cx,Math.round(h*0.2),4,2); g.fillRect(cx,Math.round(h*0.8),4,2); } }
+        g.fillStyle='rgba(255,255,255,0.16)'; g.fillRect(Math.round(w/2),2,1,h-4);
+        g.strokeStyle='rgba(0,0,0,0.3)'; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      /* THE RING — boxing. Board-first: a raised canvas with the ring APRON around the edge, taut ROPES down
+         each side (three strands with turnbuckles), a scuffed centre circle and corner pads. The hazards
+         (elastic ropes, a speed-bag on the beat, the canvas drag zone) are layered on in follow-up passes;
+         for now it plays as a plain canvas with a boxing ring's markings. */
+      ring:{ name:'THE RING', surround:'#1a1014', stand:'#2e1c22', tier:'rgba(255,225,235,0.05)',
+        frame:'#7b5a2e',frameHi:'#b98c46',frameLo:'#4a3418',post:'#f6efdc',   // timber ring-post frame
+        line:'rgba(250,244,238,0.9)',line2:'rgba(250,244,238,0.55)',
+        netRecess:'#3a2a20',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(255,246,238,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,246,238,0.56)',netOverlay:'rgba(26,14,18,0.44)',
+        surface(g){ var CAN='#c8b9a6', CAN2='#bdae9a', APRON='#8e2b34', SCUFF='rgba(120,100,88,0.30)';
+        g.fillStyle=CAN; g.fillRect(0,0,W,H);
+        // canvas weave: a fine 1px dither so the mat reads as fabric, not flat paint
+        for(var wy=WALL; wy<H-WALL; wy+=2){ for(var wx=WALL+((wy&2)?1:0); wx<W-WALL; wx+=2){ g.fillStyle=CAN2; g.fillRect(wx,wy,1,1); } }
+        for(var n=0;n<420;n++){ g.fillStyle=SCUFF; g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // APRON — the red skirt just inside the ring posts, all four sides
+        var ap=5; g.fillStyle=APRON;
+        g.fillRect(WALL,WALL,W-WALL*2,ap); g.fillRect(WALL,H-WALL-ap,W-WALL*2,ap);
+        g.fillRect(WALL,WALL,ap,H-WALL*2); g.fillRect(W-WALL-ap,WALL,ap,H-WALL*2);
+        g.fillStyle='rgba(255,255,255,0.16)'; g.fillRect(WALL,WALL+ap,W-WALL*2,1); g.fillRect(WALL,H-WALL-ap-1,W-WALL*2,1);
+        // ROPES — three strands down each side, sitting ON the apron so the INNERMOST strand lands exactly on
+        // the ball's collision line (WALL+COIN_R): the ball then visibly bounces off the rope, not off empty
+        // canvas short of it. Spanning between the corner pads. See rgRopeX() — physics and art share the math.
+        for(var sd=0;sd<2;sd++){ var y0=WALL+13, hh=H-WALL*2-26;
+        for(var st=0;st<3;st++){ var rx=sd?(W-WALL-1-st*2):(WALL+1+st*2);
+        g.fillStyle='rgba(90,72,50,0.45)'; g.fillRect(rx+(sd?-1:1),y0,1,hh);   // shadow beside the strand
+        g.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; g.fillRect(rx,y0,1,hh); }
+        g.fillStyle='#6a5230'; for(var tb=y0+14; tb<y0+hh-6; tb+=48){ g.fillRect(sd?(W-WALL-6):(WALL+1),tb,6,4);
+        g.fillStyle='#8f7040'; g.fillRect(sd?(W-WALL-6):(WALL+1),tb,6,1); g.fillStyle='#6a5230'; } }
+        // CORNER PADS — the padded posts the ropes tie into, classic blue/red pairing
+        for(var cq=0;cq<4;cq++){ var cxp=(cq&1)?(W-WALL-7):WALL, cyp=(cq<2)?WALL:(H-WALL-13);
+        g.fillStyle=(cq<2)?'#2f4f92':'#8e2b34'; g.fillRect(cxp,cyp,7,13);
+        g.fillStyle='rgba(255,255,255,0.20)'; g.fillRect(cxp,cyp,7,1); g.fillRect(cxp,cyp,1,13);
+        g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(cxp+6,cyp,1,13); g.fillRect(cxp,cyp+12,7,1); }
+        // scuffed centre circle + a worn patch in the middle of the canvas
+        g.strokeStyle='rgba(140,118,104,0.55)'; g.lineWidth=1;
+        g.beginPath(); g.arc(W/2,H/2,26,0,6.283); g.stroke();
+        for(var m=0;m<160;m++){ var ma=Math.random()*6.283, mr=Math.random()*24;
+        g.fillStyle='rgba(150,128,112,0.22)'; g.fillRect((W/2+Math.cos(ma)*mr)|0,(H/2+Math.sin(ma)*mr)|0,1,1); }
+        },
+        preview(g,w,h){ g.fillStyle='#c8b9a6'; g.fillRect(0,0,w,h);
+        var ap=Math.max(2,Math.round(w*0.09)); g.fillStyle='#8e2b34';
+        g.fillRect(0,0,w,ap); g.fillRect(0,h-ap,w,ap); g.fillRect(0,0,ap,h); g.fillRect(w-ap,0,ap,h);
+        g.fillStyle='#e2cfae'; g.fillRect(ap,ap,1,h-ap*2); g.fillRect(w-ap-1,ap,1,h-ap*2);
+        g.strokeStyle='rgba(140,118,104,0.6)'; g.lineWidth=1; g.beginPath(); g.arc(w/2,h/2,Math.max(3,h*0.13),0,6.283); g.stroke();
+        g.strokeStyle='rgba(0,0,0,0.28)'; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      /* SPORTS DAY — the decathlon finale. Board-first: an athletics infield ringed by a red running track with
+         white lane lines and a gold inner kerb, and the GHOST MARKINGS of the season's other sports laid faintly
+         over the grass (a basketball key at each end, tennis service lines, a baseball diamond at centre) so the
+         pitch reads as "every sport at once". The medley hazards are layered on in a follow-up pass. */
+      podium:{ name:'SPORTS DAY', surround:'#1b1f2a', stand:'#2c3242', tier:'rgba(255,255,255,0.06)',
+        frame:'#6a6f7d',frameHi:'#9aa0b0',frameLo:'#3f434f',post:'#f4f7ff',   // brushed-steel showpiece frame
+        line:'rgba(252,252,255,0.92)',line2:'rgba(252,252,255,0.58)',
+        netRecess:'#24283a',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(240,244,255,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(240,244,255,0.56)',netOverlay:'rgba(14,16,24,0.44)',
+        surface(g){ var TURF='#2f7d46', TURF2='#2a7040', TRACK='#b5432c', TRACK2='#a03b26', GHOST='rgba(255,255,255,0.10)';
+        g.fillStyle=TURF; g.fillRect(0,0,W,H);
+        for(var n=0;n<900;n++){ g.fillStyle=(Math.random()>0.5)?TURF2:'rgba(255,255,255,0.035)';
+        g.fillRect((WALL+Math.random()*(W-WALL*2))|0,(WALL+Math.random()*(H-WALL*2))|0,1,1); }
+        // GHOST MARKINGS — the season's other sports, faint, so the infield looks marked out for all of them
+        g.strokeStyle=GHOST; g.lineWidth=1;
+        var tk=9, iL=WALL+tk, iR=W-WALL-tk, iT=WALL+tk, iB=H-WALL-tk;   // infield bounds (inside the track)
+        for(var e=0;e<2;e++){ var ky=e?(H-NET_DEPTH-GOAL_AREA_D-6):(NET_DEPTH+GOAL_AREA_D+6);
+        g.beginPath(); g.arc(W/2,ky,17,0,Math.PI*2); g.stroke();                       // basketball key circle
+        g.beginPath(); g.moveTo(iL+6,ky); g.lineTo(iR-6,ky); g.stroke(); }             // tennis service line
+        g.beginPath();                                                                  // baseball diamond, centre
+        g.moveTo(W/2,H/2-16); g.lineTo(W/2+16,H/2); g.lineTo(W/2,H/2+16); g.lineTo(W/2-16,H/2); g.closePath(); g.stroke();
+        // RUNNING TRACK — a red band inside the walls with three lanes, plus lane ticks
+        g.fillStyle=TRACK;
+        g.fillRect(WALL,WALL,W-WALL*2,tk); g.fillRect(WALL,H-WALL-tk,W-WALL*2,tk);
+        g.fillRect(WALL,WALL,tk,H-WALL*2); g.fillRect(W-WALL-tk,WALL,tk,H-WALL*2);
+        for(var d=0;d<600;d++){ var _dx=(WALL+Math.random()*(W-WALL*2))|0, _dy=(WALL+Math.random()*(H-WALL*2))|0;
+        if(_dx>iL&&_dx<iR&&_dy>iT&&_dy<iB) continue;
+        g.fillStyle=TRACK2; g.fillRect(_dx,_dy,1,1); }
+        g.fillStyle='rgba(255,255,255,0.55)';                                           // lane divider lines
+        for(var ln=3;ln<tk;ln+=3){ g.fillRect(WALL+ln,WALL+ln,W-WALL*2-ln*2,1); g.fillRect(WALL+ln,H-WALL-ln-1,W-WALL*2-ln*2,1);
+        g.fillRect(WALL+ln,WALL+ln,1,H-WALL*2-ln*2); g.fillRect(W-WALL-ln-1,WALL+ln,1,H-WALL*2-ln*2); }
+        // GOLD inner kerb — the podium nod, separating the track from the infield
+        g.fillStyle='#e8c451';
+        g.fillRect(iL-1,iT-1,iR-iL+2,1); g.fillRect(iL-1,iB,iR-iL+2,1);
+        g.fillRect(iL-1,iT-1,1,iB-iT+2); g.fillRect(iR,iT-1,1,iB-iT+2);
+        },
+        preview(g,w,h){ g.fillStyle='#2f7d46'; g.fillRect(0,0,w,h);
+        var tk=Math.max(2,Math.round(Math.min(w,h)*0.12)); g.fillStyle='#b5432c';
+        g.fillRect(0,0,w,tk); g.fillRect(0,h-tk,w,tk); g.fillRect(0,0,tk,h); g.fillRect(w-tk,0,tk,h);
+        g.fillStyle='#e8c451'; g.strokeStyle='#e8c451'; g.lineWidth=1; g.strokeRect(tk+0.5,tk+0.5,w-tk*2-1,h-tk*2-1);
+        g.strokeStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.arc(w/2,h/2,Math.max(3,h*0.12),0,6.283); g.stroke();
+        g.strokeStyle='rgba(0,0,0,0.3)'; g.strokeRect(1.5,1.5,w-3,h-3);
+        } },
+
+      court:{ name:'HARDWOOD', surround:'#2a1a10', stand:'#452a18', tier:'rgba(255,235,200,0.05)',
+        frame:'#7a4a24',frameHi:'#b87d3f',frameLo:'#4e2c12',post:'#f6efdc',
+        line:'rgba(252,248,236,0.9)',line2:'rgba(252,248,236,0.62)',
+        netRecess:'#3d2410',netBack:'rgba(0,0,0,0.34)',netMesh:'rgba(255,246,228,0.3)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(255,246,228,0.56)',netOverlay:'rgba(40,22,8,0.44)',
+        surface(g){ var w1='#d59a53', w2='#c98f4e', w3='#bd8243';
+        g.fillStyle=w2; g.fillRect(0,0,W,H);
+        var pw=9, i=0;                                    // parquet: vertical plank strips + seams
+        for(var x=WALL;x<W-WALL;x+=pw){ g.fillStyle=(i%3===0)?w1:((i%3===1)?w2:w3);
+        g.fillRect(x,WALL,pw,H-WALL*2);
+        g.fillStyle='rgba(90,50,18,0.22)'; g.fillRect(x,WALL,1,H-WALL*2);
+        i++; }
+        for(var y=WALL+14;y<H-WALL;y+=26){ g.fillStyle='rgba(90,50,18,0.12)';
+        g.fillRect(WALL,y,W-WALL*2,1); }
+        g.strokeStyle='rgba(252,248,236,0.5)'; g.lineWidth=1.4;
+        var kw=Math.round(GOAL_W*1.5), kh=32, kx=Math.round((W-kw)/2);
+        // the painted key at each end, drawn WITHOUT its goal-side edge — that edge sat right on the
+        // goal line and read as a stray white line stretched behind the net
+        g.beginPath(); g.moveTo(kx,NET_DEPTH); g.lineTo(kx,NET_DEPTH+kh);
+        g.lineTo(kx+kw,NET_DEPTH+kh); g.lineTo(kx+kw,NET_DEPTH); g.stroke();
+        g.beginPath(); g.moveTo(kx,H-NET_DEPTH); g.lineTo(kx,H-NET_DEPTH-kh);
+        g.lineTo(kx+kw,H-NET_DEPTH-kh); g.lineTo(kx+kw,H-NET_DEPTH); g.stroke();
+        g.fillStyle='rgba(214,120,60,0.20)'; g.fillRect(kx+1,NET_DEPTH+1,kw-2,kh-2);
+        g.fillRect(kx+1,H-NET_DEPTH-kh+1,kw-2,kh-2);
+        g.beginPath(); g.arc(W/2,NET_DEPTH+kh,13,0,Math.PI); g.stroke();
+        g.beginPath(); g.arc(W/2,H-NET_DEPTH-kh,13,Math.PI,Math.PI*2); g.stroke();
+        var tr=Math.min((W-WALL*2)*0.46,58);              // three-point arcs
+        g.beginPath(); g.arc(W/2,NET_DEPTH+6,tr,0.36,Math.PI-0.36); g.stroke();
+        g.beginPath(); g.arc(W/2,H-NET_DEPTH-6,tr,Math.PI+0.36,Math.PI*2-0.36); g.stroke();
+        },
+        preview(g,w,h){ var cols=['#d59a53','#c98f4e','#bd8243'];
+        for(var i=0;i<8;i++){ g.fillStyle=cols[i%3];
+        g.fillRect(i*w/8,0,w/8+1,h);
+        } g.strokeStyle='rgba(252,248,236,0.75)';
+        g.lineWidth=1; g.beginPath();
+        g.arc(w/2,h/2,h*0.17,0,6.283); g.stroke();
+        g.strokeRect(w*0.3,2,w*0.4,h*0.2);
+        g.strokeRect(2,2,w-4,h-4);
+        } },
+
+      baseball:{ name:'BALLPARK', surround:'#123a1e', stand:'#1c5a2e', tier:'rgba(255,255,255,0.05)',
+        frame:'#2f7a3a',frameHi:'#57b96a',frameLo:'#1c5024',post:'#f4f0e0',
+        line:'rgba(255,255,255,0.85)',line2:'rgba(255,255,255,0.6)',
+        netRecess:'#14401f',netBack:'rgba(0,0,0,0.32)',netMesh:'rgba(235,245,235,0.32)',netMouth:'rgba(255,255,255,0.24)',netStrand:'rgba(235,245,235,0.58)',netOverlay:'rgba(10,40,20,0.42)',
+        // A ballpark read from above. The old version filled half the pitch with one
+        // brown lozenge, which buried midfield and read as nothing in particular. A real
+        // infield is mostly GRASS with dirt only on the base paths, so the diamond is
+        // drawn as a dirt ring with a grass island inside it — smaller, lighter, and
+        // instantly recognisable. Home plate sits in front of each goal (both teams
+        // attack, so the park is mirrored), which is also where the bat swings.
+        surface(g){ var g1='#2f8a3e', g2='#2a7d38', ISL='#379a4b', DIRT='#a9703a', DIRT2='#c2854a';
+        var cx=W/2, cy=H/2, IW=W-WALL*2, IH=H-WALL*2;
+        g.fillStyle=g1; g.fillRect(0,0,W,H);
+        // mown grass: the cut stripes, crossed by a much fainter second pass, so the outfield
+        // reads as turf rather than as flat colour
+        var bands=10, bw=IW/bands;
+        for(var i=0;i<bands;i++){ g.fillStyle=(i%2)?g2:g1;
+        g.fillRect(Math.round(WALL+i*bw),WALL,Math.ceil(bw)+1,IH); }
+        g.fillStyle='rgba(255,255,255,0.028)';
+        for(var r=0;r<12;r+=2) g.fillRect(WALL,Math.round(WALL+r*IH/12),IW,Math.ceil(IH/12)+1);
+        // warning track: a dirt apron all the way round the wall
+        g.fillStyle='rgba(150,96,52,0.5)';
+        g.fillRect(WALL,WALL,IW,5); g.fillRect(WALL,H-WALL-5,IW,5);
+        g.fillRect(WALL,WALL,5,IH); g.fillRect(W-WALL-5,WALL,5,IH);
+        // Seeded grit. Real infield dirt is never one flat colour, but Math.random() here would
+        // crawl every frame — so the speckle runs off a fixed LCG and comes out identical each draw.
+        var _sd=1234567;
+        function rnd(){ _sd=(_sd*1103515245+12345)&0x7fffffff; return _sd/0x7fffffff; }
+        function speck(px,py,rad,n){ for(var s=0;s<n;s++){ var a=rnd()*6.283, d=Math.sqrt(rnd())*rad;
+        g.fillStyle=rnd()<0.5?'rgba(255,228,186,0.18)':'rgba(74,40,16,0.18)';
+        g.fillRect(px+Math.cos(a)*d,py+Math.sin(a)*d,1,1); } }
+        function diamond(hx,hy,f){ g.beginPath();
+        g.moveTo(cx,cy-hy*f); g.lineTo(cx+hx*f,cy);
+        g.lineTo(cx,cy+hy*f); g.lineTo(cx-hx*f,cy); g.closePath(); }
+        // A real infield is mostly GRASS, with dirt only on the base paths — so the diamond is a
+        // dirt ring with a lighter grass island inside it, not one solid brown lozenge.
+        var DX=58, DY=52;
+        diamond(DX,DY,1); g.fillStyle=DIRT; g.fill();
+        g.save(); diamond(DX,DY,1); g.clip(); speck(cx,cy,DX,120); g.restore();
+        diamond(DX,DY,0.55); g.fillStyle=ISL; g.fill();
+        diamond(DX,DY,0.55); g.strokeStyle='rgba(64,36,12,0.35)'; g.lineWidth=1; g.stroke();
+        diamond(DX,DY,1); g.strokeStyle='rgba(248,244,232,0.6)'; g.lineWidth=1; g.stroke();
+        // pitcher's mound on the centre spot, with its rubber
+        // Kept small on purpose: on HARD a leather glove sits here, and a wide brown mound under a
+        // brown glove read as one mud pie. At this size the glove lands on the green island instead
+        // and its silhouette is unmistakable.
+        g.fillStyle=DIRT2; g.beginPath(); g.arc(cx,cy,9,0,6.283); g.fill();
+        g.strokeStyle='rgba(70,40,14,0.45)'; g.lineWidth=1;
+        g.beginPath(); g.arc(cx,cy,9,0,6.283); g.stroke();
+        speck(cx,cy,8,16);
+        g.fillStyle='#f4f0e0'; g.fillRect(cx-3.5,cy-1,7,2);
+        // bases at the diamond points, each with a contact shadow so they sit on the dirt
+        var bp=[[cx,cy-DY],[cx+DX,cy],[cx,cy+DY],[cx-DX,cy]];
+        for(var b=0;b<4;b++){ g.save(); g.translate(bp[b][0],bp[b][1]); g.rotate(0.785);
+        g.fillStyle='rgba(48,26,8,0.4)'; g.fillRect(-2.8,-2.4,7.2,7.2);
+        g.fillStyle='#f8f5ea'; g.fillRect(-3.6,-3.6,7.2,7.2); g.restore(); }
+        // Home plate in front of each goal — both ends attack, so the park is mirrored. This is
+        // also exactly where the bat swings, so the hazard and the art finally agree.
+        [[NET_DEPTH+32,1],[H-NET_DEPTH-32,-1]].forEach(function(hp){
+        var hy=hp[0], dir=hp[1];
+        g.fillStyle=DIRT2; g.beginPath(); g.arc(cx,hy,19,0,6.283); g.fill();
+        g.strokeStyle='rgba(70,40,14,0.4)'; g.lineWidth=1;
+        g.beginPath(); g.arc(cx,hy,19,0,6.283); g.stroke();
+        speck(cx,hy,18,40);
+        g.fillStyle='#f8f5ea'; g.beginPath();
+        g.moveTo(cx-4,hy-3*dir); g.lineTo(cx+4,hy-3*dir); g.lineTo(cx+4,hy+1*dir);
+        g.lineTo(cx,hy+4*dir); g.lineTo(cx-4,hy+1*dir); g.closePath(); g.fill();
+        // batter's boxes either side, catcher's box behind, foul lines out to the corners
+        g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1;
+        g.strokeRect(cx-15,hy-6,9,13); g.strokeRect(cx+6,hy-6,9,13);
+        g.strokeStyle='rgba(255,255,255,0.35)'; g.strokeRect(cx-7,hy-dir*16,14,12);
+        g.strokeStyle='rgba(255,255,255,0.4)'; g.beginPath();
+        g.moveTo(cx,hy); g.lineTo(WALL+6,hy+(cy-hy)*0.85);
+        g.moveTo(cx,hy); g.lineTo(W-WALL-6,hy+(cy-hy)*0.85); g.stroke();
+        // on-deck circles out by the wall
+        g.fillStyle='rgba(169,112,58,0.5)';
+        g.beginPath(); g.arc(cx-38,hy+dir*4,7,0,6.283); g.fill();
+        g.beginPath(); g.arc(cx+38,hy+dir*4,7,0,6.283); g.fill(); });
+        },
+        preview(g,w,h){ g.fillStyle='#2f8a3e'; g.fillRect(0,0,w,h);
+        var cx=w/2, cy=h/2, dx=w*0.32, dy=h*0.24;
+        for(var i=0;i<8;i++){ if(i%2){ g.fillStyle='#2a7d38'; g.fillRect(Math.round(i*w/8),0,Math.ceil(w/8)+1,h); } }
+        g.fillStyle='#a9703a'; g.beginPath();
+        g.moveTo(cx,cy-dy); g.lineTo(cx+dx,cy); g.lineTo(cx,cy+dy); g.lineTo(cx-dx,cy);
+        g.closePath(); g.fill();
+        g.fillStyle='#379a4b'; g.beginPath();
+        g.moveTo(cx,cy-dy*0.55); g.lineTo(cx+dx*0.55,cy); g.lineTo(cx,cy+dy*0.55); g.lineTo(cx-dx*0.55,cy);
+        g.closePath(); g.fill();
+        g.fillStyle='#c2854a'; g.beginPath(); g.arc(cx,cy,Math.max(2,w*0.05),0,6.283); g.fill();
+        g.fillStyle='#c2854a';
+        g.beginPath(); g.arc(cx,h*0.11,Math.max(2,w*0.07),0,6.283); g.fill();
+        g.beginPath(); g.arc(cx,h*0.89,Math.max(2,w*0.07),0,6.283); g.fill();
+        g.strokeStyle='rgba(240,235,200,0.7)'; g.strokeRect(2,2,w-4,h-4);
         } }
     };
     let boardKey='wood', board=BOARDS[boardKey];
-    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle' };
+    const AMBIENCE={ wood:'desk', grass:'stadium', street:'urban', beach:'beach', neon:'cyber', ice:'winter', cobble:'lisbon', clay:'fiesta', turf:'arena', stone:'coast', savanna:'safari', aquarium:'aquarium', storm:'storm', candy:'candy', casino:'casino', space:'space', skate:'skate', jungle:'jungle', baseball:'stadium', court:'arena', tennis:'arena', minigolf:'golf', gridiron:'stadium', bowling:'arena', raceway:'stadium', ring:'arena', podium:'stadium' };
     function ambType(){ return AMBIENCE[boardKey]||'stadium'; }
 
     function drawNetPocket(x,y,w,h,side){
@@ -523,6 +912,35 @@
       try{ if(typeof gumballs!=='undefined'&&gumballs) gumballs.length=0;
       if(typeof candyPatches!=='undefined'&&candyPatches) candyPatches.length=0;
       if(typeof candyBog!=='undefined'&&candyBog) candyBog.length=0;
+      if(typeof bbBats!=='undefined'&&bbBats) bbBats.length=0;
+      if(typeof bbPitchBalls!=='undefined'&&bbPitchBalls) bbPitchBalls.length=0;
+      if(typeof bbGloves!=='undefined'&&bbGloves) bbGloves.length=0;
+      if(typeof tnRackets!=='undefined'&&tnRackets) tnRackets.length=0;
+      if(typeof tnDoors!=='undefined'&&tnDoors) tnDoors.length=0;
+      tnFlipOn=false; tnDoorOn=false; tnT=0;
+      tnOn=false; tnNetFlash=0;
+      if(typeof bkBoards!=='undefined'&&bkBoards) bkBoards.length=0;
+      bkOn=false; bkRimOn=false; bkTrampOn=false;
+      if(typeof bkTramps!=='undefined'&&bkTramps) bkTramps.length=0;
+      if(typeof bkRims!=='undefined'&&bkRims) bkRims.length=0;
+      bkLastScore=-1;
+      if(typeof cgWater!=='undefined'&&cgWater) cgWater.length=0;
+      if(typeof cgSand!=='undefined'&&cgSand) cgSand.length=0;
+      if(typeof cgTrees!=='undefined'&&cgTrees) cgTrees.length=0;
+      if(typeof cgCups!=='undefined'&&cgCups) cgCups.length=0;
+      cgOn=false; cgT=0;
+      cgCupOn=false; cgHoled=null; cgBonus=false; cgSplash=0; cgDrown=null; cgStamBase=0;
+      gridOn=false; _gridPrevMoving=false; gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0];
+      bowlOn=false; _bowlPrevMoving=false; if(typeof bowlPins!=='undefined'&&bowlPins) bowlPins.length=0;
+      bowlRakePh=0; bowlGutter=null;
+      cgOn=false; bkOn=false; tnOn=false; bbOn=false;   // SPORTS DAY borrows these, so a board change must re-init them
+      rgOn=false; rgT=0; if(typeof rgBags!=='undefined'&&rgBags) rgBags.length=0; if(typeof rgScuff!=='undefined'&&rgScuff) rgScuff.length=0;
+      rcOn=false; rcLightT=0; if(typeof rcRuts!=='undefined'&&rcRuts) rcRuts.length=0;
+      if(typeof rcDust!=='undefined'&&rcDust) rcDust.length=0;
+      if(typeof rcSmear!=='undefined'&&rcSmear) rcSmear.length=0;
+      if(typeof rcOils!=='undefined'&&rcOils) rcOils.length=0;
+      if(typeof rcTyres!=='undefined'&&rcTyres) rcTyres.length=0;
+      if(typeof rcGravels!=='undefined'&&rcGravels) rcGravels.length=0;
       }catch(e){}
       try{ if(typeof dice!=='undefined'&&dice) dice.length=0;
       if(typeof numBoxes!=='undefined'&&numBoxes) numBoxes.length=0;

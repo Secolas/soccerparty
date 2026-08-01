@@ -240,6 +240,7 @@
     } }
     function _devilRetarget(){ if(!royDevil) return; royDevil.tx=WALL+34+Math.random()*(W-2*WALL-68); royDevil.ty=NET_DEPTH+GOAL_AREA_D+30+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-60); }
     function royDevilTick(dt){ if(!royDevil||royDevil.hasBall) return;
+    if(royDevil._aftShock) return;   // AFTERSHOCK froze it mid-spin
     var _st=dt/16.67; if(_st>3)_st=3;
     if(_st<0.2)_st=0.2; var s=royDevil;
     s.phase+=0.18*_st*s.spin;
@@ -270,7 +271,11 @@
       30,40,60]); }catch(e){} } return;
       }
       if(s.cd>0){ s.cd--; return; }
+      if(s._aftShock) return;   // a shocked devil cannot catch
       var dx=coin.x-s.x, dy=coin.y-s.y, d=Math.hypot(dx,dy), R=DEVIL_R*0.5+COIN_R;
+      // AFTERSHOCK: a charged shot cannot be eaten — it ZAPS the devil instead, freezing it for a flick
+      if(d<R && TAC.aftershock && !aftUsed){ try{ aftShock([s], s.x, s.y, Math.hypot(coin.vx,coin.vy), false); }catch(e){}
+      s.cd=60; return; }
       if(d<R){ s.hasBall=true;
       s.eatT=0; s.eatDur=42; try{ spawnSparks(s.x,s.y,'#f2ddab',12);
       }catch(e){} try{ if(!muted&&typeof sfxGuided==='function') sfxGuided();
@@ -678,6 +683,7 @@
     } } else if(royBoulder){ royBoulder=null;
     } }
     function royBoulderTick(dt){ if(!royBoulder) return;
+    if(royBoulder._aftShock) return;   // AFTERSHOCK: the boulder stops rolling for a flick
     var _st=dt/16.67; if(_st>3)_st=3;
     var s=royBoulder, lo=WALL+BOULDER_R, hi=W-WALL-BOULDER_R, spd=1.25*_st;
     s.x+=s.dir*spd; s.roll+=s.dir*spd/BOULDER_R;
@@ -698,7 +704,7 @@
     } try{ if(typeof sfxWall==='function') sfxWall();
     }catch(e){} try{ spawnSparks(s.x+ux*BOULDER_R,s.y+uy*BOULDER_R,'#8a8078',10);
     }catch(e){} try{ if(typeof haptic==='function') haptic([0,
-    24,14,24]); }catch(e){} } }
+    24,14,24]); }catch(e){} if(TAC.aftershock && !aftUsed){ try{ aftShock([s], s.x+ux*BOULDER_R, s.y+uy*BOULDER_R, _tv||4, false); }catch(e){} } } }
     function drawBoulder(now){ if(!royBoulder) return;
     var s=royBoulder, R=BOULDER_R;
     ctx.save(); ctx.imageSmoothingEnabled=false;
@@ -1015,6 +1021,1028 @@
     '#c86aff']; for(var g=0;g<gbdefs.length;g++){ var a=Math.random()*6.283, sp=0.5+Math.random()*0.15;
     gumballs.push({x:gbdefs[g].x,y:gbdefs[g].y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6,col:cols[g%5]});
     } } }
+    // BASEBALL (THE DIAMOND, Season 3) — ADDITIVE by difficulty, NO power/speed scaling:
+    //   EASY: one bat at each home plate (mirrored). It RESTS and only swings when a ball enters its
+    //         zone. The swing is the SAME speed at every difficulty and the barrel sweeps its arc, so
+    //         a hard flick blows past before the barrel arrives — a "strike". A connect launches the
+    //         ball toward that bat's OPPOSITE goal at a fixed power.
+    //   MED : + a pitching machine firing a stray ball in from a random side / diagonal.
+    //   HARD: + ONE catcher's glove on the pitcher's mound, which claims only a ball that has already
+    //         slowed below BB_CATCH_MAX — a live shot blows straight through it.
+    // Every effect only touches a MOVING ball, so the ball still settles and turns end.
+    var bbBats=[], bbPitchBalls=[], bbPitchCD=0, bbPitchOn=false, bbGloves=[], bbGlovesOn=false, bbBatsOn=true, bbOn=false;
+    var BB_RZ=40, BB_SWING=14, BB_ARC=Math.PI, BB_POWER=5.6, BB_REACH=27, BB_BARREL=12;
+    // A glove only claims a ball that is already dying. A real shot beats it, so the hazard reads as
+    // "do not leave it short through the middle" — a skill test, not a random confiscation.
+    var BB_CATCH_MAX=3.2;   /* a ball still rolling this slowly through the mound is claimed; a live shot blows through */
+    function initBaseball(){ var t=hzTier(); bbOn=true;
+    // one bat guards each goal: a ball rolling close gets cleared toward the FAR goal, unless a hard
+    // flick strikes past the swing. Top bat clears downfield, bottom bat clears upfield.
+    // The bat stands AT home plate, which the board art draws NET_DEPTH+32 out from each goal —
+    // it used to float at H*0.20 / H*0.80, matching nothing on the pitch, which is why the swing
+    // read as random. Now it is the last line in front of the keeper: a soft shot gets cleared,
+    // a hard flick strikes past it.
+    var _hp=NET_DEPTH+32;
+    // isTop picks which half the 180-degree sweep arcs through: the top bat sweeps across its
+    // downfield side, the bottom bat across its upfield side, so each always swings out over the
+    // pitch and never back into its own net.
+    // SPORTS DAY borrows exactly ONE of the diamond's three pieces per tier (bat easy / pitching machine
+    // med / mitt hard), so the final shows one clean diamond row per difficulty instead of the additive
+    // stack the diamond's own board runs. bbBatsOn didn't exist before — the bats were unconditional.
+    var _pod=_pd('diamond');
+    bbBatsOn=_pod?(t===0):true;
+    bbBats=bbBatsOn?[{x:W/2,y:_hp,rest:-1.03,tgt:H,isTop:1,swing:false,swT:0,cd:0,start:0,dir:1},
+    {x:W/2,y:H-_hp,rest:2.11,tgt:0,isTop:0,swing:false,swT:0,cd:0,start:0,dir:1}]:[];
+    bbPitchOn=_pod?(t===1):(t>=1); bbGlovesOn=_pod?(t===2):(t>=2);
+    bbPitchBalls=[]; bbPitchCD=90; bbGloves=[];
+    // ONE glove, on the pitcher's mound. Four of them — sat at coordinates matching no drawn base —
+    // turned midfield into four ball-traps that ate any shot passing through. It starts disarmed so
+    // the kickoff ball, which sits inside it, has to leave once before it can ever be claimed.
+    if(bbGlovesOn) bbGloves.push({x:W/2,y:H/2,r:13,flash:0,armed:false,caught:false,catchT:0,openT:0});
+    }
+    // BASKETBALL (THE HARDWOOD, Season 3) — ADDITIVE by difficulty, no power/speed scaling:
+    //   EASY: the ball DRIBBLES — while it is running through midcourt it hops on a fixed beat, and on
+    //         the up-beat it sails clean over outfield players. The hop is confined to midcourt ON
+    //         PURPOSE: going airborne skips every nail collision including the GOALIE (see collideStep),
+    //         so letting it hop near the goals would let shots float past the keeper at random.
+    //   MED : + backboards angled beside each goal — bank a shot off one and it deflects goalwards.
+    //   HARD: + a shot clock; the longer one possession runs, the more the ball is hurried along.
+    var bkOn=false, bkBoards=[], bkBoardFlash=0, bkTramps=[], bkTrampOn=false;
+    var bkRims=[], bkRimOn=false, bkRimPass={red:false,blue:false}, bkNoBasket=0, bkLastScore=-1;
+    var bkPrev={x:0,y:0};
+    /* BK_RIM_HALF: the hoop's half-gap. The ball is COIN_R=5 across the middle, so 8 gives a 16px
+       mouth — a bit over 1.5 balls wide. Coin-tight would be a luck check once anything deflects. */
+    var BK_BOARD_R=4, BK_TRAMP_R=11, BK_HOP=16, BK_RIM_HALF=8, BK_POST_R=2.4;
+    // pick a spot that does not sit on a player, the ball, or another prop
+    function _bkFree(x,y,r,extra){ try{ for(var i=0;i<nails.length;i++){ if(Math.hypot(x-nails[i].x,y-nails[i].y)<r+NAIL_R+7) return false; }
+    }catch(e){} try{ if(coin&&Math.hypot(x-coin.x,y-coin.y)<r+COIN_R+9) return false; }catch(e){}
+    for(var b=0;b<bkBoards.length;b++){ var _b=bkBoards[b];
+    if(Math.hypot(x-(_b.x1+_b.x2)/2,y-(_b.y1+_b.y2)/2)<r+16) return false; }
+    for(var t=0;t<bkTramps.length;t++){ if(Math.hypot(x-bkTramps[t].x,y-bkTramps[t].y)<r+BK_TRAMP_R+8) return false; }
+    for(var m=0;m<bkRims.length;m++){ if(Math.hypot(x-bkRims[m].x,y-bkRims[m].y)<r+BK_RIM_HALF+12) return false; }
+    if(extra) for(var e=0;e<extra.length;e++){ if(Math.hypot(x-extra[e].x,y-extra[e].y)<r+extra[e].r) return false; }
+    return true; }
+    // HARD rims: THREE fixed hoops — left, centre and right — set across each penalty area, mouths
+    // facing that goal. A shot only counts if it went through one of them (see bkGoalDenied). They sit
+    // at fixed, mirrored spots rather than being re-thrown each goal: you learn the three lanes and
+    // pick one, and the layout stays symmetric for both teams.
+    // The three hoops stand ON the penalty-area border — the line the box closes with, furthest from
+    // goal — spread across its width. Each still FACES the goal centre, so the two wing hoops are
+    // angled diagonally while the centre one squares up.
+    function bkSpawnRims(){ bkRims=[];
+    if(!bkRimOn) return;
+    var ends=[{team:'red',gy:NET_DEPTH,box:goalAreaRect('blue'),into:1},
+    {team:'blue',gy:H-NET_DEPTH,box:goalAreaRect('red'),into:-1}];
+    for(var e=0;e<ends.length;e++){ var en=ends[e], gx=W/2, gy=en.gy;
+    var by=gy+GOAL_AREA_D*en.into;              // the border line of the box
+    for(var s=0;s<3;s++){ var px=en.box.x+en.box.w*(0.2+0.3*s), py=by;
+    var fx=gx-px, fy=gy-py, fl=Math.hypot(fx,fy)||1;
+    bkRims.push({x:px,y:py,fx:fx/fl,fy:fy/fl,half:BK_RIM_HALF,for:en.team,flash:0}); } } }
+    // the hoop the AI should shoot through: the one closest to its natural line at goal
+    // One predicate per borrowed arena, so SPORTS DAY can switch its hazards on without every call site knowing.
+    function bbArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='baseball'||_pd('diamond'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function cgArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='minigolf'||_pd('water')||_pd('cups'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bkArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='court'||_pd('hoops'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function tnArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='tennis'||_pd('net'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bkAimTarget(team){ if(!(bkArena()&&bkRimOn)) return null;
+    if(!bkRims.length){ try{ initCourt(); }catch(e){} }
+    var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH), gx=W/2;
+    var vx=gx-coin.x, vy=gy-coin.y, vl=Math.hypot(vx,vy)||1; vx/=vl; vy/=vl;
+    var best=null, bestD=1e9;
+    for(var i=0;i<bkRims.length;i++){ var r=bkRims[i]; if(r.for!==team) continue;
+    var dx=r.x-coin.x, dy=r.y-coin.y, along=dx*vx+dy*vy;
+    if(along<=2) continue;                                    // must be ahead of the ball
+    var perp=Math.abs(dx*(-vy)+dy*vx);                        // how far off the natural line it sits
+    if(perp<bestD){ bestD=perp; best=r; } }
+    return best; }
+    function initCourt(){ var t=hzTier();
+    // On SPORTS DAY only the hoops are borrowed — no backboards, no trampolines.
+    var _pH=_pd('hoops');
+    bkOn=true; bkTrampOn=_pH?false:(t>=1); bkRimOn=_pH?true:(t>=2);
+    bkBoards=[]; bkTramps=[]; bkRims=[];
+    bkRimPass={red:false,blue:false}; bkNoBasket=0;
+    var gL=Math.round((W-GOAL_W)/2), gR=Math.round((W+GOAL_W)/2), _o=13, _d=17;
+    // EASY backboards: one angled board outside each post, canted to turn a bank shot goalwards
+    if(!_pH){ bkBoards.push({x1:gL-_o,y1:NET_DEPTH+2,x2:gL-_o-_d,y2:NET_DEPTH+2+_d});
+    bkBoards.push({x1:gR+_o,y1:NET_DEPTH+2,x2:gR+_o+_d,y2:NET_DEPTH+2+_d});
+    bkBoards.push({x1:gL-_o,y1:H-NET_DEPTH-2,x2:gL-_o-_d,y2:H-NET_DEPTH-2-_d});
+    bkBoards.push({x1:gR+_o,y1:H-NET_DEPTH-2,x2:gR+_o+_d,y2:H-NET_DEPTH-2-_d}); }
+    if(bkTrampOn){ for(var n=0;n<3;n++){ for(var tryN=0;tryN<70;tryN++){
+    var ty=NET_DEPTH+GOAL_AREA_D+18+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-36);
+    var tx=WALL+20+Math.random()*(W-WALL*2-40);
+    if(_bkFree(tx,ty,BK_TRAMP_R)){ bkTramps.push({x:tx,y:ty,r:BK_TRAMP_R,flash:0}); break; } } } }
+    bkSpawnRims(); }
+    // TENNIS (CENTRE COURT, Season 3) — ADDITIVE by difficulty:
+    //   EASY: the NET across midfield plus the RACKETS. The net is solid to anything on the ground,
+    //         however hard it is struck. The only ways across are in the air — run onto a racket and
+    //         be lobbed over, or Chip — or round the open lanes at either end of the net.
+    //   MED : the rackets FLIP on a loop — green lobs you over, red swats you back. Phases are
+    //         staggered so there is nearly always a live one, and an amber tell precedes each flip.
+    //   HARD: + sliding gates that shut BOTH side lanes on a loop, extending from each net post out
+    //         to the wall. While they are out the ground is shut completely and the only ways across
+    //         are a racket lob or Chip.
+    var tnOn=false, tnNetFlash=0, tnPrevY=0, tnRackets=[], tnFlipOn=false, tnDoors=[], tnDoorOn=false, tnT=0;
+    var TN_RACK_R=11, TN_RACK_AIR=24, TN_RACK_MAX=4.0;
+    var TN_FLIP=170, TN_GREEN=105;
+    // sliding gates that shut the side lanes: open hold -> slide out -> closed hold -> slide back.
+    var TN_DOOR=210, TN_D_OPEN=70, TN_D_SLIDE=25, TN_D_SHUT=90;
+    function tnDoorExt(d){ if(!tnDoorOn) return 0;
+    var p=(tnT+d.off)%TN_DOOR;
+    if(p<TN_D_OPEN) return 0;
+    p-=TN_D_OPEN; if(p<TN_D_SLIDE) return p/TN_D_SLIDE;
+    p-=TN_D_SLIDE; if(p<TN_D_SHUT) return 1;
+    p-=TN_D_SHUT; return Math.max(0,1-p/TN_D_SLIDE); }
+    // a racket is live (green, lobs you over) for most of its cycle and dead (red, swats you back)
+    // for the rest. Phases are staggered so there is almost always a live one to run onto.
+    function tnRackLive(r){ return !tnFlipOn || (((tnT+r.off)%TN_FLIP)<TN_GREEN); }
+    function tnRackWarn(r){ if(!tnFlipOn) return false; var p=(tnT+r.off)%TN_FLIP;
+    return p<TN_GREEN && p>TN_GREEN-26; }   /* amber tell just before it goes red */
+    // The net spans exactly the blue court and its posts stand on the sidelines, so the open lane
+    // round each end is the green apron outside the court. A function (not a var) because the board
+    // art in 03-boards.js calls it while painting, which happens before this file's vars are assigned.
+    // The apron is 22px so the lane leaves roughly a 12px window for a 10px ball — threadable with a
+    // curve or a placed flick, not free. At the original 14px it was a 4px window: effectively shut.
+    function tnApron(){ return 22; }
+    function tnNetX0(){ return WALL+tnApron(); }
+    function tnNetX1(){ return W-WALL-tnApron(); }
+    function initTennis(){ var t=hzTier();
+    tnOn=true; tnNetFlash=0; tnT=0; tnPrevY=(typeof coin!=='undefined'&&coin)?coin.y:H/2;
+    // On SPORTS DAY only the net + rackets are borrowed — the red-racket flip and the sliding gates stay home.
+    var _pN=_pd('net');
+    tnFlipOn=_pN?false:(t>=1); tnDoorOn=_pN?false:(t>=2);
+    // rackets: two per half, sitting just short of the net so you can run onto one and be lobbed over
+    tnRackets=[]; var n=0; for(var s=-1;s<=1;s+=2){ for(var i=0;i<2;i++){
+    tnRackets.push({x:W*(i?0.68:0.32),y:H/2+s*34,r:TN_RACK_R,flash:0,ang:(i?-0.6:0.6)*s,off:n*Math.round(TN_FLIP/4)});
+    n++; } }
+    // sliding gates, one per side lane, extending from the net post out to the wall
+    // Both gates share a phase so they seal TOGETHER. Antiphase was tried first and it guaranteed
+    // one lane was always open, which read as "the gates do nothing" — you could just switch sides.
+    // In phase there are real windows where the ground is shut and the only ways over are a racket
+    // lob or Chip, which is the point of the tier.
+    tnDoors=[]; if(tnDoorOn){ tnDoors.push({side:-1,off:0,flash:0});
+    tnDoors.push({side:1,off:0,flash:0}); }
+    }
+    // ball-kids shuffle along their line from the draw loop so they move between shots
+    function tennisTick(){ if(!(tnArena())) return;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    if(tnNetFlash>0) tnNetFlash--;
+    tnT++;
+    for(var r=0;r<tnRackets.length;r++){ if(tnRackets[r].flash>0) tnRackets[r].flash--; }
+    for(var v=0;v<tnDoors.length;v++){ if(tnDoors[v].flash>0) tnDoors[v].flash--; } }
+    // the x range a gate currently covers, or null when it is open
+    function tnDoorSpan(d){ var e=tnDoorExt(d); if(e<=0.02) return null;
+    var lane=tnApron();
+    if(d.side<0){ var p0=tnNetX0(); return {x0:p0-e*lane,x1:p0}; }
+    var p1=tnNetX1(); return {x0:p1,x1:p1+e*lane}; }
+    // Does the net (or a closed gate) block a ground crossing at this x? Used by the AI so it can
+    // tell "must go over" from "there is a lane open".
+    function tnBlocksAt(x){ if(!(tnArena())) return false;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    if(x>tnNetX0()&&x<tnNetX1()) return true;
+    for(var i=0;i<tnDoors.length;i++){ var sp=tnDoorSpan(tnDoors[i]);
+    if(sp&&x>sp.x0-COIN_R*0.4&&x<sp.x1+COIN_R*0.4) return true; }
+    return false; }
+    // Where should the CPU aim on CENTRE COURT? Returns a waypoint, or null to just shoot at goal.
+    //   - has Chip        -> null (shoot at goal; aiMaybeChip lifts it over the net in flight)
+    //   - a lane is open  -> hug that lane, so a curve/banana can bend round the net
+    //   - else a live racket that is roughly on the way -> run onto it and get lobbed over
+    function tnAimPlan(team){ if(!(tnArena())) return null;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    var ny=H/2, gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
+    var mustCross=((coin.y-ny)*(gy-ny)<0);      // ball and target goal on opposite sides of the net
+    if(!mustCross) return null;
+    var ab=(typeof sideAb!=='undefined'&&sideAb[team])?sideAb[team]:[];
+    if(ab.indexOf('chip')>=0&&(typeof chipUsed==='undefined'||!chipUsed)) return null;
+    var lanes=[{x:(WALL+tnNetX0())/2},{x:(tnNetX1()+W-WALL)/2}];
+    // sample across the ball's width, not just its centre: mid-slide a shutter can already overlap
+    // the edge of the ball while the centre line still looks clear
+    var openLanes=[]; for(var l=0;l<lanes.length;l++){ var lx=lanes[l].x;
+    if(!tnBlocksAt(lx)&&!tnBlocksAt(lx-COIN_R)&&!tnBlocksAt(lx+COIN_R)) openLanes.push(lanes[l]); }
+    if(openLanes.length){ openLanes.sort(function(a,b){ return Math.abs(a.x-coin.x)-Math.abs(b.x-coin.x); });
+    return {x:openLanes[0].x,y:gy,kind:'lane'}; }
+    var best=null,bd=1e9;
+    for(var r=0;r<tnRackets.length;r++){ var rk=tnRackets[r];
+    if(!tnRackLive(rk)) continue;
+    if((rk.y-ny)*(coin.y-ny)<=0) continue;      // must be on the ball's own side of the net
+    var d=Math.hypot(rk.x-coin.x,rk.y-coin.y);
+    if(d<bd){ bd=d; best=rk; } }
+    if(best) return {x:best.x,y:best.y,kind:'racket'};
+    return null; }
+    // CRAZY GOLF (Season 3) — FOOTGOLF: a golf hole whose cup is a goal.
+    //
+    // This is the fourth design for arena 4 and the first that is not a pile of props. The three that
+    // failed all made the same mistake in different costumes — a row of obstacles ACROSS midfield (a
+    // fence, something to survive), a cup that punished ordinary play, and springy bank rails (which
+    // measured perfectly and were still wrong, because a deflector puts the ball where the GEOMETRY
+    // chose rather than where the PLAYER chose). What none of them had was a SHAPE.
+    //
+    // A golf hole is not obstacles scattered on a fairway. It is a shape: hazards placed so the direct
+    // line is dead, leaving routes that curve. The skill is choosing a line, not surviving a barrier —
+    // and crucially the hazards are landmarks you steer BY, not things that push you around. So:
+    //   WATER  — your shot dies at the bank. Never redirects, never teleports you: it just ends there,
+    //            and it is a big obvious blue thing you had every chance to avoid. Sits dead centre of
+    //            each approach, which is what kills the straight line to goal.
+    //   SAND   — extra drag, not a wall. A firm strike ploughs through and a chip flies over, while a
+    //            soft one dies in it. So the bunker is a SHORTCUT you can buy with power.
+    //   TREES  — a tree kills the ball. No bounce, no deflection: golf's oldest joke is that a tree is
+    //            90% air and you always hit it. One guards each goal so the last shot has to come from
+    //            an angle rather than straight down the middle.
+    //   CUPS   — hole out for one more flick (hard). The two flank routes end at them, so running the
+    //            long way round pays.
+    // Every one of these only ever REMOVES energy, so none of them can stop the ball settling and the
+    // turn ending — the invariant that every earlier arena needed special-casing to keep.
+    //
+    // The layout is 180-degree ROTATIONALLY symmetric, not mirrored: rotating the top half about the
+    // centre spot gives the bottom half, so both sides face the identical hole with water on the same
+    // hand. A reflection would have handed one side the easier approach.
+    var cgOn=false, cgT=0, cgWater=[], cgSand=[], cgTrees=[], cgCups=[];
+    var cgCupOn=false, cgSplash=0, cgSplashX=0, cgSplashY=0, cgHoled=null, cgBonus=false;
+    // Water drown sequence: the ball sinks where it went in, then is dropped back onto the grass shore for
+    // the next flick. Deliberately unhurried (SINK then DROP frames) so it reads as real water physics
+    // rather than the ball being snapped to the bank. null = idle; while set, stepPhysics only ticks it.
+    var cgDrown=null, CG_DROWN_SINK=50, CG_DROWN_DROP=34;
+    // Hole-out reward: stamina is REFRESHED to 100% at the hole, then decreases again with each following
+    // flick — it does NOT stay pinned at 100% for the rest of the turn. cgStamBase records the flick count
+    // at the hole so staminaMul counts stamina forward from there. The hole-out still COUNTS as a flick
+    // (the tally keeps ticking down) and keeps the turn. Reset to 0 when the turn passes.
+    var cgStamBase=0;
+    var cgPrevX=0, cgPrevY=0;   // last frame's ball position, so a splash can be traced to the shore crossed
+    /* THE SHAPE, in board units (W=210, H=330). Everything is placed for the TOP half and rotated.
+       The two flank lanes are what makes this a hole rather than a wall, so their width is the number
+       that matters: WALL(12) to the pond's left edge is 29px, and the bunker's right edge to the far
+       wall is 32px. A ball is 10px across, so that is an 19-22px window for its centre — wider than
+       CENTRE COURT's side lanes, which play fine. */
+    /* SMALLER AND SYMMETRIC. The first layout put a big pond on one flank and a bunker on the other, then
+       ROTATED it 180 for the far half — so the dark rough sat left-of-centre up top and right-of-centre
+       below, and the whole pitch read as skewed even though it was perfectly centred (confirmed with
+       ?nohz=1: the bare pitch is square). The hole is now built SYMMETRIC about the centre line: a single
+       central pond per half, a matched pair of flank bunkers, and a tree pair either side of the goal.
+       Everything is smaller too. Because each piece is symmetric about W/2, the 180 rotation to the far
+       half is identical to a vertical mirror, so the pitch is balanced on BOTH axes. */
+    /* PLACEMENT: one hazard cluster per half, in the middle of that half — NOT at midfield. The midfield
+       version left the attacking third open (scoreable) but sat right where both teams' formations meet,
+       so the peg-clearing squeezed every outfield token into the centre and the setup looked clustered.
+       A cluster per half (y=92, mirrored to y=238) keeps midfield clear so the formation spreads normally,
+       and keeps the centre spot clear for kickoff. It is closer to the goal than the midfield belt, so the
+       attacking approach is tighter — the pond does not cover the goalmouth, so a shot from the side of it
+       still scores, but it is a real golf hole again rather than an open midfield. */
+    var CG_POND_X=105, CG_POND_Y=92, CG_POND_RX=24, CG_POND_RY=18;   // pond in the middle of each half
+    var CG_SAND_DX=57, CG_SAND_Y=100, CG_SAND_RX=13, CG_SAND_RY=11;  // bunkers flanking, just below the pond
+    var CG_TREE_DX=46, CG_TREE_Y=88, CG_TREE_R=6;                    // trees at the pond's shoulders
+    /* CG_SAND_DRAG. The first value, 0.70, gave a combined factor of 0.689 and a roll of only v*2.21px:
+       measured, EVERY strike from 4 to 10 died inside the 40px bunker, so the bunker was not a hazard
+       with a price, it was a second pond. At 0.86 the combined factor is 0.846 and the roll is v*5.49,
+       which splits the outcomes the way a bunker should:
+         - landing in it costs you the shot, and you play OUT of it next turn (escaping the ~20px to the
+           lip needs only v>3.6, about a third of a flick — golf-true: you chop out and lose distance);
+         - carrying clean through the full 40px needs to enter at v>7.3, i.e. a near-max strike from
+           close range. Possible, rare, and worth going for.
+       Drag can only ever remove speed, so sand can never stop the ball settling and the turn ending. */
+    var CG_SAND_DRAG=0.86, CG_TREE_KILL=0.10;
+    /* A cup has no pin in it, so the whole 7px is reachable (the mistake in the cut version was a solid
+       post keeping the ball 8px away, forcing the cup wider than the thing it was meant to catch).
+       CG_CUP_V keeps it a skill target: a firm putt skips the lip, only a dying ball drops. */
+    var CG_CUP=7, CG_CUP_V=2.6;
+    /* THE PIN IS SOLID. Requiring the ball to come to REST inside a 7px hole made the cup a lottery: you
+       had to stop dead on it, which is not how you hole a putt. A solid flagstick gives you something to
+       AIM AT — arrive at the pin softly and it drops, which is exactly the shot a golfer plays. Hit it
+       hard instead and the pin kills the ball's pace and it stays out, so power is the wrong answer.
+       CG_PIN is deliberately thin (a flagstick is thin) but the ball is COIN_R=5, so contact happens at
+       7px — the same size target as the hole itself, just reachable while still moving. */
+    var CG_PIN=2, CG_PIN_KILL=0.35;
+    /* The payoff for holing out is ONE FULL-POWER FLICK: aim only, the power is given to you. An ordinary
+       extra flick was too quiet a reward for a target this small. */
+    var cgFullFlick_=false;
+    function initMinigolf(){ var t=hzTier();
+    // On SPORTS DAY only the borrowed piece exists: the pond on easy, the cups on hard — never golf's full field.
+    var _pW=_pd('water'), _pC=_pd('cups'), _pod=(_pW||_pC);
+    cgOn=true; cgT=0; cgHoled=null; cgBonus=false; cgSplash=0; cgFullFlick_=false; cgDrown=null; cgStamBase=0;
+    cgCupOn=_pod?_pC:(t>=2);
+    // rot(p) is the 180-degree rotation about the centre spot: the bottom half IS the top half turned round
+    var rot=function(x,y){ return {x:W-x,y:H-y}; };
+    cgWater=[]; cgSand=[]; cgTrees=[]; cgCups=[];
+    // HAZARD TIERS: the pond is on at EVERY difficulty (easy is just the pond, to learn the routing);
+    // bunkers + trees add on MEDIUM (the full hazard field); the cups add on HARD (cgCupOn, below).
+    // WATER: a central pond in the midfield belt — EASY and up (and the podium's easy borrow).
+    if(!_pod||_pW) cgWater.push({x:CG_POND_X,y:CG_POND_Y,rx:CG_POND_RX,ry:CG_POND_RY,flash:0,pl:cgProfile(),pr:cgProfile()});
+    // TREES: a symmetric pair flanking the midfield belt — MEDIUM and up. Never borrowed by the podium.
+    if(t>=1&&!_pod){ cgTrees.push({x:CG_POND_X-CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0});
+    cgTrees.push({x:CG_POND_X+CG_TREE_DX,y:CG_TREE_Y,r:CG_TREE_R,flash:0}); }
+    // SAND: a matched pair of bunkers flanking the pond — MEDIUM and up. Never borrowed by the podium.
+    if(t>=1&&!_pod){ cgSand.push({x:CG_POND_X-CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()});
+    cgSand.push({x:CG_POND_X+CG_SAND_DX,y:CG_SAND_Y,rx:CG_SAND_RX,ry:CG_SAND_RY,pl:cgProfile(),pr:cgProfile()}); }
+    // Mirror the whole top-half set to the bottom. Every piece above is symmetric about W/2, so the 180
+    // rotation and a vertical mirror give the same result — the pitch ends up balanced on both axes.
+    var _wN=cgWater.length, _sN=cgSand.length, _tN=cgTrees.length;
+    for(var _wi=0;_wi<_wN;_wi++){ var _w=cgWater[_wi], _rw=rot(_w.x,_w.y);
+    cgWater.push({x:_rw.x,y:_rw.y,rx:_w.rx,ry:_w.ry,flash:0,pl:cgProfile(),pr:cgProfile()}); }
+    for(var _si=0;_si<_sN;_si++){ var _s=cgSand[_si], _rs=rot(_s.x,_s.y);
+    cgSand.push({x:_rs.x,y:_rs.y,rx:_s.rx,ry:_s.ry,pl:cgProfile(),pr:cgProfile()}); }
+    for(var _ti=0;_ti<_tN;_ti++){ var _t=cgTrees[_ti], _rt=rot(_t.x,_t.y);
+    cgTrees.push({x:_rt.x,y:_rt.y,r:_t.r,flash:0}); }
+    // CUPS: the far corners of each attacking third — hole out to play on with refreshed stamina (HARD).
+    if(cgCupOn){ for(var c=0;c<2;c++){ var cy=c?(H-NET_DEPTH-27):(NET_DEPTH+27);
+    cgCups.push({x:34,y:cy,for:c?'blue':'red',flash:0,armed:true});
+    cgCups.push({x:W-34,y:cy,for:c?'blue':'red',flash:0,armed:true}); } } }
+    /* IRREGULAR OUTLINES. A perfect ellipse reads as programmer art, and a pond or bunker on a real
+       course is a wobbly organic shape. Each hazard therefore carries two edge profiles — one for its
+       left side, one for its right — sampled smoothly down its height, and BOTH the collision test and
+       the drawing read the same profiles, so the water that is visible is exactly the water that drowns
+       you. Profile values are capped at 1.0 so the wobbled shape always sits INSIDE its base ellipse,
+       which is what lets the water push-out (which normalises in ellipse space) stay safe. */
+    function cgProfile(){ var a=[]; for(var i=0;i<7;i++) a.push(0.84+Math.random()*0.16); a.push(a[0]); return a; }
+    function cgEdge(pr,t){ if(!pr||!pr.length) return 1;
+    var n=pr.length, u=Math.max(0,Math.min(1,t))*(n-1), i=Math.floor(u), f=u-i;
+    var p0=pr[Math.min(i,n-1)], p1=pr[Math.min(i+1,n-1)];
+    return p0+(p1-p0)*(f*f*(3-2*f)); }
+    // the shape's left and right half-widths at this y, or null when y is outside it
+    function cgSpan(e,y){ var ny=(y-e.y)/e.ry; if(ny<-1||ny>1) return null;
+    var sq=Math.sqrt(Math.max(0,1-ny*ny)), t=(ny+1)/2;
+    return {l:e.rx*sq*cgEdge(e.pl,t), r:e.rx*sq*cgEdge(e.pr,t)}; }
+    function cgIn(e,x,y){ var sp=cgSpan(e,y); if(!sp) return false;
+    var dx=x-e.x; return (dx<0)?(-dx<=sp.l):(dx<=sp.r); }
+    /* Nudge a PLAYER off a hazard. The formation lays pieces out on a grid that knows nothing about this
+       board, so pieces were being placed standing in the pond and on the bunkers — which looks broken and
+       is unfair on whoever drew that spot. Pushes radially clear of whichever hazard the piece is on and
+       re-checks, since shoving a piece out of the water can land it in a bunker. Goalies are left alone:
+       the green measures 100% clear, so a keeper on its line is never on a hazard. */
+    function cgClearSpot(x,y,rad){ if(!(cgArena())) return null;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    var R=rad||NAIL_R, lists=[cgWater,cgSand];
+    for(var pass=0;pass<4;pass++){ var moved=false;
+    for(var L=0;L<lists.length;L++){ for(var i=0;i<lists[L].length;i++){ var e=lists[L][i];
+    if(!cgIn(e,x,y)) continue;
+    var dx=x-e.x, dy=y-e.y, d=Math.hypot(dx,dy);
+    if(d<0.001){ dx=1; dy=0; d=1; }
+    var k=Math.max(e.rx,e.ry)+R+2;
+    x=e.x+(dx/d)*k; y=e.y+(dy/d)*k; moved=true; } }
+    for(var t=0;t<cgTrees.length;t++){ var tr=cgTrees[t];
+    var tdx=x-tr.x, tdy=y-tr.y, td=Math.hypot(tdx,tdy);
+    if(td>=tr.r+R+2) continue;
+    if(td<0.001){ tdx=1; tdy=0; td=1; }
+    x=tr.x+(tdx/td)*(tr.r+R+2); y=tr.y+(tdy/td)*(tr.r+R+2); moved=true; }
+    if(!moved) break; }
+    x=Math.max(WALL+R,Math.min(W-WALL-R,x));
+    y=Math.max(WALL+R,Math.min(H-WALL-R,y));
+    /* Pushing radially is not enough on its own. The pond's right edge is at x=109 and the bunker's left
+       edge at x=114, so a peg shoved out of the water lands in the sand, gets shoved back into the water,
+       and the loop above just runs out of passes leaving it standing in the pond — which is exactly the
+       one peg that survived the first version. So if it is still on a hazard, search outward from where it
+       started and take the nearest point that is genuinely clear of everything. */
+    if(cgHazardAt(x,y,R)){ var found=null;
+    for(var rad=R+3;rad<=70&&!found;rad+=4){ for(var a=0;a<16&&!found;a++){
+    var an=a/16*Math.PI*2, tx2=x+Math.cos(an)*rad, ty2=y+Math.sin(an)*rad;
+    if(tx2<WALL+R||tx2>W-WALL-R||ty2<WALL+R||ty2>H-WALL-R) continue;
+    if(!cgHazardAt(tx2,ty2,R)) found={x:tx2,y:ty2}; } }
+    if(found){ x=found.x; y=found.y; } }
+    return {x:x,y:y}; }
+    // read + spend the free full-power flick, from either flick path (13-input and 09-ai)
+    function cgFullFlick(){ return !!(cgFullFlick_&&cgArena()); }
+    function cgSpendFullFlick(){ cgFullFlick_=false; }
+    function cgHoleOut(cup){ cgHoled=current; coin.x=cup.x; coin.y=cup.y;
+    coin.vx=0; coin.vy=0; cup.flash=34;
+    try{ if(typeof sfxJackpot==='function') sfxJackpot(); }catch(e){}
+    try{ spawnSparks(cup.x,cup.y,current,18,true); }catch(e){}
+    try{ shake=Math.max(shake||0,4); }catch(e){} }
+    function cgHazardAt(x,y,R){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return true; }
+    for(var j=0;j<cgSand.length;j++){ if(cgIn(cgSand[j],x,y)) return true; }
+    for(var t=0;t<cgTrees.length;t++){ if(Math.hypot(x-cgTrees[t].x,y-cgTrees[t].y)<cgTrees[t].r+(R||0)+2) return true; }
+    return false; }
+    function cgSandAt(x,y){ for(var i=0;i<cgSand.length;i++){ if(cgIn(cgSand[i],x,y)) return cgSand[i]; } return null; }
+    function cgWaterAt(x,y){ for(var i=0;i<cgWater.length;i++){ if(cgIn(cgWater[i],x,y)) return cgWater[i]; } return null; }
+    // a cup is live only for the side attacking that end, so you can never hole out into your own half
+    /* Any cup is usable by whoever is playing. It used to be gated to cup.for===current (red owned the top
+       cups, blue the bottom), which just made it unclear which holes you could actually sink — and one of
+       your two "own" cups sat in your own defensive corner where holing out is nearly useless. Now every
+       cup pays whoever holes it, still capped at one hole-out per possession by cgBonus. The 'for' field
+       is kept only for the pennant/collar tint. */
+    function cgCupLive(cup){ return true; }
+    // the two flank lanes: WALL to the pond's edge, and the bunker's edge to the far wall
+    function cgLaneX(side){ return (side<0)?((WALL+(CG_POND_X-CG_POND_RX))/2):(W-(WALL+(CG_POND_X-CG_POND_RX))/2); }
+    function minigolfTick(){ if(!(cgArena())) return;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    cgT++; if(cgSplash>0) cgSplash--;
+    if(!moving&&typeof coin!=='undefined'&&coin){ cgPrevX=coin.x; cgPrevY=coin.y; }
+    /* Sweep the pegs off the hazards from HERE, every frame the ball is still. Doing it only inside
+       rebuildFormations was not enough: formations are laid out before the arena's board is applied, so
+       boardKey was not yet 'minigolf' and cgClearSpot bailed out of its own guard — one peg was still
+       measuring as standing in the pond. This runs with the board definitely set and the pegs definitely
+       built, and it re-runs after a goal rebuilds the formation. The peg being dragged is skipped so it
+       does not fight the player's finger. */
+    if(!moving&&typeof nails!=='undefined'&&nails){ for(var ni=0;ni<nails.length;ni++){ var nn=nails[ni];
+    if(nn.goalie) continue;
+    if(typeof dragNail!=='undefined'&&dragNail===nn) continue;
+    if(!cgHazardAt(nn.x,nn.y,NAIL_R)) continue;
+    var fix=cgClearSpot(nn.x,nn.y,NAIL_R);
+    if(fix){ nn.x=fix.x; nn.y=fix.y; } } }
+    for(var i=0;i<cgTrees.length;i++){ if(cgTrees[i].flash>0) cgTrees[i].flash--; }
+    for(var w=0;w<cgWater.length;w++){ if(cgWater[w].flash>0) cgWater[w].flash--; }
+    for(var c=0;c<cgCups.length;c++){ if(cgCups[c].flash>0) cgCups[c].flash--; }
+    /* Re-ARM a cup once the ball is clear of its pin. Without this a HARD shot at the flagstick still went
+       in: the pin killed its pace, and the now-slow ball was still touching the pin, so it qualified as a
+       soft arrival on the very next frame. Holing requires the ball to have been away from the pin first,
+       so a hard hit has to leave and come back softly — which is the whole point of a solid pin. */
+    if(typeof coin!=='undefined'&&coin){ for(var ca=0;ca<cgCups.length;ca++){ var cu2=cgCups[ca];
+    if(Math.hypot(coin.x-cu2.x,coin.y-cu2.y)>CG_PIN+COIN_R+3) cu2.armed=true; } } }
+    /* What the CPU has to learn here. Unlike the arenas built out of props, the hazards are landmarks,
+       so there is exactly one real lesson: DO NOT SHOOT INTO THE POND. Left to itself the CPU fires at
+       the goal centre every turn, which on this layout is the middle of the water — it would drown its
+       own possession over and over and the arena would read as broken rather than hard.
+         - if the line to goal crosses water or a tree, aim through the nearer open flank lane instead,
+           picking the point on the GOAL LINE whose straight line runs through that lane (aiming at the
+           lane itself only earns a short flick that dies in it — learned the hard way on THE LINKS);
+         - a live cup within 58px is worth a turn, since it pays an extra flick. That needs a soft putt,
+           which is below the CPU's speed floor, so the plan carries soft:true and aiFlick lowers it. */
+    // Trace a segment for the hazards that ruin a shot: water (drown) and trees (dead stop) are fatal,
+    // and sand (heavy drag) is worth dodging too. Used to reject a blocked line to goal and to confirm a
+    // cup is actually reachable before committing a putt to it.
+    function cgLineBlocked(x0,y0,x1,y1){ var dx=x1-x0, dy=y1-y0;
+    for(var st=1;st<=24;st++){ var px=x0+dx*st/24, py=y0+dy*st/24;
+    if(cgWaterAt(px,py)) return true;
+    if(cgSandAt(px,py)) return true;
+    for(var tr=0;tr<cgTrees.length;tr++){ if(Math.hypot(px-cgTrees[tr].x,py-cgTrees[tr].y)<cgTrees[tr].r+COIN_R) return true; } }
+    return false; }
+    function cgAimPlan(team){ if(!(cgArena())) return null;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    var gy=(team==='red')?NET_DEPTH:(H-NET_DEPTH);
+    // REACH THE HOLE: a live cup within putt range whose line is clear pays a bonus flick, so it is
+    // usually the best turn on offer. Commit to it more readily on the harder tiers; any cup counts now
+    // (cgCupLive), not just this side's. Skip a cup whose approach crosses water/sand/trees.
+    if(cgCupOn){ var bc=null,bd=1e9;
+    for(var i=0;i<cgCups.length;i++){ var cu=cgCups[i];
+    var d=Math.hypot(cu.x-coin.x,cu.y-coin.y);
+    if(d<64&&d>12&&d<bd&&!cgLineBlocked(coin.x,coin.y,cu.x,cu.y)){ bd=d; bc=cu; } }
+    var pTake=(aiLevel==='hard')?0.9:(aiLevel==='med'?0.65:0.4);
+    if(bc&&Math.random()<pTake) return {x:bc.x,y:bc.y,soft:true,kind:'cup'}; }
+    // AVOID WATER/SAND/TREES: if the straight line to goal is clear, shoot it. If it is blocked, route
+    // through an open flank lane, aiming at the point on the GOAL LINE whose straight line runs through
+    // that lane (aiming at the lane itself only earns a short flick that dies in it).
+    if(!cgLineBlocked(coin.x,coin.y,W/2,gy)) return null;
+    var mid=(coin.y+gy)/2;
+    if(Math.abs(mid-coin.y)<10) return null;
+    var lanes=[cgLaneX(-1),cgLaneX(1)];
+    lanes.sort(function(a,b){ return Math.abs(a-coin.x)-Math.abs(b-coin.x); });
+    var sc=(gy-coin.y)/(mid-coin.y), chosen=null, first=null;
+    for(var li=0;li<lanes.length;li++){ var ax=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,coin.x+(lanes[li]-coin.x)*sc));
+    if(first===null) first=ax;
+    if(!cgLineBlocked(coin.x,coin.y,ax,gy)){ chosen=ax; break; } }
+    return {x:(chosen!==null?chosen:first),y:gy,soft:false,kind:'lane'}; }
+    // ================= THE END ZONE (gridiron) =================
+    // ROAMING DEFENCE — the tokens themselves. When a shot goes live, the DEFENDING side's nearest N outfield
+    // tokens break formation and PATROL left<->right in their lanes, bouncing off the walls and off any token
+    // they meet. When a moving ball comes close to one inside a defensive third, that token CLEARS it back
+    // toward midfield. When the ball settles they jog back to the spots they were placed on. No new sprites —
+    // the real player nails do it. Settle-safe: they only patrol/clear on a moving ball, the clear sends it
+    // out of the third, and while jogging home they never enter a resting ball's space, so the turn ends.
+    // Tiers: easy 2 roam, med 4, hard all.
+    // Breathing goal is now a pair of MOVING objects per mouth: each half-gap oscillates under its own
+    // velocity (not a pure sinusoid) so it can BOUNCE off its mouth's keeper nail, and while it slides it
+    // CARRIES the ball sideways like a paddle. Per-mouth: [top,bottom]. gridGapV is the signed px/frame it
+    // moved this frame (used for the carry push).
+    var gridOn=false, _gridPrevMoving=false, gridGap=[23,23], gridGapDir=[-1,-1], gridGapV=[0,0];
+    var GRID_POST_HALF=2, GRID_POST_H=7, GRID_PUSH=1.6;   // post half-width / half-height, and sideways carry gain
+    function gridArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='gridiron'||_pd('roam'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function gridCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
+    // ADDITIVE tiers, fixed intensities — a tier adds a CONDITION, it never turns the same knob up:
+    //   easy  ROAMING DEFENCE only (they break formation and patrol, so they are moving blockers)
+    //   med   + CLEARANCE      (a roamer now boots a ball that strays into its third back to midfield)
+    //   hard  + BREATHING GOAL (the posts slide, carry the ball and bounce off their keeper)
+    var _pR=_pd('roam');   // SPORTS DAY borrows the roaming defence alone — no clearance, no breathing goal
+    return { roamN:4, roamSpd:1.35, returnSpd:1.4, gate:1.0,
+    clearR:NAIL_R+COIN_R+6, clear:_pR?false:(t>=1), clearCap:6.0, cd:42,
+    breathing:_pR?false:(t>=2), breathBase:23, breathAmp:15, breathFreq:0.02 }; }
+    // current breathing-goal half-gap for a mouth (HARD only) — 0 when off. Shared by physics + renderer.
+    function gridBreathGap(e){ var c=gridCfg(); return c.breathing?(gridGap[e|0]||0):0; }
+    // this mouth's keeper — the goalie nail nearest that goal line. Posts bounce off it.
+    function gridKeeperFor(gy){ if(typeof nails==='undefined'||!nails) return null; var best=null,bd=1e9;
+    for(var i=0;i<nails.length;i++){ var n=nails[i]; if(!n.goalie) continue; var d=Math.abs(n.y-gy); if(d<bd){ bd=d; best=n; } } return best; }
+    // advance each mouth's breathing gap by its velocity; reverse at the amplitude limits, and BOUNCE BACK
+    // early if the closing (inner-moving) post reaches its keeper nail. Runs every render frame from the tick.
+    function gridBreatheStep(c){ var lo=c.breathBase-c.breathAmp, hi=c.breathBase+c.breathAmp, spd=c.breathAmp*c.breathFreq;
+    for(var e=0;e<2;e++){ var gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1), prev=gridGap[e], g=prev+gridGapDir[e]*spd, bounced=false;
+    if(gridGapDir[e]<0){ var kp=gridKeeperFor(gy);   // only the inward stroke can run the post into the keeper
+    if(kp){ var side=(kp.x>=W/2)?1:-1, postX=W/2+side*g;   // the post on the keeper's side of centre
+    if(Math.abs(postX-kp.x)<(NAIL_R+GRID_POST_HALF) && Math.abs(gy-kp.y)<(GRID_POST_H+NAIL_R)){ g=prev; gridGapDir[e]=1; bounced=true; } } }
+    if(!bounced){ if(g<=lo){ g=lo; gridGapDir[e]=1; } else if(g>=hi){ g=hi; gridGapDir[e]=-1; } }
+    gridGapV[e]=g-prev; gridGap[e]=g;
+    if(bounced){ try{ spawnSparks(W/2+((kp&&kp.x>=W/2)?1:-1)*g,gy,null,4); }catch(_e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(_e2){} } } }
+    function initGridiron(){ if(!gridArena()) return; gridOn=true; _gridPrevMoving=false;
+    gridGap=[23,23]; gridGapDir=[-1,-1]; gridGapV=[0,0]; }
+    // Jog a nail toward its snapshotted home, capped, on the pitch, never entering a resting ball's space.
+    function _gridHomeNail(n,spd){ if(!n._gridHome) return; var dx=n._gridHome.x-n.x, dy=n._gridHome.y-n.y, d=Math.hypot(dx,dy)||1;
+    var nx=n.x, ny=n.y; if(d>spd){ nx+=dx/d*spd; ny+=dy/d*spd; } else { nx=n._gridHome.x; ny=n._gridHome.y; }
+    var bx=nx-coin.x, by=ny-coin.y, bd=Math.hypot(bx,by), R=NAIL_R+COIN_R+1;
+    if(bd<R && bd>0.001){ nx=coin.x+bx/bd*R; ny=coin.y+by/bd*R; }
+    n.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,nx)); n.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ny)); }
+    // roaming defence — every render frame. At a shot's start the nearest N defenders are tagged to roam and
+    // their homes snapshotted; while the ball is live they patrol their lane; once it is too slow to roam they
+    // HOLD as solid obstacles, and only jog home after the ball has fully settled.
+    function gridironTick(){ if(!gridArena()) return; if(!gridOn) initGridiron();
+    if(typeof nails==='undefined'||!nails||typeof coin==='undefined'||!coin) return;
+    var c=gridCfg(), sp=Math.hypot(coin.vx||0,coin.vy||0), fast=(moving && sp>c.gate && !scoring && (!coin.air||coin.air<=0));
+    if(c.breathing) gridBreatheStep(c);
+    var def=(current==='red')?'blue':'red';
+    if(moving && !_gridPrevMoving){ var pool=[];
+    for(var i=0;i<nails.length;i++){ var n=nails[i]; n._gridHome={x:n.x,y:n.y}; n._gridRoam=false; n._gridCd=0;
+    if(n.team===def && !n.goalie) pool.push(n); }
+    pool.sort(function(a,b){ return Math.hypot(a.x-coin.x,a.y-coin.y)-Math.hypot(b.x-coin.x,b.y-coin.y); });
+    var N=(c.roamN>=99)?pool.length:Math.min(c.roamN,pool.length);
+    for(var p=0;p<N;p++){ pool[p]._gridRoam=true; pool[p]._gridDir=(pool[p].x<W/2)?1:-1; } }
+    _gridPrevMoving=moving;
+    var lft=WALL+NAIL_R, rgt=W-WALL-NAIL_R, gap=NAIL_R*2;
+    for(var i2=0;i2<nails.length;i2++){ var r=nails[i2]; if(!r._gridRoam) continue;
+    if(r._aftShock) continue;   // AFTERSHOCK: a shocked roamer stands where it was zapped
+    if(r._gridCd>0) r._gridCd--;
+    if(fast && !(typeof dragNail!=='undefined'&&dragNail===r)){
+    r.x+=r._gridDir*c.roamSpd;
+    if(r.x<lft){ r.x=lft; r._gridDir=1; } else if(r.x>rgt){ r.x=rgt; r._gridDir=-1; }
+    for(var j=0;j<nails.length;j++){ if(j===i2) continue; var o=nails[j];   // bounce off any token in the lane
+    if(Math.abs(r.y-o.y)<gap && Math.abs(r.x-o.x)<gap){ var side=(r.x>=o.x)?1:-1; r.x=o.x+side*gap; r._gridDir=side; } }
+    r.x=Math.max(lft,Math.min(rgt,r.x));
+    } else if(!moving){ _gridHomeNail(r,c.returnSpd); }
+    /* else: ball still in play but too slow to roam — HOLD, standing as a solid obstacle. Jogging home here
+       would make the return-path anti-overlap dodge a slow ball, so a defender looked like it fled on contact.
+       Only jog home once the ball has fully settled (!moving). */ } }
+    // clearance — physics rate, only on a moving ball. Fires a hair before contact (clearR > the ball<->token
+    // contact radius) so a roaming defender launches the ball clear instead of the plain reflection.
+    function gridironStep(){ if(!gridArena()||!moving||scoring) return;
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    if(!gridOn||typeof nails==='undefined'||!nails) return;
+    var c=gridCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    if(c.clear && air && sp>0.8){ var dz=NET_DEPTH+GOAL_AREA_D+34, inDef=(coin.y<dz)||(coin.y>H-dz);
+    if(inDef){ for(var i=0;i<nails.length;i++){ var r=nails[i]; if(!r._gridRoam || r._gridCd>0 || r._aftShock) continue;
+    var dx=coin.x-r.x, dy=coin.y-r.y, d=Math.hypot(dx,dy);
+    if(d<c.clearR && d>0.001){ r._gridCd=c.cd;
+    // clear at the pace the ball ARRIVED (tiny nudge so it leaves the third), capped — not a fixed boost,
+    // so a soft ball gets a soft clear and a firm shot a firm clear, redirected away from the near goal.
+    var _out=Math.min(sp*1.05, c.clearCap), away=(coin.y<H/2)?1:-1, la=(Math.random()-0.5)*0.5, vy=away*Math.cos(la), vx=Math.sin(la)*(Math.random()<0.5?-1:1), m=Math.hypot(vx,vy)||1;
+    coin.vx=vx/m*_out; coin.vy=vy/m*_out;
+    coin.x=r.x+dx/d*(NAIL_R+COIN_R+1); coin.y=r.y+dy/d*(NAIL_R+COIN_R+1);
+    try{ spawnSparks(r.x,r.y,r.team,10); }catch(e){} try{ if(!muted){ if(typeof sfxWall==='function') sfxWall(); else if(typeof sfxBump==='function') sfxBump(6); } }catch(e){}
+    try{ setStatus('CLEARANCE!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,14,16,20]); }catch(e){} break; } } } }
+    // BREATHING GOAL (HARD): posts at each mouth are MOVING objects. A shot into a post reflects; and because
+    // the post is sliding, it also CARRIES the ball sideways (gridGapV = px it moved this frame) like a paddle,
+    // so a post sweeping across the ball shoves it along. Only ever acts on a moving ball, and the carry is a
+    // few tenths of a px/frame, so friction still settles it and the turn ends.
+    if(c.breathing){ for(var e=0;e<2;e++){ var gp=gridGap[e], gy=e?(H-NET_DEPTH-1):(NET_DEPTH+1), pv=gridGapV[e];
+    for(var s=-1;s<=1;s+=2){ var px=W/2+s*gp, pdx=coin.x-px, pdy=coin.y-gy, pd=Math.hypot(pdx,pdy), R2=GRID_POST_HALF+1+COIN_R;
+    if(pd<R2 && pd>0.001){ var nx=pdx/pd, ny=pdy/pd, vn=coin.vx*nx+coin.vy*ny;
+    if(vn<0){ coin.vx-=(1+RESTITUTION)*vn*nx; coin.vy-=(1+RESTITUTION)*vn*ny; }
+    coin.vx+=s*pv*GRID_PUSH;   // the slide of the post carries the ball with it
+    coin.x=px+nx*R2; coin.y=gy+ny*R2;
+    try{ spawnSparks(px,gy,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } }
+    // ===== THE ALLEY (bowling) — arena 6 hazards ===============================================================
+    // Signature mechanic: a RACK OF PINS guards each goal, so you must BOWL THROUGH them to score. Each pin
+    // bleeds a little pace, so a firm strike ploughs through while a soft shot dies in the rack; a chip flies
+    // clean over (air ball). Pins persist across turns and re-rack on a goal. Med+ adds the RAKE GATE (a bar
+    // spanning the mouth that rises to open and falls to block) and real GUTTERS (a coin-width side channel
+    // that captures the ball and rolls it to a stop — a lost shot). All settle-safe: everything acts only on a
+    // MOVING grounded ball, knocked pins leave collision at once, and a guttered ball rolls to rest and the
+    // turn passes through the normal settle.
+    var bowlOn=false, _bowlPrevMoving=false, bowlPins=[], bowlRakePh=0, bowlGutter=null;
+    function bowlArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='bowling'||_pd('rake'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function bowlCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
+    // ADDITIVE tiers, fixed intensities — the 6-pin rack and the rake never change size or speed:
+    //   easy  6-PIN RACK, sides are BUMPERS (they bounce you back in, no loss)
+    //   med   + RAKE GATE (bumpers still up)
+    //   hard  + GUTTERS   (the bumpers come off, so a wall touch is a lost ball)
+    var _pK=_pd('rake');   // SPORTS DAY borrows the rake gate alone — no rack, no bumpers, no gutters
+    return { rows:_pK?0:3, pinLoss:0.86,
+    bumpers:_pK?false:(t<2), gutter:_pK?false:(t>=2), rake:_pK?true:(t>=1), rakeW:56, rakeFreq:0.04, rakeCloseTh:0.5, gate:0.4 }; }
+    // THE RAKE gate: a bar spanning the goal mouth that rises and falls along the lane. DOWN (in front of the
+    // pins) it blocks the whole mouth; UP (lifted toward the goal line) it is open and you can score. Timed on
+    // bowlRakePh — the vertical motion is the tell. bowlRakeClosed(): 1 = fully down/block, 0 = fully up/open.
+    function bowlRakeDownY(end){ return end?(H-(NET_DEPTH+GOAL_AREA_D)-6):((NET_DEPTH+GOAL_AREA_D)+6); }
+    function bowlRakeClosed(){ return 0.5+0.5*Math.cos(bowlRakePh); }
+    function bowlRakeBarY(end,closed){ var down=bowlRakeDownY(end), lift=36; return end?(down+lift*(1-closed)):(down-lift*(1-closed)); }
+    // (re)build the triangle in front of each goal, apex toward centre (the 1-pin the ball meets first).
+    function bowlRerack(){ var c=bowlCfg(), dx=9, dy=8, pinR=2.6; bowlPins=[];
+    for(var end=0;end<2;end++){ var dir=end?1:-1, apexY=end?(H-(NET_DEPTH+GOAL_AREA_D)+4):((NET_DEPTH+GOAL_AREA_D)-4);
+    for(var r=0;r<c.rows;r++){ var py=apexY+dir*r*dy, cnt=r+1, x0=W/2-(cnt-1)*dx/2;
+    for(var p=0;p<cnt;p++){ bowlPins.push({x:x0+p*dx, y:py, r:pinR, down:false, end:end, sx:0, sy:0, t:0}); } } } }
+    function initBowling(){ if(!bowlArena()) return; bowlOn=true; _bowlPrevMoving=false; bowlRerack(); bowlRakePh=0; bowlGutter=null; }
+    // every render frame: advance the rake gate, drift knocked pins (visual scatter only), and clear the
+    // gutter flag once the ball has settled. The rack does NOT re-rack per flick — pins you knock down stay
+    // down across turns; it only re-racks when a goal is scored (bowlRerack from finalizeGoal).
+    function bowlingTick(){ if(!bowlArena()) return; if(!bowlOn) initBowling();
+    if(typeof coin==='undefined'||!coin) return;
+    var c=bowlCfg();
+    if(c.rake) bowlRakePh+=c.rakeFreq;
+    if(!moving) bowlGutter=null;
+    for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(!pn.down) continue; pn.t++; pn.x+=pn.sx; pn.y+=pn.sy; pn.sx*=0.86; pn.sy*=0.86; } }
+    // physics rate, moving grounded ball only. Gutter captures + rolls the ball; pins knock + bleed pace; the rake gate blocks when down.
+    function bowlingStep(){ if(!bowlArena()||!moving||scoring) return; if(!bowlOn) initBowling();
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    var c=bowlCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    if(!air) return;   // a chip in the air flies over the rack (and clears the gutters)
+    // GUTTER (med+) — a coin-width channel down each side. Touch a side wall and the ball is CAPTURED into the
+    // gutter: its outward speed is killed and it ROLLS down the channel on its own momentum (real physics, no
+    // freeze), friction bringing it to rest — a lost shot, so the turn passes normally when it settles. The
+    // sides are gutters, not bumpers: keep it down the lane. A chip flies clean over.
+    if(c.gutter){ var inL=coin.x<=WALL+COIN_R+1, inR=coin.x>=W-WALL-COIN_R-1;
+    if(inL||inR){ if(!bowlGutter){ bowlGutter={side:inL?0:1};   // first contact — announce the gutter ball
+    try{ setStatus('GUTTER BALL!'); }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh(); else if(typeof sfxBump==='function') sfxBump(3); } }catch(e){}
+    try{ if(typeof haptic==='function') haptic([0,18,26,34]); }catch(e){} }
+    coin.x=inL?(WALL+COIN_R):(W-WALL-COIN_R); coin.vx=0;   // pinned to the channel; only rolls along the lane
+    return; } }
+    // PINS — knock any standing pin the ball reaches; it scatters, the ball loses a little pace and deflects.
+    for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i]; if(pn.down) continue;
+    var dx=coin.x-pn.x, dy=coin.y-pn.y, d=Math.hypot(dx,dy), R=COIN_R+pn.r;
+    if(d<R && d>0.001){ var nx=dx/d, ny=dy/d, vn=coin.vx*nx+coin.vy*ny;
+    pn.down=true; pn.t=0; pn.sx=coin.vx*0.28+nx*0.6; pn.sy=coin.vy*0.28+ny*0.6;
+    if(vn<0){ coin.vx-=(1+0.2)*vn*nx*0.5; coin.vy-=(1+0.2)*vn*ny*0.5; }   // slight deflection off the pin
+    coin.vx*=c.pinLoss; coin.vy*=c.pinLoss;
+    coin.x=pn.x+nx*R; coin.y=pn.y+ny*R;
+    try{ spawnSparks(pn.x,pn.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} } }
+    // THE RAKE GATE (med+) — the bar spans the mouth and only BLOCKS while it is DOWN (closed>threshold, in
+    // front of the pins); when it lifts UP toward the goal the gate is open and a shot passes to score. The
+    // ball bounces cleanly off the bar when it is down. Moving grounded ball only.
+    if(c.rake){ var closed=bowlRakeClosed();
+    if(closed>c.rakeCloseTh){ var TH=2.6, bxL=W/2-c.rakeW/2, bxR=W/2+c.rakeW/2;
+    for(var e=0;e<2;e++){ var by=bowlRakeBarY(e,closed);
+    if(Math.abs(coin.y-by)<COIN_R+TH && coin.x>bxL-COIN_R && coin.x<bxR+COIN_R){ var side=(coin.y<by)?-1:1;
+    if(coin.vy*side<0){ coin.vy=-coin.vy*0.92; coin.y=by+side*(COIN_R+TH);
+    try{ spawnSparks(coin.x,by,null,5); }catch(e){} try{ if(!muted&&typeof sfxWall==='function') sfxWall(); }catch(e){} } } } } } }
+
+    // ===== THE GRAND PRIX (raceway) — arena 7 hazards =========================================================
+    // Hazards: OIL slicks (spin off-line, a splash, and an oily TRAIL the ball drags after it), springy TYRE
+    // stacks on the PENALTY-AREA corners (bounce + recoil), GRAVEL run-off in the pitch corners (drags a wide
+    // ball down, kicking up dust), and the START-LIGHTS gate — release on GREEN for your full stamina, miss it
+    // and the flick is worth HALF. All act only on a MOVING grounded ball, are bounded/capped, and never trap
+    // the turn; a chip clears the track.
+    var rcOn=false, rcOils=[], rcTyres=[], rcGravels=[], rcLightT=0, rcLightFlash=0, rcDust=[], rcSmear=[], rcRuts=[];
+    var RC_TYRE_R=8, RC_OIL_R=8, RC_GRAVEL_D=30, RC_LIGHT_P=170, RC_LIGHT_BUILD=40, RC_LIGHT_HOLD=25;
+    var RC_WET_DRY=260, RC_OILY=40;   // frames a spilt patch stays wet / frames the ball keeps carrying oil
+    function _rcRnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    /* The tyre stack is a PIXEL SPRITE too — a rubber donut on the integer grid: dithered outer rim, flat black
+       carcass, a ring of lighter TREAD notches, a hub hole, and a highlight up-left for volume. Built once and
+       shared by all four stacks (identical furniture, so they must read identically). Shades:
+       0 = rubber, 1 = tread notch, 2 = dithered rim, 3 = hub hole, 4 = highlight. */
+    var _rcTyrePx=null;
+    function rcTyreShape(){ if(_rcTyrePx) return _rcTyrePx; var pts=[], R=RC_TYRE_R;
+    for(var dy=-R;dy<=R;dy++){ for(var dx=-R;dx<=R;dx++){
+    var d=Math.hypot(dx,dy); if(d>R) continue;   // SOLID silhouette — a dithered outline bit holes out of the
+                                                 // stack's edge at this size, which read as gaps, not softening
+    var a=Math.atan2(dy,dx), sh;
+    if(d<2.8) sh=3;                                                      // hub hole (the track showing through)
+    else if(d>R-1.3) sh=2;                                               // dark outer wall
+    else if(d>R-3.6){ sh=(Math.round((a+Math.PI)/(Math.PI/4))%2===0)?1:5; }   // TREAD band, 8 notches
+    else sh=0;                                                           // inner carcass
+    // one deliberate specular highlight: a contiguous arc on the upper-left of the tread, not scattered specks
+    if((sh===1||sh===5) && Math.abs(_rcAngDiff(a,-2.36))<0.55) sh=4;
+    pts.push([dx,dy,sh]); } }
+    return (_rcTyrePx=pts); }
+    function _rcAngDiff(a,b){ var d=a-b; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; return d; }
+    /* The slick is a PIXEL SPRITE, not a circle: a lobed blob built once per spill on the integer grid, so it
+       matches the game's pixel-art idiom (flat bands + 1x1 dither) instead of an anti-aliased arc. Shades:
+       0 = core, 1 = sheen (up-left), 2 = dithered rim. Stable per seed, so a slick never shimmers. */
+    function rcOilShape(seed){ var pts=[], R=RC_OIL_R;
+    for(var dy=-R-1;dy<=R+1;dy++){ for(var dx=-R-1;dx<=R+1;dx++){
+    var d=Math.hypot(dx,dy*1.12)||0.001, a=Math.atan2(dy,dx);
+    var lobe=0.78+0.30*_rcRnd(seed+Math.round((a+Math.PI)*2.7));
+    var lim=R*lobe; if(d>lim) continue;
+    var rim=(d>lim-1.7), sheen=(!rim && dx+dy<-2 && _rcRnd(seed+dx*7.1+dy*3.3)>0.45);
+    if(rim && ((dx+dy)&1) && _rcRnd(seed+dx*2.3+dy*5.7)>0.55) continue;   // 1x1 dither on the edge
+    pts.push([dx,dy,rim?2:(sheen?1:0)]); } }
+    return pts; }
+    function rcArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='raceway'||_pd('oil')||_pd('lights'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rcCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
+    // ADDITIVE tiers, fixed intensities — nothing gets turned up, each tier adds a CONDITION:
+    //   easy  TYRE WALLS only
+    //   med   + OIL SLICKS + GRAVEL RUN-OFF
+    //   hard  + START-LIGHTS (miss the green and the flick is worth half its stamina)
+    // Oil is always the symmetric PAIR when it is on — a single slick would favour one end.
+    // SPORTS DAY borrows ONE of these at a time — the oil (med) or the start-lights (hard) — and never the
+    // tyre walls or the gravel, which belong to the raceway's own layout.
+    var _pO=_pd('oil'), _pL=_pd('lights'), _prc=(_pO||_pL);
+    return { oil:_prc?_pO:(t>=1), oilN:(_prc?(_pO?2:0):(t>=1?2:0)), oilSpin:2.0,
+    tyres:!_prc, tyreRest:1.0, tyreCap:12,
+    gravel:_prc?false:(t>=1), gravelDrag:0.90,
+    lights:_prc?_pL:(t>=2), lightMiss:0.5, lightGreen:28, gate:0.4 }; }
+    function initRaceway(){ if(!rcArena()) return; rcOn=true; var c=rcCfg();
+    // Two slicks max, placed 180deg-rotationally symmetric about the centre so neither end is favoured.
+    rcOils=[]; if(c.oilN>=1){ rcOils.push({x:Math.round(W/2+28),y:Math.round(H*0.36),cd:0,sp:0,px:rcOilShape(3.7)}); }
+    if(c.oilN>=2){ rcOils.push({x:Math.round(W/2-28),y:Math.round(H*0.64),cd:0,sp:0,px:rcOilShape(11.3)}); }
+    // TYRE stacks on the OUTER corners of each penalty area (the box corners facing midfield), so they guard
+    // the approach instead of sitting in the dead pitch corners.
+    // Only when the stacks are actually ON: SPORTS DAY borrows the oil/lights without them, and an invisible
+    // stack still shoved the pegs off their formation via rcSweepNails.
+    rcTyres=[]; if(c.tyres) try{ var _br=goalAreaRect('blue'), _rr=goalAreaRect('red'), _bF=NET_DEPTH+_br.h, _rF=H-NET_DEPTH-_rr.h;
+    rcTyres.push({x:Math.round(_br.x),y:Math.round(_bF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_br.x+_br.w),y:Math.round(_bF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_rr.x),y:Math.round(_rF),hit:0,nx:0,ny:0});
+    rcTyres.push({x:Math.round(_rr.x+_rr.w),y:Math.round(_rF),hit:0,nx:0,ny:0}); }catch(e){}
+    rcGravels=[]; if(c.gravel){ var gD=RC_GRAVEL_D; rcGravels=[ {x:WALL,y:WALL,w:gD,h:gD}, {x:W-WALL-gD,y:WALL,w:gD,h:gD}, {x:WALL,y:H-WALL-gD,w:gD,h:gD}, {x:W-WALL-gD,y:H-WALL-gD,w:gD,h:gD} ]; }
+    rcLightT=0; rcLightFlash=0; rcDust=[]; rcSmear=[]; rcRuts=[]; }
+    // Pegs are laid out BEFORE the arena's board is applied, so a formation nail can land inside a tyre stack.
+    // Nudge any overlapping nail out to the stack's edge while the ball is at rest (the golf sweep's precedent).
+    function rcSweepNails(){ if(moving||typeof nails==='undefined'||!nails) return;
+    for(var i=0;i<nails.length;i++){ var n=nails[i];
+    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], dx=n.x-ty.x, dy=n.y-ty.y, d=Math.hypot(dx,dy), R=RC_TYRE_R+NAIL_R+1;
+    if(d<R){ if(d<0.001){ dx=1; dy=0; d=1; }
+    n.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,ty.x+dx/d*R));
+    n.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,ty.y+dy/d*R)); } } } }
+    // draw-loop: advance the start-lights cycle, the oil splash / tyre recoil timers, the gravel dust puffs and
+    // the fading oil smears, and keep pegs out of the tyre stacks.
+    function racewayTick(){ if(!rcArena()) return; if(!rcOn) initRaceway();
+    if(rcCfg().lights) rcLightT=(rcLightT+1)%RC_LIGHT_P;
+    if(rcLightFlash>0) rcLightFlash--;
+    for(var j=0;j<rcOils.length;j++){ if(rcOils[j].cd>0) rcOils[j].cd--; if(rcOils[j].sp>0) rcOils[j].sp--; }
+    for(var t=0;t<rcTyres.length;t++){ if(rcTyres[t].hit>0) rcTyres[t].hit--; }
+    if(!_rcTyrePx) try{ rcTyreShape(); }catch(e){}
+    for(var d=rcDust.length-1;d>=0;d--){ var du=rcDust[d]; du.x+=du.vx; du.y+=du.vy; du.vx*=du.puff?0.94:0.90; du.vy*=du.puff?0.94:0.90;
+    if(du.puff) du.r+=0.26; if(--du.life<=0) rcDust.splice(d,1); }
+    for(var s=rcSmear.length-1;s>=0;s--){ var _sm=rcSmear[s]; if(_sm.cd>0) _sm.cd--; if(--_sm.life<=0) rcSmear.splice(s,1); }
+    for(var r=rcRuts.length-1;r>=0;r--){ if(--rcRuts[r].life<=0) rcRuts.splice(r,1); }
+    try{ rcSweepNails(); }catch(e){} }
+    // START-LIGHTS: the flick's power multiplier at the current phase — full on GREEN, HALF if you miss it. So
+    // green pays your normal stamina for that flick (100%, then 75%, then 50%…) and a miss halves it.
+    function rcLaunchMul(){ if(!rcArena()) return 1; var c=rcCfg(); if(!c.lights) return 1;
+    return rcInGreen()?1:c.lightMiss; }
+    function rcInGreen(){ if(!rcArena()) return false; var c=rcCfg(); if(!c.lights) return false;
+    var on=RC_LIGHT_BUILD+RC_LIGHT_HOLD; return rcLightT>=on && rcLightT<on+c.lightGreen; }
+    // Called at the moment of release (human + CPU) — returns the multiplier and plays the feedback.
+    function rcLaunchApply(){ if(!rcArena()) return 1; var c=rcCfg(); if(!c.lights) return 1;
+    var g=rcInGreen(); rcLightFlash=g?16:12;
+    try{ setStatus(g?'GREEN LIGHT — FULL POWER!':'JUMP START — HALF POWER'); }catch(e){}
+    try{ if(!muted){ if(g&&typeof sfxWhoosh==='function') sfxWhoosh(); else if(!g&&typeof sfxBlocked==='function') sfxBlocked(); } }catch(e){}
+    return g?1:c.lightMiss; }
+    // physics rate, moving grounded ball only. Oil injects (bounded) spin + a splash + a trail; tyres bounce and
+    // recoil; gravel run-off drags a wide ball and kicks up dust.
+    function racewayStep(){ if(!rcArena()||!moving||scoring) return; if(!rcOn) initRaceway();
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    var c=rcCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    if(!air) return;   // airborne clears the track hazards
+    // GRAVEL run-off — extra drag in the corner boxes; stray wide and the ball bogs down. Only slows, so safe.
+    // Throws a couple of pebbles/dust motes per frame while the ball is ploughing through it.
+    var _inGrv=false;
+    for(var g=0;g<rcGravels.length;g++){ var gv=rcGravels[g];
+    if(coin.x>gv.x && coin.x<gv.x+gv.w && coin.y>gv.y && coin.y<gv.y+gv.h){ _inGrv=true;
+    coin.vx*=c.gravelDrag; coin.vy*=c.gravelDrag;
+    if(sp>c.gate){ var _back=Math.atan2(-coin.vy,-coin.vx);
+    // the moment it goes off-track: a hard spray of stones + a dust cloud, like a car hitting the run-off
+    if(!coin._rcGrv){ for(var q0=0;q0<9;q0++){ var a0=_back+(Math.random()-0.5)*2.0, m0=1.1+Math.random()*2.2;
+    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a0)*m0,vy:Math.sin(a0)*m0,life:16+(Math.random()*12|0),max:28,r:1}); }
+    for(var q1=0;q1<3;q1++){ rcDust.push({x:coin.x+(Math.random()-0.5)*4,y:coin.y+(Math.random()-0.5)*4,vx:Math.cos(_back)*(0.3+Math.random()*0.5),vy:Math.sin(_back)*(0.3+Math.random()*0.5),life:26+(Math.random()*10|0),max:36,r:2.5+Math.random()*2,puff:true});
+    }
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(3); }catch(e){} }
+    // and a steady trickle of stones + a rut gouged in the surface while it ploughs on
+    if(rcDust.length<52){ for(var q=0;q<2;q++){ var a=_back+(Math.random()-0.5)*1.5, m=0.5+Math.random()*1.3;
+    rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(a)*m,vy:Math.sin(a)*m,life:12+(Math.random()*10|0),max:22,r:1}); }
+    if(Math.random()<0.5) rcDust.push({x:coin.x,y:coin.y,vx:Math.cos(_back)*0.25,vy:Math.sin(_back)*0.25,life:22,max:32,r:2+Math.random()*1.6,puff:true}); }
+    if(rcRuts.length<80) rcRuts.push({x:coin.x,y:coin.y,a:Math.atan2(coin.vy,coin.vx),life:70,max:70});
+    }
+    break; } }
+    coin._rcGrv=_inGrv;
+    // OIL spills — inject spin so the ball curves off-line (Magnus does the bending). Spin is bounded; friction
+    // still settles the ball, so this never traps a turn. Arms the splash and coats the ball so it SMEARS oil
+    // along its path for a short while afterwards.
+    for(var j=0;j<rcOils.length;j++){ var ol=rcOils[j];
+    if(ol.cd<=0 && sp>c.gate && Math.hypot(coin.x-ol.x,coin.y-ol.y)<RC_OIL_R+COIN_R){ coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=ol.x)?1:-1)*c.oilSpin)); ol.cd=30; ol.sp=26;
+    ol.hx=coin.x; ol.hy=coin.y; coin._rcOily=RC_OILY;   // frames of oil still on the ball
+    try{ spawnSparks(ol.x,ol.y,null,4); }catch(e){} try{ if(!muted&&typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
+    // The oily ball SMEARS the track behind it, and those patches stay WET for a while (RC_WET_DRY frames)
+    // before they dry off — so the circuit gets progressively oily as a rally runs on. Laid down at a spacing
+    // in px (not per frame) so a slow ball doesn't pile up a blob and a fast one still leaves a continuous line.
+    if(coin._rcOily>0){ coin._rcOily--;
+    if(sp>c.gate){ var _lastS=rcSmear.length?rcSmear[rcSmear.length-1]:null;
+    if(!_lastS || Math.hypot(coin.x-_lastS.x,coin.y-_lastS.y)>2.6){
+    if(rcSmear.length>=90) rcSmear.shift();
+    rcSmear.push({x:coin.x,y:coin.y,seed:rcSmear.length*3.1+coin.x*0.7,life:RC_WET_DRY,max:RC_WET_DRY,cd:14}); } } }
+    // Drive back through a patch that is still WET and the ball picks the oil up again — the trail carries on,
+    // with a small slip nudge (a fraction of a fresh slick, bounded and on a per-patch cooldown, so a single
+    // patch can never pump the spin up). A dried patch is inert.
+    else if(sp>c.gate){ for(var w=0;w<rcSmear.length;w++){ var wsm=rcSmear[w];
+    if(wsm.cd<=0 && Math.hypot(coin.x-wsm.x,coin.y-wsm.y)<COIN_R+2){ coin._rcOily=Math.round(RC_OILY*0.55); wsm.cd=26;
+    coin.spin=Math.max(-4,Math.min(4,(coin.spin||0)+((coin.x>=wsm.x)?1:-1)*c.oilSpin*0.3));
+    break; } } }
+    // TYRE walls — springy bounce (restitution up to 1.15 on hard), capped so it can't run away. Arms the recoil
+    // animation (the stack is knocked along the impact normal and springs back).
+    if(c.tyres) for(var t2=0;t2<rcTyres.length;t2++){ var ty=rcTyres[t2], tdx=coin.x-ty.x, tdy=coin.y-ty.y, td=Math.hypot(tdx,tdy), TR=RC_TYRE_R+COIN_R;
+    if(td<TR && td>0.001){ var tnx=tdx/td, tny=tdy/td, tvn=coin.vx*tnx+coin.vy*tny;
+    if(tvn<0){ coin.vx-=(1+c.tyreRest)*tvn*tnx; coin.vy-=(1+c.tyreRest)*tvn*tny;
+    var tsp=Math.hypot(coin.vx,coin.vy); if(tsp>c.tyreCap){ var kk=c.tyreCap/tsp; coin.vx*=kk; coin.vy*=kk; }
+    ty.hit=18; ty.nx=-tnx; ty.ny=-tny; ty.pow=Math.min(1,Math.abs(tvn)/7); }
+    coin.x=ty.x+tnx*TR; coin.y=ty.y+tny*TR;
+    try{ spawnSparks(ty.x,ty.y,null,5); }catch(e){} try{ if(!muted&&typeof sfxBump==='function') sfxBump(5); }catch(e){} } } }
+    // ===== THE RING (boxing) — arena 8 hazards ================================================================
+    // ADDITIVE tiers, fixed intensities:
+    //   easy  ROPES        — the side walls are fully elastic and hand the ball back WITH INTEREST
+    //   med   + HEAVY BAGS — sand-filled bags that ABSORB a shot instead of bouncing it (a hit dies on them),
+    //                        and SHIFT a little on every hit and stay put, so the pitch layout drifts as the
+    //                        match goes on
+    //   hard  + SPRUNG GLOVES — four spring-loaded boxing gloves in the end frames (two per end) that punch out
+    //                        into the pitch on a fixed, staggered LOOP. They swat a shot away from goal and
+    //                        leave the ball WOBBLING on the next flick.
+    // Settle-safe: the ropes only add interest above a speed gate and are capped (friction across the pitch
+    // dominates, so a rally converges), the bag absorbs rather than adds, and a glove can only ever strike a
+    // MOVING ball (ringStep returns unless `moving`), so nothing can stop a ball settling and ending the turn.
+    //
+    // Gloves LOOP rather than track the ball on purpose: the standing telegraph rule is that a hazard has to be
+    // readable BEFORE it acts, and a glove that homed in could not be dodged, only suffered. A fixed rhythm with
+    // a visible wind-up can be learned and shot around.
+    var rgOn=false, rgBags=[], rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}], rgT=0, rgScuff=[], rgGloves=[];
+    var rgWobPend=0, _rgPrevMoving=false;
+    var RG_BAG_R=6, RG_ZONE_R=26, RG_ROPE_FLEX=16;
+    function rgArena(){ return (typeof boardKey!=='undefined')&&(boardKey==='ring'||_pd('ropes')||_pd('gloves'))&&(typeof stadiumHazards==='function')&&stadiumHazards(); }
+    function rgCfg(){ var t=(typeof hzTier==='function')?hzTier():1;   // 0 easy / 1 med / 2 hard
+    var _pP=_pd('ropes'), _pG=_pd('gloves'), _pRg=(_pP||_pG);   // SPORTS DAY borrows one of the two, never the bags
+    return { ropes:_pRg?_pP:true, ropeRest:1.08, ropeGate:1.2, ropeCap:11,
+    bag:_pRg?false:(t>=1), bagAbsorb:0.26, bagSlide:0.30, bagShove:2.2, bagShoveMax:6,
+    gloves:_pRg?_pG:(t>=2), gloveReach:26, glovePow:4.6, gloveCap:11, gate:0.4 }; }
+    // The glove's punch cycle, in frames: wind up (cocks back), snap out, hold at full stretch, retract, idle.
+    // Returns 0..1 = how far out of the frame the glove is, and whether it is live (able to connect).
+    // RG_GLOVE_R is the strike radius AND the art's radius — the glove is a touch wider than the ball (COIN_R*2)
+    // so it reads as a real mitt. HOLD is deliberately long: with four gloves on a 17% duty cycle and a narrow
+    // corridor, a first pass at 12 frames of hold almost never connected, which made the whole condition inert.
+    var RG_GLOVE_R=7;
+    var RG_GL_P=112, RG_GL_WIND=24, RG_GL_OUT=10, RG_GL_HOLD=20, RG_GL_BACK=20;
+    function rgGlovePhase(ph){ var t=((rgT+ph)%RG_GL_P);
+    if(t<RG_GL_WIND) return { ext:-0.18*Math.sin(t/RG_GL_WIND*Math.PI), live:false, wind:t/RG_GL_WIND };
+    t-=RG_GL_WIND; if(t<RG_GL_OUT) return { ext:t/RG_GL_OUT, live:true, wind:1 };
+    t-=RG_GL_OUT; if(t<RG_GL_HOLD) return { ext:1, live:true, wind:1 };
+    t-=RG_GL_HOLD; if(t<RG_GL_BACK) return { ext:1-t/RG_GL_BACK, live:false, wind:0 };
+    return { ext:0, live:false, wind:0 }; }
+    // The x of the INNERMOST rope strand on a side (0=left,1=right) — the same line the ball collides on, and
+    // the same math the board art uses, so the bounce always lands visually on the rope.
+    function rgRopeX(side){ return side?(W-WALL-COIN_R):(WALL+COIN_R); }
+    /* The speed-bag is a PIXEL SPRITE: a solid leather blob, slightly pear-shaped (wider low), with a lighter
+       top-left face, a dark underside and a lace seam. Solid silhouette — no edge dither, which at this size
+       reads as holes rather than softening (the tyre stack's lesson). Shades: 0 leather, 1 lit face, 2 shadow,
+       3 lace. Built once and shared by both bags. */
+    var _rgBagPx=null;
+    function rgBagShape(){ if(_rgBagPx) return _rgBagPx; var pts=[], R=RG_BAG_R;
+    for(var dy=-R;dy<=R;dy++){ for(var dx=-R;dx<=R;dx++){
+    var sy=dy*(dy<0?1.15:0.95);                       // pear: tapers toward the top, fuller at the bottom
+    if(Math.hypot(dx,sy)>R) continue;
+    var sh=0;
+    if(dx+dy<-3) sh=1; else if(dx+dy>4) sh=2;
+    if(dx===0 && dy>-3 && dy<4) sh=3;                  // lace seam down the middle
+    pts.push([dx,dy,sh]); } }
+    return (_rgBagPx=pts); }
+    function initRing(){ if(!rgArena()) return; rgOn=true; rgT=0; rgScuff=[];
+    rgRope=[{t:0,y:0,s:0},{t:0,y:0,s:0}];
+    // a 180deg-rotationally symmetric PAIR of bags, so neither end is favoured. tx/ty is where a bag is being
+    // shoved to; x/y eases toward it, then it just stays there — every hit nudges it again.
+    rgBags=[ {x:Math.round(W/2), y:Math.round(H*0.30), tx:Math.round(W/2), ty:Math.round(H*0.30), hit:0, nx:0, ny:0},
+    {x:Math.round(W/2), y:Math.round(H*0.70), tx:Math.round(W/2), ty:Math.round(H*0.70), hit:0, nx:0, ny:0} ];
+    // FOUR gloves — two per end frame, either side of the goal mouth, 180deg-rotationally symmetric so neither
+    // end is favoured. Phases are staggered around the loop so they read as a rhythm rather than a single beat.
+    var _gL=Math.round((W-GOAL_W)/2), _gx=[Math.round((WALL+_gL)/2), W-Math.round((WALL+_gL)/2)];
+    rgGloves=[ {x:_gx[0], base:WALL, dir:1, ph:0, hit:0},
+    {x:_gx[1], base:WALL, dir:1, ph:Math.round(RG_GL_P*0.5)},
+    {x:_gx[1], base:H-WALL, dir:-1, ph:Math.round(RG_GL_P*0.25), hit:0},
+    {x:_gx[0], base:H-WALL, dir:-1, ph:Math.round(RG_GL_P*0.75), hit:0} ];
+    for(var g=0;g<rgGloves.length;g++){ rgGloves[g].hit=0; rgGloves[g].ext=0; }
+    rgWobPend=0; rgWobOn=false; _rgPrevMoving=false; }
+    // Retracted, the glove sits ON the pitch wall — its back flush to the boundary and its whole body inside the
+    // play area, rather than half-buried in the timber frame. It extends inward from there.
+    function rgGloveY(g,ext){ return g.base+g.dir*(RG_GLOVE_R+ext*rgCfg().gloveReach); }
+    /* The glove is a hand-authored PIXEL SPRITE rather than a procedural blob — at 11x11 the silhouette matters
+       more than any formula, so it is drawn as a little bitmap: cuff + white trim at the wrist, a swelling
+       knuckle mass, a thumb bump on one side, and a lace seam. Laid out punching DOWN (+y); mirrored vertically
+       for the gloves in the bottom frame. Legend: K outline, R body, L lit, D shade, W cuff trim, S lace. */
+    var RG_GLOVE_ART=[
+    '.....KKKKK.....',
+    '....KWWWWWK....',
+    '...KKWWWWWKK...',
+    '...KWWWWWWWK...',
+    '..KKRRRRRRRKK..',
+    '..KRLRRRRRDRK..',
+    '.KKRLRRRRRDRKK.',
+    'KKRRLRRRRRDRRK.',
+    'KRRRLRRRRRDRRK.',
+    'KKRRRRRRRRRDRK.',
+    '.KKRRRSSSRRRRK.',
+    '..KRRRSSSRRRK..',
+    '..KKRRRRRRRKK..',
+    '...KKRRRRRKK...',
+    '.....KKKKK.....'];
+    var _rgGlovePx=null;
+    function rgGloveShape(){ if(_rgGlovePx) return _rgGlovePx; var up=[], dn=[], H2=RG_GLOVE_ART.length, W2=RG_GLOVE_ART[0].length;
+    for(var r=0;r<H2;r++){ for(var cx=0;cx<W2;cx++){ var ch=RG_GLOVE_ART[r].charAt(cx); if(ch==='.') continue;
+    var dx=cx-((W2-1)/2), dy=r-((H2-1)/2);
+    dn.push([dx,dy,ch]); up.push([dx,-dy,ch]); } }
+    return (_rgGlovePx={down:dn, up:up}); }
+    // True while a punch is pending, i.e. the NEXT flick will wobble — the aim guide asks this so it can draw
+    // the rattled trajectory instead of a clean one.
+    function rgWobArmed(){ return !!(rgArena() && rgCfg().gloves && rgWobPend>0); }
+    // A bag can be shoved around midfield but never into a goal area — a bag parked in the box would wall the
+    // goal off for the rest of the match.
+    function rgBagClampX(x){ return Math.max(WALL+COIN_R+RG_BAG_R+2, Math.min(W-WALL-COIN_R-RG_BAG_R-2, x)); }
+    function rgBagClampY(y){ var m=NET_DEPTH+GOAL_AREA_D+RG_BAG_R+4; return Math.max(m, Math.min(H-m, y)); }
+    // draw-loop: swing the bags, decay the rope flex + scuff puffs.
+    function ringTick(){ if(!rgArena()) return; if(!rgOn) initRing();
+    var c=rgCfg(); rgT++;
+    // the bags do not roam — they only ease into wherever the last hit shoved them, and stay
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    b.x+=(b.tx-b.x)*0.18; b.y+=(b.ty-b.y)*0.18;
+    if(Math.abs(b.tx-b.x)<0.05) b.x=b.tx; if(Math.abs(b.ty-b.y)<0.05) b.y=b.ty;
+    if(b.hit>0) b.hit--; }
+    for(var r=0;r<2;r++){ if(rgRope[r].t>0) rgRope[r].t--; }
+    for(var g2=0;g2<rgGloves.length;g2++){ var gv=rgGloves[g2];
+    var gp=rgGlovePhase(gv.ph); gv.ext=c.gloves?gp.ext:0; gv.live=c.gloves&&gp.live; gv.wind=gp.wind;
+    if(gv.hit>0) gv.hit--; }
+    // A punched ball comes back RATTLED: the next shot is thrown off exactly the way the DRUNK debuff does it —
+    // the launch angle takes a random kick of up to DRUNK_SPREAD at the moment of release. Applied here, at the
+    // idle->moving transition, so it covers the human and the CPU with one hook.
+    if(moving && !_rgPrevMoving && rgWobPend>0){ rgWobPend=0;
+    var _rj=(Math.random()-0.5)*DRUNK_SPREAD, _rc=Math.cos(_rj), _rs=Math.sin(_rj);
+    var _rvx=coin.vx*_rc-coin.vy*_rs, _rvy=coin.vx*_rs+coin.vy*_rc;
+    coin.vx=_rvx; coin.vy=_rvy;
+    // No status text: the swaying aim guide already reads as a drunk shot, so announcing it is noise.
+    try{ if(!muted&&typeof sfxDrunk==='function') sfxDrunk(); }catch(e){} }
+    _rgPrevMoving=moving;
+    try{ rgSeparate(); }catch(e){}
+    for(var s2=rgScuff.length-1;s2>=0;s2--){ var sc=rgScuff[s2]; sc.x+=sc.vx; sc.y+=sc.vy; sc.vx*=0.9; sc.vy*=0.9; if(--sc.life<=0) rgScuff.splice(s2,1); } }
+    // A bag eases into wherever it was shoved, so it can drift onto a resting ball or a peg. While the ball is
+    // at REST, push whatever is overlapping a bag back out to its edge — the bag never displaces play by
+    // sliding, it just occupies the space it was pushed into.
+    function rgSeparate(){ if(!rgCfg().bag) return;
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    if(!moving && typeof coin!=='undefined' && coin){ var dx=coin.x-b.x, dy=coin.y-b.y, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R+1;
+    if(d<R){ if(d<0.001){ dx=1; dy=0; d=1; }
+    coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,b.x+dx/d*R));
+    coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,b.y+dy/d*R)); } }
+    if(typeof nails!=='undefined'&&nails){ for(var n=0;n<nails.length;n++){ var q=nails[n];
+    var ndx=q.x-b.x, ndy=q.y-b.y, nd=Math.hypot(ndx,ndy), NR=RG_BAG_R+NAIL_R+1;
+    if(nd<NR){ if(nd<0.001){ ndx=1; ndy=0; nd=1; }
+    q.x=Math.max(WALL+NAIL_R,Math.min(W-WALL-NAIL_R,b.x+ndx/nd*NR));
+    q.y=Math.max(WALL+NAIL_R,Math.min(H-WALL-NAIL_R,b.y+ndy/nd*NR)); } } } }
+    // a glove punches outward into the pitch, so it can reach a ball that has come to rest in its lane
+    if(!moving && rgCfg().gloves && typeof coin!=='undefined' && coin){ for(var gi2=0;gi2<rgGloves.length;gi2++){ var gg=rgGloves[gi2];
+    var ggy=rgGloveY(gg,gg.ext||0), gx2=coin.x-gg.x, gy2=coin.y-ggy, gd2=Math.hypot(gx2,gy2), GR2=RG_GLOVE_R+COIN_R+1;
+    if(gd2<GR2){ if(gd2<0.001){ gx2=0; gy2=gg.dir; gd2=1; }
+    coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,gg.x+gx2/gd2*GR2));
+    coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,ggy+gy2/gd2*GR2)); } } } }
+    // Called from the side-wall bounce in collideStep: the ropes hand the ball back with interest above a speed
+    // gate (a dying ball keeps the normal restitution so it still settles), and the strand flexes where it hit.
+    function rgRopeRest(vabs,cy,side){ var c=rgCfg(); if(!c.ropes) return RESTITUTION;
+    rgRope[side]={t:RG_ROPE_FLEX, y:cy, s:Math.min(1,vabs/8)};
+    try{ if(!muted&&typeof sfxBounce==='function') sfxBounce(vabs); }catch(e){}
+    return (vabs>c.ropeGate)?c.ropeRest:RESTITUTION; }
+    // physics rate, moving grounded ball only. Bags punch; the canvas centre drags.
+    function ringStep(){ if(!rgArena()||!moving||scoring) return; if(!rgOn) initRing();
+    if(typeof ghosting!=='undefined'&&ghosting) return;
+    var c=rgCfg(), sp=Math.hypot(coin.vx,coin.vy), air=(!coin.air||coin.air<=0);
+    if(!air) return;   // a chip flies over the bags and clears the canvas
+    // HEAVY BAGS — sand inside, so a shot DIES on them instead of bouncing: the component driving into the bag
+    // is killed outright (no rebound) and only a little of the sideways slide survives, so the ball thuds and
+    // slumps beside it. Every hit also SHOVES the bag along the shot's line, by an amount that scales with how
+    // hard it was struck, and the bag simply stays there — so the pitch layout drifts over the match.
+    if(c.bag){ for(var i=0;i<rgBags.length;i++){ var b=rgBags[i];
+    var dx=coin.x-b.x, dy=coin.y-b.y, d=Math.hypot(dx,dy), R=RG_BAG_R+COIN_R;
+    if(d<R && d>0.001){ var nx=dx/d, ny=dy/d, vn=coin.vx*nx+coin.vy*ny;
+    if(vn<0){ var tvx=coin.vx-vn*nx, tvy=coin.vy-vn*ny;   // split off the sideways slide, drop the rest
+    coin.vx=tvx*c.bagSlide; coin.vy=tvy*c.bagSlide;
+    var imp=Math.min(1,Math.abs(vn)/8);                  // how hard it landed, 0..1
+    b.tx=rgBagClampX(b.tx-nx*c.bagShove*(0.4+imp)); b.ty=rgBagClampY(b.ty-ny*c.bagShove*(0.4+imp));
+    b.hit=16; b.nx=-nx; b.ny=-ny; b.imp=imp;
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(Math.min(7,2+imp*5)); }catch(e){}
+    try{ if(typeof haptic==='function') haptic(Math.round(8+imp*10)); }catch(e){} }
+    coin.x=b.x+nx*R; coin.y=b.y+ny*R;
+    coin.vx*=c.bagAbsorb; coin.vy*=c.bagAbsorb; } } }
+    // SPRUNG GLOVES — while a glove is at full stretch it swats a MOVING ball away from its goal and rattles it
+    // for the next flick. Only ever acts on a moving ball, and the result is capped.
+    // The glove is a SOLID object whether or not it is mid-punch — it sits on the wall, so a ball that reaches it
+    // always bounces. Only a LIVE glove (out or holding) adds the punch and rattles the ball for the next flick.
+    if(c.gloves){ for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
+    var gy=rgGloveY(g,g.ext||0), gdx=coin.x-g.x, gdy=coin.y-gy, gd=Math.hypot(gdx,gdy), GR=RG_GLOVE_R+COIN_R;
+    if(gd<GR && gd>0.001){ var gnx=gdx/gd, gny=gdy/gd, gvn=coin.vx*gnx+coin.vy*gny;
+    if(gvn<0){ coin.vx-=(1+RESTITUTION)*gvn*gnx; coin.vy-=(1+RESTITUTION)*gvn*gny; }
+    coin.x=g.x+gnx*GR; coin.y=gy+gny*GR;
+    if(g.live){ coin.vy+=g.dir*c.glovePow;                     // the punch itself, straight down its travel
+    var gs=Math.hypot(coin.vx,coin.vy); if(gs>c.gloveCap){ var gk=c.gloveCap/gs; coin.vx*=gk; coin.vy*=gk; }
+    g.hit=14; rgWobPend=1;
+    try{ spawnSparks(g.x,gy,null,8); }catch(e){} try{ if(!muted&&typeof sfxPunch==='function') sfxPunch(8); }catch(e){}
+    try{ setStatus('PUNCHED!'); }catch(e){} try{ if(typeof haptic==='function') haptic([0,18,24,30]); }catch(e){}
+    } else { g.hit=Math.max(g.hit,6);                          // a dead glove just thuds
+    try{ if(!muted&&typeof sfxBump==='function') sfxBump(4); }catch(e){} }
+    break; } } } }
+    function bkGoalDenied(side){ return bkArena()&&bkRimOn&&!bkRimPass[side]; }
+    function _bbSpawnPitch(){ var e=Math.floor(Math.random()*4), pad=WALL+8, sx,sy;
+    if(e===0){ sx=WALL+2; sy=pad+Math.random()*(H-2*pad); }
+    else if(e===1){ sx=W-WALL-2; sy=pad+Math.random()*(H-2*pad); }
+    else if(e===2){ sx=pad+Math.random()*(W-2*pad); sy=WALL+2; }
+    else { sx=pad+Math.random()*(W-2*pad); sy=H-WALL-2; }
+    var tx=WALL+Math.random()*(W-2*WALL), ty=WALL+Math.random()*(H-2*WALL);
+    var dx=tx-sx, dy=ty-sy, d=Math.hypot(dx,dy)||1, sp=2.6+Math.random()*0.9;
+    bbPitchBalls.push({x:sx,y:sy,vx:dx/d*sp,vy:dy/d*sp,r:5});
+    }
+    // advance the pitching machine + glove flashes from the draw loop so they animate between shots.
+    // The bat swing state machine runs from stepPhysics (it is triggered by and acts on the ball).
+    function baseballTick(){ if(!bbArena()) return;
+    if(!bbOn){ try{ initBaseball(); }catch(e){} }
+    if(bbPitchOn){ for(var _pmi=bbPitchBalls.length-1;_pmi>=0;_pmi--){ var _pm=bbPitchBalls[_pmi];
+    _pm.x+=_pm.vx; _pm.y+=_pm.vy;
+    if(_pm.x>W-WALL+10||_pm.x<WALL-10||_pm.y<WALL-10||_pm.y>H-WALL+10) bbPitchBalls.splice(_pmi,1);
+    } if(bbPitchCD>0){ bbPitchCD--; } else if(bbPitchBalls.length<2){ _bbSpawnPitch();
+    bbPitchCD=130+Math.floor(Math.random()*80);
+    try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} } }
+    if(bbGlovesOn){ for(var _gf=0;_gf<bbGloves.length;_gf++){ var _gg=bbGloves[_gf];
+    if(_gg.flash>0) _gg.flash--; if(_gg.catchT>0) _gg.catchT--;
+    if(_gg.openT>0) _gg.openT--; } }
+    }
     // hazard difficulty tier (0 easy / 1 med / 2 hard) — scales counts + intensity
     function hzTier(){ var l;
     if((typeof mode!=='undefined'&&mode==='royale')&&(typeof royaleLevel!=='undefined'&&royaleLevel)){ l=royaleLevel;
@@ -1151,6 +2179,7 @@
     _beEnsure(); var _bt=hzTier();
     if(_bt>=1){ var _cyT=NET_DEPTH+GOAL_AREA_D+12, _cyB=H-NET_DEPTH-GOAL_AREA_D-12;
     for(var _ci=0;_ci<beachCrabs.length;_ci++){ var _cr=beachCrabs[_ci];
+    if(_cr._aftShock) continue;   // AFTERSHOCK: a zapped crab stops scuttling for a flick
     if((_cr.turn=(_cr.turn||0)-1)<=0){ var _na=Math.atan2(_cr.vy,_cr.vx)+(Math.random()-0.5)*2.2;
     _cr.vx=Math.cos(_na)*_cr.sp;
     _cr.vy=Math.sin(_na)*_cr.sp;
@@ -1400,6 +2429,21 @@
     for(var _bx=0;_bx<numBoxes.length;_bx++){ var _bb=numBoxes[_bx];
     if(Math.abs(_dx-_bb.x)<=_bb.w/2&&Math.abs(_dy-_bb.y)<=_bb.h/2){ _bb.n=0;
     break; } } } } }catch(e){} }
+    /* SPORTS DAY — the season-3 final. Like THE FINAL (S1) and THE TURF (S2) it invents no hazards and grants
+       the opponent NO abilities (ab:[]): the whole challenge is the borrowed hazards striking at once. Each
+       source arena's predicate is widened with || _pd('key') so its existing roll/step/draw fires on the
+       podium. To match the S1/S2 finals it runs FOUR hazards per tier — a rotating decathlon, a different
+       quartet of sports at each difficulty rather than the same arenas turned up:
+         easy  WATER (golf) + ROPES (ring) + ROAMING DEFENCE (gridiron) + BAT (diamond)
+         med   OIL (prix)   + RAKE (alley) + NET & RACKETS (tennis)     + PITCHING MACHINE (diamond)
+         hard  HOOPS (court)+ GLOVES (ring)+ START-LIGHTS (prix)        + THE MITT (diamond)
+       The diamond is the season's 8th sport and was the only one the medley never used; borrowed here it
+       contributes exactly ONE piece per tier (its own bat/pitcher/mitt progression), keeping the card at a
+       clean four rows. Like the other finals, hard stacks real denials — this is the final, meant to bite. */
+    function _podHaz(){ if(!((typeof boardKey!=='undefined')&&boardKey==='podium'&&(typeof stadiumHazards==='function')&&stadiumHazards())) return null;
+    var t=(typeof hzTier==='function')?hzTier():1;
+    return [['water','ropes','roam','diamond'],['oil','rake','net','diamond'],['hoops','gloves','lights','diamond']][t]; }
+    function _pd(n){ var h=_podHaz(); return !!(h&&h.indexOf(n)>=0); }
     // GRASS FINAL — season-1 gauntlet. THE FINAL (royaleArena.gauntlet) pulls one hazard per tier from
     // clean-porting Season 1 stadiums. Each stadium's arena predicate is generalized with || _g1('x'),
     // so the existing roll/step/draw all fire on the grass final for exactly the active tier's hazard.
@@ -1503,7 +2547,7 @@
       if(_crd<COIN_R+9&&_crd>0){ coin.vx+=(_crdx/_crd)*2.6;
       coin.vy+=(_crdy/_crd)*2.6;
       try{ if(typeof sfxBump==='function') sfxBump(5);
-      }catch(e){} } } }
+      }catch(e){} if(TAC.aftershock&&!aftUsed){ try{ aftShock([_cr],_cr.x,_cr.y,4,false); }catch(e){} } } } }
       else if(Hz.beach==='beachball'&&_air){ for(var _bbi=0;_bbi<beachBalls.length;_bbi++){ var _bb=beachBalls[_bbi],_dxb=coin.x-_bb.x,_dyb=coin.y-_bb.y,_ddb=Math.hypot(_dxb,_dyb),_mnb=COIN_R+_bb.r;
       if(_ddb<_mnb&&_ddb>0){ var _uxb=_dxb/_ddb,_uyb=_dyb/_ddb;
       coin.x+=_uxb*(_mnb-_ddb);
@@ -1521,7 +2565,9 @@
     }
     function stepPhysics(){
       if(!moving){ if(typeof skateTube!=='undefined') skateTube=null;
-      return; } if(coin&&coin.air>0) coin.air--;
+      return; }
+      if(cgDrown){ try{ cgDrownTick(); }catch(e){} return; }   // drowning: freeze play, just run the sink/drop
+      if(coin&&coin.air>0) coin.air--;
       if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(rouletteFlash>0) rouletteFlash--;
       if(rouletteCD>0) rouletteCD--;
       if(!rouletteCap&&rouletteCD<=0&&moving&&(!coin.air||coin.air<=0)&&Math.hypot(coin.x-W/2,coin.y-H/2)<ROUL_R*0.55&&Math.hypot(coin.vx,coin.vy)>0.9){ rouletteCap={t:0,dur:64,ko:false};
@@ -1681,7 +2727,269 @@
       }catch(e){} try{ spawnSparks(candyPatches[_ji].x,candyPatches[_ji].y,current,10,true);
       }catch(e){} try{ nsKick(5);
       }catch(e){} break; } } } for(var _ci=0;_ci<candyBog.length;_ci++){ if(Math.hypot(coin.x-candyBog[_ci].x,coin.y-candyBog[_ci].y)<candyBog[_ci].r){ coin.vx*=0.85;
-      coin.vy*=0.85; break; } } } } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
+      coin.vy*=0.85; break; } } } } if(bbArena()&&!scoring){ if(!bbOn) initBaseball();
+      var _bbsp=Math.hypot(coin.vx,coin.vy), _bbmov=(moving&&(!coin.air||coin.air<=0));
+      // HARD glove: the mound glove claims a DYING ball that enters it. It re-arms only once the ball
+      // has left, so the ball you flick off the mound is never re-caught in place.
+      // This runs whether or not the coin is moving ON PURPOSE: gated behind the `moving` check it
+      // missed the most common case — a ball that rolls in and STOPS inside the glove stops being
+      // checked the moment it settles, so it just sat on the mound uncaught. The lower speed bound is
+      // gone for the same reason (a decelerating ball could skip the old 0.5-2.2 window between
+      // frames). The kickoff ball is still safe: the glove spawns disarmed and only arms once the
+      // ball has left it.
+      for(var _gci=0;_gci<bbGloves.length;_gci++){ var _gc=bbGloves[_gci];
+      var _gin=Math.hypot(coin.x-_gc.x,coin.y-_gc.y)<_gc.r+COIN_R;
+      if(!_gin){ _gc.armed=true;
+      if(_gc.caught){ _gc.caught=false; _gc.openT=12;   /* the ball just left — spring back open */
+      try{ if(typeof sfxWhoosh==='function') sfxWhoosh(); }catch(e){} }
+      continue; }
+      if(_gc.armed&&_bbsp<BB_CATCH_MAX&&(!coin.air||coin.air<=0)){ coin.x=_gc.x; coin.y=_gc.y;
+      coin.vx=0; coin.vy=0; _bbsp=0;
+      _gc.armed=false; _gc.caught=true; _gc.flash=22; _gc.catchT=14; _gc.openT=0;
+      try{ if(typeof sfxBump==='function') sfxBump(6);
+      }catch(e){} try{ shake=Math.max(shake||0,3);
+      }catch(e){} break; } }
+      if(_bbmov){
+      // MED+ pitching machine: a stray ball crossing the pitch deflects the moving ball (never traps it)
+      for(var _pci=0;_pci<bbPitchBalls.length&&_bbsp>0.5;_pci++){ var _pc=bbPitchBalls[_pci];
+      var _pcx=coin.x-_pc.x,_pcy=coin.y-_pc.y,_pcd=Math.hypot(_pcx,_pcy),_pcm=COIN_R+_pc.r;
+      if(_pcd<_pcm&&_pcd>0){ var _pcux=_pcx/_pcd,_pcuy=_pcy/_pcd;
+      coin.x+=_pcux*(_pcm-_pcd); coin.y+=_pcuy*(_pcm-_pcd);
+      var _pcdot=coin.vx*_pcux+coin.vy*_pcuy; if(_pcdot<0){ coin.vx-=1.6*_pcdot*_pcux;
+      coin.vy-=1.6*_pcdot*_pcuy; } coin.vx+=_pc.vx*0.5;
+      coin.vy+=_pc.vy*0.5; try{ if(typeof sfxBump==='function') sfxBump(5);
+      }catch(e){} break; } } }
+      // EASY+ reactive bats: rest until a moving ball rolls into the zone, then swing at a fixed
+      // speed. The barrel SWEEPS through its arc and connects the instant it overlaps the ball — so
+      // a slow ball is hit reliably, but a hard flick blows past before the barrel arrives (a strike).
+      // A connect launches the ball toward that bat's opposite goal at a fixed power (no scaling).
+      // The bat also swings at a PITCHED ball that comes near and cracks it away down the pitch —
+      // the batter doing what a batter is for. It is cosmetic for the match (a struck baseball still
+      // only ever deflects a moving coin) but it makes the two hazards play off each other.
+      for(var _bbi=0;_bbi<bbBats.length;_bbi++){ var _bb=bbBats[_bbi];
+      if(_bb.cd>0){ _bb.cd--; continue; }
+      if(!_bb.swing){ var _btrig=(_bbmov&&_bbsp>0.5&&Math.hypot(coin.x-_bb.x,coin.y-_bb.y)<BB_RZ), _btx=coin.x;
+      if(!_btrig){ for(var _bpi=0;_bpi<bbPitchBalls.length;_bpi++){ var _bp0=bbPitchBalls[_bpi];
+      if(!_bp0.struck&&Math.hypot(_bp0.x-_bb.x,_bp0.y-_bb.y)<BB_RZ){ _btrig=true; _btx=_bp0.x; break; } } }
+      if(_btrig){ _bb.swing=true; _bb.swT=0; _bb.hit=false;
+      // swing FROM the side the ball is on, sweeping a full 180 degrees across the bat's own front,
+      // so the barrel always travels through the ball instead of away from it
+      var _bR=(_btx>=_bb.x); _bb.start=_bR?0:Math.PI;
+      _bb.dir=(_bR===!!_bb.isTop)?1:-1;
+      } continue; }
+      _bb.swT++; var _bang=_bb.start+_bb.dir*(_bb.swT/BB_SWING)*BB_ARC;
+      var _bhx=_bb.x+Math.cos(_bang)*BB_REACH, _bhy=_bb.y+Math.sin(_bang)*BB_REACH;
+      if(!_bb.hit&&_bbmov&&Math.hypot(coin.x-_bhx,coin.y-_bhy)<COIN_R+BB_BARREL){ var _bax=(W/2)-coin.x, _bay=_bb.tgt-coin.y, _bad=Math.hypot(_bax,_bay)||1;
+      coin.vx=_bax/_bad*BB_POWER; coin.vy=_bay/_bad*BB_POWER;
+      _bb.hit=true; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,12,true);
+      }catch(e){} try{ shake=Math.max(shake||0,4);
+      }catch(e){} }
+      for(var _bsi=0;_bsi<bbPitchBalls.length;_bsi++){ var _bp=bbPitchBalls[_bsi];
+      if(_bp.struck) continue;
+      if(Math.hypot(_bp.x-_bhx,_bp.y-_bhy)<_bp.r+BB_BARREL){ var _pax=(W/2)-_bp.x, _pay=_bb.tgt-_bp.y, _pad=Math.hypot(_pax,_pay)||1;
+      _bp.vx=_pax/_pad*4.6; _bp.vy=_pay/_pad*4.6;
+      _bp.struck=true; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_bhx,_bhy,current,8,true);
+      }catch(e){} } }
+      if(_bb.swT>=BB_SWING){ _bb.swing=false; _bb.cd=16; } }
+      } if(bkArena()&&!scoring){ if(!bkOn) initCourt();
+      var _ksp=Math.hypot(coin.vx,coin.vy), _kmov=(moving&&(!coin.air||coin.air<=0));
+      // the hoops are fixed furniture now; only the "went through one" flag resets between attempts
+      if(!moving){ bkRimPass.red=false; bkRimPass.blue=false; }
+      if(bkNoBasket>0) bkNoBasket--;
+      // HARD rim: crossing the hoop mouth toward its goal arms that goal; the posts are solid, so
+      // clipping one rims you out instead
+      for(var _rmi=0;_rmi<bkRims.length;_rmi++){ var _rm=bkRims[_rmi];
+      if(_rm.flash>0) _rm.flash--;
+      if(_kmov){ var _d0=(bkPrev.x-_rm.x)*_rm.fx+(bkPrev.y-_rm.y)*_rm.fy;
+      var _d1=(coin.x-_rm.x)*_rm.fx+(coin.y-_rm.y)*_rm.fy;
+      if(_d0<0&&_d1>=0){ var _lat=(coin.x-_rm.x)*(-_rm.fy)+(coin.y-_rm.y)*_rm.fx;
+      if(Math.abs(_lat)<_rm.half-COIN_R*0.35){ bkRimPass[_rm.for]=true; _rm.flash=20;
+      try{ if(!muted&&typeof sfxSwish==='function') sfxSwish();
+      }catch(e){} try{ spawnSparks(_rm.x,_rm.y,current,10,true); }catch(e){} } }
+      for(var _pk=-1;_pk<=1;_pk+=2){ var _px=_rm.x+(-_rm.fy)*_rm.half*_pk, _py=_rm.y+_rm.fx*_rm.half*_pk;
+      var _pdx=coin.x-_px, _pdy=coin.y-_py, _pd=Math.hypot(_pdx,_pdy), _pmin=COIN_R+BK_POST_R;
+      if(_pd<_pmin&&_pd>0){ var _pux=_pdx/_pd, _puy=_pdy/_pd;
+      coin.x+=_pux*(_pmin-_pd); coin.y+=_puy*(_pmin-_pd);
+      var _pdot=coin.vx*_pux+coin.vy*_puy;
+      if(_pdot<0){ coin.vx-=1.7*_pdot*_pux; coin.vy-=1.7*_pdot*_puy; }
+      try{ if(!muted&&typeof sfxRimClang==='function') sfxRimClang(_ksp); }catch(e){}
+      try{ spawnSparks(_px,_py,null,5); }catch(e){} } } } }
+      // MED trampoline: a BAD hop — it throws the ball up AND kicks it off its line, so unlike the
+      // candy jelly pad (which launches you helpfully along your travel) it costs you control
+      if(_kmov&&_ksp>0.9){ for(var _tri=0;_tri<bkTramps.length;_tri++){ var _tr=bkTramps[_tri];
+      if(_tr.flash>0) _tr.flash--;
+      if(Math.hypot(coin.x-_tr.x,coin.y-_tr.y)<_tr.r+COIN_R*0.5){ coin.air=BK_HOP; coin.air0=BK_HOP;
+      var _tang=Math.atan2(coin.vy,coin.vx)+(Math.random()-0.5)*1.15, _tsp=_ksp*0.86;
+      coin.vx=Math.cos(_tang)*_tsp; coin.vy=Math.sin(_tang)*_tsp;
+      _tr.flash=14; try{ if(!muted&&typeof sfxTramp==='function') sfxTramp();
+      }catch(e){} try{ spawnSparks(_tr.x,_tr.y,current,9,true);
+      }catch(e){} try{ nsKick(4); }catch(e){} break; } } }
+      else { for(var _tf=0;_tf<bkTramps.length;_tf++){ if(bkTramps[_tf].flash>0) bkTramps[_tf].flash--; } }
+      // EASY backboards: bank a shot off the angled board beside a post
+      if(_kmov&&_ksp>0.6){ for(var _kbi=0;_kbi<bkBoards.length;_kbi++){ var _kb=bkBoards[_kbi];
+      var _kdx=_kb.x2-_kb.x1, _kdy=_kb.y2-_kb.y1, _kl2=_kdx*_kdx+_kdy*_kdy;
+      var _kt=_kl2?((coin.x-_kb.x1)*_kdx+(coin.y-_kb.y1)*_kdy)/_kl2:0;
+      _kt=Math.max(0,Math.min(1,_kt));
+      var _kqx=_kb.x1+_kdx*_kt, _kqy=_kb.y1+_kdy*_kt, _kd=Math.hypot(coin.x-_kqx,coin.y-_kqy);
+      if(_kd<COIN_R+BK_BOARD_R&&_kd>0){ var _knx=-_kdy/Math.sqrt(_kl2), _kny=_kdx/Math.sqrt(_kl2);
+      if(coin.vx*_knx+coin.vy*_kny>0){ _knx=-_knx; _kny=-_kny; }   /* face the incoming ball */
+      var _kdot=coin.vx*_knx+coin.vy*_kny;
+      coin.vx-=2*_kdot*_knx; coin.vy-=2*_kdot*_kny;
+      coin.vx*=1.06; coin.vy*=1.06;
+      var _kpush=(COIN_R+BK_BOARD_R)-_kd;
+      coin.x+=(coin.x-_kqx)/_kd*_kpush; coin.y+=(coin.y-_kqy)/_kd*_kpush;
+      bkBoardFlash=10; try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_kqx,_kqy,current,7,true);
+      }catch(e){} break; } } }
+      bkPrev.x=coin.x; bkPrev.y=coin.y;
+      } if(tnArena()&&!scoring){ if(!tnOn) initTennis();
+      var _tsp=Math.hypot(coin.vx,coin.vy), _tair=(coin.air>0), _tmov=(moving&&!_tair);
+      // EASY the net: a lob clears it; a hard grounded shot punches through and loses pace off the
+      // cord; anything slower is stopped at the net and knocked back the way it came
+      // EASY rackets: run onto one and it lobs the ball into the air, carrying it over the net —
+      // the way past without the Chip ability. Capped speed so the lob lands before the goal
+      // (an airborne ball reaching the net is rejected as a goal, which would just read as broken).
+      if(_tmov&&_tsp>0.8){ for(var _ri=0;_ri<tnRackets.length;_ri++){ var _rk=tnRackets[_ri];
+      var _rdx=coin.x-_rk.x, _rdy=coin.y-_rk.y, _rd=Math.hypot(_rdx,_rdy);
+      if(_rd<_rk.r+COIN_R*0.6){
+      if(tnRackLive(_rk)){ var _rs=Math.min(_tsp,TN_RACK_MAX)||1;   // GREEN: lob it over the net
+      var _ra=Math.atan2(coin.vy,coin.vx);
+      coin.vx=Math.cos(_ra)*_rs; coin.vy=Math.sin(_ra)*_rs;
+      coin.air=TN_RACK_AIR; coin.air0=TN_RACK_AIR;
+      _tair=true; _tmov=false; _rk.flash=16;
+      try{ if(typeof sfxBumperHit==='function') sfxBumperHit();
+      }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
+      }catch(e){} try{ nsKick(4); }catch(e){}
+      } else { var _rl=_rd||1, _rux=_rdx/_rl, _ruy=_rdy/_rl;   // RED: swat it straight back
+      coin.x=_rk.x+_rux*(_rk.r+COIN_R*0.6+0.5); coin.y=_rk.y+_ruy*(_rk.r+COIN_R*0.6+0.5);
+      var _rsp=Math.max(1.6,Math.min(_tsp,5)*0.9);
+      coin.vx=_rux*_rsp; coin.vy=_ruy*_rsp;
+      _rk.flash=16; try{ if(typeof sfxBump==='function') sfxBump(6);
+      }catch(e){} try{ spawnSparks(_rk.x,_rk.y,current,9,true);
+      }catch(e){} try{ shake=Math.max(shake||0,3); }catch(e){} }
+      break; } } }
+      var _ny=H/2, _was=tnPrevY-_ny, _now=coin.y-_ny;
+      var _inNet=(coin.x>tnNetX0()&&coin.x<tnNetX1());   // the lanes either side are open
+      // The net is SOLID to anything on the ground, however hard it is struck — there is no punching
+      // through it. The only ways across are in the air (a racket lob or Chip) or round the open
+      // lanes at either end, so no loadout is ever locked out of attacking.
+      // A kickoff sits the ball exactly ON the net line, so the opening flick would otherwise be
+      // knocked straight back. A ball leaving the centre spot is treated as a SERVE and allowed
+      // through; after that the net is absolute. (Do not lean on _was===0 for this — it only holds
+      // while the ball has not moved a single frame.)
+      var _serve=Math.abs(tnPrevY-_ny)<=2.5;
+      // HARD gates: while a gate is out it seals its lane, so that crossing is blocked exactly like
+      // the net. Ground balls only — a lob still clears a gate, same as it clears the net.
+      var _inDoor=false;
+      for(var _di=0;_di<tnDoors.length;_di++){ var _sp=tnDoorSpan(tnDoors[_di]);
+      if(_sp&&coin.x>_sp.x0-COIN_R*0.4&&coin.x<_sp.x1+COIN_R*0.4){ _inDoor=true;
+      if(moving&&_was*_now<0&&!_tair&&!_serve) tnDoors[_di].flash=14;
+      break; } }
+      var _blocked=(_inNet||_inDoor);
+      if(moving&&_was*_now<0&&_blocked&&!_tair&&!_serve){ coin.y=_ny+(_was>0?1:-1)*(COIN_R+1.5);
+      coin.vy=-coin.vy*0.45; coin.vx*=0.6;
+      tnNetFlash=14; try{ if(typeof sfxBump==='function') sfxBump(5);
+      }catch(e){} try{ spawnSparks(coin.x,_ny,current,6,true); }catch(e){} }
+      // belt and braces: a grounded ball must never come to sit INSIDE a blocked band, or the next
+      // frame's crossing test has nothing to compare against and it slips through
+      else if(_blocked&&!_tair&&Math.abs(coin.y-_ny)<COIN_R+1.5&&!_serve){
+      var _side=(_was>=0?1:-1); coin.y=_ny+_side*(COIN_R+1.5);
+      if(coin.vy*_side<0) coin.vy=-coin.vy*0.45; }
+      tnPrevY=coin.y;
+      } if(gridArena()&&!scoring){ try{ gridironStep(); }catch(e){} }
+      if(bowlArena()&&!scoring){ try{ bowlingStep(); }catch(e){} }
+      if(rcArena()&&!scoring){ try{ racewayStep(); }catch(e){} }
+      if(rgArena()&&!scoring){ try{ ringStep(); }catch(e){} }
+      if(cgArena()&&!scoring){ if(!cgOn) initMinigolf();
+      var _gsp=Math.hypot(coin.vx,coin.vy), _ggr=(!coin.air||coin.air<=0);
+      // SAND: extra drag, never a wall. Landing in it costs you the shot and you play out of it next
+      // turn; a near-max strike from close range carries clean through, and a chip flies over. See
+      // CG_SAND_DRAG for the numbers and for what the first value got wrong.
+      if(_ggr&&_gsp>0.01&&cgSandAt(coin.x,coin.y)){ coin.vx*=CG_SAND_DRAG;
+      coin.vy*=CG_SAND_DRAG; }
+      // TREES: a tree KILLS the ball. Deliberately not a bounce — a deflector puts the ball where the
+      // geometry chose, and that is the mistake the bank rails made. This just ends the shot on the spot,
+      // which is both what a tree does on a real course and completely predictable.
+      if(_ggr&&moving&&_gsp>0.3){ for(var _gti=0;_gti<cgTrees.length;_gti++){ var _gt=cgTrees[_gti];
+      var _tdx=coin.x-_gt.x, _tdy=coin.y-_gt.y, _td=Math.hypot(_tdx,_tdy), _tmn=_gt.r+COIN_R;
+      if(_td<_tmn&&_td>0.001){ coin.x=_gt.x+(_tdx/_td)*_tmn;
+      coin.y=_gt.y+(_tdy/_td)*_tmn;
+      coin.vx*=CG_TREE_KILL; coin.vy*=CG_TREE_KILL;
+      _gt.flash=16; try{ if(typeof sfxBump==='function') sfxBump(7);
+      }catch(e){} try{ spawnSparks(coin.x,coin.y,current,9);
+      }catch(e){} try{ shake=Math.max(shake||0,3);
+      }catch(e){} break; } } }
+      // WATER: the shot dies at the bank. It never redirects and never teleports the ball across the
+      // pitch — the ball is set down on the shore it crossed and that is the end of the turn. Airborne
+      // balls carry clean over, so Chip is a real answer to the pond, exactly as it is in golf.
+      if(_ggr&&moving&&_gsp>0.05){ for(var _gwi=0;_gwi<cgWater.length;_gwi++){ var _gw=cgWater[_gwi];
+      if(!cgIn(_gw,coin.x,coin.y)) continue;
+      /* Put the ball down where it ENTERED the water: walk the path it actually travelled this frame and
+         take the last point still on dry land. The first version pushed it to the nearest point on the bank
+         in ellipse space, and for a hard strike (a Cannon shot covers ~20px in a frame and lands well
+         inside) that threw the ball sideways or out the far side — it read as being grabbed and flung.
+         Three guards, because measurement found all three failing:
+           - the previous point is only usable if it was on dry land AND close enough to be this frame's
+             position (a kickoff, VAR or rewind teleports the ball, leaving a stale previous point);
+           - otherwise fall back to the radial push, out to 1.10x the base ellipse;
+           - and then VERIFY. A push that lands in another hazard, or fails, is stepped outward until the
+             point is genuinely clear. One measured case left the ball sitting in the pond. */
+      var _wpx=coin.x, _wpy=coin.y, _wgot=false;
+      var _wjump=Math.hypot(coin.x-cgPrevX,coin.y-cgPrevY);
+      if(_wjump<=34&&!cgIn(_gw,cgPrevX,cgPrevY)){ var _wex=cgPrevX, _wey=cgPrevY;
+      for(var _wk=1;_wk<=16;_wk++){ var _wf=_wk/16;
+      var _wqx=cgPrevX+(coin.x-cgPrevX)*_wf, _wqy=cgPrevY+(coin.y-cgPrevY)*_wf;
+      if(cgIn(_gw,_wqx,_wqy)) break;
+      _wex=_wqx; _wey=_wqy; }
+      if(!cgHazardAt(_wex,_wey,0)){ _wpx=_wex; _wpy=_wey; _wgot=true; } }
+      if(!_wgot){ var _wnx=(coin.x-_gw.x)/_gw.rx, _wny=(coin.y-_gw.y)/_gw.ry, _wnl=Math.hypot(_wnx,_wny)||0.0001;
+      for(var _ws=1.10;_ws<=1.9;_ws+=0.08){ var _wtx=_gw.x+(_wnx/_wnl)*_gw.rx*_ws, _wty=_gw.y+(_wny/_wnl)*_gw.ry*_ws;
+      if(_wtx<WALL+COIN_R||_wtx>W-WALL-COIN_R||_wty<WALL+COIN_R||_wty>H-WALL-COIN_R) continue;
+      if(!cgHazardAt(_wtx,_wty,0)){ _wpx=_wtx; _wpy=_wty; _wgot=true; break; } } }
+      coin.x=Math.max(WALL+COIN_R,Math.min(W-WALL-COIN_R,_wpx));
+      coin.y=Math.max(WALL+COIN_R,Math.min(H-WALL-COIN_R,_wpy));
+      coin.vx=0; coin.vy=0; coin.air=0; _gsp=0;
+      // DROWN: sink where it went in (a little into the pond from the shore it crossed), then drop the ball
+      // back onto the grass at coin's rest spot for the next flick. cgDrown holds the turn — stepPhysics
+      // only ticks it — until the drop lands, then it releases into endFlick.
+      var _sinkx=coin.x+(_gw.x-coin.x)*0.4, _sinky=coin.y+(_gw.y-coin.y)*0.4;
+      cgDrown={t:0, sx:_sinkx, sy:_sinky, gx:coin.x, gy:coin.y};
+      _gw.flash=26; cgSplash=26; cgSplashX=_sinkx; cgSplashY=_sinky;   // impact splash at the sink point
+      try{ setStatus('IN THE WATER'); }catch(e){}
+      try{ if(typeof sfxSplash==='function') sfxSplash(); }catch(e){}
+      try{ spawnSparks(_sinkx,_sinky,null,12); }catch(e){}
+      break; } }
+      // CUPS (HARD): hole out for ONE MORE FLICK. Claims only a DYING ball, so a firm putt skips the
+      // lip, and only in the end this side is attacking. Missing costs nothing.
+      // cgBonus caps it at one per possession: without that, an extra flick played from inside the hole
+      // could drop straight back in and hand out turns for ever.
+      // THE PIN: solid on every cup, and on a LIVE one a soft arrival drops. This is the shot the arena is
+      // for — you aim at the flagstick rather than trying to stop dead on a 7px hole. A hard arrival is
+      // killed by the pin and stays out, so power is the wrong answer.
+      if(cgCupOn&&_ggr&&!cgHoled){ for(var _gpi=0;_gpi<cgCups.length;_gpi++){ var _gp=cgCups[_gpi];
+      var _pdx=coin.x-_gp.x, _pdy=coin.y-_gp.y, _pd=Math.hypot(_pdx,_pdy), _pmn=CG_PIN+COIN_R;
+      if(_pd>=_pmn) continue;
+      if(_gp.armed&&cgCupLive(_gp)&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ cgHoleOut(_gp); _gsp=0; break; }
+      if(_pd<0.001){ _pdx=1; _pdy=0; _pd=1; }
+      var _pux=_pdx/_pd, _puy=_pdy/_pd;
+      coin.x=_gp.x+_pux*_pmn; coin.y=_gp.y+_puy*_pmn;
+      // Remove the component driving the ball INTO the pin rather than reflecting it — a flagstick stops a
+      // ball dead and it drops beside the hole, it does not spring off like a bumper.
+      var _pdot=coin.vx*_pux+coin.vy*_puy;
+      if(_pdot<0){ coin.vx-=_pdot*_pux; coin.vy-=_pdot*_puy; }
+      coin.vx*=CG_PIN_KILL; coin.vy*=CG_PIN_KILL; _gsp*=CG_PIN_KILL;
+      _gp.armed=false; _gp.flash=10;
+      try{ if(typeof sfxBump==='function') sfxBump(5); }catch(e){}
+      break; } }
+      // and the original route stays: a ball that simply dies in the hole is holed too
+      if(cgCupOn&&_ggr&&!cgHoled&&!cgBonus&&!(pen&&pen.active)&&_gsp<CG_CUP_V){ for(var _gci=0;_gci<cgCups.length;_gci++){ var _gc=cgCups[_gci];
+      if(!cgCupLive(_gc)||!_gc.armed) continue;
+      if(Math.hypot(coin.x-_gc.x,coin.y-_gc.y)>=CG_CUP) continue;
+      cgHoleOut(_gc); _gsp=0; break; } }
+      cgPrevX=coin.x; cgPrevY=coin.y;
+      } if((typeof boardKey!=='undefined')&&boardKey==='casino'&&!scoring&&stadiumHazards()){ if(hzTier()>=1&&dice.length===0) initDice();
       if(hzTier()>=2&&numBoxes.length===0) initNumBoxes();
       for(var _di=0;_di<dice.length;_di++){ var _d=dice[_di];
       if(_d.tumble>0) _d.tumble--;
@@ -1833,10 +3141,15 @@
       coin.vx+=(_crdx/_crd)*_crf;
       coin.vy+=(_crdy/_crd)*_crf;
       try{ if(typeof sfxBump==='function') sfxBump(5);
-      }catch(e){} } } } } } if(royBlizzard() && moving && !scoring){ var _gst=royGust()*ROY_GUST_MAX;
+      }catch(e){} if(TAC.aftershock&&!aftUsed){ try{ aftShock([_cr],_cr.x,_cr.y,4,false); }catch(e){} } } } } } } if(royBlizzard() && moving && !scoring){ var _gst=royGust()*ROY_GUST_MAX;
       coin.vx+=Math.cos(royGustDir)*_gst;
       coin.vy+=Math.sin(royGustDir)*_gst;
-      } const f=scoring?NET_FRICTION:Math.min(0.995,(FRICTION+TAC.glide+royFloorFric()+((typeof boardKey!=='undefined'&&stadiumHazards())?((boardKey==='space')?0.007:(boardKey==='skate'?0.005:0)):0)+((typeof bananaSlip!=='undefined'&&bananaSlip>0)?0.012:0)));
+      } const f=scoring?NET_FRICTION:Math.min(0.995,(FRICTION+TAC.glide+royFloorFric()+((typeof boardKey!=='undefined'&&stadiumHazards())?((boardKey==='space')?0.007:(boardKey==='skate'?0.005:(boardKey==='minigolf'?-0.006:0))):0)+((typeof bananaSlip!=='undefined'&&bananaSlip>0)?0.012:0)));
+      /* GRASS DRAG on CRAZY GOLF: a golf course rolls slower than a hard pitch, and the arena's ability
+         pool includes Cannon (1.2x power -> launches up to ~12 px/frame), which on the standard 0.984
+         friction rockets around for ~2.8s and is hard to track. The -0.006 delta (f~=0.978) settles a
+         cannon shot in ~1.9s and still lets a normal flick roll the length of the pitch, so scoring is
+         unaffected but the ball is followable. */
       coin.vx*=f; coin.vy*=f; if(TAC.backspin&&moving&&!scoring){ if(!backspinPhase){ coin.vx*=0.92;
       coin.vy*=0.92; var _bfv=coin.vx*backspinFx+coin.vy*backspinFy;
       if(_bfv<0.4){ coin.vx=-backspinFx*3.0;
@@ -1853,7 +3166,7 @@
       if(current===_mt) continue;
       if((sideAb[_mt]||[]).indexOf('magnet')<0) continue;
       var _mg=null; for(var _mi=0;_mi<nails.length;_mi++){ if(nails[_mi].team===_mt&&nails[_mi].goalie){ _mg=nails[_mi];
-      break; } } if(!_mg) continue;
+      break; } } if(!_mg||_mg._aftShock) continue;
       var _mdx=_mg.x-coin.x, _mdy=_mg.y-coin.y, _md=Math.hypot(_mdx,_mdy)||1, _mR=GOAL_W*0.95;
       var _mgl=(_mt==='red')?(H-NET_DEPTH-COIN_R):(NET_DEPTH+COIN_R);
       var _mtow=(_mt==='red')?(coin.vy>0.05):(coin.vy<-0.05), _mon=false;
@@ -1889,11 +3202,20 @@
           if(!celebrated){ celebrated=true; netBulge=3; netBulgeX=coin.x; netHold=10; hitStop=2; celebrate(t,6); }
           finalizeGoal(t);
         }
-      } else if(!(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
+      } else if(!cgDrown && !(typeof royDevil!=='undefined'&&royDevil&&royDevil.hasBall) && !(typeof skateTube!=='undefined'&&skateTube) && Math.hypot(coin.vx,coin.vy)<STOP_V){ coin.vx=0;
       coin.vy=0; separateCoin();
       moving=false; endFlick();
       }
     }
+    // Advance the water drown: sink (SINK frames), then drop onto the grass (DROP frames). The ball already
+    // rests at cgDrown.gx/gy; this only paces the turn — the render (drawCgDrown) shows sink + drop. When the
+    // drop lands, release the turn through endFlick (a water death is not a keep, so possession passes).
+    function cgDrownTick(){ if(!cgDrown) return;
+    cgDrown.t++;
+    if(cgDrown.t>=CG_DROWN_SINK+CG_DROWN_DROP){ cgDrown=null;
+    coin.vx=0; coin.vy=0; coin.air=0; moving=false;
+    try{ separateCoin(); }catch(e){}   // nudge off any peg it landed on, as the normal stop path would
+    try{ endFlick(); }catch(e){} } }
     function syncSpecialNails(){ nails=nails.filter(function(n){ return !n.striker && !n.defender;
     }); for(var qi=0;qi<nails.length;qi++){ nails[qi].damp=false;
     nails[qi].bike=false; nails[qi].clearer=false;
@@ -2039,7 +3361,7 @@
     if(current===_mt) continue;
     if((sideAb[_mt]||[]).indexOf('magnet')<0) continue;
     var _mg=null; for(var _mi=0;_mi<nails.length;_mi++){ if(nails[_mi].team===_mt&&nails[_mi].goalie){ _mg=nails[_mi];
-    break; } } if(!_mg) continue;
+    break; } } if(!_mg||_mg._aftShock) continue;
     if(Math.hypot(_mg.x-coin.x,_mg.y-coin.y)>=GOAL_W*0.95) continue;
     var col=(_mt==='red')?'rgba(255,90,90,0.5)':'rgba(120,180,255,0.55)';
     ctx.save(); ctx.strokeStyle=col;
@@ -2071,7 +3393,68 @@
     ctx.lineTo(sx+(i-2.5)*3*sh, f.y+dir2*(6+sh*22));
     ctx.stroke(); } ctx.restore();
     f.life--; if(f.life<=0) shieldFx=null;
-    } } function drawPortals(now){ var _t=(now||0)*0.006;
+    } }
+    /* AFTERSHOCK — the shot carries a charge: the FIRST opponent piece it strikes is SHOCKED for the
+       REST of the shooter's turn (lifecycle lives in trioReset; the stun dies at the turn handover). What
+       a shock means depends on what was hit, but it is always "stops doing its job, stays a body":
+         keeper            stops tracking / sweeping / magnet-catching; still physically blocks
+         outfield token    its tricks are off — no clearance lunge, no anchor damp, no gridiron roam/punt
+         roaming hazard    (dust devil, boulder, crabs) freezes on the spot
+       Off a KEEPER the rebound additionally keeps AFT_KEEP of the arrival speed, as a FLOOR not a cap, so
+       the riposte ball comes back out far enough to keep the turn alive — that pace floor is what makes
+       the intended combo playable: shock the keeper, catch the rebound on your own token, then shoot at a
+       keeper that cannot move for the rest of your turn. Once per flick (aftUsed), so nothing here can
+       stop the ball settling — and successive flicks MERGE into one stun set rather than replacing it,
+       because a replaced entity would keep its _aftShock flag with nobody left to clear it. */
+    function aftShock(list,hx,hy,pre,isKeeper){ if(aftUsed||!list||!list.length) return; aftUsed=true;
+    for(var _si=0;_si<list.length;_si++){ list[_si]._aftShock=true; }
+    if(aftStun && aftStun.by===current){ for(var _mi2=0;_mi2<list.length;_mi2++){ if(aftStun.list.indexOf(list[_mi2])<0) aftStun.list.push(list[_mi2]); } }
+    else { aftClearStun(); aftStun={by:current,list:list.slice()}; }
+    if(isKeeper){ var _an=Math.hypot(coin.vx,coin.vy), want=(pre||0)*AFT_KEEP;
+    if(want>0.2){ if(_an<0.05){ var ux2=coin.x-hx, uy2=coin.y-hy, ul=Math.hypot(ux2,uy2)||1;
+    coin.vx=(ux2/ul)*want; coin.vy=(uy2/ul)*want;
+    } else if(_an<want){ var k=want/_an; coin.vx*=k; coin.vy*=k; } } }
+    aftFx={x:hx,y:hy,life:AFT_FX_DUR,team:current};
+    try{ spawnSparks(hx,hy,current,16); }catch(e){}
+    try{ if(typeof nsKick==='function') nsKick(Math.min(9,(pre||4)*1.2)); }catch(e){}
+    try{ setStatus(isKeeper?'AFTERSHOCK - KEEPER SHOCKED!':'AFTERSHOCK - SHOCKED!'); }catch(e){}
+    try{ if(typeof sfxAftershock==='function') sfxAftershock(pre); }catch(e){}
+    try{ if(typeof abilitySlotPop==='function') abilitySlotPop(current,'aftershock',1.3); }catch(e){}
+    }
+    function aftClearStun(){ if(!aftStun) return;
+    try{ for(var _ci=0;_ci<aftStun.list.length;_ci++){ aftStun.list[_ci]._aftShock=false; } }catch(e){}
+    aftStun=null; }
+    /* Impact ring (expanding PIXEL ring + debris, the oil-splash idiom) plus the stun tell: jittering
+       bolt pixels over every shocked piece for as long as the stun lasts, so both players can see exactly
+       what is frozen and for how long. */
+    function drawAftershock(now){ if(aftFx){ var f=aftFx, p=1-(f.life/AFT_FX_DUR), a=Math.max(0,f.life/AFT_FX_DUR);
+    var R=3+Math.round(p*AFT_R), big=(p<0.4);
+    ctx.save();
+    ctx.fillStyle='rgba(255,232,150,'+(0.85*a).toFixed(3)+')';
+    for(var k=0;k<20;k++){ var ang=k/20*Math.PI*2;
+    var rx=Math.round(f.x+Math.cos(ang)*R), ry=Math.round(f.y+Math.sin(ang)*R);
+    if(_cgRnd(k+0.3)>0.2) ctx.fillRect(rx,ry,big?2:1,big?2:1); }
+    ctx.fillStyle='rgba(246,138,44,'+(0.7*a).toFixed(3)+')';
+    for(var d2=0;d2<10;d2++){ var a2=(d2/10)*Math.PI*2+_cgRnd(d2)*0.5, dd=R*(0.55+_cgRnd(d2+0.4)*0.4);
+    ctx.fillRect(Math.round(f.x+Math.cos(a2)*dd),Math.round(f.y+Math.sin(a2)*dd),1,1); }
+    if(p<0.5){ ctx.fillStyle='rgba(255,250,225,'+(0.75*a).toFixed(3)+')';
+    ctx.fillRect(Math.round(f.x)-2,Math.round(f.y)-2,4,4); }
+    ctx.restore();
+    f.life--; if(f.life<=0) aftFx=null; }
+    if(aftStun&&aftStun.list){ var _ph=Math.floor((now||0)/90)%3;
+    ctx.save();
+    for(var _ti=0;_ti<aftStun.list.length;_ti++){ var t=aftStun.list[_ti];
+    if(!t||!t._aftShock||t.x==null) continue;
+    var bx=Math.round(t.x), by=Math.round(t.y)-NAIL_R-5;
+    // a tiny 3-step lightning zigzag, hopping between three poses so it reads as crackling
+    ctx.fillStyle='#ffe98a';
+    if(_ph===0){ ctx.fillRect(bx-2,by-3,1,2); ctx.fillRect(bx-1,by-1,1,2); ctx.fillRect(bx-2,by+1,1,1); }
+    else if(_ph===1){ ctx.fillRect(bx+1,by-3,1,2); ctx.fillRect(bx,by-1,1,2); ctx.fillRect(bx+1,by+1,1,1); }
+    else { ctx.fillRect(bx-1,by-2,1,2); ctx.fillRect(bx,by,1,1); ctx.fillRect(bx+1,by-3,1,1); }
+    ctx.fillStyle='rgba(255,250,225,0.9)'; ctx.fillRect(bx+((_ph===1)?-2:2),by-1,1,1);
+    }
+    ctx.restore(); }
+    } function drawPortals(now){ var _t=(now||0)*0.006;
     ['red','blue'].forEach(function(tm){ if((sideAb[tm]||[]).indexOf('portal')<0) return;
     var pp=portalPts(tm); [[pp.ex,
     pp.ey,'#7fdcff','#173a55'],
@@ -2127,7 +3510,11 @@
     try{ if(typeof haptic==='function') haptic([0,
     12,22,14]); }catch(_h){} return;
     } } } function collideStep(){
-      const left=WALL+COIN_R,right=W-WALL-COIN_R,gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
+      // THE ALLEY bumpers (easy/med): the raised rail fills the coin-width channel, so the ball must bounce off
+      // its INNER FACE, not the wall hidden behind it — inset the side boundary by the rail width. Hard has no
+      // bumper (inset 0), so the ball reaches the wall and the gutter capture takes it.
+      var _bInset=((typeof bowlArena==='function')&&bowlArena()&&bowlCfg().bumpers)?(COIN_R*2+1):0;
+      const left=WALL+COIN_R+_bInset,right=W-WALL-COIN_R-_bInset,gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
       if(scoring){
         const pl=gL+COIN_R,pr=gR-COIN_R;
         if(coin.x<pl){coin.x=pl;coin.vx=0;} if(coin.x>pr){coin.x=pr;coin.vx=0;}
@@ -2159,6 +3546,10 @@
       try{sfxBump(4);}catch(e){} return;
       } } if(shieldHit('blue')) return;
       if('red'!==current && (sideAb[current]||[]).indexOf('varcheck')>=0 && !varUsed[current]){ varDeny();
+      return; } if(bkGoalDenied('red')){ coin.y=NET_DEPTH+COIN_R+1;
+      coin.vy=Math.abs(coin.vy)*0.55+0.6; coin.vx*=0.6;
+      bkNoBasket=80; try{ sfxWhistle(); }catch(e){}
+      try{ spawnSparks(coin.x,NET_DEPTH+2,'red',10); }catch(e){}
       return; } scoring=true; scoringTeam='red';
       scoreFrames=0; spawnSparks(coin.x,NET_DEPTH,'red',18);
       return; }
@@ -2174,12 +3565,32 @@
       try{sfxBump(4);}catch(e){} return;
       } } if(shieldHit('red')) return;
       if('blue'!==current && (sideAb[current]||[]).indexOf('varcheck')>=0 && !varUsed[current]){ varDeny();
+      return; } if(bkGoalDenied('blue')){ coin.y=H-NET_DEPTH-COIN_R-1;
+      coin.vy=-(Math.abs(coin.vy)*0.55+0.6); coin.vx*=0.6;
+      bkNoBasket=80; try{ sfxWhistle(); }catch(e){}
+      try{ spawnSparks(coin.x,H-NET_DEPTH-2,'blue',10); }catch(e){}
       return; } scoring=true; scoringTeam='blue';
       scoreFrames=0; spawnSparks(coin.x,H-NET_DEPTH,'blue',18);
       return; }
       var _skRamp=((typeof boardKey!=='undefined')&&boardKey==='skate'&&(typeof stadiumHazards==='function')&&stadiumHazards()&&hzTier()>=1);
-      if(coin.x<left&&!_skRamp){coin.x=left;
-      coin.vx=-coin.vx*RESTITUTION;
+      // THE ALLEY gutters (med+): a side wall CAPTURES the ball instead of bouncing it — done here, at the
+      // collision point, so even a fast cannon shot is caught (the once-per-frame gutter check missed it after
+      // the bounce had already flung it back inward). Kill outward speed; it then rolls down the channel.
+      var _bowlGut=((typeof bowlArena==='function')&&bowlArena()&&bowlCfg().gutter&&(!coin.air||coin.air<=0));
+      // THE RING: the side walls ARE the ropes — elastic, so they hand the ball back with interest (rgRopeRest
+      // also arms the strand's flex animation). Grounded ball only; a chip sails over them.
+      var _rgRope=((typeof rgArena==='function')&&rgArena()&&(!coin.air||coin.air<=0));
+      if(coin.x<left&&!_skRamp){ if(_bowlGut){ coin.x=left; coin.vx=0; coin.spin=0;
+      if(!bowlGutter){ bowlGutter={side:0};
+      try{ setStatus('GUTTER BALL!');
+      }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh();
+      else if(typeof sfxBump==='function') sfxBump(3);
+      } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
+      18,26,34]); }catch(e){} }
+      } else { coin.x=left;
+      var _rL=_rgRope?rgRopeRest(Math.abs(coin.vx),coin.y,0):RESTITUTION;
+      coin.vx=-coin.vx*_rL;
+      if(_rgRope){ var _sL=Math.hypot(coin.vx,coin.vy), _cL=rgCfg().ropeCap; if(_sL>_cL){ var _kL=_cL/_sL; coin.vx*=_kL; coin.vy*=_kL; } }
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
       coin.vx*=1.5; coin.vy*=1.2;
@@ -2188,9 +3599,18 @@
       try{ sfxBounce(Math.abs(coin.vx));
       }catch(e){} try{ nsKick(Math.abs(coin.vx));
       }catch(e){} try{ nsWallHit(coin.x,coin.y);
-      }catch(e){} }}
-      if(coin.x>right&&!_skRamp){coin.x=right;
-      coin.vx=-coin.vx*RESTITUTION;
+      }catch(e){} } }}
+      if(coin.x>right&&!_skRamp){ if(_bowlGut){ coin.x=right; coin.vx=0; coin.spin=0;
+      if(!bowlGutter){ bowlGutter={side:1};
+      try{ setStatus('GUTTER BALL!');
+      }catch(e){} try{ if(!muted){ if(typeof sfxWhoosh==='function') sfxWhoosh();
+      else if(typeof sfxBump==='function') sfxBump(3);
+      } }catch(e){} try{ if(typeof haptic==='function') haptic([0,
+      18,26,34]); }catch(e){} }
+      } else { coin.x=right;
+      var _rR=_rgRope?rgRopeRest(Math.abs(coin.vx),coin.y,1):RESTITUTION;
+      coin.vx=-coin.vx*_rR;
+      if(_rgRope){ var _sR=Math.hypot(coin.vx,coin.vy), _cR=rgCfg().ropeCap; if(_sR>_cR){ var _kR=_cR/_sR; coin.vx*=_kR; coin.vy*=_kR; } }
       if(coin.spin) coin.spin*=0.35;
       _achBounces++; if((sideAb[current]||[]).indexOf('ricochet')>=0 && !ricochetUsed){ ricochetUsed=true;
       coin.vx*=1.5; coin.vy*=1.2;
@@ -2199,7 +3619,7 @@
       try{ sfxBounce(Math.abs(coin.vx));
       }catch(e){} try{ nsKick(Math.abs(coin.vx));
       }catch(e){} try{ nsWallHit(coin.x,coin.y);
-      }catch(e){} }}
+      }catch(e){} } }}
       const top=WALL+COIN_R,bottom=H-WALL-COIN_R;
       if(coin.y<top&&!(coin.x>gL&&coin.x<gR)){coin.y=top;
       coin.vy=-coin.vy*RESTITUTION;
@@ -2265,7 +3685,11 @@
       coin.vx=_tvx-dot*ux*RESTITUTION;
       coin.vy=_tvy-dot*uy*RESTITUTION;
       } if(n.goalie&&pen&&pen.active) pen.keeperHit=true;
-      if(n.damp && n.team!==current && !TAC.wet){ coin.vx*=0.18;
+      // AFTERSHOCK: the first opponent token the shot strikes — keeper or outfielder — takes the shock.
+      // _cv is the speed the ball arrived with, captured above before the bounce reversed it.
+      if(TAC.aftershock && !aftUsed && n.team!==current && _cv>1.2 && !(pen&&pen.active)){
+      try{ aftShock([n], n.x+ux*NAIL_R, n.y+uy*NAIL_R, _cv, !!n.goalie); }catch(e){} }
+      if(n.damp && n.team!==current && !TAC.wet && !n._aftShock){ coin.vx*=0.18;
       coin.vy*=0.18; if(!n._acd){ try{sfxAnchorHit();
       }catch(e){} n._acd=8; } } spawnSparks(n.x+ux*NAIL_R,n.y+uy*NAIL_R,n.team,n.team===current?16:9);
       struck=true; if(n.team!==current && typeof _clrSt!=='undefined' && _clrSt[n.team] && _clrSt[n.team].n===n){ _clrBlocked=true;
@@ -2345,11 +3769,29 @@
     }catch(e){} },1700); flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } current=_lkTeam;
+    if(typeof cgStamBase!=='undefined') cgStamBase=0;
     turnFlash=24; try{ sfxTurn();
-    }catch(e){} try{ updateComebackHUD();
+    }catch(e){} try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
+    try{ updateComebackHUD();
     }catch(e){} flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     return; } var _fcap=(debuffActive(current,'injury')?2:FLICK_CAP);
+    // CRAZY GOLF: holed out. The payoff is ONE MORE FLICK, played from the hole the ball is sitting in.
+    // Deliberately ahead of the FLICK_CAP branches below: this was earned by sinking a 7px target, not
+    // by running down a clock, so the flick cap must not be able to swallow it.
+    if((typeof cgHoled!=='undefined')&&cgHoled){ var _cgw=cgHoled;
+    cgHoled=null; cgBonus=true; cgStamBase=flickCount; current=_cgw;
+    coin.vx=0; coin.vy=0; coin.air=0;
+    // Holing out KEEPS possession and the hole-out COUNTS as a flick — the tally keeps ticking down (so a
+    // hole on your first flick leaves you 2). The reward is that stamina is REFRESHED to 100% at the hole
+    // (cgStamBase = the current count) and then decreases again with each following flick — it is not
+    // pinned at 100% for the rest of the turn. You keep the turn whether or not the shot touched your own
+    // players; cgBonus caps it at one hole-out per possession.
+    hitOwn=false; struck=false;
+    turnFlash=24; setStatus('HOLED OUT — PLAY ON');
+    try{ sfxCheer(); }catch(e){} try{ spawnSparks(coin.x,coin.y,current,16,true);
+    }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
+    applyTactics(); updateHUD(); return; }
     if(hitOwn && flickCount<_fcap){ sfxOwn();
     try{ tutHook('keep'); }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     } else if(_wasCleared && flickCount<_fcap && !hitOwn){ setStatus('CLEARED — PLAY ON');
@@ -2364,7 +3806,9 @@
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     } else { try{ tutHook('lose');
     }catch(e){} current=current==='red'?'blue':'red';
+    if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; cgStamBase=0; }   /* CRAZY GOLF: hole-out bonus + stamina refresh last one possession */
     turnFlash=24; sfxTurn();
+    try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;
     try{stopAnthem();}catch(e){} } }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     stickyUsed=false; flickCount=0;
@@ -2537,6 +3981,11 @@
     _trioDone=false; _boomFwd=false;
     _boomUsed=false; chipUsed=false;
     _clrBlocked=false; drillUsed=false;
+    aftUsed=false;
+    /* AFTERSHOCK stun lifecycle: the stun lives exactly as long as its owner's turn. Every flick start
+       checks the owner — the first flick that is not theirs (the turn switched hands) clears everything,
+       so a stun can never reach into the opponent's turn or a later turn of the shocker's own. */
+    try{ if(aftStun && current!==aftStun.by){ aftClearStun(); } }catch(e){}
     if(typeof coin!=='undefined'&&coin) coin.air=0;
     if(typeof nails!=='undefined'&&nails){ for(var _tri=0;_tri<nails.length;_tri++) nails[_tri]._trioHit=false;
     } try{ var _tb=document.querySelectorAll('.ns_triob');
@@ -2637,6 +4086,7 @@
     }catch(e){} }); }
     function finalizeGoal(scorer){ if(pen&&pen.active){ penResolve('goal'); return; }
       _rwSnap=null;
+      try{ if(typeof bowlArena==='function'&&bowlArena()&&typeof bowlRerack==='function') bowlRerack(); }catch(e){}   // THE ALLEY: fresh rack each point
       score[scorer]++; try{ tutHook('goal',scorer);
       }catch(e){} try{ ecoOnGoal(scorer);
       }catch(e){} try{ if(scorer==='red' && mode!=='practice'){ var _ag=spAchGet();

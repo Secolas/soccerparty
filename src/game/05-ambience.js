@@ -70,6 +70,26 @@
       } else if(t==='safari'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14});
+      } else if(t==='golf'){
+        /* CRAZY GOLF is cut out of woodland, so the surround is a TREELINE and there is no gallery at all
+           (buildCrowd skips this type entirely). With the crowd gone the trees get the full 12-unit band:
+           two staggered rows down each side and a row along the top and bottom. Sizes and offsets are
+           jittered per tree — a row of identical sprites reads as wallpaper. */
+        /* CG_TREELINE gates the surround trees. Switched OFF while the pitch's alignment is being checked:
+           scenery packed into a 12-unit surround makes it very hard to see by eye whether the pitch itself
+           is centred in its frame. One word to put them back. */
+        var CG_TREELINE=false;
+        if(CG_TREELINE) for(var _gs=0;_gs<2;_gs++){ var _bx=(_gs===0)?(OX*0.42):(CW-OX*0.42);
+        for(var _gy=3;_gy<CH-2;_gy+=8){ for(var _gc=0;_gc<2;_gc++){
+        ambient.push({kind:'gtree', x:_bx+(_gc?OX*0.34:-OX*0.3)+(Math.random()-0.5)*3, y:_gy+(_gc?4:0)+(Math.random()-0.5)*3,
+        sz:9+Math.random()*5, f:Math.floor(Math.random()*4)}); } } }
+        if(CG_TREELINE) for(var _gx=3;_gx<CW-2;_gx+=9){ ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)});
+        ambient.push({kind:'gtree', x:_gx+(Math.random()-0.5)*3, y:CH-OY*0.4+(Math.random()-0.5)*3, sz:9+Math.random()*4, f:Math.floor(Math.random()*4)}); }
+        /* No birds here. The y in the copied formula is `3+Math.random()*(OY-14)`, and OY is 10 — so the
+           range is NEGATIVE and every bird is placed at y 0..3, drawn as a pale curved wing stroke right
+           on top of the timber frame. Four of those, one per corner region, is what read as "the pitch has
+           stray curves in the corners". The formula is wrong wherever it appears (see the safari case); it
+           is simply not worth having birds on a 10-unit-tall band, so this arena has none. */
       } else if(t==='aquarium'){
         // the sea life lives only UNDER the crystal pitch; the surround is just tank water with rising bubbles
         for(var i=0;i<10;i++) ambient.push({kind:'tankbub', x:Math.random()*CW, y:Math.random()*CH, vy:0.1+Math.random()*0.22, sz:Math.random()<0.4?2:1, drift:Math.random()*6.28});
@@ -407,6 +427,16 @@
         if(a.x>CW+4)a.x=-4; if(a.x<-4)a.x=CW+4;
         drawAntelope(Math.round(a.x),Math.round(a.y),a.vx<0,now);
         }
+        else if(a.kind==='gtree'){ var _gi=(typeof NS_BUSH!=='undefined'&&NS_BUSH.length)?NS_BUSH[a.f%NS_BUSH.length]:null;
+        var _gz=a.sz, _gx2=Math.round(a.x-_gz/2), _gy2=Math.round(a.y-_gz*0.6);
+        ctx.fillStyle='rgba(4,16,8,0.5)';
+        ctx.fillRect(_gx2+2,_gy2+Math.round(_gz*0.72),Math.round(_gz)-4,2);
+        if(_gi&&_gi.complete&&_gi.naturalWidth){ ctx.fillStyle='rgba(6,22,10,0.85)';   // dark rim, so the
+        ctx.fillRect(_gx2-1,_gy2+1,Math.round(_gz)+2,Math.round(_gz)-2);               // canopy reads at size
+        ctx.drawImage(_gi,_gx2,_gy2,_gz,_gz);
+        } else { ctx.fillStyle='#1c5a24';
+        ctx.fillRect(_gx2+1,_gy2+2,Math.round(_gz)-2,Math.round(_gz)-4);
+        ctx.fillStyle='#2d7f36'; ctx.fillRect(_gx2+2,_gy2+3,Math.round(_gz)-6,Math.round(_gz)-8); } }
         else if(a.kind==='bgfish'){ a.x+=a.vx;
         a.y+=Math.sin(now*0.002+a.phase)*0.12;
         if(a.x>CW+a.sz*2)a.x=-a.sz*2;

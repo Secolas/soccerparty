@@ -50,6 +50,25 @@ Rarity scale: COMMON · UNCOMMON · RARE · EPIC · LEGENDARY
 | **Lob Shot / Chip** | 🪂 | RARE | Flick then tap to hop the ball over the next player it would hit (faked height + shadow). | Top-down height fake; keeper can still claim on landing |
 | **Market** | 🛒 | UNCOMMON | Economy mode only: currency you claim is doubled. | Filter out of the draft pool unless Coin Rush is on |
 
+## Season 3 batch (2026 — not yet built)
+
+New ideas to seed the Season 3 draft pool. Several hook directly into the new
+Royale arenas proposed in [`SEASON_3_IDEAS.md`](./SEASON_3_IDEAS.md); all obey
+the no-currency / hooks-existing-systems rule.
+
+| Name | Icon | Rarity | Effect | Notes / synergies |
+|---|---|---|---|---|
+| **Grappler** | 🪝 | RARE | Your flick can latch onto one of your own players and slingshot off it, releasing at +35% speed (manual aim). | New tether hook; Sticky, Captain |
+| **Homing Shot** | 🎯 | EPIC | After crossing midfield your shot curves gently toward the goal's *current* centre. | Weave past Gridiron rushers; Sniper, Curveball |
+| **Decoy Run** | 🏃💨 | RARE | Your flick spawns a ghost decoy ball that peels toward a corner and draws the keeper; the real ball launches a half-beat later. | Deception play; distinct from Feint's aim-lie |
+| **Trailblazer** | 🔆 | EPIC | Your shot leaves a fading speed-lane; your NEXT flick this possession accelerates +25% while riding it. | Grand Prix slipstream/boost; Playmaker, Tiki-Taka |
+| **Time Out** | ⏱️ | EPIC | Once per match, freeze ALL arena hazards and the opponent keeper for your single next flick. | Any hazard-heavy Royale stage; a defensive panic button |
+| **Slalom** | 🎿 | RARE | Your shot auto-weaves a gentle S to avoid the first two obstacles/players in its lane. | Obstacle arenas; Ghost, Soft Touch |
+| **Featherweight** | 🪶 | UNCOMMON | Your ball ignores slow-fields (mud, caramel, puddles, Sticky Pitch) — but keepers punch rebounds twice as far. | Risk/reward; counter to slow-field arenas; vs Wet Shot (which keeps pace off *impacts*) |
+| **Aftershock** ✅ BUILT (v3: turn-long stun) | 💥 | RARE (w3) | Your shot carries a charge: the FIRST opponent piece it strikes is SHOCKED until YOUR TURN ENDS — a keeper freezes on its spot (still a body: it blocks, but stops tracking/sweeping/magnet-catching), an outfield token loses its tricks (no clearance lunge, no anchor damp, no gridiron roam or punt), and a roaming hazard (dust devil, boulder, crab) stops dead — a charged shot can't even be EATEN by the devil, it zaps it instead. Off a keeper the rebound also keeps pace (0.85 floor vs the natural ~0.73). One shock per flick, so they STACK across the turn (keeper on flick 1, a defender on flick 2); the whole set clears at the handover. | The designed play: shock the keeper, catch the rebound off your own token, then punish for the rest of the turn. v1 (blast-back + rebound pace) pooled 50.0% — noise, positional payoff the AI never exploited. v2 (one-flick stun) pooled 93/180 = 51.7%. v3 (turn-long) pooled 98/180 = 54.4% (51.7/61.7/50.0) vs empty at med — dead on the median ability, and the CPU benefits passively (a saved flick leaves the keeper frozen for the REST of its turn), so it's a real floor with the deliberate human combo above it. Ranked RARE (w3). Promote on playtest evidence, never demote on this number. |
+| **Sticky Gloves** | 🧤 | UNCOMMON | Your keeper catches and holds any shot it reaches — no rebounds conceded for a beat. | Anti-Counter-Attack; Zone Defense, Catenaccio |
+| **Gyroscope** | 🧭 | UNCOMMON | All your curve/spin is +50%, and you can tap once mid-flight to add a second curve. | Curveball + Serpent enabler; Banana Storm on demand |
+
 ---
 
 ## 1. Shot modifiers

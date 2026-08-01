@@ -17,10 +17,27 @@
     if(abOff[sd].indexOf(other)<0) abOff[sd].push(other);
     try{ applyTactics(); }catch(e){} try{ syncSlots();
     }catch(e){} }
-    function aiFlick(){
+    // The human's drag is clamped to the pitch (aimNow is bounded by WALL..W-WALL / WALL..H-WALL), so with
+    // the ball against a wall they can only pull back a little in the away-from-wall direction — a weak shot.
+    // Mirror that ceiling for the CPU so it can't fire full power off a wall. `reach` models that the human
+    // may start the drag slightly off-ball (within COIN_R+13). Only bites near a wall; far from walls the
+    // available room dwarfs FLICK_POWER so the cap is a no-op. Returns a max speed in the same units as `speed`.
+    function aiWallPowerCap(bx,by,ang){ var reach=COIN_R+13, cx=Math.cos(ang), cy=Math.sin(ang);
+    var sx=Math.max(WALL,Math.min(W-WALL,bx+cx*reach)), sy=Math.max(WALL,Math.min(H-WALL,by+cy*reach));
+    var tx=(cx>0.0001)?(sx-WALL)/cx:((cx<-0.0001)?(sx-(W-WALL))/cx:1e9);
+    var ty=(cy>0.0001)?(sy-WALL)/cy:((cy<-0.0001)?(sy-(H-WALL))/cy:1e9);
+    var tt=Math.max(0,Math.min(tx,ty,FLICK_POWER));
+    return tt*(FLICK_MAX/FLICK_POWER)*(TAC.power||1)*staminaMul(); }
+    // Whether the CPU will WAIT for the start-lights green this turn (THE GRAND PRIX, hard only). Decided once
+    // per turn at think-start, and NOT always true — so the CPU mistimes the lights now and then like a human
+    // does, instead of nailing every launch.
+    var aiLightWait=true;
+    // Compute the CPU's shot (target, angle, speed, curve spin, drunk jitter) WITHOUT touching the ball,
+    // and return it as a plain object. Split out so the aim telegraph can lock the shot in at think-start
+    // and render the very shot that will be released. aiPickShotMod runs here (it decides curve vs serpent).
+    function aiComputeShot(){
       try{ aiPickShotMod(); }catch(e){}
       const t=current;
-      coin.spin=0; // clear residual curve from a previous curveball shot, same as a human flick does
       if(pen&&pen.active){ var _Z=['L',
       'C','R']; var _kp=pen.dive;
       var _sp=aiLevel==='hard'?0.9:(aiLevel==='med'?0.6:0.3);
@@ -35,21 +52,55 @@
       var _gy=t==='red'?NET_DEPTH+COIN_R+1:H-NET_DEPTH-COIN_R-1;
       var _dx=_gx-coin.x,_dy=_gy-coin.y,_di=Math.hypot(_dx,_dy),_ang=Math.atan2(_dy,_dx);
       var _spd=Math.min(5.1,Math.max(4.2,_di*0.05+3.0));
-      coin.vx=Math.cos(_ang)*_spd;
-      coin.vy=Math.sin(_ang)*_spd;
-      flickCount++; _achBounces=0;
-      hitOwn=false; moving=true;
-      ghostUsed=false; ghosting=false;
-      portalUsed=false; ricochetUsed=false;
-      serpentPhase=0; turnFlash=Math.max(turnFlash,10);
-      return; }
-      const goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
-      const spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
-      const goalX=W/2+(Math.random()*2-1)*spread;
+      return {pen:true, vx:Math.cos(_ang)*_spd, vy:Math.sin(_ang)*_spd}; }
+      let goalY = t==='red' ? NET_DEPTH+COIN_R+1 : H-NET_DEPTH-COIN_R-1;
+      let spread=(GOAL_W*0.5-2)*(1-AI_ACC[aiLevel])*(TAC.laser?0.30:1);
+      let goalX=W/2+(Math.random()*2-1)*spread;
+      // THE HARDWOOD: a shot only counts if it went through a hoop, so aim at the hoop that best
+      // lines up with the run at goal instead of the goal mouth. Without this the CPU keeps having
+      // goals waved off and the rim rule quietly becomes a one-sided advantage for the player.
+      var _rimT=null; try{ if(typeof bkAimTarget==='function') _rimT=bkAimTarget(t); }catch(e){}
+      if(_rimT){ spread=Math.min(spread,_rimT.half*0.45);
+      goalX=_rimT.x+(Math.random()*2-1)*spread; goalY=_rimT.y; }
+      // CENTRE COURT: the net cannot be beaten along the ground. Aim down an open side lane (a curve
+      // then bends it back at goal) or onto a live racket that will lob it over. With Chip the plan is
+      // null and it shoots straight at goal, lifting the ball in flight instead — see aiMaybeChip.
+      var _tnP=null; try{ if(typeof tnAimPlan==='function') _tnP=tnAimPlan(t); }catch(e){}
+      if(_tnP){ spread=Math.min(spread,_tnP.kind==='lane'?3.2:4.5);
+      goalX=_tnP.x+(Math.random()*2-1)*spread; goalY=_tnP.y; }
+      // CRAZY GOLF: the one real lesson is DO NOT SHOOT INTO THE POND — the goal centre sits behind the
+      // water on this layout, so left alone the CPU drowns its own possession every turn. cgAimPlan routes
+      // through the nearer flank lane when the line to goal crosses water or a tree, and takes a nearby
+      // live cup when one is worth a turn (which needs a soft putt, hence the speed floor drop below).
+      var _cgP=null; try{ if(typeof cgAimPlan==='function') _cgP=cgAimPlan(t); }catch(e){}
+      if(_cgP){ spread=Math.min(spread,_cgP.soft?2.2:4.0);
+      goalX=_cgP.x+(Math.random()*2-1)*spread; goalY=_cgP.y; }
+      // These arenas gate scoring on threading something (a hoop, a lane, a racket), so a loose CPU
+      // shot is simply wasted. Tighten its aim here so the ratio of wasted turns stays sane.
+      var _s3=false; try{ _s3=(typeof stadiumHazards==='function')&&stadiumHazards()&&(boardKey==='tennis'||boardKey==='court'||boardKey==='baseball'||boardKey==='minigolf'
+      ||(typeof _pd==='function'&&(_pd('hoops')||_pd('net'))));   // SPORTS DAY borrows the same gated scoring
+      }catch(e){}
+      if(_s3){ spread*=0.55; }
       let dx=goalX-coin.x, dy=goalY-coin.y;
       const dist=Math.hypot(dx,dy);
-      const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1);
+      let ang=Math.atan2(dy,dx)+(Math.random()*2-1)*AI_NOISE[aiLevel]*(TAC.laser?0.38:1)*(_s3?0.55:1);
+      // OWN-GOAL GUARD: don't fire straight into a token sitting right in front of the ball — a near
+      // head-on hit deflects the ball back toward our own net (an auto own-goal). Slide the aim to the
+      // token's open side. Skipped for soft cup putts (cgAimPlan already chose a clear-line cup, and a
+      // dodge would nudge the ball off the hole).
+      if(!(_cgP&&_cgP.soft)){ try{ ang=aiClearFront(t,ang); }catch(e){} }
       let speed=Math.min(FLICK_MAX,Math.max(5.0,dist*0.05+3.2)*(0.9+Math.random()*0.25))*(TAC.power||1)*staminaMul();
+      // Wall ceiling: with the ball against a wall the human can't pull back far to shoot away from it, so cap
+      // the CPU the same way. Skipped for penalties (their own capped mode); the full-flick reward below is
+      // applied AFTER and deliberately bypasses this, exactly as the player's full-flick ignores drag distance.
+      if(!(pen&&pen.active)){ try{ speed=Math.min(speed, aiWallPowerCap(coin.x,coin.y,ang)); }catch(e){} }
+      // A putt at a cup has to ARRIVE dying or it skips the lip, and the roll here is v/(1-FRICTION) =
+      // 62.5*v, so the speed that stops on the hole is dist/62.5 — far below the 5.0 floor above.
+      if(_cgP&&_cgP.soft) speed=Math.max(1.0,Math.min(speed,(dist+10)/62.5));
+      // The CPU gets the hole-out reward on the same terms the player does. Applied LAST so the soft-putt
+      // cap above cannot quietly throw the free full-power flick away.
+      var _fullFlick=false;
+      try{ if((typeof cgFullFlick==='function')&&cgFullFlick()){ speed=FLICK_MAX*(TAC.power||1)*staminaMul(); _fullFlick=true; } }catch(e){}
       if(debuffActive(current,'freeze')) speed=Math.min(speed,FLICK_MAX*0.5);
       if(pen&&pen.active) speed=Math.min(speed,5.1);
       // curveball: the shot will bend, so pick the launch angle whose simulated curved path lands closest to the target
@@ -77,11 +128,27 @@
       } if(_md<_bestD){ _bestD=_md;
       _bestA=_ca; } } ang2=_bestA;
       }
-      _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount}; coin.vx=Math.cos(ang2)*speed; coin.vy=Math.sin(ang2)*speed;
-      if(TAC.curve && speed>=1.9){ var _hx2=-coin.vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); coin.spin=_hd2*((coin.vy<0)?1:-1)*1.9; try{sfxCurl();}catch(e){} }
-      if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=coin.vx*_djc-coin.vy*_djs,_djy=coin.vx*_djs+coin.vy*_djc;
-      coin.vx=_djx; coin.vy=_djy;
-      } flickCount++; _achBounces=0;
+      var _vx=Math.cos(ang2)*speed, _vy=Math.sin(ang2)*speed, _spin=0, _curveSfx=false;
+      if(TAC.curve && speed>=1.9){ var _hx2=-_vx,_hd2=(_hx2>0.05)?1:((_hx2<-0.05)?-1:((W/2-coin.x)>=0?1:-1)); _spin=_hd2*((_vy<0)?1:-1)*1.9; _curveSfx=true; }
+      if(debuffActive(current,'drunk')){ var _dj=(Math.random()-0.5)*DRUNK_SPREAD,_djc=Math.cos(_dj),_djs=Math.sin(_dj),_djx=_vx*_djc-_vy*_djs,_djy=_vx*_djs+_vy*_djc;
+      _vx=_djx; _vy=_djy; }
+      return {pen:false, vx:_vx, vy:_vy, spin:_spin, curveSfx:_curveSfx, fullFlick:_fullFlick};
+    }
+    // Apply a shot from aiComputeShot to the ball and fire the one-time side effects (curve sound, full-
+    // flick spend, rewind snapshot, per-flick flag resets). Kept separate from compute so the telegraph
+    // can render the locked-in shot during the wind-up, then release exactly it without recomputing.
+    function aiApplyShot(shot){
+      coin.spin=0; // clear residual curve from a previous curveball shot, same as a human flick does
+      if(!shot) return;
+      if(shot.pen){ coin.vx=shot.vx; coin.vy=shot.vy;
+      flickCount++; _achBounces=0; hitOwn=false; moving=true;
+      ghostUsed=false; ghosting=false; portalUsed=false; ricochetUsed=false;
+      serpentPhase=0; turnFlash=Math.max(turnFlash,10); return; }
+      if(shot.fullFlick){ try{ cgSpendFullFlick(); }catch(e){} }
+      _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount};
+      coin.vx=shot.vx; coin.vy=shot.vy;
+      if(shot.spin){ coin.spin=shot.spin; if(shot.curveSfx){ try{sfxCurl();}catch(e){} } }
+      flickCount++; _achBounces=0;
       hitOwn=false; moving=true;
       ghostUsed=false; ghosting=false;
       portalUsed=false; ricochetUsed=false;
@@ -96,7 +163,26 @@
       steerHold=null; try{ ecoFlickStart();
       }catch(e){} try{ trioReset();
       }catch(e){} turnFlash=Math.max(turnFlash,10);
-      
+    }
+    function aiFlick(){ aiApplyShot(aiComputeShot()); }
+    /* Nudge an aim so it does not smack a token sitting right in front of the ball. Such a hit is a wasted
+       flick at best and an own-goal at worst (a near head-on bounce sends the ball back at our own net).
+       Finds the nearest token that is just ahead (within ~30px) and close to the shot line, then rotates
+       the aim by the small angle that clears it, to the side the token is NOT on. Returns ang unchanged
+       when the lane ahead is clear. Read-only; used only to pick the launch angle. */
+    function aiClearFront(t,ang){
+      if(!nails||!nails.length) return ang;
+      var ux=Math.cos(ang), uy=Math.sin(ang), near=null, nd=1e9, nc=0;
+      for(var i=0;i<nails.length;i++){ var n=nails[i];
+      var rx=n.x-coin.x, ry=n.y-coin.y, proj=rx*ux+ry*uy;
+      if(proj<=COIN_R+1 || proj>30) continue;                 // only a token just ahead
+      var cross=ux*ry-uy*rx;                                   // signed perpendicular offset from the line
+      if(Math.abs(cross)>COIN_R+NAIL_R) continue;              // not actually blocking the shot line
+      if(proj<nd){ nd=proj; near=n; nc=cross; } }
+      if(!near) return ang;
+      var clear=COIN_R+NAIL_R+2, off=Math.min(0.42, Math.atan2(clear-Math.abs(nc), Math.max(10,nd)));
+      if(off<=0) return ang;
+      return ang - (nc>=0?1:-1)*off;                           // steer to the token's open side
     }
     // CPU versions of the tap-to-use abilities, run once at the start of its turn
     function aiUtility(){ var t=current; if(!(aiEnabled&&aiEnabled[t])) return; var ab=sideAb[t]||[];
@@ -130,6 +216,15 @@
     // CHIP: loft the shot over a defender/keeper sitting in the lane just ahead of the ball.
     function aiMaybeChip(){ if(Math.hypot(coin.vx,coin.vy)<1.2) return;
     if(_aiChipRoll<0) return;
+    // CENTRE COURT: chip the NET. Nothing crosses it on the ground, so lift the ball just before it
+    // arrives — 22 frames of air is enough to clear the band and land on the far side.
+    try{ if((typeof boardKey!=='undefined')&&boardKey==='tennis'&&(typeof stadiumHazards==='function')&&stadiumHazards()){
+    var _ny=H/2, _dn=Math.abs(coin.y-_ny);
+    var _atNet=((coin.y>_ny&&coin.vy<-0.3)||(coin.y<_ny&&coin.vy>0.3));
+    if(_atNet&&_dn<34&&_dn>7&&tnBlocksAt(coin.x)){ chipUsed=true;
+    coin.air=22; coin.air0=22;
+    try{sfxGuided();}catch(e){} try{ setStatus(((teamKits[current]&&teamKits[current].abbr)||'CPU')+' CHIP!');
+    }catch(e){} } return; } }catch(e){}
     var goalY=(current==='red')?NET_DEPTH:(H-NET_DEPTH);
     var toGoal=(current==='red')?(coin.vy<-0.3):(coin.vy>0.3);
     if(!toGoal) return; var dg=Math.abs(coin.y-goalY);
@@ -149,9 +244,29 @@
       if(pen&&pen.active&&pen.step!=='aim'){ aiPending=false; return; }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.guided&&steerBudget>0){ steerHold=aiSteerTarget(); }
       if(moving&&!scoring&&!paused&&phase==='play'&&aiEnabled[current]&&TAC.chip&&!chipUsed&&(!coin.air||coin.air<=0)){ try{ aiMaybeChip(); }catch(e){} }
-      if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; return; }
+      if(paused||winner||phase!=='play'||moving||aiming||scoring||banner>0){ aiPending=false; aiShot=null; return; }
       if(!aiEnabled[current]) return;
-      if(!aiPending){ aiPending=true; aiDelay=950+Math.random()*550; try{ aiUtility(); }catch(e){} return; }
-      aiDelay-=delta; if(aiDelay<=0){ aiPending=false; aiFlick(); }
+      if(!aiPending){ aiPending=true; aiDelay=1200+Math.random()*650; aiThink0=aiDelay;
+      try{ aiUtility(); }catch(e){}
+      // Lock in the exact shot now (not at release) so the telegraph draws the real thing. Penalties keep
+      // computing at release — pen.dive can change during the wind-up, so a precomputed pen shot could go stale.
+      try{ aiShot=(CPU_AIM_TELEGRAPH && !(pen&&pen.active))?aiComputeShot():null; }catch(e){ aiShot=null; }
+      try{ aiAim=CPU_AIM_TELEGRAPH?aiTargetCenter(current):null; }catch(e){ aiAim=null; }
+      try{ aiLightWait=Math.random()<0.85; }catch(e){ aiLightWait=true; }
+      return; }
+      aiDelay-=delta; if(aiDelay<=0){
+      // THE GRAND PRIX start-lights: rev while the reds are lit and launch on GREEN, so the CPU gets the same
+      // boost a well-timed player does instead of bogging on a jump-start.
+      if(aiLightWait&&typeof rcArena==='function'&&rcArena()&&typeof rcCfg==='function'&&rcCfg().lights&&typeof rcInGreen==='function'&&!rcInGreen()) return;
+      aiPending=false; aiAim=null; var _lm=(typeof rcLaunchApply==='function')?rcLaunchApply():1;
+      if(aiShot){ if(_lm!==1){ aiShot.vx*=_lm; aiShot.vy*=_lm; } aiApplyShot(aiShot); aiShot=null; } else { aiFlick(); } }
     }
+    /* The point the CPU is lining up on, WITHOUT the random spread aiFlick adds — so the telegraph arrow
+       shows its intent, not the jittered result. Mirrors the target-selection at the top of aiFlick
+       (goal centre, or whichever arena aim-plan applies); read-only, so it cannot affect the shot. */
+    function aiTargetCenter(t){ var gy=(t==='red')?(NET_DEPTH+COIN_R+1):(H-NET_DEPTH-COIN_R-1), gx=W/2;
+    try{ var r=(typeof bkAimTarget==='function')?bkAimTarget(t):null; if(r){ gx=r.x; gy=r.y; } }catch(e){}
+    try{ var tn=(typeof tnAimPlan==='function')?tnAimPlan(t):null; if(tn){ gx=tn.x; gy=tn.y; } }catch(e){}
+    try{ var cg=(typeof cgAimPlan==='function')?cgAimPlan(t):null; if(cg){ gx=cg.x; gy=cg.y; } }catch(e){}
+    return {x:gx,y:gy}; }
 

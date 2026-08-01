@@ -41,7 +41,10 @@
     'defender','magnet'],d:4,cust:'traps',blurb:'Webs stop and vanish when the ball hits them, a skittering spider keeps weaving new ones, and crates crash down from above.'},
     {name:'THE FORTRESS',pitch:'stone',ab:['bigkeeper',
     'clearance','sweeper'],d:5,cust:'fortress',blurb:'Stone walls cage each goal box on the sides, an iron portcullis gates the front on a timer, and a boulder rolls across midfield.'},
-    {name:'THE FINAL',pitch:'grass',ab:[],d:5,gauntlet:1,blurb:'The Season 1 final — a gauntlet of the whole run. Frozen ice, the Thicket, Sandstorm and the Web Warehouse all bare their teeth at once, turning from a nuisance on Easy into chaos on Hard. No keeper tricks; just survive it and score.'}];
+    {name:'THE FINAL',pitch:'grass',ab:[],d:5,gauntlet:1,bossAb:{easy:['defender',
+    'anchor','clearance'],med:['sweeper',
+    'reflex','magnet'],hard:['bigkeeper',
+    'wall','shield']},blurb:'The Season 1 final — a gauntlet of the whole run. Frozen ice, the Thicket, Sandstorm and the Web Warehouse all bare their teeth at once. And the champion is THE WALL: an immovable defence that fortifies with the difficulty — extra bodies on easy, a hyperactive catching keeper on med, a big keeper behind a brick wall and a shield on hard.'}];
     // Map 2 — Season 2 stadiums. Hazards are boardKey-driven and scale by ladder position (aiLevel).
     var ROYALE_ARENAS_1=ROYALE_ARENAS, royMap=1;
     var ROYALE_ARENAS_2=[
@@ -55,8 +58,57 @@
       {name:'VINE RUINS',pitch:'jungle',ab:['serpent','striker','ghost'],d:6,blurb:'A mossy temple where swinging vines snatch the ball and fling it across the pitch.'},
       {name:'THE SHORE',pitch:'beach',ab:['sweeper',
       'clearance','anchor'],d:6,blurb:'A sunny beach — tide waves sweep the ball down the sand, drifting beach balls bounce it around, and crabs scuttle across the pitch.'},
-      {name:'THE TURF',pitch:'turf',ab:[],d:7,blurb:'The Season 2 final — a gauntlet of the whole run. Four stadiums strike at once: wind, orbit, jungle and shore — a nuisance on Easy, a maelstrom on Hard. No keeper tricks; survive the chaos and score.'}
-    ]; var ROYALE_DRAFT_POOL=['cannon',
+      {name:'THE TURF',pitch:'turf',ab:[],d:7,bossAb:{easy:['ricochet',
+      'bumper','striker'],med:['serpent',
+      'sniper','freeze'],hard:['cannon',
+      'curve','ghost']},blurb:'The Season 2 final — a gauntlet of the whole run: wind, orbit, jungle and shore strike at once. And the champion is THE TRICKSTER: shots off odd angles on easy, snaking precision plus a freeze on med, and a banana-cannon that phases through your players on hard.'}
+    ];
+    /* Map 3 — Season 3 stadiums (SPORTS theme). Hazards are boardKey-driven and scale by royaleLevel.
+
+       ab[] is the OPPONENT's loadout, sliced by tier: easy takes ab[0], med ab[0..1], hard all three. So ab[0]
+       is the one every player meets on that stadium, whatever difficulty they picked — and six of the nine
+       stadiums used to open with CANNON, which is why an easy run was nine matches against the same ability.
+
+       The season now spends 27 DIFFERENT abilities across its 27 slots — no repeats at all — so a full ladder
+       is a tour of the roster, and each trio is that sport's idea of how to play:
+         diamond   batter / the swing / the catcher's mitt
+         hardwood  bank shot / rebound / the ball off the rim
+         tennis    the lob / topspin / the S-rally (both toggles, so the AI actually switches between them)
+         golf      the putting line / the check-up / the cup that swallows the ball
+         gridiron  barge the line / the heavy linebacker / the last-ditch tackle
+         alley     the ball that keeps rolling / bumper rails / a wall of pins
+         prix      steering / slow-motion cornering / a wet track
+         ring      the puncher / slipping punches / the champion's guard
+       (the ring cannot use DRUNK: its hard-tier gloves already apply that exact effect on a punch, so the
+        ability was invisible there — a wobbling arrow the player would read as the gloves. GHOST holds the
+        med slot because it is the only fit that raises the arena without taxing the player's own turn: your
+        blockers stop mattering, so the keeper and your shape have to do the defending.)
+         podium    keeper off the line / the relay pass / the big man in goal
+       Arena ab[] is NOT limited to ROYALE_DRAFT_POOL — glide, wall and bumper are never drafted, so a stadium
+       is the only place they are ever seen. */
+    var ROYALE_ARENAS_3=[
+      {name:'THE DIAMOND',pitch:'baseball',ab:['striker',
+      'volley','reflex'],d:1,blurb:'A ballpark diamond — a bat at each home plate swings at a ball that rolls close and cracks it toward the far goal, but a hard flick strikes past it (easy); a pitching machine fires stray balls in from any side (medium); the mitt on the mound claims any ball left short through the middle (hard).'},
+      {name:'THE ALLEY',pitch:'bowling',ab:['glide',
+      'bumper','wall'],d:2,blurb:'Ten-pin bowling — a polished maple lane with dovetail aiming arrows, a foul line at each end and deep gutters running down the sides.'},
+      {name:'THE GRAND PRIX',pitch:'raceway',ab:['guided',
+      'slowmo','wet'],d:3,blurb:'Motorsport — a tarmac circuit lined with red-and-white kerbs, a checkered start/finish stripe at each end and the racing line down the middle.'},
+      {name:'THE END ZONE',pitch:'gridiron',ab:['drill',
+      'anchor','clearance'],d:4,blurb:'Gridiron football — a striped field of yard lines and end zones, with narrow uprights guarding each goal.'},
+      {name:'THE HARDWOOD',pitch:'court',ab:['ricochet',
+      'sticky','boomerang'],d:5,blurb:'A basketball court — angled backboards beside each post bank a shot goalwards (easy); trampolines throw the ball up and knock it off its line (medium); a hoop guards each goal and only a shot threaded through it counts, re-thrown after every basket (hard).'},
+      {name:'THE RING',pitch:'ring',ab:['cannon',
+      'ghost','shield'],d:6,blurb:'Boxing — a raised canvas ringed by a red apron and three taut ropes down each side, with a scuffed centre where the fight is decided.'},
+      {name:'CENTRE COURT',pitch:'tennis',ab:['chip',
+      'curve','serpent'],d:7,blurb:'A tennis court split by a net no ground shot can pass — run onto a racket to be lobbed over, chip it, or curl round the open lanes at either end (easy); the rackets flip green to red on a loop and a red one swats you back instead (medium); sliding gates run out from the net posts to the wall and seal the side lanes in turn (hard).'},
+      {name:'CRAZY GOLF',pitch:'minigolf',ab:['sniper',
+      'backspin','magnet'],d:8,blurb:'Footgolf — a golf hole with a goal for a cup. A pond sits dead centre of each approach, so there is no straight line: play the left lane or the right, and the shot drowns if it lands in the water (easy); bunkers toll the flanks and trees guard the greens (medium); a cup opens at the end of each flank, and holing out lets you play on with refreshed stamina (hard).'},
+      {name:'SPORTS DAY',pitch:'podium',ab:[],d:9,bossAb:{easy:['striker',
+      'magnet','volley'],med:['aftershock',
+      'sweeper','reflex'],hard:['cannon',
+      'bigkeeper','drill']},blurb:'The Season 3 final — a decathlon of four borrowed hazards at once, a different quartet of sports each difficulty. And the champion is THE ALL-ROUNDER: attacker, catcher and counter on easy; the season\u2019s own Aftershock plus an active keeper on med; and on hard a keeper that scores hard, saves big and barges through.'}
+    ];
+    var ROYALE_DRAFT_POOL=['cannon',
     'sniper','chip','drill',
     'curve','backspin','wet',
     'boomerang','volley','trio',
@@ -66,7 +118,8 @@
     'magnet','clearance','shield',
     'anchor','striker','defender',
     'freeze','injury','drunk',
-    'ricochet','serpent','wild'];
+    'ricochet','serpent','wild',
+    'aftershock'];
     var ROY_EXTRA_ABILITY={common:'fog',rare:'magnet',epic:'cannon'};
     function royaleRamp(i){ return i<3?'easy':(i<6?'med':'hard');
     } function cupSizesWon(){ try{ return spAchGet().cupSizes||[];
@@ -86,13 +139,15 @@
     } function cupTopSize(){ return cupSizeUnlocked(16)?16:(cupSizeUnlocked(8)?8:4);
     } function cupTopLvl(){ return cupLvlUnlocked('hard')?'hard':(cupLvlUnlocked('med')?'med':'easy');
     } function royDiffsFor(season){ try{ var o=spAchGet();
-    return ((season===2)?o.royDiffs2:o.royDiffs1)||[];
+    return ((season===3)?o.royDiffs3:(season===2)?o.royDiffs2:o.royDiffs1)||[];
     }catch(e){ return []; } } function royLvlUnlocked(season,lvl){ if(lvl==='easy') return true;
     var d=royDiffsFor(season);
     if(lvl==='med') return d.indexOf('easy')>=0;
     if(lvl==='hard') return d.indexOf('med')>=0;
-    return true; } function roySeasonUnlocked(season){ if(season!==2) return true;
-    try{ var o=spAchGet(); return !!(o.done&&o.done.season1);
+    return true; } function roySeasonAllCleared(season){ var d=royDiffsFor(season)||[];
+    return d.indexOf('easy')>=0&&d.indexOf('med')>=0&&d.indexOf('hard')>=0;
+    } function roySeasonUnlocked(season){ if(season<=1) return true;
+    try{ return roySeasonAllCleared(season-1);  /* S2 needs S1 cleared on ALL difficulties; S3 needs S2 on all */
     }catch(e){ return false;
     } } function royTopUnlocked(season){ return royLvlUnlocked(season,'hard')?'hard':(royLvlUnlocked(season,'med')?'med':'easy');
     } function royKitClash(a,b){ try{ function _rgb(h){ h=(''+h).replace('#','');
@@ -105,7 +160,7 @@
     } var pa=PRESETS[a].primary||(PRESETS[a].kit.colors||[])[0], pb=PRESETS[b].primary||(PRESETS[b].kit.colors||[])[0];
     return _d(pa,pb)<100; }catch(e){ return false;
     } }
-    function startRoyale(pi,fixed){ ROYALE_ARENAS=(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1; var opps=[];
+    function startRoyale(pi,fixed){ ROYALE_ARENAS=(royMap===3)?ROYALE_ARENAS_3:(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1; var opps=[];
       if(fixed && fixed.opps && fixed.opps.length){
         // a challenge link supplies the fixture list, so both players face the
         // same run of opponents; pad or trim if the ladder length ever changes
@@ -121,20 +176,36 @@
       ROYALE={i:0,player:pi,opps:opps,playerAb:[],history:[],map:royMap,ch:(fixed&&(fixed.target!=null||fixed.from))?{target:fixed.target,from:fixed.from}:null};
       mode='royale'; try{ CHALLENGE=null;
       chClearUrl(); }catch(e){} showRoyaleMap();
-      } function startRoyaleArena(){ if(!ROYALE) return;
+      }
+      /* A valid opponent preset index for arena i. ROYALE.opps is built to the ladder length, but a run
+         SAVED before the ladder grew (e.g. Season 3 at 4 arenas, now 5) resumes with a short array, so
+         opps[i] can be undefined on a new stadium — and PRESETS[undefined] then blanks the frame the first
+         time anything reads teamKits.blue.kit/.abbr. This fills a stable valid country opponent (not the
+         player) into the gap and caches it, so every read below is safe. */
+      function royOpp(i){ if(!ROYALE) return 0; if(!ROYALE.opps) ROYALE.opps=[];
+      var v=ROYALE.opps[i];
+      if(typeof v==='number'&&PRESETS[v]&&PRESETS[v].kit) return v;
+      var p=(typeof ROYALE.player==='number')?ROYALE.player:0, pick=(p+1+i)%PRESETS.length, tries=0;
+      while(tries<PRESETS.length && (pick===p||!PRESETS[pick]||PRESETS[pick].cat!=='country'||!PRESETS[pick].kit)){ pick=(pick+1)%PRESETS.length; tries++; }
+      if(!PRESETS[pick]) pick=0; ROYALE.opps[i]=pick; return pick; }
+      function startRoyaleArena(){ if(!ROYALE) return;
       var ar=ROYALE_ARENAS[ROYALE.i];
       royaleArena=ar; aiLevel=royaleRamp(ROYALE.i);
       ROYALE.af=0; if(ROYALE.i===0){ try{ tutStart('roy');
       }catch(e){} } teamSize=5;
       /* Royale is always 5-a-side — don't inherit the exhibition formation */ teamKits.red=PRESETS[ROYALE.player];
-      teamKits.blue=PRESETS[ROYALE.opps[ROYALE.i]];
+      teamKits.blue=PRESETS[royOpp(ROYALE.i)];
       boardKey=ar.pitch; buildBoard();
       buildCrowd(); mode='royale';
       winTarget=3; matchLen=0;
       matchMs=0; timeUp=false;
       timerRunning=false; aiEnabled={red:false,blue:true};
       pendingAb=(function(){ var _b;
-      if(ar.aiKeeper){ _b=ar.aiKeeper.slice();
+      if(ar.bossAb){ /* GAUNTLET-FINAL BOSS: a full 3-ability loadout per difficulty, scaling by rarity
+      (easy common / med rare+uncommon / hard epic), curated defensive-first so it stacks fairly with the
+      hazards. Distinct per season — see ROYALE_ARENAS[_1/_2/_3]'s final entry. */
+      _b=(ar.bossAb[royaleLevel]||ar.bossAb.easy||[]).slice(0,3);
+      } else if(ar.aiKeeper){ _b=ar.aiKeeper.slice();
       if(ar.aiExtraTier){ var _tk=ar.aiExtraTier[royaleLevel]||'common';
       var _ex=(typeof ROY_EXTRA_ABILITY!=='undefined')?ROY_EXTRA_ABILITY[_tk]:null;
       if(_ex && _b.indexOf(_ex)<0) _b.push(_ex);
@@ -162,24 +233,24 @@
       ROYALE.history.push({name:_hn,opp:_ho,r:(score&&score.red)||0,b:(score&&score.blue)||0,win:winner==='red',f:(ROYALE.af||0)});
       }catch(e){} if(winner!=='red'){ showRoyaleResult(false);
       return; } ROYALE.i++; if(ROYALE.i>=ROYALE_ARENAS.length){ try{ spAchUnlock('royale');
-      spAchUnlock(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?'season2':'season1');
+      var _sm=((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===3)?3:(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?2:1);
+      spAchUnlock('season'+_sm);
       if(royaleLevel==='hard') spAchUnlock('royalehard');
       try{ var _rd=spAchGet();
       var _rl=royaleLevel||'med';
       if(_rd.royDiffs.indexOf(_rl)<0){ _rd.royDiffs.push(_rl);
-      } var _sk=(((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?'royDiffs2':'royDiffs1');
+      } var _sk='royDiffs'+_sm;
       if(!_rd[_sk]) _rd[_sk]=[];
       if(_rd[_sk].indexOf(_rl)<0){ _rd[_sk].push(_rl);
       } spAchSave(_rd); var _a3=function(a){ return !!a&&a.indexOf('easy')>=0&&a.indexOf('med')>=0&&a.indexOf('hard')>=0;
       }; if(_a3(_rd.royDiffs)) spAchUnlock('royaleall');
-      if(_a3(_rd.royDiffs1)&&_a3(_rd.royDiffs2)) spAchUnlock('grandslam');
+      if(_a3(_rd.royDiffs1)&&_a3(_rd.royDiffs2)&&_a3(_rd.royDiffs3)) spAchUnlock('grandslam');
       }catch(e){} try{ var _os=spAchGet();
       if(!_os.royUnlockSeen) _os.royUnlockSeen=[];
-      var _sn2=((typeof ROYALE!=='undefined'&&ROYALE&&ROYALE.map)===2)?2:1;
       var _un=[]; var _uc=function(k,lab){ if(_os.royUnlockSeen.indexOf(k)<0){ _os.royUnlockSeen.push(k);
-      _un.push(lab); } }; if(royLvlUnlocked(_sn2,'med')) _uc('s'+_sn2+'m','MEDIUM DIFFICULTY');
-      if(royLvlUnlocked(_sn2,'hard')) _uc('s'+_sn2+'h','HARD DIFFICULTY');
-      if(roySeasonUnlocked(2)) _uc('s2','SEASON 2');
+      _un.push(lab); } }; if(royLvlUnlocked(_sm,'med')) _uc('s'+_sm+'m','MEDIUM DIFFICULTY');
+      if(royLvlUnlocked(_sm,'hard')) _uc('s'+_sm+'h','HARD DIFFICULTY');
+      if(_sm<3 && roySeasonUnlocked(_sm+1)) _uc('s'+(_sm+1),'SEASON '+(_sm+1));
       spAchSave(_os); _royUnlockMsg=_un;
       }catch(e){} }catch(e){} showRoyaleResult(true);
       return; } showRoyaleDraft(function(){ showRoyaleMap(true);
@@ -334,7 +405,7 @@
     var num=mk('div',FS(9,cur?'#0b0910':'#c9bce0')+'flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:'+(cur?'#a9c94b':(done?'#3a5a2a':'#241a2e'))+';', done?'✓':String(k+1));
     row.appendChild(num); var mid=mk('div','flex:1 1 auto;text-align:left;min-width:0;');
     mid.appendChild(mk('div',FS(7,cur?'#f4e9c8':'#c9bce0')+'letter-spacing:0.4px;line-height:1.4;',ar.name+'  '+Array((ar.d||1)+1).join('◆')));
-    var opp=PRESETS[ROYALE.opps[k]];
+    var opp=PRESETS[royOpp(k)];
     var oppRow=mk('div','display:flex;align-items:center;gap:5px;margin-top:3px;');
     oppRow.appendChild(royFlag(opp,18,12));
     oppRow.appendChild(mk('span',FS(6,'#9a8fb0'),'vs '+(opp?opp.abbr:'?')));
@@ -343,14 +414,22 @@
     you.appendChild(royFlag(PRESETS[ROYALE.player],22,15));
     you.appendChild(mk('div',FS(5,'#a9c94b'),'YOU'));
     row.appendChild(you); } else if(done){ row.appendChild(mk('div',FS(7,'#7fd07f')+'flex:0 0 auto;','WON'));
-    } return row; } function royMapArt(){ try{ return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
+    } return row; } function royMapArt(){ try{ if(typeof royMap!=='undefined'&&royMap===3&&typeof NS_ROYMAP3!=='undefined') return NS_ROYMAP3;
+    return (typeof royMap!=='undefined'&&royMap===2&&typeof NS_ROYMAP2!=='undefined') ? NS_ROYMAP2 : NS_ROYMAP; }catch(e){ return null; } }
     function royMapAspect(){
       try{ var im=royMapArt();
         if(im&&im.naturalWidth&&im.naturalHeight) return im.naturalWidth/im.naturalHeight;
       }catch(e){} return 1; }
-    function royMapNodes(){ return (function(){ return (typeof royMap!=='undefined'&&royMap===2)
+    function royMapNodes(){ return (function(){ if(typeof royMap!=='undefined'&&royMap===3)
+      /* measured on roymap3.png — bottom row = stadiums 1-3, middle 4-6, top 7-9, trophy over 9 */
+      return [[0.185,0.82],[0.50,0.82],[0.82,0.82],[0.185,0.51],[0.505,0.51],[0.81,0.49],[0.185,0.235],[0.50,0.21],[0.825,0.22]];
+      return (typeof royMap!=='undefined'&&royMap===2)
       ? [[0.16,0.83],[0.50,0.83],[0.84,0.81],[0.16,0.49],[0.50,0.49],[0.84,0.49],[0.16,0.16],[0.50,0.19],[0.85,0.17]]
       : [[0.17,0.82],[0.50,0.82],[0.81,0.82],[0.17,0.49],[0.50,0.49],[0.82,0.48],[0.18,0.18],[0.50,0.18],[0.84,0.17]]; })(); }
+    /* During a stadium advance this holds {target,playerFrom,t}: the player coin
+       runs in alone from playerFrom, clashes the opponent waiting at target, and
+       springs to rest. null the rest of the time (both coins sit at the node). */
+    var _royTravel=null;
     function drawRoyMap(g,cw,ch,flagPos,zoom,camx,camy){ var NODES=royMapNodes(); var NN=Math.min(NODES.length,(typeof ROYALE_ARENAS!=='undefined'&&ROYALE_ARENAS)?ROYALE_ARENAS.length:NODES.length);
     g.clearRect(0,0,cw,ch); g.save();
     if(zoom&&zoom>1.001){ var _hw=(cw/2)/zoom, _hh=(ch/2)/zoom;
@@ -372,7 +451,7 @@
     } g.stroke(); g.setLineDash([]);
     g.lineWidth=1; g.strokeStyle='rgba(90,60,20,0.5)';
     g.stroke(); g.restore();
-    })(); var pk=PRESETS[ROYALE.player], opp=PRESETS[ROYALE.opps[ROYALE.i]];
+    })(); var pk=PRESETS[ROYALE.player], opp=PRESETS[royOpp(ROYALE.i)];
     for(var k=0;k<NN;k++){ var p=P(k), done=k<ROYALE.i, cur=k===ROYALE.i, R=(cur?11:9);
     g.save(); g.globalAlpha=0.4;
     g.fillStyle='#000'; g.beginPath();
@@ -388,35 +467,53 @@
     g.fillStyle=(cur||done)?'#0b0910':'#d8cfe8';
     g.font="8px 'Press Start 2P', monospace";
     g.fillText(done?'✓':String(k+1), p.x, p.y+0.5);
-    try{ var _op=PRESETS[ROYALE.opps[k]];
+    try{ var _op=PRESETS[royOpp(k)];
     if(_op&&_op.kit){ var _fr=6, _fcy=p.y-R-_fr-3;
     g.globalAlpha=1; flagCoin(g,p.x,_fcy,_fr,_op.kit,false);
     } }catch(e){} g.restore();
-    } var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
-    var _cy=fy-17, _R=10, _ir=7;
-    function _cn(cx,pr){ g.save();
+    } try{ if(typeof spTrophyMapBadge==='function'){ spTrophyMapBadge(g,cw,ch,(typeof royMap!=='undefined'?royMap:1));
+    } }catch(e){} var lo=Math.max(0,Math.floor(flagPos)), hi=Math.min(NN-1,lo+1), fr=flagPos-lo, a=P(lo), b=P(hi), fx=a.x+(b.x-a.x)*fr, fy=a.y+(b.y-a.y)*fr;
+    var _R=10, _ir=7;
+    function _cn(cx,cy,pr){ g.save();
     g.globalAlpha=0.35; g.fillStyle='#000';
-    g.beginPath(); g.arc(cx,_cy+2,_R+1,0,6.283);
+    g.beginPath(); g.arc(cx,cy+2,_R+1,0,6.283);
     g.fill(); g.globalAlpha=1;
     g.fillStyle=COLORS.coin;
-    g.beginPath(); g.arc(cx,_cy,_R,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_R,0,6.283);
     g.fill(); try{ g.save();
-    g.beginPath(); g.arc(cx,_cy,_ir,0,6.283);
-    g.clip(); if(pr&&pr.kit) paintPattern(g,cx-_ir,_cy-_ir,_ir*2,_ir*2,pr.kit);
+    g.beginPath(); g.arc(cx,cy,_ir,0,6.283);
+    g.clip(); if(pr&&pr.kit) paintPattern(g,cx-_ir,cy-_ir,_ir*2,_ir*2,pr.kit);
     g.restore(); }catch(e){} g.lineWidth=2;
     g.strokeStyle=COLORS.coinEdge;
-    g.beginPath(); g.arc(cx,_cy,_R-1,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_R-1,0,6.283);
     g.stroke(); g.lineWidth=1;
     g.strokeStyle='rgba(0,0,0,0.45)';
-    g.beginPath(); g.arc(cx,_cy,_ir,0,6.283);
+    g.beginPath(); g.arc(cx,cy,_ir,0,6.283);
     g.stroke(); g.restore();
-    } _cn(fx-11,pk); _cn(fx+11,opp);
+    } var _OFF=11, _px,_py,_ox,_oy,_showVS;
+    var _tv=_royTravel;
+    if(_tv){ /* the player coin runs in solo, clashes the opponent parked at the new stadium, then springs to rest */
+    var _TN=Math.min(NN-1,Math.max(0,_tv.target)), _PN=Math.min(NN-1,Math.max(0,_tv.playerFrom)), _t=_tv.t;
+    var _tp=P(_TN), _pp=P(_PN), _tcy=_tp.y-17, _pcy=_pp.y-17;
+    var _dir=(_tp.x>=_pp.x)?1:-1;                        /* which side the player arrives from */
+    var _clash=0.72, _pRest=_tp.x-_dir*_OFF, _oRest=_tp.x+_dir*_OFF, _clashX=_tp.x-_dir*(2*_R-_OFF);
+    _ox=_oRest; _oy=_tcy;
+    if(_t<=_clash){ var _e=1-Math.pow(1-_t/_clash,2);   /* ease-out run-in to the clash */
+    _px=_pp.x+(_clashX-_pp.x)*_e; _py=_pcy+(_tcy-_pcy)*_e;
+    } else { var _bt=(_t-_clash)/(1-_clash);            /* recoil away from the opponent, damped settle to rest */
+    _px=_pRest+Math.exp(-3.5*_bt)*((_clashX-_pRest)*Math.cos(_bt*7.0)-_dir*14*Math.sin(_bt*7.0));
+    _py=_tcy;
+    _ox=_oRest+_dir*_R*Math.max(0,Math.exp(-6*_bt)*Math.sin(_bt*7.0));  /* opponent knocked back a touch */
+    } _showVS=(_t>0.9);
+    } else { _px=fx-_OFF; _py=fy-17; _ox=fx+_OFF; _oy=fy-17; _showVS=true; }
+    _cn(_px,_py,pk); _cn(_ox,_oy,opp);
+    if(_showVS){ var _vx=(_px+_ox)/2, _vy=(_py+_oy)/2;
     g.save(); g.font='bold 7px sans-serif';
     g.textAlign='center'; g.textBaseline='middle';
     g.lineWidth=2.5; g.strokeStyle='#1a1330';
-    g.strokeText('VS',fx,_cy);
-    g.fillStyle='#ffe066'; g.fillText('VS',fx,_cy);
-    g.restore(); g.restore();
+    g.strokeText('VS',_vx,_vy);
+    g.fillStyle='#ffe066'; g.fillText('VS',_vx,_vy);
+    g.restore(); } g.restore();
     } function royArenaConds(ar,incOpp){ if(!ar) return [];
     var G='assets/generated/', lvl=(typeof royaleLevel!=='undefined'?royaleLevel:'med'), c=[];
       if(ar.floor==='ice'){ c.push([G+'icon-glide.png',
@@ -533,6 +630,92 @@
       if(lvl==='hard') c.push(['@beachball',
       '🏐','BEACH BALLS','Beach balls rest until struck, then bounce around.']);
       }
+      // --- Season 3 stadiums (SPORTS). Same additive-tier grammar as the configs in 11-physics:
+      // easy is the base row, med and hard each ADD a row — the card mirrors hzTier exactly. ---
+      if(ar.pitch==='baseball'){ c.push([G+'sprite-bat.png',
+      '⚾','THE BATTER','A bat at each plate cracks a slow ball toward the far goal — strike hard past it.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@pitcher',
+      '🎯','PITCHING MACHINE','Fires stray balls onto the pitch from a random side.']);
+      if(lvl==='hard') c.push([G+'sprite-glove.png',
+      '🧤','THE MITT','The mound mitt claims any ball left short through the middle.']);
+      }
+      if(ar.pitch==='court'){ c.push(['@backboard',
+      '🏀','BACKBOARDS','Angled boards beside each post bank a shot goalwards.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@tramp',
+      '🔵','TRAMPOLINES','Throw the ball up and kick it off its line — a bad hop.']);
+      if(lvl==='hard') c.push(['@hoop',
+      '⭕','THE HOOPS','A hoop guards each goal — thread one first or the goal does not count.']);
+      }
+      if(ar.pitch==='tennis'){ c.push(['@tnet',
+      '🎾','THE NET','No ground ball crosses it — ride a racket over, chip, or round the open lanes.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@racketflip',
+      '🔴','RACKET FLIP','Rackets flip green to red on a loop — a red one swats you back.']);
+      if(lvl==='hard') c.push(['@tgate',
+      '🚧','SLIDING GATES','Shutters seal the side lanes in turn — switch wings to find the open one.']);
+      }
+      if(ar.pitch==='minigolf'){ c.push(['@pond',
+      '💧','WATER','The pond kills a shot at the bank it crossed — a chip carries clean over.']);
+      c.push([G+'sprite-bush-2.png',
+      '🌳','THE ROUGH','Trees kill the ball dead; greenside bunkers cost the shot.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@bunker',
+      '🟡','FAIRWAY BUNKER','Tolls the short left lane, so left is taxed and right is clean but long.']);
+      if(lvl==='hard') c.push(['@cup',
+      '⛳','THE CUPS','Hole out in a corner cup for a refreshed full-power flick — hit the pin hard and the ball stays out.']);
+      }
+      if(ar.pitch==='gridiron'){ c.push(['@roam',
+      '🏈','ROAMING DEFENCE','Their defenders break formation and patrol as moving blockers.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@punt',
+      '🦶','CLEARANCE','A roamer boots a ball that strays into its third back to midfield.']);
+      if(lvl==='hard') c.push(['@posts',
+      '🥅','BREATHING GOAL','The posts slide, carry the ball sideways and bounce off their keeper.']);
+      }
+      if(ar.pitch==='bowling'){ c.push(['@pins',
+      '🎳','PIN RACK','Six pins guard each goal and sap the ball; the side walls are bumpers.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@rake',
+      '🚪','RAKE GATE','A bar sweeps across the goal mouth on a loop — shoot as it lifts.']);
+      if(lvl==='hard') c.push(['@gutter',
+      '🕳️','GUTTERS','The bumpers come off — a touch of the side wall is a lost ball.']);
+      }
+      if(ar.pitch==='raceway'){ c.push(['@tyre',
+      '🛞','TYRE WALLS','Stacks guard the box corners and bounce the ball back into play.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@oil',
+      '🛢️','OIL & GRAVEL','Slicks spin the ball onto a surprise line; gravel corners bog it down.']);
+      if(lvl==='hard') c.push(['@lights',
+      '🚦','START-LIGHTS','Release on green for full power — jump the start and the flick is halved.']);
+      }
+      if(ar.pitch==='ring'){ c.push(['@ropes',
+      '🥊','THE ROPES','Elastic ropes line the sides and sling the ball back harder than it arrived.']);
+      if(lvl==='med'||lvl==='hard') c.push(['@bag',
+      '🛍️','HEAVY BAGS','Soak up a shot\u2019s pace and get shoved along it — the layout drifts.']);
+      if(lvl==='hard') c.push(['@glove',
+      '🧤','SPRUNG GLOVES','Wall gloves punch a passing ball, and the hit leaves your next aim punch-drunk.']);
+      }
+      // SPORTS DAY final: a different borrowed TRIO per tier, attributed like the other finals
+      if(ar.pitch==='podium'){ if(lvl==='easy'){ c.push(['@pond',
+      '💧','WATER','Kills the shot at the bank it crossed. (Crazy Golf)']);
+      c.push(['@ropes','🥊','THE ROPES',
+      'Sling the ball back harder. (The Ring)']);
+      c.push(['@roam','🏈','ROAMING DEFENCE',
+      'Moving blockers on patrol. (The End Zone)']);
+      c.push([G+'sprite-bat.png','⚾','THE BATTER',
+      'A bat cracks a soft shot toward the far goal. (The Diamond)']);
+      } else if(lvl==='med'){ c.push(['@oil',
+      '🛢️','OIL SLICKS','Spin the ball onto a surprise line. (Grand Prix)']);
+      c.push(['@rake','🚪','RAKE GATE',
+      'Sweeps the goal mouth — shoot as it lifts. (The Alley)']);
+      c.push(['@tnet','🎾','NET & RACKETS',
+      'No ground ball crosses; ride a racket over. (Centre Court)']);
+      c.push(['@pitcher','🎯','PITCHING MACHINE',
+      'Fires stray balls in from the sides. (The Diamond)']);
+      } else { c.push(['@hoop',
+      '⭕','THE HOOPS','Thread one first or the goal does not count. (The Hardwood)']);
+      c.push(['@glove','🧤','SPRUNG GLOVES',
+      'Punch the ball and rattle your aim. (The Ring)']);
+      c.push(['@lights','🚦','START-LIGHTS',
+      'Miss the green and the flick is halved. (Grand Prix)']);
+      c.push([G+'sprite-glove.png','🧤','THE MITT',
+      'Claims a ball left short through the middle. (The Diamond)']);
+      } }
       // --- gauntlet finals: show only the four hazards active at this difficulty ---
       if(ar.pitch==='turf'){ if(lvl==='easy'){ c.push(['@gust',
       '🌬️','CROSSWIND','Gusts nudge the ball. (Thunderdome)']);
@@ -585,10 +768,19 @@
       'Crash down and knock the ball. (Web Warehouse)']);
       } }
       var _opp=[]; if(incOpp){ var _n=(lvl==='easy')?1:((lvl==='med')?2:3);
-      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 50% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.'};
-      (ar.ab||[]).slice(0,_n).forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
-      '✨','OPPONENT · '+((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
-      (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||''))]);
+      var _oppD={clearance:'Their defender lunges once a turn to block a dangerous shot on their goal.',reflex:'Their keeper tracks the ball much faster.',striker:'They keep an extra attacker deep on your side.',cannon:'Their flicks hit 20% harder.',curve:'Their shots bend around players.',drill:'Their shot barges the first player aside and powers through.',ghost:'Their shots pass through players (keepers still block).',defender:'They keep an extra defender in front of their goal.',wall:'A wall guards their goal — 3 hits to break.',magnet:'Their keeper is magnetic and catches soft or slow shots.',bigkeeper:'Their keeper is bigger — harder to score on.',sweeper:'Their keeper charges out to meet the ball.',volley:'Their forward smacks the ball goalward when it is hit.',sticky:'They get a bonus flick when they strike one of your players.',anchor:'One of their players is heavy and slows the ball hard on contact.',shield:'Blocks the next goal against them — one save.',boomerang:'A missed shot of theirs can curve back for another try.',serpent:'Their shot snakes down the pitch in an S.',
+      // Season 3 spends 27 different abilities across its 9 stadiums, so every one of them needs a line in
+      // the OPPONENT's voice — without one the card falls back to the player-voice text ("Your ball is super
+      // slippery!") under an "OPPONENT ·" heading, which reads like it is describing you.
+      ricochet:'Their shot speeds UP off the side walls instead of slowing.',chip:'They can lob the ball over your players and keeper.',sniper:'They aim down a long guide line — expect precision.',backspin:'Their shot runs on, then bites back toward them.',glide:'Their ball barely slows — it runs and runs.',bumper:'Their players are bumpers: the ball pings off them faster.',guided:'They steer the ball after the flick.',slowmo:'Their ball travels in slow motion — and they can steer it.',wet:'Their ball is slippery: it skids off walls and players on a surprise line.',drunk:'YOUR aim wobbles and every flick you take veers off at a random angle.',trio:'A shot of theirs off three of their own players re-launches at full speed.',injury:'YOU play hurt — 2 flicks per turn instead of 3.',
+      freeze:'YOUR power bar is capped at half.',aftershock:'Their shot shocks the first of your pieces it hits — frozen until your turn ends.'};
+      // Rows are TAGGED 'opp' (c[4]) rather than label-prefixed: the map card renders the two groups
+      // under their own section headers, so a prefix on every line would just repeat the header.
+      // A gauntlet-final BOSS carries a full per-tier loadout (bossAb); everything else slices ab[] by tier.
+      var _ol=ar.bossAb?((ar.bossAb[lvl]||[]).slice(0,3)):((ar.ab||[]).slice(0,_n));
+      _ol.forEach(function(id){ if(typeof ICON_SRC!=='undefined'&&ICON_SRC[id]) _opp.push([ICON_SRC[id],
+      '✨',((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].name)||id),
+      (_oppD[id]||((typeof TACTIC_MAP!=='undefined'&&TACTIC_MAP[id]&&TACTIC_MAP[id].desc)||'')),'opp']);
       }); } return _opp.concat(c);
       }
     // the opponent's "home boss" trait: immune to the stadium's signature hazard, or a granted
@@ -1079,7 +1271,199 @@
     g.arc(cx,cy,r,0,6.283); g.stroke();
     g.fillStyle='rgba(255,255,255,0.5)';
     g.beginPath(); g.arc(cx-r*0.32,cy-r*0.32,r*0.26,0,6.283);
-    g.fill(); } g.restore();
+    g.fill(); }
+    /* --- Season 3 (SPORTS) minis. These are MINIATURES OF THE PITCH ART, not freehand symbols: each
+       one either paints the hazard's real pixel sprite (glove/tyre/oil call the same shape builders the
+       board uses — shared componentDidMount scope, so they are in reach) or copies the exact palette and
+       construction from its draw function. The bat and the mitt don't appear here at all: their pitch art
+       IS a PNG sprite, so royArenaConds hands the card the sprite path directly. --- */
+    else if(key==='pitcher'){ /* the machine itself is never drawn — its BALLS are the hazard (drawBaseball) */
+    g.strokeStyle='rgba(244,240,230,0.45)'; g.lineWidth=1.4; g.lineCap='round';
+    for(var _st3=0;_st3<2;_st3++){ g.beginPath();
+    g.moveTo(cx-S*0.42,cy-S*0.10+_st3*S*0.2); g.lineTo(cx-S*0.14,cy-S*0.10+_st3*S*0.2); g.stroke(); }
+    g.fillStyle='#f4f0e6'; g.beginPath();
+    g.arc(cx+S*0.12,cy,S*0.24,0,6.283); g.fill();
+    g.strokeStyle='#c8102e'; g.lineWidth=1;
+    g.beginPath(); g.arc(cx+S*0.12-S*0.24*0.4,cy,S*0.24*1.1,-0.9,0.9); g.stroke();
+    g.beginPath(); g.arc(cx+S*0.12+S*0.24*0.4,cy,S*0.24*1.1,Math.PI-0.9,Math.PI+0.9); g.stroke();
+    } else if(key==='backboard'){ g.save(); g.translate(cx,cy); g.rotate(0.6);
+    g.lineCap='round';
+    g.strokeStyle='rgba(20,12,4,0.35)'; g.lineWidth=7;
+    g.beginPath(); g.moveTo(-S*0.28,1.5); g.lineTo(S*0.28,1.5); g.stroke();
+    g.strokeStyle='#f4efe0'; g.lineWidth=5;
+    g.beginPath(); g.moveTo(-S*0.28,0); g.lineTo(S*0.28,0); g.stroke();
+    g.strokeStyle='#d2542c'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(-S*0.28,0); g.lineTo(S*0.28,0); g.stroke();
+    g.restore();
+    } else if(key==='tramp'){ g.fillStyle='rgba(16,10,4,0.28)';
+    g.beginPath(); g.ellipse(cx,cy+2.5,S*0.34,S*0.21,0,0,6.283); g.fill();
+    g.fillStyle='#26407e'; g.beginPath();
+    g.ellipse(cx,cy,S*0.34,S*0.21,0,0,6.283); g.fill();
+    g.strokeStyle='#6b8fd8'; g.lineWidth=2;
+    g.beginPath(); g.ellipse(cx,cy,S*0.34,S*0.21,0,0,6.283); g.stroke();
+    g.strokeStyle='rgba(180,215,255,0.5)'; g.lineWidth=1;
+    for(var _tspk=0;_tspk<6;_tspk++){ var _ta=_tspk/6*6.283;
+    g.beginPath(); g.moveTo(cx+Math.cos(_ta)*S*0.15,cy+Math.sin(_ta)*S*0.095);
+    g.lineTo(cx+Math.cos(_ta)*S*0.34,cy+Math.sin(_ta)*S*0.21); g.stroke(); }
+    } else if(key==='hoop'){ var _hrx=S*0.30, _hry=S*0.156;   // BK_RIM_HALF proportions, drawCourt's ring+net
+    g.fillStyle='rgba(24,14,4,0.30)';
+    g.beginPath(); g.ellipse(cx,cy-S*0.04+2,_hrx,_hry,0,0,6.283); g.fill();
+    g.strokeStyle='rgba(252,248,240,0.45)'; g.lineWidth=1;
+    for(var _hn=0;_hn<7;_hn++){ var _ha=Math.PI*(_hn/6);
+    var _hsx=Math.cos(_ha)*_hrx, _hsy=Math.sin(_ha)*_hry;
+    g.beginPath(); g.moveTo(cx+_hsx,cy-S*0.04+_hsy);
+    g.quadraticCurveTo(cx+_hsx*0.55,cy+S*0.14,cx+_hsx*0.20,cy+S*0.28); g.stroke(); }
+    g.beginPath(); g.ellipse(cx,cy+S*0.28,_hrx*0.30,_hry*0.36,0,0,6.283); g.stroke();
+    g.lineWidth=2.6; g.strokeStyle='#e2622c';
+    g.beginPath(); g.ellipse(cx,cy-S*0.04,_hrx,_hry,0,0,6.283); g.stroke();
+    g.lineWidth=1; g.strokeStyle='rgba(255,190,120,0.85)';
+    g.beginPath(); g.ellipse(cx,cy-S*0.02,_hrx*0.92,_hry*0.72,0,0,Math.PI); g.stroke();
+    } else if(key==='tnet'){ /* drawTennis: dark band, white mesh, bright top edge, square posts */
+    var _ny=cy, _nx0=cx-S*0.36, _nx1=cx+S*0.36;
+    g.fillStyle='rgba(14,22,30,0.55)'; g.fillRect(_nx0,_ny-3.5,_nx1-_nx0,7);
+    g.strokeStyle='rgba(228,240,252,0.55)'; g.lineWidth=1;
+    for(var _mx=_nx0;_mx<_nx1;_mx+=3){ g.beginPath(); g.moveTo(_mx+0.5,_ny-3.5); g.lineTo(_mx+0.5,_ny+3.5); g.stroke(); }
+    g.beginPath(); g.moveTo(_nx0,_ny+3.5); g.lineTo(_nx1,_ny+3.5); g.stroke();
+    g.fillStyle='#f2f7ff'; g.fillRect(_nx0,_ny-4.5,_nx1-_nx0,2);
+    g.fillStyle='#e8eef8'; g.fillRect(_nx0-2,_ny-7,3,14); g.fillRect(_nx1-1,_ny-7,3,14);
+    } else if(key==='racketflip'){ /* drawTennis rackets: one live green, one dead red */
+    function _rk(g2,x,rot,frame,str){ g2.save(); g2.translate(x,cy-S*0.04); g2.rotate(rot);
+    g2.fillStyle='rgba(12,20,10,0.26)'; g2.beginPath();
+    g2.ellipse(0,2.5,S*0.14,S*0.17,0,0,6.283); g2.fill();
+    g2.strokeStyle=frame; g2.lineWidth=2.6;
+    g2.beginPath(); g2.ellipse(0,-1,S*0.13,S*0.16,0,0,6.283); g2.stroke();
+    g2.strokeStyle=str; g2.lineWidth=0.8;
+    for(var _g3=-1;_g3<=1;_g3++){ g2.beginPath();
+    g2.moveTo(_g3*S*0.05,-1-S*0.14); g2.lineTo(_g3*S*0.05,-1+S*0.14); g2.stroke();
+    g2.beginPath(); g2.moveTo(-S*0.12,-1+_g3*S*0.06); g2.lineTo(S*0.12,-1+_g3*S*0.06); g2.stroke(); }
+    g2.strokeStyle='#8a5a2a'; g2.lineWidth=2.6; g2.lineCap='round';
+    g2.beginPath(); g2.moveTo(0,S*0.15); g2.lineTo(0,S*0.30); g2.stroke(); g2.restore(); }
+    _rk(g,cx-S*0.18,-0.4,'#4ad07a','rgba(190,255,214,0.8)');
+    _rk(g,cx+S*0.18,0.4,'#e0503c','rgba(255,190,180,0.75)');
+    } else if(key==='tgate'){ /* drawTennis shutter: grey body, light top, hazard ribs, red leading edge */
+    g.fillStyle='rgba(255,255,255,0.14)'; g.fillRect(cx-S*0.42,cy-1.5,S*0.84,3);
+    g.fillStyle='rgba(10,16,24,0.34)'; g.fillRect(cx-S*0.42,cy-2,S*0.56,7);
+    g.fillStyle='#9aa8bc'; g.fillRect(cx-S*0.42,cy-3.5,S*0.56,7);
+    g.fillStyle='#c6d2e2'; g.fillRect(cx-S*0.42,cy-3.5,S*0.56,2);
+    g.fillStyle='rgba(40,52,70,0.55)';
+    for(var _rx3=cx-S*0.42+2;_rx3<cx+S*0.12;_rx3+=4) g.fillRect(_rx3,cy-2,1.5,5);
+    g.fillStyle='#e0503c'; g.fillRect(cx+S*0.12,cy-4.5,2,9);
+    } else if(key==='pond'){ /* drawMinigolf water: layered blue bands, damp margin, static glints */
+    g.fillStyle='#2a6b34'; g.beginPath(); g.ellipse(cx,cy,S*0.40,S*0.27,0,0,6.283); g.fill();
+    g.fillStyle='#123f63'; g.beginPath(); g.ellipse(cx,cy,S*0.37,S*0.24,0,0,6.283); g.fill();
+    g.fillStyle='#1c5f96'; g.beginPath(); g.ellipse(cx,cy,S*0.32,S*0.20,0,0,6.283); g.fill();
+    g.fillStyle='#2a7cbe'; g.beginPath(); g.ellipse(cx,cy+1,S*0.24,S*0.14,0,0,6.283); g.fill();
+    g.fillStyle='#3d95d6'; g.beginPath(); g.ellipse(cx-1,cy+1,S*0.13,S*0.07,0,0,6.283); g.fill();
+    g.fillStyle='rgba(226,246,255,0.8)';
+    g.fillRect(cx-S*0.12,cy-S*0.06,2,1); g.fillRect(cx+S*0.08,cy+S*0.05,2,1); g.fillRect(cx+S*0.02,cy-S*0.10,1,1);
+    } else if(key==='bunker'){ /* drawMinigolf sand: grass collar, shaded lip, lit sand bands */
+    g.fillStyle='#15501f'; g.beginPath(); g.ellipse(cx,cy,S*0.40,S*0.27,0,0,6.283); g.fill();
+    g.fillStyle='#3b2f14'; g.beginPath(); g.ellipse(cx,cy-0.5,S*0.36,S*0.23,0,0,6.283); g.fill();
+    g.fillStyle='#a8813f'; g.beginPath(); g.ellipse(cx,cy+0.5,S*0.34,S*0.21,0,0,6.283); g.fill();
+    g.fillStyle='#c79f57'; g.beginPath(); g.ellipse(cx,cy+1,S*0.30,S*0.18,0,0,6.283); g.fill();
+    g.fillStyle='#dcbb79'; g.beginPath(); g.ellipse(cx,cy+1.5,S*0.24,S*0.13,0,0,6.283); g.fill();
+    g.fillStyle='#eed9a4'; g.beginPath(); g.ellipse(cx-1,cy+2,S*0.14,S*0.07,0,0,6.283); g.fill();
+    } else if(key==='cup'){ /* drawMinigolf cup: white collar, black hole, grey pin, golf-yellow pennant */
+    g.fillStyle='#e8f4dc'; g.beginPath(); g.arc(cx-S*0.06,cy+S*0.22,S*0.17,0,6.283); g.fill();
+    g.fillStyle='#0d1a0a'; g.beginPath(); g.arc(cx-S*0.06,cy+S*0.22,S*0.12,0,6.283); g.fill();
+    g.fillStyle='#000000'; g.beginPath(); g.arc(cx-S*0.06,cy+S*0.20,S*0.08,0,6.283); g.fill();
+    g.fillStyle='rgba(8,32,14,0.34)'; g.fillRect(cx-S*0.02,cy+S*0.18,S*0.30,2);
+    g.fillStyle='#8f9aa4'; g.fillRect(cx-S*0.08,cy-S*0.42,2,S*0.62);
+    g.fillStyle='#e8eef4'; g.fillRect(cx-S*0.08,cy-S*0.42,1,S*0.62);
+    for(var _fy=0;_fy<7;_fy++){ var _fw=9-Math.abs(_fy-3)*2;
+    g.fillStyle=(_fy<3)?'#ffd94a':'#e0a520';
+    g.fillRect(cx-S*0.08+2,cy-S*0.42+_fy,_fw,1); }
+    g.fillStyle='#fff3b0'; g.fillRect(cx-S*0.08+2,cy-S*0.42,4,1);
+    } else if(key==='roam'){ g.fillStyle='#e05a4a';
+    g.beginPath(); g.arc(cx,cy,S*0.2,0,6.283); g.fill();
+    g.strokeStyle='#f4e9c8'; g.lineWidth=1.4;
+    g.beginPath(); g.arc(cx,cy,S*0.2,0,6.283); g.stroke();
+    g.strokeStyle='rgba(255,255,255,0.75)'; g.lineWidth=1.4;
+    for(var _rm2=-1;_rm2<=1;_rm2+=2){ g.beginPath();
+    g.moveTo(cx+_rm2*S*0.3,cy-S*0.07); g.lineTo(cx+_rm2*S*0.42,cy);
+    g.lineTo(cx+_rm2*S*0.3,cy+S*0.07); g.stroke(); }
+    } else if(key==='punt'){ g.fillStyle='#2f3a4e';
+    g.beginPath(); g.moveTo(cx-S*0.34,cy-S*0.16); g.lineTo(cx-S*0.06,cy-S*0.16);
+    g.lineTo(cx+S*0.02,cy+S*0.06); g.lineTo(cx+S*0.14,cy+S*0.06);
+    g.lineTo(cx+S*0.14,cy+S*0.18) ; g.lineTo(cx-S*0.34,cy+S*0.18); g.closePath(); g.fill();
+    g.fillStyle='#f4efe0'; g.fillRect(cx-S*0.34,cy+S*0.12,S*0.48,2);
+    g.fillStyle='#f4e9c8'; g.beginPath();
+    g.arc(cx+S*0.3,cy-S*0.1,S*0.11,0,6.283); g.fill();
+    g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx+S*0.34,cy-S*0.2); g.lineTo(cx+S*0.44,cy-S*0.3); g.stroke();
+    } else if(key==='posts'){ /* drawGridiron breathing posts: GOLD, and they slide */
+    g.strokeStyle='#f2c53a'; g.lineWidth=2.4;
+    g.beginPath(); g.moveTo(cx-S*0.18,cy+S*0.3); g.lineTo(cx-S*0.18,cy-S*0.24); g.stroke();
+    g.beginPath(); g.moveTo(cx+S*0.18,cy+S*0.3); g.lineTo(cx+S*0.18,cy-S*0.24); g.stroke();
+    g.fillStyle='#ffe066'; g.fillRect(Math.round(cx-S*0.18)-1,Math.round(cy-S*0.24),1,Math.round(S*0.54));
+    g.fillRect(Math.round(cx+S*0.18)-1,Math.round(cy-S*0.24),1,Math.round(S*0.54));
+    g.strokeStyle='rgba(255,255,255,0.7)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx-S*0.34,cy-S*0.36); g.lineTo(cx-S*0.44,cy-S*0.30);
+    g.moveTo(cx+S*0.34,cy-S*0.36); g.lineTo(cx+S*0.44,cy-S*0.30); g.stroke();
+    } else if(key==='pins'){ /* drawBowling pins: white disc, single red neck stripe */
+    var _pw2=[[cx-S*0.2,cy-S*0.12],[cx+S*0.2,cy-S*0.12],[cx,cy+S*0.14]];
+    for(var _pn2=0;_pn2<3;_pn2++){ var _pp2=_pw2[_pn2], _pr2=S*0.14;
+    g.fillStyle='rgba(0,0,0,0.2)'; g.beginPath(); g.arc(_pp2[0],_pp2[1]+1.5,_pr2,0,6.283); g.fill();
+    g.fillStyle='#f6efe0'; g.beginPath(); g.arc(_pp2[0],_pp2[1],_pr2,0,6.283); g.fill();
+    g.fillStyle='#d0402e'; g.fillRect(Math.round(_pp2[0]-_pr2),Math.round(_pp2[1]-1),Math.round(_pr2*2),1);
+    } } else if(key==='rake'){ /* drawBowling rake bar: steel bar, light top, tines toward the pins */
+    g.fillStyle='rgba(20,14,8,0.4)'; g.fillRect(cx-S*0.4,cy-S*0.02+2,S*0.8,S*0.14);
+    g.fillStyle='#79818b'; g.fillRect(cx-S*0.4,cy-S*0.06,S*0.8,S*0.14);
+    g.fillStyle='#9aa8bc'; g.fillRect(cx-S*0.4,cy-S*0.06,S*0.8,S*0.045);
+    g.fillStyle='#6b7280'; for(var _tx3=cx-S*0.36;_tx3<cx+S*0.4;_tx3+=6){ g.fillRect(_tx3,cy+S*0.08,2,3); }
+    g.strokeStyle='rgba(255,255,255,0.7)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx,cy-S*0.34); g.lineTo(cx,cy-S*0.12);
+    g.moveTo(cx-S*0.06,cy-S*0.2); g.lineTo(cx,cy-S*0.12); g.lineTo(cx+S*0.06,cy-S*0.2); g.stroke();
+    } else if(key==='gutter'){ /* drawBowling gutters: bare dark channels either side of the maple lane */
+    g.fillStyle='#b57b3d'; g.fillRect(cx-S*0.44,cy-S*0.3,S*0.88,S*0.6);
+    g.fillStyle='#c98a3a'; g.fillRect(cx-S*0.20,cy-S*0.3,S*0.10,S*0.6); g.fillRect(cx+S*0.06,cy-S*0.3,S*0.10,S*0.6);
+    g.fillStyle='#241708'; g.fillRect(cx-S*0.44,cy-S*0.3,S*0.18,S*0.6); g.fillRect(cx+S*0.26,cy-S*0.3,S*0.18,S*0.6);
+    g.fillStyle='rgba(0,0,0,0.30)'; g.fillRect(cx-S*0.26,cy-S*0.3,1,S*0.6); g.fillRect(cx+S*0.25,cy-S*0.3,1,S*0.6);
+    g.fillStyle='#f4e9c8'; g.beginPath(); g.arc(cx-S*0.35,cy+S*0.12,S*0.085,0,6.283); g.fill();
+    } else if(key==='tyre'){ /* THE REAL SPRITE: rcTyreShape(), same shade map as drawRacewayTyres */
+    try{ var _tpx=(typeof rcTyreShape==='function')?rcTyreShape():null;
+    if(_tpx){ for(var _tq=0;_tq<_tpx.length;_tq++){ var _tp=_tpx[_tq], _tsh=_tp[2];
+    g.fillStyle=(_tsh===3)?'#2c2e33':((_tsh===2)?'#08080b':((_tsh===1)?'#3b3c45':((_tsh===5)?'#2a2b33':((_tsh===4)?'#585a66':'#141519'))));
+    g.fillRect(cx+_tp[0]*1.4-0.7,cy+_tp[1]*1.4-0.7,1.4,1.4); } } }catch(e){}
+    } else if(key==='oil'){ /* THE REAL SPRITE: rcOilShape(), same band colours as drawRaceway */
+    try{ var _opx=(typeof rcOilShape==='function')?rcOilShape(3.7):null;
+    if(_opx){ for(var _oq=0;_oq<_opx.length;_oq++){ var _op2=_opx[_oq];
+    g.fillStyle=(_op2[2]===2)?'rgba(18,14,26,0.85)':((_op2[2]===1)?'rgba(96,132,196,0.6)':'rgba(10,8,16,0.95)');
+    g.fillRect(cx+_op2[0]*1.4-0.7,cy+_op2[1]*1.4-0.7,1.4,1.4); }
+    g.fillStyle='rgba(150,186,240,0.5)'; g.fillRect(cx-4,cy-4,1.4,1.4); g.fillRect(cx-2.6,cy-5.4,1.4,1.4); } }catch(e){}
+    } else if(key==='lights'){ /* drawRaceway gantry: black housing, red build, green release */
+    g.fillStyle='#0a0b0e'; g.fillRect(cx-S*0.38,cy-S*0.12,S*0.76,S*0.24);
+    g.fillStyle='#3a3d42'; g.fillRect(cx-S*0.38,cy-S*0.12,S*0.76,S*0.05);
+    var _lc2=['#ff2a1a','#ff2a1a','#4bff72'];
+    for(var _lg=0;_lg<3;_lg++){ g.fillStyle=_lc2[_lg];
+    g.beginPath(); g.arc(cx-S*0.2+_lg*S*0.2,cy+S*0.02,S*0.075,0,6.283); g.fill(); }
+    g.fillStyle='rgba(90,255,130,0.35)'; g.beginPath();
+    g.arc(cx+S*0.2,cy+S*0.02,S*0.14,0,6.283); g.fill();
+    } else if(key==='ropes'){ /* the ring's strands: cream rope pair over post pads, drawRing colours */
+    for(var _rp2=0;_rp2<3;_rp2++){ var _ry2=cy-S*0.18+_rp2*S*0.18;
+    g.strokeStyle='rgba(70,56,38,0.45)'; g.lineWidth=1.8;
+    g.beginPath(); g.moveTo(cx-S*0.38,_ry2+1); g.quadraticCurveTo(cx,_ry2+S*0.12+1,cx+S*0.38,_ry2+1); g.stroke();
+    g.strokeStyle=(_rp2===1)?'#f6ecd8':'#e2cfae'; g.lineWidth=1.8;
+    g.beginPath(); g.moveTo(cx-S*0.38,_ry2); g.quadraticCurveTo(cx,_ry2+S*0.12,cx+S*0.38,_ry2); g.stroke(); }
+    g.fillStyle='#6a5230';
+    g.fillRect(cx-S*0.44,cy-S*0.24,S*0.08,S*0.54); g.fillRect(cx+S*0.36,cy-S*0.24,S*0.08,S*0.54);
+    } else if(key==='bag'){ /* the ring's heavy bag: BROWN leather (drawRing colours), chain, dark band */
+    g.fillStyle='rgba(20,12,8,0.35)';
+    g.beginPath(); g.ellipse(cx,cy+S*0.3,S*0.19,S*0.08,0,0,6.283); g.fill();
+    g.strokeStyle='#f7f2e8'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(cx-S*0.08,cy-S*0.18); g.lineTo(cx,cy-S*0.34);
+    g.lineTo(cx+S*0.08,cy-S*0.18); g.stroke();
+    g.fillStyle='#3d2413'; g.fillRect(cx-S*0.185,cy-S*0.21,S*0.37,S*0.48);
+    g.fillStyle='#a9703c'; g.fillRect(cx-S*0.16,cy-S*0.19,S*0.32,S*0.44);
+    g.fillStyle='#7a4a26'; g.fillRect(cx+S*0.05,cy-S*0.19,S*0.11,S*0.44);
+    g.fillStyle='#c8996a'; g.fillRect(cx-S*0.16,cy-S*0.19,S*0.08,S*0.44);
+    g.fillStyle='#3a3030'; g.fillRect(cx-S*0.16,cy-S*0.03,S*0.32,S*0.07);
+    } else if(key==='glove'){ /* THE REAL SPRITE: rgGloveShape(), same colour codes as drawRing */
+    try{ var _gpx=(typeof rgGloveShape==='function')?rgGloveShape():null;
+    if(_gpx&&_gpx.down){ for(var _gq=0;_gq<_gpx.down.length;_gq++){ var _gp=_gpx.down[_gq], _gch=_gp[2];
+    g.fillStyle=(_gch==='K')?'#12060a':((_gch==='W')?'#ece5d4':((_gch==='L')?'#e8574a':((_gch==='D')?'#8d1a16':((_gch==='S')?'#f0d9c8':'#c02a24'))));
+    g.fillRect(cx+_gp[0]*1.5-0.75,cy+_gp[1]*1.5-0.75,1.5,1.5); } } }catch(e){}
+    } g.restore();
     }
     // build a DOM icon (procedural canvas, sprite img, or emoji) for a condition entry
     function condIconEl(c,size){ var icon=c[0];
@@ -1104,7 +1488,8 @@
     pre.style.display='block';
     pre.scrollTop=0; var pad=mk('div','padding:12px 12px 20px;display:flex;flex-direction:column;align-items:center;');
     pad.appendChild(mk('div',FS(13,'#a9c94b')+'text-align:center;letter-spacing:1px;text-shadow:0 3px 0 #1c1330;','STADIUM ROYALE'));
-    pad.appendChild(mk('div',FS(7,'#9a8fb0')+'text-align:center;margin:4px 0 8px;','STADIUM '+(ROYALE.i+1)+' OF '+ROYALE_ARENAS.length));
+    var _stTitle=mk('div',FS(7,'#9a8fb0')+'text-align:center;margin:4px 0 8px;','STADIUM '+(ROYALE.i+1)+' OF '+ROYALE_ARENAS.length);
+    pad.appendChild(_stTitle);
     (function(){ var _dl=({easy:['EASY',
     '#5dd15d'],med:['MEDIUM',
     '#ffcf3a'],hard:['HARD',
@@ -1117,22 +1502,31 @@
     cv.style.cssText='width:'+CW+'px;height:'+CH+'px;display:block;border-radius:10px;border:2px solid #3a3050;image-rendering:pixelated;box-shadow:0 6px 18px rgba(0,0,0,0.5);';
     pad.appendChild(cv); var mctx=cv.getContext('2d');
     mctx.scale(2,2); mctx.imageSmoothingEnabled=false;
-    var ar=ROYALE_ARENAS[ROYALE.i], opp=PRESETS[ROYALE.opps[ROYALE.i]];
+    var ar=ROYALE_ARENAS[ROYALE.i], opp=PRESETS[royOpp(ROYALE.i)];
     var descBox=mk('div','display:flex;flex-direction:column;align-items:center;width:100%;');
     pad.appendChild(descBox);
       function renderDesc(idx){ descBox.innerHTML='';
-      var a2=ROYALE_ARENAS[idx], op2=PRESETS[ROYALE.opps[idx]], _cur=(idx===ROYALE.i);
+      var a2=ROYALE_ARENAS[idx], op2=PRESETS[royOpp(idx)], _cur=(idx===ROYALE.i);
       descBox.appendChild(mk('div',FS(8,'#f4e9c8')+'text-align:center;margin:10px 0 2px;line-height:1.5;','STADIUM '+(idx+1)+': '+a2.name+(_cur?'':' — PREVIEW')));
       var conds=royArenaConds(a2,true);
       if(conds.length){ var list=mk('div','width:100%;max-width:'+CW+'px;margin:7px 0 2px;');
-      conds.forEach(function(c){ var row=mk('div','display:flex;align-items:center;gap:9px;padding:4px 8px;');
+      // Two SECTIONS, not one flat list: the stadium's hazards and the opponent's loadout are different
+      // kinds of trouble, and mixing them read as one — players took the rake gate for an enemy ability.
+      // Hazards lead (they describe the place); the loadout sits directly above the "YOU vs" row.
+      var _hz=conds.filter(function(c){ return c[4]!=='opp'; }), _op=conds.filter(function(c){ return c[4]==='opp'; });
+      function _sect(t,col){ list.appendChild(mk('div',FS(6,col)+'letter-spacing:1px;text-align:left;padding:5px 8px 1px;',t)); }
+      function _rows(arr,labCol){ arr.forEach(function(c){ var row=mk('div','display:flex;align-items:center;gap:9px;padding:4px 8px;');
       var icw=mk('div','width:26px;height:26px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;');
       icw.appendChild(condIconEl(c,26));
       row.appendChild(icw); var tx=mk('div','flex:1;min-width:0;text-align:left;');
-      tx.appendChild(mk('div',FS(6,'#a9c94b')+'line-height:1.4;',c[2]));
+      tx.appendChild(mk('div',FS(6,labCol)+'line-height:1.4;',c[2]));
       if(c[3]) tx.appendChild(mk('div','font-size:9px;line-height:1.4;color:#a6b6cc;font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin-top:1px;',c[3]));
       row.appendChild(tx); list.appendChild(row);
-      }); descBox.appendChild(list);
+      }); }
+      if(_hz.length){ _sect('\u26A0 STADIUM HAZARDS','#e0b04b'); _rows(_hz,'#e0b04b'); }
+      if(_hz.length&&_op.length) list.appendChild(mk('div','height:1px;background:rgba(74,58,94,0.55);margin:5px 8px;',''));
+      if(_op.length){ _sect('\u2694 OPPONENT CARRIES','#7fb2e0'); _rows(_op,'#7fb2e0'); }
+      descBox.appendChild(list);
       } else { descBox.appendChild(mk('div',FS(6,'#9a8fb0')+'text-align:center;line-height:1.5;max-width:'+CW+'px;',a2.blurb));
       } (function(){ var vrow=mk('div','display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;');
       vrow.appendChild(mk('span',FS(7,'#a9c94b'),'YOU vs'));
@@ -1147,18 +1541,23 @@
       descBox.appendChild(vrow);
       })(); }
       renderDesc(ROYALE.i);
-      pad.appendChild(mk('div',FS(5,'#6f6684')+'text-align:center;margin-top:5px;','tap any stadium on the map to preview it'));
+      // Stadiums are played in order — tapping a node previews it, it never jumps the run ahead.
+      var _royJump=false;
+      pad.appendChild(mk('div',FS(5,'#6f6684')+'text-align:center;margin-top:5px;',_royJump?'tap any stadium on the map to jump straight to it':'tap any stadium on the map to preview it'));
       cv.style.cursor='pointer';
       cv.addEventListener('click',function(ev){ try{ var r=cv.getBoundingClientRect(), fx=(ev.clientX-r.left)/r.width, fy=(ev.clientY-r.top)/r.height;
       if(typeof NODES2==='undefined') return;
       var best=-1,bd=0.085; for(var _n=0;_n<NODES2.length&&_n<ROYALE_ARENAS.length;_n++){ var nd=NODES2[_n];
       if(!nd) continue; var dd=Math.hypot(fx-nd[0],fy-nd[1]);
       if(dd<bd){ bd=dd; best=_n;
-      } } if(best>=0){ renderDesc(best);
+      } } if(best>=0){ if(_royJump&&best!==ROYALE.i){ ROYALE.i=best;
+      try{ _stTitle.textContent='STADIUM '+(best+1)+' OF '+ROYALE_ARENAS.length;
+      go.textContent='ENTER STADIUM '+(best+1)+'  ▸';
+      }catch(e){} } renderDesc(best);
       try{ if(!muted) sfxClick();
-      }catch(e){} } }catch(e){} }); 
+      }catch(e){} } }catch(e){} });
       var go=mk('button','margin-top:10px;width:100%;max-width:'+CW+'px;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:12px;cursor:pointer;','ENTER STADIUM '+(ROYALE.i+1)+'  ▸');
-      go.onclick=function(){ var cn=(typeof NODES2!=='undefined'&&NODES2[ROYALE.i])?NODES2[ROYALE.i]:[0.5,
+      go.onclick=function(){ _royTravel=null; var cn=(typeof NODES2!=='undefined'&&NODES2[ROYALE.i])?NODES2[ROYALE.i]:[0.5,
       0.5]; var cpx=cn[0]*CW, cpy=cn[1]*CH, t0=null;
       go.disabled=true; try{sfxZoomIn();
       }catch(e){} function zin(ts){ if(t0===null)t0=ts;
@@ -1172,10 +1571,13 @@
       try{spClearRun('royale');
       }catch(e){} mode='royale';
       buildPre(); }; pad.appendChild(quit);
-      pre.appendChild(pad); var NODES2=royMapNodes(); var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850;
+      pre.appendChild(pad); var NODES2=royMapNodes(); var from=(animate && ROYALE.i>0)?(ROYALE.i-1):ROYALE.i, to=ROYALE.i, t0=null, dur=animate?1500:850, _clashDone=false;
       function frame(ts){ if(t0===null) t0=ts;
       var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3), fpos=from+(to-from)*e;
       var zoom=1, camx=CW/2, camy=CH/2;
+      if(animate && to>from && p<1){ _royTravel={target:to,playerFrom:from,t:p};   /* solo run-in + clash; cleared once settled so the coins rest at the stadium */
+      if(!_clashDone && p>=0.72){ _clashDone=true; try{ if(!muted && typeof sfxPunch==='function') sfxPunch(); }catch(_e){} }
+      } else { _royTravel=null; }
       if(animate){ var zt=p<0.22?(p/0.22):(p>0.8?(1-(p-0.8)/0.2):1);
       zoom=1+1.0*zt; var lo=Math.max(0,Math.floor(fpos)), hi=Math.min(Math.min(NODES2.length,ROYALE_ARENAS.length)-1,lo+1), fr=fpos-lo;
       camx=(NODES2[lo][0]+(NODES2[hi][0]-NODES2[lo][0])*fr)*CW;
@@ -1217,13 +1619,14 @@
     ov.appendChild(track); var pct=mk('div',FS(8,'#9a8fb0')+'letter-spacing:1px;','LOADING  0%');
     ov.appendChild(pct); var TIPS=[{i:null,t:'Drag back from the coin and release to flick. Pull further for more power.'},
     {i:'slowmo',t:'SLOW MO + JOYSTICK: steer the ball in slow motion after you flick.'},
-    {i:'cannon',t:'CANNON: your flicks hit twice as hard and smash through walls.'},
+    {i:'cannon',t:'CANNON: your flicks hit 20% harder and smash through walls.'},
     {i:null,t:'Tap the gear top-right, then SOUND, to turn the music off.'},
     {i:'curve',t:'CURVEBALL: while you aim, nudge left or right and the shot banana-curves that way.'},
     {i:null,t:'Score goals to earn abilities. Equip up to 3 before kickoff.'},
     {i:'magnet',t:'MAGNET: near their goal the ball curves toward the net.'},
     {i:'freeze',t:'FREEZE: the opponent power bar is capped at half.'},
     {i:'ghost',t:'GHOST: your shot phases through the players it hits.'},
+    {i:'aftershock',t:'AFTERSHOCK: your shot shocks the first piece it hits — even the keeper — frozen until your turn ends.'},
     {i:'wall',t:'WALL: a brick wall guards your goal. Three hits and it shatters.'},
     {i:'sticky',t:'STICKY: hit an opponent player for a bonus flick each turn.'},
     {i:'sniper',t:'SNIPER: shows a long aim line to line up the perfect shot.'},
@@ -1485,6 +1888,8 @@
     if(m===dl) x=x0; else if(m===dr) x=x1;
     else if(m===dt) y=y0; else y=y1;
     } } return {x:x,y:y}; } function resolveSpot(px,py,self){ let x=px,y=py;
+    // CRAZY GOLF: a dragged piece cannot be parked in the water or a bunker either
+    try{ var _rcg=cgClearSpot(x,y,NAIL_R); if(_rcg){ x=_rcg.x; y=_rcg.y; } }catch(e){}
     for(let it=0;it<16;it++){ var _wp=wallPush(x,y);
     x=_wp.x; y=_wp.y; const hit=overlapsAny(x,y,self);
     if(!hit) break; let dx=x-hit.x,dy=y-hit.y,d=Math.hypot(dx,dy);
@@ -1502,6 +1907,7 @@
       if(phase!=='play'||winner) return;
       const gl=(W-GOAL_W)/2+NAIL_R, gr=(W+GOAL_W)/2-NAIL_R;
       for(const n of nails){ if(!n.goalie) continue;
+      if(n._aftShock) continue;   // AFTERSHOCK: a shocked keeper stands still — a body on its spot, never a mover
       var _lf=((sideAb[n.team]||[]).indexOf('reflex')>=0)?0.24:0.12;
       var _isRk=(n.team==='red');
       var _atkX=moving&&(_isRk?(coin.vy>0.15):(coin.vy<-0.15));
@@ -1528,9 +1934,9 @@
       if(!_cSt && _threat && !clearUsed[_ctm]){ var _cb=null;
       for(var _ci=0;_ci<nails.length;_ci++){ var _cn=nails[_ci];
       if(_cn.team===_ctm && _cn.clearer){ _cb=_cn;
-      break; } } if(_cb && Math.hypot(_cb.x-coin.x,_cb.y-coin.y)<56){ _clrSt[_ctm]={n:_cb,hx:_cb.x,hy:_cb.y};
+      break; } } if(_cb && !_cb._aftShock && Math.hypot(_cb.x-coin.x,_cb.y-coin.y)<56){ _clrSt[_ctm]={n:_cb,hx:_cb.x,hy:_cb.y};
       clearUsed[_ctm]=true; _cSt=_clrSt[_ctm];
-      try{syncSlots();}catch(e){} } } if(_cSt){ var _n=_cSt.n, _cap=3.4, _maxOff=18;
+      try{syncSlots();}catch(e){} } } if(_cSt && !_cSt.n._aftShock){ var _n=_cSt.n, _cap=3.4, _maxOff=18;
       if(_threat){ var _tx=coin.x+coin.vx*1.5, _dx=_tx-_n.x, _step=Math.max(-_cap,Math.min(_cap,_dx*0.4)), _nx=_n.x+_step, _off=_nx-_cSt.hx;
       if(_off>_maxOff) _nx=_cSt.hx+_maxOff;
       else if(_off<-_maxOff) _nx=_cSt.hx-_maxOff;

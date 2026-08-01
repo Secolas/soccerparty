@@ -99,7 +99,10 @@
       if(!aiming) return;
       const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,power=Math.min(Math.hypot(dx,dy),(pen&&pen.active)?32:(TAC.frozen?FLICK_POWER*0.5:FLICK_POWER));
       aiming=false; if(power<4){ aimStart=aimNow=null; return; }
-      const ang=Math.atan2(dy,dx),speed=power*(FLICK_MAX/FLICK_POWER)*TAC.power*staminaMul();
+      // CRAZY GOLF: holing out pays a FULL-POWER flick — you supply the aim, the game supplies the power
+      var _cgFull=false; try{ _cgFull=(typeof cgFullFlick==='function')&&cgFullFlick(); }catch(e){}
+      const ang=Math.atan2(dy,dx),speed=(_cgFull?FLICK_MAX:power*(FLICK_MAX/FLICK_POWER))*TAC.power*staminaMul()*((typeof rcLaunchApply==='function')?rcLaunchApply():1);
+      if(_cgFull){ try{ cgSpendFullFlick(); }catch(e){} try{ setStatus('FULL POWER!'); }catch(e){} }
       _rwSnap={x:coin.x,y:coin.y,team:current,flickCount:flickCount};
       coin.vx=Math.cos(ang)*speed;
       coin.vy=Math.sin(ang)*speed;
@@ -248,7 +251,8 @@
     {id:'royaleall',n:'ROYALE MASTER',d:'Win Royale on Easy, Medium and Hard.'},
     {id:'season1',n:'SEASON ONE CLEARED',d:'Clear every stadium in the Season 1 Royale ladder.'},
     {id:'season2',n:'SEASON TWO CLEARED',d:'Clear every stadium in the Season 2 Royale ladder.'},
-    {id:'grandslam',n:'GRAND SLAM',d:'Clear both Season 1 and Season 2 Royale on Easy, Medium and Hard.'},
+    {id:'season3',n:'SEASON THREE CLEARED',d:'Clear every stadium in the Season 3 Royale ladder.'},
+    {id:'grandslam',n:'GRAND SLAM',d:'Clear all three Seasons of Royale on Easy, Medium and Hard.'},
     {id:'trick',n:'TRICK SHOT',d:'Score off a 3+ wall-bounce shot.'},
     {id:'clean',n:'CLEAN SHEET',d:'Win a match without conceding.'},
     {id:'hat',n:'HAT-TRICK',d:'Score 3 goals in one match.'},
@@ -277,6 +281,7 @@
     if(!o.royDiffs) o.royDiffs=[];
     if(!o.royDiffs1) o.royDiffs1=[];
     if(!o.royDiffs2) o.royDiffs2=[];
+    if(!o.royDiffs3) o.royDiffs3=[];
     if(!o.royUnlockSeen) o.royUnlockSeen=[];
     if(!o.royBest||typeof o.royBest!=='object') o.royBest={};
     if(!o.abils) o.abils=[];
@@ -324,6 +329,7 @@
     tx.appendChild(bar); tx.appendChild(mk('div',FS(6,'#7a7092')+'margin-top:2px;',Math.min(_cur,_tot)+' / '+_tot));
     } row.appendChild(tx); if(done) row.appendChild(mk('div',FS(9,'#a9c94b'),'✓'));
     pad.appendChild(row); });
+    try{ spTrophySection(pad); }catch(e){}
     ov.appendChild(pad); (document.body||document.documentElement).appendChild(ov);
     }catch(e){} } function spFindPreset(nm){ try{ if(!nm) return null;
     for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].name===nm) return PRESETS[i];
@@ -439,8 +445,9 @@
     slowPhase=0; trapFx=null;
     shieldFx=null; strategistArm=null;
     pmDrag=false; aiPending=false;
-    aiDelay=0; shotTrail=[];
-    hitSparks=[]; turnFlash=0;
+    aiDelay=0; aiAim=null; aiShot=null; shotTrail=[];
+    hitSparks=[]; turnFlash=0; _turnBanner=null;
+    if(typeof cgStamBase!=='undefined') cgStamBase=0;
     struck=false; stickyUsed=false;
     ghosting=false; serpentPhase=0;
     bumpPending=false; tacticsChosen=true;
@@ -482,7 +489,7 @@
     }catch(e){} return true;
     } if(m==='royale'&&R.royale){ ROYALE=R.royale;
     mode='royale'; try{ royMap=(ROYALE&&ROYALE.map)||1;
-    ROYALE_ARENAS=(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1;
+    ROYALE_ARENAS=(royMap===3)?ROYALE_ARENAS_3:(royMap===2)?ROYALE_ARENAS_2:ROYALE_ARENAS_1;
     }catch(e){} if(R.royaleLevel) royaleLevel=R.royaleLevel;
     try{ if(pre) pre.style.display='none';
     }catch(e){} try{ showRoyaleMap();

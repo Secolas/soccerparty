@@ -427,7 +427,19 @@
     }catch(e){} ['blue','red'].forEach(function(t){ if(!teamKits[t]) return;
     var kit=teamKits[t].kit, rk=resolveKit(kit,effStyle(t));
     try{ formation(t).forEach(function(n){ paintNail(g,n.x,n.y,(n.goalie&&((sideAb[t]||[]).indexOf('bigkeeper')>=0))?NAIL_R+3:NAIL_R,kit,false,rk);
-    }); }catch(e){} }); g.beginPath();
+    }); }catch(e){} });
+    // THE ALLEY: the halfway line + goal boxes above cross the gutters and the bumpers are live-only, so the
+    // clash intro looked like the old pitch. Re-apply the LANE LAYOUT only (no hazards, matching every other
+    // arena's clash intro): gutter channels over the lines, and bumpers (easy/med) or open gutters (hard).
+    try{ if((typeof boardKey!=='undefined')&&boardKey==='bowling'&&(typeof bowlCfg==='function')){ var _bc=bowlCfg(), _gw=COIN_R*2+1;
+    g.fillStyle='#241708'; g.fillRect(WALL,WALL,_gw,H-WALL*2); g.fillRect(W-WALL-_gw,WALL,_gw,H-WALL*2);
+    g.fillStyle='rgba(0,0,0,0.30)'; g.fillRect(WALL+_gw,WALL,1,H-WALL*2); g.fillRect(W-WALL-_gw-1,WALL,1,H-WALL*2);
+    g.fillStyle='rgba(0,0,0,0.18)'; g.fillRect(WALL,WALL,2,H-WALL*2); g.fillRect(W-WALL-2,WALL,2,H-WALL*2);
+    if(_bc.bumpers){ for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_gw):WALL, _lit=_bs?(_bx+1):(_bx+_gw-4);
+    g.fillStyle='#2f6fa8'; g.fillRect(_bx+1,WALL,_gw-2,H-WALL*2);
+    g.fillStyle='#6fb0e6'; g.fillRect(_lit,WALL,3,H-WALL*2);
+    g.fillStyle='rgba(0,0,0,0.28)'; g.fillRect(_bs?(_bx+_gw-2):(_bx+1),WALL,1,H-WALL*2); } } } }catch(e){}
+    g.beginPath();
     g.arc(W/2,H/2,COIN_R,0,Math.PI*2);
     g.fillStyle='#fbfbf6'; g.fill();
     g.lineWidth=1; g.strokeStyle='#a9a99f';

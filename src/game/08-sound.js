@@ -218,7 +218,34 @@
     } function sfxBumperHit(){ if(muted) return;
     tone(620,0.06,'sine',0.10,1180);
     setTimeout(function(){ tone(880,0.07,'triangle',0.05,560);
-    },45); haptic(16); } function sfxAnchorHit(){ if(muted) return;
+    },45); haptic(16); } function sfxAftershock(v){ if(muted) return;
+    var s=Math.min(1,(v||4)/9);
+    tone(150,0.13,'square',0.10+s*0.05,52);
+    tone(300,0.09,'sawtooth',0.06+s*0.04,120);
+    noise(0.16+s*0.08,0.09+s*0.05);
+    setTimeout(function(){ tone(760,0.06,'triangle',0.04,1500);
+    },70); haptic([0,32,16,26]);
+    } function sfxSwish(){ if(muted) return;
+    noise(0.14,0.05); tone(880,0.08,'sine',0.05,1400);
+    setTimeout(function(){ tone(1320,0.10,'sine',0.06,1900);
+    },55); haptic(14);
+    } function sfxRimClang(v){ if(muted) return;
+    var s=Math.min(1,(v||4)/8);
+    tone(1180,0.09,'square',0.05+s*0.04,2400);
+    tone(1770,0.12,'triangle',0.04+s*0.03,2400);
+    haptic(Math.round(6+s*8));
+    } function sfxTramp(){ if(muted) return;
+    tone(220,0.05,'sine',0.09,90);
+    setTimeout(function(){ tone(440,0.09,'sine',0.07,700);
+    },40); setTimeout(function(){ tone(660,0.06,'sine',0.04,1100);
+    },90); haptic(12);
+    } function sfxPunch(v){ if(muted) return;
+    var s=Math.min(1,(v||6)/9);
+    tone(95,0.11,'square',0.11+s*0.04,45);
+    noise(0.10+s*0.05,0.10);
+    setTimeout(function(){ tone(330,0.05,'triangle',0.05,180);
+    },30); haptic([0,26,12,20]);
+    } function sfxAnchorHit(){ if(muted) return;
     tone(120,0.16,'square',0.11,60);
     noise(0.08,0.06); haptic([0,
     25,15]); } function sfxJackpot(){ if(muted) return;
@@ -303,7 +330,8 @@
     tone(200,0.10,'square',0.10,120);
     return; case 'medic': tone(720,0.14,'sine',0.08);
     setTimeout(function(){ tone(560,0.16,'sine',0.08);
-    },120); return; default: tone(760,0.08,'sine',0.06,920);
+    },120); return; case 'aftershock': return sfxAftershock(6);
+    default: tone(760,0.08,'sine',0.06,920);
     return; } } var _announced={red:{},blue:{}};
     var COUNTRY_MUSIC={ _default:{tempo:118,wave:'triangle',notes:[[0,
     1],[4,1],[7,1],[4,1]]}, Brazil:{tempo:152,wave:'square',vol:0.05,notes:[[0,
@@ -434,10 +462,21 @@
       const spotY = top ? gLine+Math.round(r.h*0.62) : gLine-Math.round(r.h*0.62);
       const arcR=12;
       // double-stroke so the lines stay solid where they cross the dark goal net
+      // The boxes are meant to be "open to goal", but strokeRect closes them, leaving an edge lying
+      // along the goal line — double-stroked, so on the hardwood it read as a white band strung
+      // behind the net. There, draw them three-sided and leave the goal line clear.
+      const _openEnd=((typeof boardKey!=='undefined')&&boardKey==='court');
+      const _box3=(bx,bw,near,depth)=>{ const y0=near+(top?depth:-depth);
+      g.beginPath(); g.moveTo(bx+0.5,near); g.lineTo(bx+0.5,y0+0.5);
+      g.lineTo(bx+bw+0.5,y0+0.5); g.lineTo(bx+bw+0.5,near); g.stroke(); };
       for(let pass=0;pass<2;pass++){
         g.strokeStyle=board.line;
+        if(_openEnd){ _box3(Math.round(r.x), Math.round(r.w), Math.round(gLine), Math.round(boxH));
+        _box3(Math.round(bl), Math.round(gbW), Math.round(gLine), Math.round(gbD));
+        } else {
         g.strokeRect(Math.round(r.x)+0.5, Math.round(boxY)+0.5, Math.round(r.w), Math.round(boxH));           // penalty box
         g.strokeRect(Math.round(bl)+0.5, Math.round(Math.min(gLine,bfar))+0.5, Math.round(gbW), Math.round(gbD)); // 6-yard box
+        }
         g.beginPath(); if(top) g.arc(cx,far,arcR,0,Math.PI); else g.arc(cx,far,arcR,Math.PI,2*Math.PI); g.stroke(); // arc
         g.fillStyle=board.line; g.fillRect(Math.round(cx)-1,Math.round(spotY)-1,2,2);                          // penalty spot
       }
@@ -538,13 +577,18 @@
     _dy=Math.sin(_it*1.7);_d=1;
     } var _pu=(GAP-_d)+0.6; _n.x+=_dx/_d*_pu;
     _n.y+=_dy/_d*_pu; var _c=clampToPitch(_n.x,_n.y);
-    _n.x=_c.x; _n.y=_c.y; } } nails.push(_n);
+    _n.x=_c.x; _n.y=_c.y; } }
+    // CRAZY GOLF: shift the piece clear of any hazard it landed on before it is committed. The formation
+    // grid knows nothing about this board, so pieces were being placed standing in the pond.
+    try{ if(!_n.goalie){ var _cgs=cgClearSpot(_n.x,_n.y,NAIL_R);
+    if(_cgs){ _n.x=_cgs.x; _n.y=_cgs.y; } } }catch(e){}
+    nails.push(_n);
     } }
     var TAC={power:1,glide:0,curve:false,precision:false,magnet:false,sticky:false,laser:false,frozen:false,portal:false,boomerang:false};
     var activeTactics=[]; var tacticsChosen=false;
     var struck=false; var stickyUsed=false;
     var sideAb={red:[],blue:[]};
-    var sbReady=false; var TACTICS=[{id:'cannon',icon:'⚡',name:'CANNON',desc:'Your flicks hit 50% harder, and break walls faster. Tap the icon to switch it on or off for a softer, precise shot.',apply:function(t){t.power=1.5;
+    var sbReady=false; var TACTICS=[{id:'cannon',icon:'⚡',name:'CANNON',desc:'Your flicks hit 20% harder, and break walls faster. Tap the icon to switch it on or off for a softer, precise shot.',apply:function(t){t.power=1.2;
     }},{id:'curve',icon:'🍌',name:'CURVEBALL',desc:'Your shot bends like a banana — nudge left or right as you aim to steer the curve. Tap the icon in a match to turn it on or off; only one shot style (Curveball or Serpent) can be on at a time.',apply:function(t){t.curve=true;
     }},{id:'glide',icon:'🧊',name:'GLIDE',desc:'The ball glides — it barely slows.',apply:function(t){t.glide=0.011;
     }},{id:'magnet',icon:'🧲',name:'MAGNET',desc:'Your keeper is magnetic — soft or slow shots bend toward it and get caught. Beat it with a hard shot aimed at the corners.',apply:function(t){t.magnet=true;
@@ -585,6 +629,7 @@
     }},{id:'trio',icon:'🔺',name:'TIKI-TAKA',desc:'Bounce a single shot off 3 of your own players and it re-launches at full speed off the third — a passing move that never dies.',apply:function(t){t.trio=true;
     }},{id:'varcheck',icon:'📺',name:'VAR CHECK',desc:'Once per match your first own goal is reviewed and ruled out. No goal!',apply:function(t){t.varcheck=true;
     }},{id:'rewind',icon:'⏪',name:'REWIND',desc:'On your turn, tap to undo your last flick — the ball goes back to where you shot and you get the flick again — but not on your final flick of the turn, since that hands the ball over. One use, and it recharges every time a goal is scored.',apply:function(t){t.rewind=true;
+    }},{id:'aftershock',icon:'💥',name:'AFTERSHOCK',desc:'Your shot carries a charge: the first opponent piece it strikes is SHOCKED until your turn ends — a keeper freezes on the spot (still a body, but it stops tracking), a defender loses its tricks, a roaming guard stops dead. Off a keeper the rebound also keeps its pace. One shock per flick, so they stack: freeze the keeper, then a defender, then punish.',apply:function(t){t.aftershock=true;
     }}]; var TACTIC_MAP={}; TACTICS.forEach(function(c){TACTIC_MAP[c.id]=c;
     }); var COUNTRY_AB={Brazil:['curve',
     'serpent','striker'],Argentina:['guided',
@@ -604,7 +649,7 @@
     'bigkeeper','cannon'],Senegal:['bumper',
     'anchor','glide']}; var COUNTRY_PITCH={Brazil:'beach',Portugal:'cobble',Argentina:'street',Netherlands:'grass',France:'street',Mexico:'clay',Spain:'grass',England:'grass',Germany:'wood',Italy:'grass',Belgium:'grass',Croatia:'stone',Japan:'neon',USA:'turf',Iceland:'ice',Senegal:'savanna'};
     var COUNTRY_STYLE={Brazil:{f5:'1-3',f7:'3-3',aggr:1.0},Netherlands:{f5:'1-3',f7:'3-3',aggr:0.92},Argentina:{f5:'1-3',f7:'3-3',aggr:0.82},Portugal:{f5:'1-3',f7:'3-3',aggr:0.75},Spain:{f5:'1-3',f7:'3-3',aggr:0.68},Mexico:{f5:'1-2-1',f7:'2-3-1',aggr:0.58},France:{f5:'1-2-1',f7:'2-3-1',aggr:0.52},Germany:{f5:'1-2-1',f7:'2-3-1',aggr:0.46},Belgium:{f5:'1-2-1',f7:'2-3-1',aggr:0.42},Japan:{f5:'1-2-1',f7:'2-3-1',aggr:0.40},England:{f5:'1-2-1',f7:'2-3-1',aggr:0.38},USA:{f5:'2-2',f7:'3-2-1',aggr:0.30},Croatia:{f5:'2-2',f7:'3-2-1',aggr:0.24},Italy:{f5:'2-2',f7:'3-2-1',aggr:0.15},Iceland:{f5:'2-2',f7:'3-2-1',aggr:0.18},Senegal:{f5:'1-3',f7:'3-3',aggr:0.78}};
-    var ICON_SRC={cannon:'assets/generated/icon-cannon.png',curve:'assets/generated/icon-curveball.png',glide:'assets/generated/icon-glide.png',magnet:'assets/generated/icon-magnet.png',sticky:'assets/generated/icon-sticky.png',sniper:'assets/generated/icon-sniper.png',bigkeeper:'assets/generated/icon-bigkeeper.png',freeze:'assets/generated/icon-freeze.png',guided:'assets/generated/icon-joystick.png',wall:'assets/generated/icon-wall.png',slowmo:'assets/generated/icon-slowmo.png',ghost:'assets/generated/icon-ghost.png',reflex:'assets/generated/icon-reflex.png',clearance:'assets/generated/icon-clearance.png',wet:'assets/generated/icon-wet.png',chip:'assets/generated/icon-chip.png',striker:'assets/generated/icon-striker.png',defender:'assets/generated/icon-defender.png',boomerang:'assets/generated/icon-boomerang.png',anchor:'assets/generated/icon-anchor.png',portal:'assets/generated/icon-portal.png',sweeper:'assets/generated/icon-sweeper.png',strategist:'assets/generated/icon-strategist.png',volley:'assets/generated/icon-volley.png',medic:'assets/generated/icon-medic.png',trap:'assets/generated/icon-trap.png',shield:'assets/generated/icon-shield.png',bumper:'assets/generated/icon-bumper.png',ricochet:'assets/generated/icon-ricochet.png',fog:'assets/generated/icon-fog.png',drunk:'assets/generated/icon-drunk.png',injury:'assets/generated/icon-injury.png',drill:'assets/generated/icon-drill.png',backspin:'assets/generated/icon-backspin.png',serpent:'assets/generated/icon-serpent.png',swap:'assets/generated/icon-swap.png',wild:'assets/generated/icon-wild.png',market:'assets/generated/icon-market.png',trio:'assets/generated/icon-trio.png',varcheck:'assets/generated/icon-varcheck.png',rewind:'assets/generated/icon-rewind.png',flick:'assets/generated/icon-flick.png',home:'assets/generated/icon-home.png'};
+    var ICON_SRC={cannon:'assets/generated/icon-cannon.png',curve:'assets/generated/icon-curveball.png',glide:'assets/generated/icon-glide.png',magnet:'assets/generated/icon-magnet.png',sticky:'assets/generated/icon-sticky.png',sniper:'assets/generated/icon-sniper.png',bigkeeper:'assets/generated/icon-bigkeeper.png',freeze:'assets/generated/icon-freeze.png',guided:'assets/generated/icon-joystick.png',wall:'assets/generated/icon-wall.png',slowmo:'assets/generated/icon-slowmo.png',ghost:'assets/generated/icon-ghost.png',reflex:'assets/generated/icon-reflex.png',clearance:'assets/generated/icon-clearance.png',wet:'assets/generated/icon-wet.png',chip:'assets/generated/icon-chip.png',striker:'assets/generated/icon-striker.png',defender:'assets/generated/icon-defender.png',boomerang:'assets/generated/icon-boomerang.png',anchor:'assets/generated/icon-anchor.png',portal:'assets/generated/icon-portal.png',sweeper:'assets/generated/icon-sweeper.png',strategist:'assets/generated/icon-strategist.png',volley:'assets/generated/icon-volley.png',medic:'assets/generated/icon-medic.png',trap:'assets/generated/icon-trap.png',shield:'assets/generated/icon-shield.png',bumper:'assets/generated/icon-bumper.png',ricochet:'assets/generated/icon-ricochet.png',fog:'assets/generated/icon-fog.png',drunk:'assets/generated/icon-drunk.png',injury:'assets/generated/icon-injury.png',drill:'assets/generated/icon-drill.png',backspin:'assets/generated/icon-backspin.png',serpent:'assets/generated/icon-serpent.png',swap:'assets/generated/icon-swap.png',wild:'assets/generated/icon-wild.png',market:'assets/generated/icon-market.png',trio:'assets/generated/icon-trio.png',varcheck:'assets/generated/icon-varcheck.png',rewind:'assets/generated/icon-rewind.png',aftershock:'assets/generated/icon-aftershock.png',flick:'assets/generated/icon-flick.png',home:'assets/generated/icon-home.png'};
     var ICON_IMG={}; Object.keys(ICON_SRC).forEach(function(id){ var o={ok:false}, im=new Image();
     im.onload=function(){ o.ok=true;
     try{ if(typeof updateScoreboards==='function') updateScoreboards();
@@ -797,7 +842,12 @@
     ov.id='ns_abinfo'; var panel=mk('div','position:relative;width:100%;max-width:300px;background:linear-gradient(#1a1330,#0e0a18);border:3px solid #4a3a5e;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6),inset 0 0 0 1px #3a3050;padding:12px 12px 14px;');
     panel.appendChild(mk('div',FS(9,'#f4e9c8')+'position:absolute;top:5px;right:7px;width:26px;height:26px;line-height:26px;text-align:center;cursor:pointer;border-radius:6px;background:#241a38;box-shadow:inset 0 0 0 1px #3a3050;','✕'));
     panel.appendChild(mk('div',FS(10,'#a9c94b')+'text-align:center;margin-bottom:9px;letter-spacing:1px;padding:0 22px;', kit+' ABILITIES'));
-    if(!arr.length){ panel.appendChild(mk('div','font-size:11px;text-align:center;color:#c7bcd8;line-height:1.6;','None yet — score a goal to win one!'));
+    if(!arr.length){ /* "score a goal to win one" is the PLAYER's prompt — the CPU never earns abilities that
+       way, so on a gauntlet final (SPORTS DAY / THE FINAL / THE TURF, ab:[]) it wrongly implied the boss
+       would gain some. The message is now side-aware: the boss says its hazards are the whole challenge. */
+    var _cpu=(typeof aiEnabled!=='undefined'&&aiEnabled&&aiEnabled[side]);
+    var _emsg=(!_cpu)?'None yet — score a goal to win one!':((typeof mode!=='undefined'&&mode==='royale')?'No boss abilities — the stadium hazards are the whole challenge.':'No abilities.');
+    panel.appendChild(mk('div','font-size:11px;text-align:center;color:#c7bcd8;line-height:1.6;',_emsg));
     } else { arr.forEach(function(id){ var t=TACTIC_MAP[id];
     if(!t) return; var row=mk('div','display:flex;align-items:center;gap:9px;margin-bottom:8px;');
     var ic=mk('div','width:40px;height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:20px;');
@@ -1036,7 +1086,8 @@
     } } }); try{ renderAiImmunityBadge();
     }catch(e){} } function staminaMul(){ if(pen&&pen.active) return 1;
     if(mode==='penalty') return 1;
-    return STAMINA[Math.min(flickCount, STAMINA.length-1)];
+    var _sc=flickCount-((typeof cgStamBase!=='undefined')?cgStamBase:0);   // CRAZY GOLF hole-out refreshes stamina from the hole, then it decreases again
+    return STAMINA[Math.min(Math.max(0,_sc), STAMINA.length-1)];
     }
     function renderAiImmunityBadge(){ if(typeof _royScoreDefer!=='undefined'&&_royScoreDefer) return;
     try{ var _bz=(typeof royAiBoss==='function'&&typeof royaleArena!=='undefined'&&royaleArena)?royAiBoss(royaleArena):null;
@@ -1119,7 +1170,7 @@
     if(!muted) sfxJackpot();
     } else { if(!muted) sfxSlotLand();
     } }catch(e){} if(done) done();
-    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4};
+    } } step(); } var AB_WEIGHT={wild:1,market:4,swap:2,cannon:2,guided:4,shield:3,magnet:5,sniper:3,bigkeeper:2,reflex:4,clearance:6,wet:2,chip:4,sweeper:4,striker:5,defender:5,boomerang:2,volley:6,freeze:4,ghost:2,wall:3,slowmo:4,portal:6,serpent:4,curve:2,ricochet:6,bumper:5,sticky:2,trap:6,anchor:6,strategist:5,medic:3,drunk:5,fog:6,glide:3,trio:5,varcheck:4,rewind:2,injury:5,drill:2,backspin:4,aftershock:3};
     function abWeight(id){ return (AB_WEIGHT[id]!=null)?AB_WEIGHT[id]:4;
     } var AB_EXCLUSIVE=[['curve',
     'serpent']], AB_TOGGLE=['curve',
@@ -1508,6 +1559,7 @@
     royGustPhase=0; roySnow=[];
     shieldUsed.red=false; shieldUsed.blue=false;
     shieldFx=null; wallHP={red:null,blue:null};
+    try{ if(typeof aftClearStun==='function') aftClearStun(); }catch(e){}
     strategistUsed={red:false,blue:false};
     strategistArm=null; pmDrag=false;
     medicUsed={red:false,blue:false};

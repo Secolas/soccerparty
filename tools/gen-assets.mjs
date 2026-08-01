@@ -187,6 +187,13 @@ const ASSETS = [
   { file: "icon-cactus.png", size: 64, prompt: `A single green saguaro cactus with two upraised arms and rows of little white spikes, chunky and bold with a thick dark outline, filled solid like a sticker, centered. NO pot, NO ground, NO background, NO shadow. ${ICON}` },
   { file: "icon-geyser.png", size: 64, prompt: `A sand geyser erupting, a tall spout of tan and pale-yellow sand and dust blasting straight upward out of a small vent, with a bold dark outline, centered. NO landscape, NO background, NO text. ${ICON}` },
   { file: "sprite-cactus.png", size: 64, prompt: `A single green saguaro cactus standing upright, front view, thick rounded trunk with two upraised arms and rows of tiny white spikes and a couple of small red flowers on top, ONE thick dark outline on the outer edge, filled solid like a sticker. NO pot, NO ground line, NO shadow, floating alone in wide empty magenta space. ${ICON}` },
+  // sprite-bat.png / sprite-glove.png are NOT generated here. They render at only
+  // 38px / 27px in-game, and a 1024px AI render downscaled that far turns to
+  // speckle (the glove came out an unreadable orange blob). They are hand-authored
+  // pixel art instead — see tools/draw-props.mjs. Do NOT add prompts for them here
+  // or `npm run gen` will overwrite the drawn art.
+
+  // Season 3 BASEBALL (THE DIAMOND) — top-down props, rotated in-engine
 
 
   // (savanna-hard bush ambush uses the top-down serp-lunge-1..4 sheet above: one snake hides in

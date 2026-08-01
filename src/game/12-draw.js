@@ -394,52 +394,632 @@
     ctx.arc(0,0,g.r,0,6.283);
     ctx.stroke(); ctx.restore();
     } }
-    // CASINO roulette wheel (spins; shows the winning number on a result)
-    function drawRouletteWheel(ctx,now){ var cx=W/2,cy=H/2,R=ROUL_R, base=(typeof rouletteAng!=='undefined')?rouletteAng:((typeof ROUL_BASE!=='undefined')?ROUL_BASE:-2.0943951);
-    var cols=['#c83a4a','#2a2a30',
-    '#d6b054','#3a6ad0','#3aa050',
-    '#c86ad0']; var flash=(typeof rouletteFlash!=='undefined')?rouletteFlash:0;
-    var seg=Math.PI/3; ctx.save();
-    ctx.translate(cx,cy); ctx.rotate(base);
-    for(var s=0;s<6;s++){ var a0=s*seg,a1=(s+1)*seg;
-    ctx.fillStyle=cols[s]; ctx.beginPath();
-    ctx.moveTo(0,0); ctx.arc(0,0,R,a0,a1);
-    ctx.closePath(); ctx.fill();
-    if(flash>0&&(s+1)===rouletteLastN){ ctx.save();
-    ctx.globalAlpha=Math.min(0.85,flash/26);
-    ctx.fillStyle='#ffffff';
-    ctx.beginPath(); ctx.moveTo(0,0);
-    ctx.arc(0,0,R,a0,a1); ctx.closePath();
-    ctx.fill(); ctx.restore();
-    } ctx.strokeStyle='rgba(20,16,10,0.6)';
+    // BASEBALL (THE DIAMOND) — base gloves (hard), stray pitched balls (med), reactive bats (easy).
+    // Uses the generated sprite-bat / sprite-glove PNGs, with a procedural draw as fallback.
+    function _drawBat(ctx,x,y,ang,lit){ var img=(typeof NS_BAT!=='undefined')?NS_BAT:null;
+    if(img&&img.complete&&img.naturalWidth){ var L=38, h=L*img.naturalHeight/img.naturalWidth;
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    ctx.translate(x,y); ctx.rotate(ang);
+    ctx.drawImage(img,-4,-h/2,L,h);
+    if(lit){ ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.35;
+    ctx.drawImage(img,-4,-h/2,L,h); }
+    ctx.restore(); return; }
+    var reach=30; ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(0,-1.4);
+    ctx.lineTo(reach*0.68,-2.6); ctx.lineTo(reach,-4.2);
+    ctx.lineTo(reach+3.2,0); ctx.lineTo(reach,4.2);
+    ctx.lineTo(reach*0.68,2.6); ctx.lineTo(0,1.4);
+    ctx.closePath(); ctx.fillStyle=lit?'#e8b45a':'#c98a3a';
+    ctx.fill(); ctx.strokeStyle='rgba(80,52,16,0.7)';
+    ctx.lineWidth=0.7; ctx.stroke();
+    ctx.fillStyle='rgba(255,236,196,0.55)'; ctx.fillRect(reach*0.55,-2.6,reach*0.3,1.3);
+    ctx.fillStyle='#9a6224'; ctx.beginPath();
+    ctx.arc(0,0,2.6,0,6.283); ctx.fill();
+    ctx.restore(); }
+    function drawBaseball(ctx,now){ if(typeof bbBats==='undefined') return;
+    var gimg=(typeof NS_GLOVE!=='undefined')?NS_GLOVE:null;
+    if(typeof bbGlovesOn!=='undefined'&&bbGlovesOn){ for(var gi=0;gi<bbGloves.length;gi++){ var gl=bbGloves[gi];
+    // The glove sits on the pitcher's mound — brown leather on brown dirt, which vanished. A chalk
+    // ring and a contact shadow separate it from the mound, and it greys out while disarmed so the
+    // "it only claims a dying ball, and only once" rule is visible instead of having to be learnt.
+    // The dim tracks `caught`, not `armed` — the glove also spawns disarmed (the kickoff ball starts
+    // inside it), and greying it out before it has done anything would read as broken.
+    ctx.save();
+    ctx.fillStyle='rgba(30,16,6,0.28)'; ctx.beginPath();
+    ctx.arc(gl.x,gl.y+2,gl.r*1.05,0,6.283); ctx.fill();
+    ctx.strokeStyle=gl.flash>0?'rgba(255,216,74,0.9)':'rgba(248,244,232,0.5)';
     ctx.lineWidth=1; ctx.beginPath();
-    ctx.moveTo(0,0); ctx.lineTo(Math.cos(a0)*R,Math.sin(a0)*R);
-    ctx.stroke(); } ctx.restore();
-    ctx.strokeStyle='rgba(255,235,170,0.9)';
-    ctx.lineWidth=2; ctx.beginPath();
-    ctx.arc(cx,cy,R,0,6.283);
-    ctx.stroke(); var _fs=Math.max(11,Math.round(R*0.5));
-    ctx.font='bold '+_fs+'px monospace';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    for(var s2=0;s2<6;s2++){ var phi=base+(s2+0.5)*seg, nx=cx+Math.cos(phi)*R*0.58, ny=cy+Math.sin(phi)*R*0.58, isW=(flash>0&&(s2+1)===rouletteLastN);
-    ctx.save(); ctx.translate(nx,ny);
-    ctx.rotate(phi+Math.PI/2);
-    ctx.fillStyle='rgba(0,0,0,0.72)';
-    ctx.fillText(''+(s2+1),0.7,0.7);
-    ctx.fillStyle=isW?'#fff8d0':'rgba(255,252,232,1)';
-    ctx.fillText(''+(s2+1),0,0);
-    ctx.restore(); } ctx.fillStyle='#3a2f18';
-    ctx.beginPath(); ctx.arc(cx,cy,R*0.13,0,6.283);
-    ctx.fill(); ctx.fillStyle='#ffe9a8';
-    ctx.beginPath(); ctx.arc(cx,cy,R*0.06,0,6.283);
-    ctx.fill(); if(flash>0){ ctx.save();
-    ctx.globalAlpha=Math.min(1,flash/22);
-    ctx.font='bold 16px monospace';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.strokeStyle='rgba(0,0,0,0.75)';
-    ctx.lineWidth=3; ctx.strokeText(''+rouletteLastN,cx,cy-R-14);
-    ctx.fillStyle='#fff'; ctx.fillText(''+rouletteLastN,cx,cy-R-14);
+    ctx.arc(gl.x,gl.y,gl.r+2.5,0,6.283); ctx.stroke();
+    ctx.restore();
+    // catch / release animation: squeeze shut around a claimed ball (catchT), then spring back open
+    // when the ball leaves (openT). Squash on the closing beat and a slight overshoot on the opening
+    // one, so the "it has your ball" / "you are free" states are felt, not just colour-coded.
+    var _sc=1, _sq=1;
+    if(gl.catchT>0){ var _ct=1-gl.catchT/14;                  // 0 -> just caught, 1 -> settled shut
+    _sc=0.80+0.34*Math.exp(-3.4*_ct)*Math.cos(7.0*_ct);       // damped pinch inward
+    _sq=1+0.16*Math.exp(-3.4*_ct)*Math.cos(7.0*_ct+1.1);
+    } else if(gl.openT>0){ var _ot=1-gl.openT/12;             // 0 -> just released, 1 -> back to rest
+    _sc=1+0.30*Math.exp(-3.0*_ot)*Math.cos(6.2*_ot);          // springs open past its resting size
+    _sq=1-0.12*Math.exp(-3.0*_ot)*Math.cos(6.2*_ot);
+    } else if(gl.caught) _sc=0.86;                             // held shut while it has the ball
+    if(gimg&&gimg.complete&&gimg.naturalWidth){ var gs=gl.r*2.1+(gl.flash>0?3:0);
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    ctx.translate(gl.x,gl.y); ctx.scale(_sc,_sc*_sq);
+    if(gl.caught&&!gl.catchT) ctx.globalAlpha=0.72;
+    if(gl.flash>0){ ctx.shadowColor='#ffd84a'; ctx.shadowBlur=6; }
+    ctx.drawImage(gimg,-gs/2,-gs/2,gs,gs);
+    ctx.restore(); continue; }
+    ctx.save(); ctx.translate(gl.x,gl.y);
+    ctx.fillStyle=gl.flash>0?'#f0c060':'#8a5a2a'; ctx.beginPath();
+    ctx.arc(0,0,gl.r+(gl.flash>0?2:0),0,6.283); ctx.fill();
+    ctx.fillStyle='#5a3410'; ctx.beginPath();
+    ctx.arc(0,gl.r*0.15,gl.r*0.55,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(40,24,8,0.7)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,0,gl.r,-0.6,3.75); ctx.stroke();
     ctx.restore(); } }
+    if(typeof bbPitchOn!=='undefined'&&bbPitchOn){ for(var p=0;p<bbPitchBalls.length;p++){ var pb=bbPitchBalls[p];
+    ctx.save(); ctx.translate(pb.x,pb.y);
+    ctx.fillStyle='#f4f0e6'; ctx.beginPath();
+    ctx.arc(0,0,pb.r,0,6.283); ctx.fill();
+    ctx.strokeStyle='#c8102e'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(-pb.r*0.4,0,pb.r*1.1,-0.9,0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(pb.r*0.4,0,pb.r*1.1,Math.PI-0.9,Math.PI+0.9); ctx.stroke();
+    ctx.restore(); } }
+    for(var i=0;i<bbBats.length;i++){ var b=bbBats[i];
+    var ang=b.swing?(b.start+b.dir*(b.swT/BB_SWING)*BB_ARC):b.rest;
+    _drawBat(ctx,b.x,b.y,ang,b.swing); } }
+    // TENNIS (CENTRE COURT) — the net across the blue court and the rackets that lob you over it
+    function drawTennis(ctx,now){ if(typeof tnRackets==='undefined') return;
+    if(!tnOn){ try{ initTennis(); }catch(e){} }
+    var ny=H/2, lit=tnNetFlash>0;
+    // the net spans the singles court only — the alleys either side stay open as a way round it
+    var nx0=tnNetX0(), nx1=tnNetX1(), nw=nx1-nx0;
+    ctx.save();
+    ctx.fillStyle='rgba(14,22,30,0.32)'; ctx.fillRect(nx0,ny-3.5,nw,7);
+    ctx.strokeStyle='rgba(228,240,252,0.34)'; ctx.lineWidth=1;
+    for(var x=nx0;x<nx1;x+=3){ ctx.beginPath(); ctx.moveTo(x+0.5,ny-3.5); ctx.lineTo(x+0.5,ny+3.5); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(nx0,ny-3.5); ctx.lineTo(nx1,ny-3.5);
+    ctx.moveTo(nx0,ny+3.5); ctx.lineTo(nx1,ny+3.5); ctx.stroke();
+    ctx.fillStyle=lit?'#ffe98a':'#f2f7ff'; ctx.fillRect(nx0,ny-4.5,nw,2);
+    ctx.fillStyle='#e8eef8'; ctx.fillRect(nx0-2,ny-7,3,14); ctx.fillRect(nx1-1,ny-7,3,14);   // posts
+    ctx.fillStyle='rgba(200,255,120,0.22)';                       // the open alleys, faintly marked
+    ctx.fillRect(WALL,ny-3.5,nx0-2-WALL,7); ctx.fillRect(nx1+2,ny-3.5,W-WALL-nx1-2,7);
+    ctx.restore();
+    for(var ri=0;ri<tnRackets.length;ri++){ var rk=tnRackets[ri], rl=rk.flash>0;
+    // green = live (lobs you over), red = dead (swats you back), amber = about to flip
+    var live=tnRackLive(rk), warn=tnRackWarn(rk);
+    var frameCol=rl?'#fff2b8':(live?(warn?'#ffc24a':'#4ad07a'):'#e0503c');
+    var stringCol=live?(warn?'rgba(255,226,160,0.85)':'rgba(190,255,214,0.8)'):'rgba(255,190,180,0.75)';
+    ctx.save(); ctx.translate(rk.x,rk.y); ctx.rotate(rk.ang);
+    ctx.fillStyle='rgba(12,20,10,0.26)'; ctx.beginPath();
+    ctx.ellipse(0,2.5,rk.r*0.78,rk.r*0.95,0,0,6.283); ctx.fill();
+    if(!live){ ctx.fillStyle='rgba(224,80,60,0.20)'; ctx.beginPath();
+    ctx.ellipse(0,-1,rk.r*0.72,rk.r*0.9,0,0,6.283); ctx.fill(); }
+    ctx.strokeStyle=frameCol; ctx.lineWidth=2.6;                  // frame
+    ctx.beginPath(); ctx.ellipse(0,-1,rk.r*0.72,rk.r*0.9,0,0,6.283); ctx.stroke();
+    ctx.strokeStyle=stringCol; ctx.lineWidth=0.8;
+    for(var g2=-2;g2<=2;g2++){ ctx.beginPath();
+    ctx.moveTo(g2*rk.r*0.26,-1-rk.r*0.86); ctx.lineTo(g2*rk.r*0.26,-1+rk.r*0.86); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-rk.r*0.68,-1+g2*rk.r*0.32); ctx.lineTo(rk.r*0.68,-1+g2*rk.r*0.32); ctx.stroke(); }
+    ctx.strokeStyle=rl?'#ffe07a':'#8a5a2a'; ctx.lineWidth=2.6;    // handle
+    ctx.lineCap='round'; ctx.beginPath();
+    ctx.moveTo(0,rk.r*0.9-1); ctx.lineTo(0,rk.r*1.7); ctx.stroke();
+    ctx.restore(); }
+    // sliding gates: a shutter running out from each net post to the wall, sealing that lane
+    for(var di=0;di<tnDoors.length;di++){ var d=tnDoors[di], sp=tnDoorSpan(d), dl=d.flash>0;
+    var lane=tnApron(), p=(d.side<0)?tnNetX0():tnNetX1();
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,0.10)';                     // the slot the shutter runs in
+    ctx.fillRect(d.side<0?p-lane:p,ny-1.5,lane,3);
+    if(sp){ var w2=sp.x1-sp.x0;
+    ctx.fillStyle='rgba(10,16,24,0.34)'; ctx.fillRect(sp.x0,ny-3.5+1.5,w2,7);
+    ctx.fillStyle=dl?'#ffe07a':'#9aa8bc';                       // shutter body
+    ctx.fillRect(sp.x0,ny-3.5,w2,7);
+    ctx.fillStyle=dl?'#fff6d0':'#c6d2e2';
+    ctx.fillRect(sp.x0,ny-3.5,w2,2);
+    ctx.fillStyle='rgba(40,52,70,0.55)';                        // hazard ribs
+    for(var rx2=sp.x0+2;rx2<sp.x1-1;rx2+=4) ctx.fillRect(rx2,ny-2,1.5,5);
+    ctx.fillStyle=dl?'#ffd84a':'#e0503c';                       // leading edge
+    var le=(d.side<0)?sp.x0:sp.x1-2; ctx.fillRect(le,ny-4.5,2,9);
+    } ctx.restore(); } }
+    /* CRAZY GOLF, drawn as PIXEL ART. The first cut used ctx.ellipse with soft alpha gradients, and next
+       to the game's chunky crowd sprites, dithered kits and hard-edged flags it read as vector clip-art
+       pasted onto the board. Everything below is built the way the rest of the art is built: integer
+       coordinates, flat colour bands, hard 1px edges, and 1x1 stipple where one material meets another
+       instead of a gradient. The shapes come from cgSpan, the same profiles the collision test reads, so
+       what you can see is exactly what you can hit.
+       _cgFill walks the shape scanline by scanline; inset shrinks it, so stacking calls at increasing
+       insets gives flat bands with hard edges. rnd is a fixed hash rather than Math.random so the stipple
+       does not crawl from frame to frame — a shimmering shoreline was the first thing that went wrong. */
+    function _cgRnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    function _cgFill(g,e,inset,col,fromT,toT){
+    var y0=Math.round(e.y-e.ry), y1=Math.round(e.y+e.ry);
+    for(var y=y0;y<=y1;y++){ var t=(y-y0)/((y1-y0)||1);
+    if(fromT!=null&&(t<fromT||t>toT)) continue;
+    var sp=cgSpan(e,y); if(!sp) continue;
+    var xa=Math.round(e.x-sp.l)+inset, xb=Math.round(e.x+sp.r)-inset;
+    if(xb>xa){ g.fillStyle=col; g.fillRect(xa,y,xb-xa,1); } } }
+    // stipple the outermost pixels of a shape into whatever is behind it, so materials meet by dithering
+    function _cgDither(g,e,col,seed,n){
+    var y0=Math.round(e.y-e.ry), y1=Math.round(e.y+e.ry);
+    for(var k=0;k<n;k++){ var y=y0+Math.floor(_cgRnd(seed+k)*(y1-y0+1));
+    var sp=cgSpan(e,y); if(!sp) continue;
+    var side=_cgRnd(seed+k+0.5)>0.5, d=Math.floor(_cgRnd(seed+k+0.25)*3);
+    g.fillStyle=col;
+    g.fillRect(side?Math.round(e.x-sp.l)-1+d:Math.round(e.x+sp.r)+1-d,y,1,1); } }
+    // a hard-edged pixel disc, for tree canopies
+    function _cgDisc(g,cx,cy,r,col){ g.fillStyle=col;
+    for(var y=Math.round(cy-r);y<=Math.round(cy+r);y++){ var dy=(y-cy)/r;
+    if(dy<-1||dy>1) continue; var hw=Math.round(r*Math.sqrt(Math.max(0,1-dy*dy)));
+    if(hw>0) g.fillRect(Math.round(cx)-hw,y,hw*2,1); } }
+    /* BASKETBALL (THE HARDWOOD) — angled backboards beside each post (med) and the HOOPS (hard).
+       This function was deleted by accident when the tennis volleyers were spliced out, so the court's
+       furniture stopped being drawn: on hard the hoops still DENIED the goal, invisibly. Both call sites
+       sit inside a try/catch, so the ReferenceError was swallowed every frame instead of surfacing. */
+    function drawCourt(ctx,now){ if(typeof bkBoards==='undefined') return;
+    // the boards and the hoops are standing furniture, so lay them out from the draw side too —
+    // stepPhysics has not run yet at kickoff, and waiting for it left the court bare until first touch
+    if(!bkOn){ try{ initCourt(); }catch(e){} }
+    for(var i=0;i<bkBoards.length;i++){ var b=bkBoards[i];
+    ctx.save(); ctx.lineCap='round';
+    ctx.strokeStyle='rgba(20,12,4,0.35)'; ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1+1.5); ctx.lineTo(b.x2,b.y2+1.5); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ffe9a8':'#f4efe0'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.strokeStyle=bkBoardFlash>0?'#ff9c3c':'#d2542c'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(b.x1,b.y1); ctx.lineTo(b.x2,b.y2); ctx.stroke();
+    ctx.restore(); }
+    if(bkBoardFlash>0) bkBoardFlash--;
+    // trampolines — a springy pad with a hooped frame, flashing on a bad hop
+    for(var t=0;t<bkTramps.length;t++){ var tr=bkTramps[t], lit=tr.flash>0;
+    ctx.save(); ctx.translate(tr.x,tr.y);
+    ctx.fillStyle='rgba(16,10,4,0.28)'; ctx.beginPath();
+    ctx.ellipse(0,2.5,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.fillStyle=lit?'#3f6fd8':'#26407e'; ctx.beginPath();
+    ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.fill();
+    ctx.strokeStyle=lit?'#9fd0ff':'#6b8fd8'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,tr.r,tr.r*0.62,0,0,6.283); ctx.stroke();
+    ctx.strokeStyle='rgba(180,215,255,0.5)'; ctx.lineWidth=1;
+    for(var s=0;s<6;s++){ var a=s/6*6.283;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*tr.r*0.45,Math.sin(a)*tr.r*0.28);
+    ctx.lineTo(Math.cos(a)*tr.r,Math.sin(a)*tr.r*0.62); ctx.stroke(); }
+    ctx.restore(); }
+    // the hoops: a basketball rim seen from above — an orange ring with a net cinching below it, and
+    // a small backboard plate on the goal side. Drawn as a ring, not a bar, so it reads as a hoop.
+    // Lane dividers: chalk lines fanning out of the goal mouth between the hoops, so each hoop owns
+    // a visible slice of the penalty area and you can see which lane you are shooting down.
+    if(bkRims.length){ ctx.save();
+    ctx.strokeStyle='rgba(255,252,242,0.52)'; ctx.lineWidth=1.2;
+    ctx.setLineDash([4,3]);
+    for(var ei=0;ei<2;ei++){ var team=ei?'blue':'red', gy=ei?H-NET_DEPTH:NET_DEPTH;
+    var row=bkRims.filter(function(r){return r.for===team;}).sort(function(a,b){return a.x-b.x;});
+    for(var di=0;di+1<row.length;di++){ var mx=(row[di].x+row[di+1].x)/2, my=(row[di].y+row[di+1].y)/2;
+    var vx=mx-W/2, vy=my-gy, vl=Math.hypot(vx,vy)||1;   // goal mouth -> gap, run a little past it
+    ctx.beginPath(); ctx.moveTo(W/2+vx/vl*9,gy+vy/vl*9);
+    ctx.lineTo(W/2+vx/vl*(vl+7),gy+vy/vl*(vl+7)); ctx.stroke(); } }
+    ctx.setLineDash([]); ctx.restore(); }
+    // Each hoop is rotated to its own facing, so the wing hoops sit diagonally. In local space the
+    // GOAL side is -Y: the net hangs that way (the ball drops through and out toward the goal) with
+    // the backboard beyond it, which is the way round a hoop actually reads.
+    for(var m=0;m<bkRims.length;m++){ var rm=bkRims[m], hot=rm.flash>0, armed=bkRimPass[rm.for];
+    var rx=rm.half, ry=rm.half*0.52;
+    ctx.save(); ctx.translate(rm.x,rm.y);
+    ctx.rotate(Math.atan2(rm.fy,rm.fx)+Math.PI/2);
+    ctx.fillStyle='rgba(24,14,4,0.30)';                                   // contact shadow
+    ctx.beginPath(); ctx.ellipse(0,2,rx,ry,0,0,6.283); ctx.fill();
+    ctx.strokeStyle='rgba(252,248,240,0.45)'; ctx.lineWidth=1;            // net, cinching goalwards
+    for(var n=0;n<7;n++){ var a=Math.PI*(n/6);
+    var sx=Math.cos(a)*rx, sy=Math.sin(a)*ry;
+    ctx.beginPath(); ctx.moveTo(sx,sy);
+    ctx.quadraticCurveTo(sx*0.55,-3.2,sx*0.20,-6.6); ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(0,-6.6,rx*0.30,ry*0.36,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=2.6;                                                     // the rim itself
+    ctx.strokeStyle=hot?'#ffe98a':(armed?'#9fe06a':'#e2622c');
+    ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,6.283); ctx.stroke();
+    ctx.lineWidth=1; ctx.strokeStyle=hot?'#fffbe0':'rgba(255,190,120,0.85)';
+    ctx.beginPath(); ctx.ellipse(0,0.6,rx*0.92,ry*0.72,0,0,Math.PI); ctx.stroke();
+    ctx.restore(); }
+    if(bkNoBasket>0){ bkNoBasket--;
+    ctx.save(); ctx.globalAlpha=Math.min(1,bkNoBasket/22);
+    ctx.fillStyle='rgba(10,6,14,0.72)'; ctx.fillRect(W/2-46,H/2-11,92,22);
+    ctx.strokeStyle='#e05a4a'; ctx.lineWidth=1.5; ctx.strokeRect(W/2-46.5,H/2-11.5,93,23);
+    ctx.fillStyle='#ff8a72'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+    ctx.fillText('NO BASKET',W/2,H/2+3); ctx.restore(); }
+    }
+    function drawMinigolf(ctx,now){ if(typeof cgWater==='undefined') return;
+    if(!cgOn){ try{ initMinigolf(); }catch(e){} }
+    // ---- SAND: a dug hollow. Dark grass collar, shaded overhanging lip at the top, lit sand below.
+    for(var si=0;si<cgSand.length;si++){ var b=cgSand[si];
+    _cgFill(ctx,b,-2,'#15501f');                      // collar of scuffed grass, dug through
+    _cgFill(ctx,b,-1,'#3b2f14');                      // the lip's shadow ring
+    _cgFill(ctx,b,0,'#a8813f');                       // sand, shaded
+    _cgFill(ctx,b,1,'#c79f57',0.18,1);
+    _cgFill(ctx,b,2,'#dcbb79',0.34,1);                // lit from the near side
+    _cgFill(ctx,b,4,'#eed9a4',0.62,0.94);
+    _cgDither(ctx,b,'#dcbb79',si*7.1,60);
+    _cgDither(ctx,b,'#2a6b34',si*7.1+3.3,34);
+    ctx.fillStyle='rgba(120,88,40,0.55)';             // rake marks: short dashes, never long stripes
+    for(var rk=0;rk<34;rk++){ var ry=Math.round(b.y-b.ry+_cgRnd(si*3+rk)*b.ry*2);
+    var sp=cgSpan(b,ry); if(!sp) continue;
+    var rx=Math.round(b.x-sp.l+3+_cgRnd(si*3+rk+0.7)*(sp.l+sp.r-6));
+    ctx.fillRect(rx,ry,2,1); }
+    ctx.fillStyle='#f6ead0';                          // grains catching the light
+    for(var gr=0;gr<18;gr++){ var gy=Math.round(b.y+(_cgRnd(si*5+gr)-0.35)*b.ry*1.4);
+    var s2=cgSpan(b,gy); if(!s2) continue;
+    ctx.fillRect(Math.round(b.x-s2.l+4+_cgRnd(si*5+gr+0.4)*(s2.l+s2.r-8)),gy,1,1); } }
+    // ---- WATER: still, flat blue. No red hazard stakes (they read as a loud dotted ring and flashed
+    // yellow on a drown, which the player disliked) and no moving ripple lines (they looked like crawling
+    // scanlines). Just layered blue bands, a hard shoreline, and a single STATIC sheen highlight — the
+    // pond only comes alive when the ball hits it, via the splash below.
+    for(var wi=0;wi<cgWater.length;wi++){ var p=cgWater[wi];
+    _cgFill(ctx,p,-1,'#2a6b34');                      // damp grass at the margin
+    _cgFill(ctx,p,0,'#123f63');                       // shoreline
+    _cgFill(ctx,p,1,'#1c5f96');
+    _cgFill(ctx,p,3,'#2a7cbe',0.1,0.96);
+    _cgFill(ctx,p,6,'#3d95d6',0.2,0.7);               // shallow water catching the sky
+    _cgDither(ctx,p,'#1c5f96',wi*11.3,80);
+    _cgDither(ctx,p,'#2a6b34',wi*11.3+2.7,60);
+    // ANIMATED SURFACE — restored, but as gentle TWINKLING GLINTS rather than the drifting horizontal
+    // lines that read as crawling scanlines. Each glint sits at a fixed spot (hashed off its index so it
+    // never wanders) and fades in and out on its own slow phase, so the pond shimmers in place. Plus a
+    // couple of short highlight dashes that ride a slow sine so there is a little surface motion.
+    for(var gl=0;gl<12;gl++){ var ga=0.5+0.5*Math.sin((now||0)/380+gl*1.7);   // per-glint twinkle
+    if(ga<0.25) continue;
+    var gy2=Math.round(p.y+(_cgRnd(wi*13+gl)-0.5)*p.ry*1.7);
+    var gs=cgSpan(p,gy2); if(!gs) continue;
+    var gx2=Math.round(p.x-gs.l+3+_cgRnd(wi*13+gl+0.5)*(gs.l+gs.r-6));
+    ctx.fillStyle='rgba(226,246,255,'+(0.55*ga)+')';
+    ctx.fillRect(gx2,gy2,1,1); if(ga>0.7) ctx.fillRect(gx2+1,gy2,1,1); }
+    ctx.fillStyle='rgba(210,238,255,0.4)';            // two drifting highlight dashes, gentle sine
+    for(var hd=0;hd<2;hd++){ var hy=Math.round(p.y+(hd?-1:1)*p.ry*0.3);
+    var hs=cgSpan(p,hy); if(!hs) continue;
+    var hw=Math.round((hs.l+hs.r)*0.3), hx=Math.round(p.x-hw/2+Math.sin((now||0)/1100+hd*2.1)*(hs.l+hs.r)*0.12);
+    ctx.fillRect(hx,hy,hw,1); } }
+    // ---- CUPS: white collar, black hole, a golf-yellow pin. No ring — the dashed gold ring round each
+    // cup read as scattered dots in the corners; the pin already marks the hole, and every cup is
+    // sinkable now so there is nothing a ring needs to say.
+    for(var ci=0;ci<cgCups.length;ci++){ var cu=cgCups[ci], cf=(cu.flash>0)?cu.flash/34:0;
+    var cx=Math.round(cu.x), cy=Math.round(cu.y);
+    _cgDisc(ctx,cx,cy,CG_CUP,'#e8f4dc');              // the cut collar of the hole
+    _cgDisc(ctx,cx,cy,CG_CUP-1.5,cf?'#ffd35a':'#0d1a0a');
+    _cgDisc(ctx,cx,cy-1,CG_CUP-3.5,cf?'#fff0a8':'#000000');
+    var sway=Math.round(Math.sin((now||0)/430+ci)*1.5);
+    /* The pennant is GOLF YELLOW on every cup. Colouring it by team made the course look like it was
+       flying two nations' flags, and it was redundant anyway: which cups are yours is already said by the
+       dashed ring, which only ever appears on the two you can actually use. */
+    ctx.fillStyle='rgba(8,32,14,0.34)'; ctx.fillRect(cx+1,cy-1,10,2);
+    ctx.fillStyle='#8f9aa4'; ctx.fillRect(cx-1,cy-22,2,22);          // pin
+    ctx.fillStyle='#e8eef4'; ctx.fillRect(cx-1,cy-22,1,22);
+    for(var fy=0;fy<7;fy++){ var fw=9-Math.abs(fy-3)*2;              // a pennant, in flat pixel rows
+    ctx.fillStyle=(fy<3)?'#ffd94a':'#e0a520';
+    ctx.fillRect(cx+1+sway*(fy>3?1:0),cy-22+fy,fw,1); }
+    ctx.fillStyle='#fff3b0'; ctx.fillRect(cx+1,cy-22,4,1);           // lit top edge
+    }   /* NB: no ctx.restore() here — this loop opens no ctx.save(). It used to, and that stray restore
+           ran once per cup, popping the pitch's own translate(OX,OY) off the stack. With cups present
+           everything drawn after them rendered in a corrupted transform — THE reason ?hz=all broke while
+           trees+water+sand (no cups, loop never runs) was fine. */
+    // SPLASH: a sprinkle of droplets thrown up where the ball entered the water, played at the stored
+    // entry point (cgSplashX/Y) so it stays put even though the turn moves the ball on. An expanding
+    // ring of pixels plus a dozen droplets that arc out and fall back, each seeded off a fixed hash so
+    // the pattern is stable per splash rather than random noise.
+    if(cgSplash>0&&typeof cgSplashX!=='undefined'){ var sa=cgSplash/26, age=1-sa;   // 0 at impact -> 1 done
+    var ex=cgSplashX, ey=cgSplashY;
+    ctx.fillStyle='rgba(226,246,255,'+(0.7*sa)+')';                 // the expanding contact ring
+    var sr=Math.round(3+13*age);
+    for(var sp2=0;sp2<10;sp2++){ var a3=sp2/10*Math.PI*2;
+    ctx.fillRect(Math.round(ex+Math.cos(a3)*sr),Math.round(ey+Math.sin(a3)*sr*0.7),1,1); }
+    for(var dj=0;dj<12;dj++){                                        // droplets: out, up, then fall
+    var ang=(dj/12)*Math.PI*2+_cgRnd(dj)*0.4, dist=(6+_cgRnd(dj+0.3)*10)*age;
+    var dx2=ex+Math.cos(ang)*dist, dy2=ey+Math.sin(ang)*dist*0.7 - Math.sin(age*Math.PI)*(5+_cgRnd(dj+0.6)*6);
+    ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?'rgba(210,240,255,'+(0.9*sa)+')':'rgba(150,205,240,'+(0.9*sa)+')';
+    ctx.fillRect(Math.round(dx2),Math.round(dy2),1,1);
+    if(age<0.5) ctx.fillRect(Math.round(dx2),Math.round(dy2)+1,1,1); } } }
+    /* The trees are drawn in their OWN pass, from the same call site as THE THICKET's bushes — which runs
+       AFTER the ball. So a ball that finishes in a tree disappears INTO the foliage instead of sitting on
+       top of it, and the canopy goes part-transparent while the ball is inside so you can still see where
+       it went. That is Season 1's behaviour and it is the right one: the tree is taller than the ball. */
+    function drawMinigolfTrees(ctx,now){ if(typeof cgTrees==='undefined'||!cgOn) return;
+    // The SAME bush sprites THE THICKET uses (assets/generated/sprite-bush-*.png). Reusing
+    // the art the game already ships beats a second hand-rolled style, and it is already pixel art at the
+    // right scale. A dark disc goes down first so the canopy keeps a hard rim against bright turf — the
+    // thing that kills your ball has to be the most legible object on the course. The procedural canopy
+    // stays as the fallback for the frames before the image has loaded, same as the ballpark props.
+    for(var ti=0;ti<cgTrees.length;ti++){ var t=cgTrees[ti], tl=(t.flash>0), r=t.r;
+    var inBush=(typeof coin!=='undefined'&&coin)&&Math.hypot(coin.x-t.x,coin.y-t.y)<r+COIN_R+1;
+    ctx.save(); ctx.globalAlpha=inBush?0.62:1;
+    var tx=Math.round(t.x), ty=Math.round(t.y);
+    ctx.fillStyle='rgba(6,26,10,0.42)';
+    ctx.fillRect(tx-r+1,ty+Math.round(r*0.55),r*2-2,3);
+    var _tim=(typeof NS_BUSH!=='undefined'&&NS_BUSH.length)?NS_BUSH[tl?(Math.floor((now||0)/60)%NS_BUSH.length):1]:null;
+    if(_tim&&_tim.complete&&_tim.naturalWidth){ var tz=r*2.4;
+    _cgDisc(ctx,tx,ty-1,r+1.5,'#06180a');
+    ctx.drawImage(_tim,Math.round(tx-tz/2),Math.round(ty-tz*0.62),tz,tz);
+    if(tl){ ctx.fillStyle='rgba(255,246,190,0.3)';
+    ctx.fillRect(Math.round(tx-tz/2),Math.round(ty-tz*0.62),Math.round(tz),Math.round(tz)); }
+    } else {
+    ctx.fillStyle='#4a3116'; ctx.fillRect(tx-2,ty-1,4,Math.round(r*0.95));
+    _cgDisc(ctx,tx,ty-2,r+1,'#06180a');
+    _cgDisc(ctx,tx,ty-2,r,tl?'#cbe86a':'#17491d');
+    _cgDisc(ctx,tx-r*0.28,ty-2-r*0.3,r*0.66,tl?'#e2f79c':'#1f6127');
+    _cgDisc(ctx,tx+r*0.34,ty-2+r*0.1,r*0.5,tl?'#e2f79c':'#1f6127'); }     ctx.restore(); } }
+
+    /* The water drown, drawn in place of the ball while cgDrown is active. Two unhurried phases:
+       SINK — the ball settles under the surface at the point it went in (shrinks, goes waterlogged blue-
+       grey, ripples spread, a few bubbles rise); DROP — it is dropped back onto the grass shore, falling
+       from a height with a shadow that tightens as it lands, a small bounce, and a flashing ring so you can
+       see where it is ready for the next flick. Timings live in CG_DROWN_SINK / CG_DROWN_DROP. */
+    function drawCgDrown(ctx,now){ if(typeof cgDrown==='undefined'||!cgDrown) return;
+    var t=cgDrown.t, SINK=CG_DROWN_SINK, DROP=CG_DROWN_DROP;
+    if(t<SINK){ var p=t/SINK;
+    ctx.save();
+    for(var r=0;r<3;r++){ var rp=p*1.2-r*0.28; if(rp<0||rp>1) continue;   // expanding surface ripples
+    var rr=3+rp*15; ctx.strokeStyle='rgba(214,240,255,'+(0.5*(1-rp))+')'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(cgDrown.sx,cgDrown.sy,rr,rr*0.6,0,0,6.283); ctx.stroke(); }
+    var rad=COIN_R*(1-p*0.65);                                            // the ball sinking + shrinking
+    if(rad>0.4){ ctx.globalAlpha=Math.max(0,1-p*0.55); ctx.fillStyle='#7fa6c2';
+    ctx.beginPath(); ctx.ellipse(cgDrown.sx,cgDrown.sy+p*3,rad,rad*0.72,0,0,6.283); ctx.fill(); }
+    ctx.globalAlpha=0.75; ctx.fillStyle='rgba(226,246,255,0.9)';          // bubbles rising
+    for(var b=0;b<4;b++){ var bp=(p*1.4+b*0.25)%1; ctx.fillRect(Math.round(cgDrown.sx+Math.sin(b*2.1+p*6)*3),Math.round(cgDrown.sy-2-bp*9),1,1); }
+    ctx.restore();
+    } else { var d=(t-SINK)/DROP, H0=COIN_R*5.2, hgt;
+    if(d<0.8){ var e=d/0.8; hgt=H0*(1-e*e); }                             // fall, accelerating, to grass
+    else { hgt=Math.sin(((d-0.8)/0.2)*Math.PI)*3; }                       // one small bounce on landing
+    var eg=Math.min(1,d/0.8);
+    ctx.save(); ctx.globalAlpha=0.2+0.12*eg; ctx.fillStyle='#000';        // shadow tightening as it lands
+    ctx.beginPath(); ctx.ellipse(cgDrown.gx,cgDrown.gy,COIN_R*(0.45+0.55*eg),COIN_R*(0.24+0.28*eg),0,0,6.283); ctx.fill();
+    ctx.restore();
+    drawBall(cgDrown.gx,cgDrown.gy-hgt);
+    if(d>0.65){ ctx.save(); ctx.globalAlpha=(1-(d-0.65)/0.35)*((Math.floor(t/3)%2)?0.7:0.25);   // ready-to-play flash
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(cgDrown.gx,cgDrown.gy,COIN_R+2.5,0,6.283); ctx.stroke(); ctx.restore(); } } }
+
+    /* The turn-change banner: a short "who's up" strip that slides in from the new attacker's side when
+       possession rotates, so a CPU turn (which then winds up and flicks) doesn't begin out of nowhere. It
+       sits toward the end that side is attacking. Advanced by updateFX; cleared when its timer runs out. */
+    function drawTurnBanner(ctx,now){ if(typeof _turnBanner==='undefined'||!_turnBanner) return;
+    var tb=_turnBanner, p=tb.t/tb.dur, ax;
+    if(p<0.22){ var e=p/0.22; ax=1-(1-e)*(1-e); } else if(p>0.72){ ax=1-((p-0.72)/0.28); } else ax=1;
+    if(ax<=0.02) return;
+    var tc=primary(tb.team), cy=(tb.team==='red')?Math.round(H*0.26):Math.round(H*0.74);
+    var bw=W-WALL*3, bh=20, cx=W/2, slide=(1-ax)*44*(tb.team==='red'?1:-1);
+    ctx.save(); ctx.globalAlpha=Math.min(1,ax); ctx.translate(slide,0);
+    ctx.fillStyle='rgba(14,9,5,0.82)'; ctx.fillRect(cx-bw/2,cy-bh/2,bw,bh);
+    ctx.fillStyle=tc; ctx.fillRect(cx-bw/2,cy-bh/2,bw,2); ctx.fillRect(cx-bw/2,cy+bh/2-2,bw,2);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font="7px 'Press Start 2P', monospace";
+    var nm=(teamKits[tb.team]&&teamKits[tb.team].abbr)?teamKits[tb.team].abbr.toUpperCase():String(tb.team).toUpperCase();
+    var label=(tb.cpu?'CPU · ':'')+nm+' TO PLAY';
+    ctx.lineWidth=3; ctx.strokeStyle='#0e0905'; ctx.strokeText(label,cx,cy+1);
+    ctx.fillStyle='#f4e9c8'; ctx.fillText(label,cx,cy); ctx.restore(); }
+
+    /* THE END ZONE: the roamers are the real nails (drawn normally); the only extra furniture is the HARD
+       breathing goalposts, whose gap opens and closes. gridBreathGap() returns 0 off hard, so nothing draws. */
+    function drawGridiron(ctx,now){ if(typeof gridArena!=='function'||!gridArena()) return;
+    if(typeof gridBreathGap!=='function'||gridBreathGap(0)<=0) return;
+    for(var e=0;e<2;e++){ var gap=gridBreathGap(e), lineY=e?(H-NET_DEPTH):NET_DEPTH, ph=13, y0=e?(lineY-ph):lineY;
+    for(var s=-1;s<=1;s+=2){ var px=Math.round(W/2+s*gap);
+    ctx.fillStyle='#f2c53a'; ctx.fillRect(px-1,Math.round(y0),2,ph);
+    ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.arc(px,e?(lineY-1):(lineY+1),2.6,0,6.283); ctx.fill(); } } }
+
+    /* THE ALLEY: the pin racks in front of each goal, plus (med+) the RAKE GATE — a metal bar spanning the
+       mouth that rises (open, translucent) and falls (down, solid — blocks). Standing pins are white with a
+       red neck stripe; a knocked pin fades as it scatters (drift handled in bowlingTick). */
+    function drawBowling(ctx,now){ if(typeof bowlArena!=='function'||!bowlArena()) return;
+    if(typeof bowlPins==='undefined'||!bowlPins) return;
+    var c=(typeof bowlCfg==='function')?bowlCfg():null;
+    // Re-paint the gutter channels OVER the pitch markings so the white lines don't cross the gutters — the
+    // lane lines belong to the lane, not the gutter. This is BOWLING-BOARD art: when SPORTS DAY borrows just the
+    // rake gate there are no channels to restore, and painting them would drop dark lanes onto its infield.
+    var _onLane=(boardKey==='bowling');
+    if(_onLane){ var _GUT='#241708', _GW=COIN_R*2+1;
+    ctx.fillStyle=_GUT; ctx.fillRect(WALL,WALL,_GW,H-WALL*2); ctx.fillRect(W-WALL-_GW,WALL,_GW,H-WALL*2);
+    ctx.fillStyle='rgba(0,0,0,0.30)'; ctx.fillRect(WALL+_GW,WALL,1,H-WALL*2); ctx.fillRect(W-WALL-_GW-1,WALL,1,H-WALL*2);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(WALL,WALL,2,H-WALL*2); ctx.fillRect(W-WALL-2,WALL,2,H-WALL*2); }
+    // BUMPERS (easy/med): a raised padded rail fills each gutter so the ball bounces back instead of dropping
+    // in. Off on hard — the bare dark channel above is the open gutter that eats the ball.
+    if(c&&c.bumpers){ var _GW2=COIN_R*2+1;
+    for(var _bs=0;_bs<2;_bs++){ var _bx=_bs?(W-WALL-_GW2):WALL, _lit=_bs?(_bx+1):(_bx+_GW2-4);
+    ctx.fillStyle='#2f6fa8'; ctx.fillRect(_bx+1,WALL,_GW-2,H-WALL*2);          // padded bumper body
+    ctx.fillStyle='#6fb0e6'; ctx.fillRect(_lit,WALL,3,H-WALL*2);              // lane-facing highlight
+    ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(_bs?(_bx+_GW-2):(_bx+1),WALL,1,H-WALL*2); } }   // wall-side shadow
+    // THE RAKE GATE (med+) — drawn at its risen/fallen y; solid + opaque when down (blocking), lifted +
+    // translucent when up (open), tines pointing toward that mouth's pins.
+    if(c&&c.rake&&typeof bowlRakeBarY==='function'){ var _cl=bowlRakeClosed(), _down=_cl>c.rakeCloseTh, _bxL=Math.round(W/2-c.rakeW/2), _bw=Math.round(c.rakeW);
+    for(var _re=0;_re<2;_re++){ var _by=Math.round(bowlRakeBarY(_re,_cl));
+    ctx.globalAlpha=_down?1:0.45;
+    ctx.fillStyle=_down?'#2b2f36':'#4a525b'; ctx.fillRect(_bxL,_by-2,_bw,4);   // bar body
+    ctx.fillStyle='#9aa3ad'; ctx.fillRect(_bxL,_by-2,_bw,1);   // top highlight
+    var _ty=_re?(_by+2):(_by-5);   // tines toward the pins/goal
+    ctx.fillStyle=_down?'#6b7280':'#79818b'; for(var _tx=_bxL+3; _tx<_bxL+_bw-3; _tx+=6){ ctx.fillRect(_tx,_ty,2,3); }
+    ctx.globalAlpha=1; } }
+    for(var i=0;i<bowlPins.length;i++){ var pn=bowlPins[i];
+    if(pn.down){ if(pn.t>40) continue; ctx.globalAlpha=Math.max(0,1-pn.t/40); }
+    ctx.fillStyle='#f6efe0'; ctx.beginPath(); ctx.arc(pn.x,pn.y,pn.r,0,6.283); ctx.fill();   // white pin body
+    ctx.fillStyle='#d0402e'; ctx.fillRect(Math.round(pn.x-pn.r),Math.round(pn.y-1),Math.round(pn.r*2),1);   // red neck stripe
+    ctx.globalAlpha=1; } }
+    /* THE GRAND PRIX: gravel run-off (with dust kick-up) + oil slicks (splash + a smear trail the ball drags)
+       + springy tyre stacks on the penalty-box corners (recoil on hit) + the start-lights gantries, which sit
+       in the FRAME beside each net so they read at a glance. Drawn with the ground FX (under the nails). */
+    function drawRaceway(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
+    var c=(typeof rcCfg==='function')?rcCfg():null;
+    // GRAVEL run-off — tan speckled corner patches (deterministic dither, no shimmer)
+    if(typeof rcGravels!=='undefined'){ for(var gi=0;gi<rcGravels.length;gi++){ var gv=rcGravels[gi];
+    ctx.fillStyle='rgba(150,130,90,0.5)'; ctx.fillRect(gv.x,gv.y,gv.w,gv.h);
+    ctx.fillStyle='rgba(110,95,65,0.55)';
+    for(var yy=gv.y; yy<gv.y+gv.h; yy+=2){ for(var xx=gv.x+((yy&2)?1:0); xx<gv.x+gv.w; xx+=3){ ctx.fillRect(xx,yy,1,1); } } } }
+    // OIL SMEAR trail — pixel blobs of oil the ball has dragged onto the track. They stay WET (dark, with a
+    // blue sheen pixel) and DRY OFF over RC_WET_DRY frames: the sheen goes first, then the stain fades to a
+    // faint dry mark. Drawn on the integer grid — 2x2/1x1 pixels, no arcs — to match the board's art.
+    if(typeof rcSmear!=='undefined'){ for(var si=0;si<rcSmear.length;si++){ var sm=rcSmear[si], sa=sm.life/sm.max;
+    var wet=sa>0.35, sx=Math.round(sm.x), sy=Math.round(sm.y), sh=(sm.seed||si);
+    ctx.fillStyle='rgba(14,10,20,'+(0.55*sa).toFixed(3)+')';
+    ctx.fillRect(sx-1,sy-1,2,2);
+    if(_cgRnd(sh)>0.4) ctx.fillRect(sx+1,sy-1+((_cgRnd(sh+0.5)>0.5)?1:0),1,1);
+    if(_cgRnd(sh+0.9)>0.5) ctx.fillRect(sx-2,sy+((_cgRnd(sh+1.4)>0.5)?0:1),1,1);
+    if(wet){ ctx.fillStyle='rgba(96,132,196,'+(0.30*sa).toFixed(3)+')'; ctx.fillRect(sx-1,sy-1,1,1); } } }
+    // GRAVEL RUTS — the gouge the ball ploughs through the stones, fading as they settle back
+    if(typeof rcRuts!=='undefined'){ for(var ri=0;ri<rcRuts.length;ri++){ var ru=rcRuts[ri], ra=ru.life/ru.max;
+    ctx.save(); ctx.translate(ru.x,ru.y); ctx.rotate(ru.a);
+    ctx.fillStyle='rgba(74,62,40,'+(0.5*ra).toFixed(3)+')'; ctx.fillRect(-3,-2,6,4);
+    ctx.fillStyle='rgba(198,180,134,'+(0.35*ra).toFixed(3)+')'; ctx.fillRect(-3,-3,6,1); ctx.fillRect(-3,2,6,1);
+    ctx.restore(); } }
+    // GRAVEL DUST — a rising dust cloud plus the stones it spits out behind the ball
+    if(typeof rcDust!=='undefined'){ for(var di=0;di<rcDust.length;di++){ var du=rcDust[di], da=du.life/du.max;
+    if(du.puff){ ctx.fillStyle='rgba(196,178,132,'+(0.30*da).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(du.x,du.y,du.r,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(222,208,168,'+(0.20*da).toFixed(3)+')';
+    ctx.beginPath(); ctx.arc(du.x-du.r*0.3,du.y-du.r*0.3,du.r*0.55,0,6.283); ctx.fill();
+    } else { ctx.fillStyle=(di&1)?('rgba(206,188,142,'+(0.9*da).toFixed(3)+')'):('rgba(132,114,78,'+(0.9*da).toFixed(3)+')');
+    var _dz=(du.life>du.max*0.6)?2:1; ctx.fillRect(Math.round(du.x),Math.round(du.y),_dz,_dz); } } }
+    // OIL slicks — dark glossy puddles with a cool sheen; a crossing throws a proper splash (expanding ring +
+    // droplets that arc out and fall back, seeded off a fixed hash so the pattern is stable per splash).
+    if(typeof rcOils!=='undefined'){ for(var i=0;i<rcOils.length;i++){ var ol=rcOils[i];
+    // the slick itself: a PIXEL SPRITE (lobed blob built once at init, see rcOilShape) laid down 1x1 at a time
+    // on the integer grid — flat bands + a dithered rim, no anti-aliased arc.
+    var _ox=Math.round(ol.x), _oy=Math.round(ol.y), _px=ol.px;
+    if(_px){ for(var q=0;q<_px.length;q++){ var pp=_px[q];
+    ctx.fillStyle=(pp[2]===2)?'rgba(18,14,26,0.60)':((pp[2]===1)?'rgba(96,132,196,0.34)':'rgba(10,8,16,0.80)');
+    ctx.fillRect(_ox+pp[0],_oy+pp[1],1,1); }
+    ctx.fillStyle='rgba(150,186,240,0.30)'; ctx.fillRect(_ox-3,_oy-3,1,1); ctx.fillRect(_ox-2,_oy-4,1,1); }
+    // SPLASH: a stepped pixel ring (integer radius, so it pops frame to frame like sprite animation) plus
+    // droplets that arc out and fall back, all seeded off a fixed hash so the burst is stable per splash.
+    if(ol.sp>0){ var oa=ol.sp/26, age=1-oa, ex=Math.round(ol.hx==null?ol.x:ol.hx), ey=Math.round(ol.hy==null?ol.y:ol.hy);
+    var orr=3+Math.round(age*11), _big=(age<0.35);
+    ctx.fillStyle='rgba(120,150,215,'+(0.8*oa).toFixed(3)+')';
+    for(var k=0;k<16;k++){ var a3=k/16*Math.PI*2, rx=Math.round(ex+Math.cos(a3)*orr), ry=Math.round(ey+Math.sin(a3)*orr*0.72);
+    if(_cgRnd(k+0.2)>0.25) ctx.fillRect(rx,ry,_big?2:1,_big?2:1); }
+    for(var dj=0;dj<12;dj++){                                                    // droplets: out, up, fall back
+    var ang=(dj/12)*Math.PI*2+_cgRnd(dj)*0.4, dist=(5+_cgRnd(dj+0.3)*9)*age;
+    var dx2=Math.round(ex+Math.cos(ang)*dist), dy2=Math.round(ey+Math.sin(ang)*dist*0.7-Math.sin(age*Math.PI)*(4+_cgRnd(dj+0.6)*5));
+    ctx.fillStyle=(_cgRnd(dj+0.9)>0.5)?('rgba(30,24,40,'+(0.9*oa).toFixed(3)+')'):('rgba(110,140,205,'+(0.9*oa).toFixed(3)+')');
+    ctx.fillRect(dx2,dy2,1,1);
+    if(age<0.5) ctx.fillRect(dx2,dy2+1,1,1); } } } }
+    // START-LIGHTS gantries — mounted in the FRAME either side of each net (the most visible spot on the board).
+    // Reds fill 1..5, hold, then all OUT = GREEN: release then for full stamina, miss it and the flick is halved.
+    if(c&&c.lights){ var _on=RC_LIGHT_BUILD+RC_LIGHT_HOLD, _green=(rcLightT>=_on&&rcLightT<_on+c.lightGreen),
+    _lit=(rcLightT<RC_LIGHT_BUILD)?Math.min(5,Math.floor(rcLightT/(RC_LIGHT_BUILD/5))+1):((rcLightT<_on)?5:0),
+    _gL=Math.round((W-GOAL_W)/2), _fy=[Math.round(WALL/2), H-Math.round(WALL/2)],
+    _fx=[Math.round((WALL+_gL)/2), W-Math.round((WALL+_gL)/2)], _fl=(typeof rcLightFlash!=='undefined')?rcLightFlash:0;
+    for(var _yi=0;_yi<2;_yi++){ for(var _xi=0;_xi<2;_xi++){ var _cx=_fx[_xi], _cy=_fy[_yi];
+    ctx.fillStyle='#0a0b0e'; ctx.fillRect(_cx-15,_cy-4,30,8);                    // gantry housing
+    ctx.fillStyle='#3a3d42'; ctx.fillRect(_cx-15,_cy-4,30,1);
+    // fill order mirrors on the bottom row so the four gantries are 180deg-rotationally symmetric, the same
+    // convention every Season 3 arena uses — light k at (x,y) has its twin at (W-x, H-y).
+    for(var _k=0;_k<5;_k++){ var _lx=_cx+((_yi?1:-1)*(12-_k*6));
+    if(_green){ var _ga=0.45+(_fl>0?0.35*(_fl/16):0);
+    ctx.fillStyle='rgba(90,255,130,'+Math.min(0.9,_ga).toFixed(3)+')'; ctx.beginPath(); ctx.arc(_lx,_cy,4,0,6.283); ctx.fill(); }
+    ctx.fillStyle=_green?'#4bff72':((_k<_lit)?'#ff2a1a':'#3a1512');
+    ctx.beginPath(); ctx.arc(_lx,_cy,2.2,0,6.283); ctx.fill();
+    if(_green||_k<_lit){ ctx.fillStyle=_green?'rgba(220,255,225,0.85)':'rgba(255,190,180,0.7)'; ctx.fillRect(Math.round(_lx)-1,Math.round(_cy)-2,1,1); } } } } }
+    }
+    /* THE GRAND PRIX tyre stacks sit ON the penalty-box corners, so they must be drawn AFTER the pitch markings
+       (drawEndMarks) — with the ground FX the white box line was painted straight across each stack. Same late
+       pass the bowling pins use.
+
+       Drawn as a PIXEL SPRITE (rcTyreShape: dithered outer wall, a tread band of 8 alternating notches, a flat
+       inner carcass, a hub hole that shows the tarmac through it, and a top-left highlight) —
+       no anti-aliased arcs, matching the board's art. On a hit the stack RECOILS along the impact normal and
+       WOBBLES back with a damped bounce, SQUASHES along that normal (never stretched, so the sprite can't tear
+       gaps), flashes a bright rim, and spits a few scuff pixels off the contact point. */
+    function drawRacewayTyres(ctx,now){ if(typeof rcArena!=='function'||!rcArena()) return;
+    if(typeof rcTyres==='undefined'||!rcTyres) return;
+    var px=(typeof rcTyreShape==='function')?rcTyreShape():null; if(!px) return;
+    for(var t=0;t<rcTyres.length;t++){ var ty=rcTyres[t], k=(ty.hit>0)?(ty.hit/18):0, pw=(ty.pow==null?1:ty.pow);
+    // damped wobble: two bounces that decay as the timer runs out
+    var wob=Math.sin(k*Math.PI*2.2)*k*(2.6+2.4*pw);
+    var ox=(ty.nx||0)*wob, oy=(ty.ny||0)*wob;
+    var sq=1-0.30*k*pw, ax=Math.abs(ty.nx||0), ay=Math.abs(ty.ny||0);
+    var sx=1-(1-sq)*ax, sy=1-(1-sq)*ay;                     // squash along the impact normal only
+    var X=Math.round(ty.x+ox), Y=Math.round(ty.y+oy);
+    if(k>0){ ctx.fillStyle='rgba(255,222,130,'+(k*0.55).toFixed(3)+')';   // rim flash, as pixels on the outline
+    for(var f=0;f<14;f++){ var fa=f/14*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa)*(RC_TYRE_R+1)*sx),Math.round(Y+Math.sin(fa)*(RC_TYRE_R+1)*sy),1,1); } }
+    for(var q=0;q<px.length;q++){ var pp=px[q], sh=pp[2];
+    ctx.fillStyle=(sh===3)?'#2c2e33':((sh===2)?'#08080b':((sh===1)?'#3b3c45':((sh===5)?'#2a2b33':((sh===4)?'#585a66':'#141519'))));
+    ctx.fillRect(X+Math.round(pp[0]*sx),Y+Math.round(pp[1]*sy),1,1); }
+    // scuff pixels kicked off the contact point while it recoils
+    if(k>0.45){ var cxp=X-(ty.nx||0)*RC_TYRE_R, cyp=Y-(ty.ny||0)*RC_TYRE_R, spread=(1-k)*9;
+    ctx.fillStyle='rgba(120,120,130,'+((k-0.45)*1.4).toFixed(3)+')';
+    for(var d2=0;d2<5;d2++){ var da=_cgRnd(d2+t)*Math.PI*2;
+    ctx.fillRect(Math.round(cxp+Math.cos(da)*spread),Math.round(cyp+Math.sin(da)*spread),1,1); } } } }
+    /* THE RING: the canvas drag zone (hard), the scuff it kicks up, the swinging speed-bags, and the ROPE FLEX —
+       when the ball hits a rope the strands bow inward around the contact point and snap back. Because the
+       static strands are baked into the board, the flexing span is repainted with canvas first, then redrawn
+       bowed. Drawn with the ground FX (under the nails); the ball stays on top. */
+    function drawRing(ctx,now){ if(typeof rgArena!=='function'||!rgArena()) return;
+    var c=(typeof rgCfg==='function')?rgCfg():null; if(!c) return;
+    // SPRUNG GLOVES (hard) — four spring-loaded gloves in the end frames, two per end. Each runs a fixed,
+    // staggered loop: cock back (wind-up tell), snap out into the pitch, hold, retract. The glove is a
+    // hand-authored pixel sprite (rgGloveShape) and the spring is a stack of coil turns that stretch as it
+    // punches and bunch up when it withdraws.
+    if(c.gloves && typeof rgGloves!=='undefined' && typeof rgGloveShape==='function'){ var GA=rgGloveShape();
+    for(var gi=0;gi<rgGloves.length;gi++){ var g=rgGloves[gi];
+    var gy=(typeof rgGloveY==='function')?rgGloveY(g,g.ext||0):g.base, X=Math.round(g.x), Y=Math.round(gy);
+    var kn=g.dir, y0=g.base, back=Y-kn*(RG_GLOVE_R-1);                       // `back` = the wrist end the spring feeds into
+    // SPRING — coil turns between the frame and the wrist: each turn is a lit bar over a dark bar, offset side
+    // to side so it reads as a helix, and the gap between turns grows as the glove extends.
+    var span=Math.abs(back-y0), turns=Math.max(3,Math.min(8,Math.round(span/4)));
+    for(var q=0;q<turns;q++){ var t2=(q+0.5)/turns, cy2=Math.round(y0+(back-y0)*t2), off=((q&1)?1:-1);
+    ctx.fillStyle='#9aa0aa'; ctx.fillRect(X-3+off,cy2,6,1);
+    ctx.fillStyle='#4a4e57'; ctx.fillRect(X-3+off,cy2+kn,6,1); }
+    ctx.fillStyle='#6e727b'; ctx.fillRect(X-1,Math.min(y0,back),2,Math.max(1,span));   // the core rod
+    ctx.fillStyle='#2f3238'; ctx.fillRect(X-4,y0-(kn>0?0:3),8,3);                       // mount plate on the frame
+    ctx.fillStyle='#585c66'; ctx.fillRect(X-4,y0-(kn>0?0:3),8,1);
+    // GLOVE — the pixel sprite, flipped to face its punch direction
+    var px=(kn>0)?GA.down:GA.up;
+    for(var q2=0;q2<px.length;q2++){ var pp=px[q2], ch=pp[2];
+    ctx.fillStyle=(ch==='K')?'#12060a':((ch==='W')?'#ece5d4':((ch==='L')?'#e8574a':((ch==='D')?'#8d1a16':((ch==='S')?'#f0d9c8':'#c02a24'))));
+    ctx.fillRect(X+pp[0],Y+pp[1],1,1); }
+    var gh=(g.hit>0)?(g.hit/14):0;
+    if(gh>0){ ctx.fillStyle='rgba(255,236,170,'+(gh*0.75).toFixed(3)+')';   // impact flare rings the knuckles
+    for(var f2=0;f2<14;f2++){ var fa2=f2/14*Math.PI*2;
+    ctx.fillRect(Math.round(X+Math.cos(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),Math.round(Y+Math.sin(fa2)*(RG_GLOVE_R+2+(1-gh)*6)),1,1); } }
+    if((g.wind||0)>0.5 && (g.ext||0)<=0){ ctx.fillStyle='rgba(255,206,110,'+(((g.wind-0.5)*1.6).toFixed(3))+')';
+    ctx.fillRect(X-5,Y+kn*(RG_GLOVE_R+1),10,1); ctx.fillRect(X-3,Y+kn*(RG_GLOVE_R+2),6,1); } } }   // wind-up tell at the knuckles
+    // BORROWED ROPES — on the ring the strands are part of the board, but when SPORTS DAY borrows them there is
+    // nothing to see, and an elastic wall you cannot see breaks the telegraph rule. Draw them live instead, at
+    // the same x the ring board uses (innermost strand on the collision line, see rgRopeX).
+    if(c.ropes && boardKey!=='ring'){ var _ry0=WALL+13, _rhh=H-WALL*2-26;
+    for(var _rs2=0;_rs2<2;_rs2++){ for(var _st2=0;_st2<3;_st2++){ var _rx2=_rs2?(W-WALL-1-_st2*2):(WALL+1+_st2*2);
+    ctx.fillStyle='rgba(70,56,38,0.45)'; ctx.fillRect(_rx2+(_rs2?-1:1),_ry0,1,_rhh);
+    ctx.fillStyle=(_st2===1)?'#f6ecd8':'#e2cfae'; ctx.fillRect(_rx2,_ry0,1,_rhh); }
+    ctx.fillStyle='#6a5230'; for(var _tb2=_ry0+14; _tb2<_ry0+_rhh-6; _tb2+=48){ ctx.fillRect(_rs2?(W-WALL-6):(WALL+1),_tb2,6,4); } } }
+    // ROPE FLEX — bow the three strands inward around the contact point, decaying with a damped snap-back
+    if(typeof rgRope!=='undefined'){ for(var r=0;r<2;r++){ var fl=rgRope[r]; if(!fl||fl.t<=0) continue;
+    var k=fl.t/RG_ROPE_FLEX, amp=Math.sin(k*Math.PI*2.4)*k*(3.2+2.6*(fl.s||0)), inward=r?-1:1;
+    var span=26, cy=Math.round(fl.y), y0=Math.max(WALL+13,cy-span), y1=Math.min(H-WALL-13,cy+span);
+    // The ring board has the strands BAKED IN, so a flex has to repaint the span with canvas before redrawing
+    // it bowed. A borrowed board has no baked strands (they are drawn live below), so skip the repaint there —
+    // painting ring canvas onto another pitch would drop a beige band across it.
+    if(boardKey==='ring'){ var bx=r?(W-WALL-6):(WALL+1);
+    for(var py=y0;py<=y1;py++){ for(var px2=0;px2<6;px2++){ var X=bx+px2;
+    ctx.fillStyle=(((X+py)&1)?'#bdae9a':'#c8b9a6'); ctx.fillRect(X,py,1,1); } } }
+    for(var st=0;st<3;st++){ for(var py2=y0;py2<=y1;py2++){
+    var t2=(py2-cy)/span, fall=Math.max(0,1-t2*t2), rx=(r?(W-WALL-1-st*2):(WALL+1+st*2))+inward*amp*fall;
+    ctx.fillStyle='rgba(90,72,50,0.45)'; ctx.fillRect(Math.round(rx)+(r?-1:1),py2,1,1);
+    ctx.fillStyle=(st===1)?'#f6ecd8':'#e2cfae'; ctx.fillRect(Math.round(rx),py2,1,1); } }
+    if(k>0.55){ ctx.fillStyle='rgba(255,244,214,'+((k-0.55)*1.4).toFixed(3)+')';   // impact spark on the rope
+    ctx.fillRect(Math.round(rgRopeX(r))+inward*2,cy-1,1,3); } } }
+    // HEAVY BAGS (med+) — pixel leather sandbags. No swing: they sit where the last hit shoved them. A hit
+    // SQUASHES the bag along the impact normal (sand shifting inside, never a bounce) and bursts a puff of sand
+    // grains out of the seams, and the bag leans over toward where it is being pushed.
+    if(c.bag && typeof rgBags!=='undefined' && typeof rgBagShape==='function'){ var px=rgBagShape();
+    for(var i=0;i<rgBags.length;i++){ var b=rgBags[i], X=Math.round(b.x), Y=Math.round(b.y);
+    var hf=(b.hit>0)?(b.hit/16):0, imp=(b.imp==null?0.5:b.imp);
+    // squash along the impact normal only (never stretched, so the sprite cannot tear gaps)
+    var sq=1-0.26*hf*(0.5+imp), ax=Math.abs(b.nx||0), ay=Math.abs(b.ny||0);
+    var sx=1-(1-sq)*ax, sy=1-(1-sq)*ay;
+    ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.fillRect(X-RG_BAG_R+1,Y+RG_BAG_R-2,RG_BAG_R*2-2,2);   // ground shadow
+    for(var q=0;q<px.length;q++){ var pp=px[q], sh=pp[2];
+    ctx.fillStyle=(sh===1)?'#a9703c':((sh===2)?'#3d2413':((sh===3)?'#c8996a':'#7a4a26'));
+    ctx.fillRect(X+Math.round(pp[0]*sx),Y+Math.round(pp[1]*sy),1,1); }
+    if(hf>0){ // sand bursting out of the seams, thrown along the shot's line and settling
+    var puff=(1-hf)*10;
+    for(var g=0;g<7;g++){ var ga=_cgRnd(g+i*3.3)*Math.PI*2, gr=2+puff*(0.4+_cgRnd(g+0.7)*0.8);
+    ctx.fillStyle=(g&1)?('rgba(214,193,148,'+(hf*0.85).toFixed(3)+')'):('rgba(168,146,104,'+(hf*0.85).toFixed(3)+')');
+    ctx.fillRect(Math.round(X+Math.cos(ga)*gr+(b.nx||0)*puff*0.5),Math.round(Y+Math.sin(ga)*gr+(b.ny||0)*puff*0.5),1,1); }
+    ctx.fillStyle='rgba(60,40,22,'+(hf*0.5).toFixed(3)+')';   // the dull thud mark where it landed
+    ctx.fillRect(Math.round(X-(b.nx||0)*RG_BAG_R),Math.round(Y-(b.ny||0)*RG_BAG_R),1,1); } } }
+    }
     function drawDice(ctx,now){ if(typeof dice==='undefined') return;
     for(var i=0;i<dice.length;i++){ var d=dice[i], s=d.sz;
     ctx.save(); ctx.translate(d.x,d.y);
@@ -996,7 +1576,33 @@
     stormStrikeTick(); drawStormPuddles(ctx,now);
     }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
     drawGumballs(ctx,now); drawJelly(ctx,now);
-    }catch(e){} return; } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
+    }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
+    }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
+    }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
+    site after drawEndMarks) — drawn here they came out with the goal-box lines painted across them */
+    } if(boardKey==='minigolf'&&stadiumHazards()){ try{ minigolfTick();
+    }catch(e){} return;   /* the course furniture is drawn later, above the pitch lines */
+    } if(boardKey==='gridiron'&&stadiumHazards()){ try{ gridironTick(); drawGridiron(ctx,now);
+    }catch(e){} return;
+    } if(boardKey==='bowling'&&stadiumHazards()){ try{ bowlingTick();
+    }catch(e){} return;   /* the pins are drawn later, above the pitch lines (see drawBowling's call site) */
+    } if(boardKey==='raceway'&&stadiumHazards()){ try{ racewayTick(); drawRaceway(ctx,now);
+    }catch(e){} return;
+    } if(boardKey==='ring'&&stadiumHazards()){ try{ ringTick(); drawRing(ctx,now);
+    }catch(e){} return;
+    } if(boardKey==='podium'&&stadiumHazards()){
+    /* SPORTS DAY runs whichever hazards its tier borrowed, so unlike every other board it dispatches SEVERAL
+       arenas' ticks in one frame. Each is guarded by its own _pd() key; the furniture that belongs above the
+       pitch markings (golf, tennis, court, bowling) is drawn in the late pass, same as on its home board. */
+    try{ if(_pd('water')||_pd('cups')) minigolfTick(); }catch(e){}
+    try{ if(_pd('ropes')||_pd('gloves')){ ringTick(); drawRing(ctx,now); } }catch(e){}
+    try{ if(_pd('roam')){ gridironTick(); drawGridiron(ctx,now); } }catch(e){}
+    try{ if(_pd('oil')||_pd('lights')){ racewayTick(); drawRaceway(ctx,now); } }catch(e){}
+    try{ if(_pd('rake')) bowlingTick(); }catch(e){}
+    try{ if(_pd('net')) tennisTick(); }catch(e){}
+    try{ if(_pd('diamond')) baseballTick(); }catch(e){}
+    return;
+    } if(boardKey==='space'&&stadiumHazards()){ try{ _spEnsure();
     spaceAsteroidsTick(); if(hzTier()>=2) drawBlackHole(ctx,now);
     drawSpacePlates(ctx,now);
     drawSpaceAsteroids(ctx,now);
@@ -1304,8 +1910,12 @@
       ctx.fillStyle=board.line; ctx.fillRect(Math.round(W/2)-1,Math.round(H/2)-1,2,2);   // centre spot
       const gL=(W-GOAL_W)/2,gR=(W+GOAL_W)/2;
       ctx.strokeStyle=board.line2;
+      // the court leaves its goal-mouth line off: with the key and the hoops already marking the
+      // area it just read as a white line strung behind the net. Purely cosmetic either way.
+      if(boardKey!=='court'){
       ctx.beginPath(); ctx.moveTo(gL,NET_DEPTH+0.5); ctx.lineTo(gR,NET_DEPTH+0.5); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(gL,H-NET_DEPTH-0.5); ctx.lineTo(gR,H-NET_DEPTH-0.5); ctx.stroke();
+      }
       for(const team of ['red','blue']){
         const r=goalAreaRect(team);
         if(phase==='setup'){ const cnt=countInGoalArea(team,dragNail);
@@ -1315,6 +1925,21 @@
         }
         drawEndMarks(ctx,team);
       }
+      // THE DIAMOND's props sit on top of the markings: the bat stands at home plate, inside the
+      // goal box, so drawing it with the ground FX left the white box lines striped across it.
+      try{ if(boardKey==='baseball'&&stadiumHazards()) drawBaseball(ctx,now); }catch(e){}
+      try{ if(boardKey==='court'&&stadiumHazards()) drawCourt(ctx,now); }catch(e){}
+      try{ if(boardKey==='tennis'&&stadiumHazards()) drawTennis(ctx,now); }catch(e){}
+      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolf(ctx,now); }catch(e){}
+      // SPORTS DAY: the borrowed furniture that belongs above the markings. Each gets its OWN try/catch — one
+      // shared guard meant a throw in the first borrow silently swallowed every borrow after it.
+      try{ if(_pd('hoops')) drawCourt(ctx,now); }catch(e){}
+      try{ if(_pd('net')) drawTennis(ctx,now); }catch(e){}
+      try{ if(_pd('water')||_pd('cups')) drawMinigolf(ctx,now); }catch(e){}
+      try{ if(_pd('rake')) drawBowling(ctx,now); }catch(e){}
+      try{ if(_pd('diamond')) drawBaseball(ctx,now); }catch(e){}
+      try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
+      try{ if(boardKey==='raceway'&&stadiumHazards()) drawRacewayTyres(ctx,now); }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';
@@ -1322,12 +1947,23 @@
       else ctx.fillRect(WALL,WALL,W-WALL*2,H/2-WALL);
       }
 
+      /* Corner arcs are centred ON the pitch's inner corner with radius cr, so HALF of each one falls
+         outside the playing area and onto the surrounding frame. That has always been true and on most
+         pitches the frame tone hides it — but on CRAZY GOLF the frame is bright timber, and the stray half
+         reads as a white curve floating on the woodwork, which is what made that pitch look misdrawn.
+         Clipping the arcs to the pitch rect is what they always meant: a corner arc is a pitch marking. */
       const cr=8;
+      // THE ALLEY: keep the corner arcs BEHIND the bumper/gutter — clip them to the lane (inset past the
+      // coin-width side channel) so they don't paint over the rail. Other boards clip to the full pitch.
+      var _cInset=((typeof bowlArena==='function')&&bowlArena())?(COIN_R*2+1):0;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(WALL+_cInset,WALL,W-WALL*2-2*_cInset,H-WALL*2); ctx.clip();
       ctx.strokeStyle=board.line2;
       ctx.beginPath(); ctx.arc(WALL,WALL,cr,0,Math.PI/2); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,WALL,cr,Math.PI/2,Math.PI); ctx.stroke();
       ctx.beginPath(); ctx.arc(WALL,H-WALL,cr,-Math.PI/2,0); ctx.stroke();
       ctx.beginPath(); ctx.arc(W-WALL,H-WALL,cr,Math.PI,Math.PI*1.5); ctx.stroke();
+      ctx.restore();
 
       try{drawEco(now);}catch(e){} try{drawWalls();
       }catch(e){} try{drawMud(now);
@@ -1341,6 +1977,7 @@
       }catch(e){} try{drawBlizzard(now);
       }catch(e){} try{drawFrost(now);
       }catch(e){} try{drawTrapFx(now);
+      }catch(e){} try{drawAftershock(now);
       }catch(e){} try{drawShield(now);
       }catch(e){} try{drawMagnetPull(now);
       }catch(e){} // nails
@@ -1400,7 +2037,8 @@
         ctx.arc(t.x+2.3,t.y+1.6,1.1,0,Math.PI*2);
         ctx.fill(); } }
         ctx.save(); if(ghosting) ctx.globalAlpha=0.4;
-        if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6);
+        if(typeof cgDrown!=='undefined'&&cgDrown){ try{ drawCgDrown(ctx,now); }catch(e){}   // drowning: sink then drop, drawn in place of the ball
+        } else if(coin.air>0){ var _a0=coin.air0||22, _ap=1-(coin.air/_a0), _hh=Math.sin(_ap*Math.PI)*(COIN_R*2.6);
         ctx.save(); ctx.globalAlpha=0.26;
         ctx.fillStyle='#000'; ctx.beginPath();
         ctx.ellipse(coin.x,coin.y,COIN_R*0.85,COIN_R*0.45,0,0,Math.PI*2);
@@ -1420,6 +2058,12 @@
       // ball and the coiled snake both disappear INTO the foliage
       try{drawSerp(now);}catch(e){}
       try{drawBushes(now);}catch(e){}
+      /* CRAZY GOLF's trees ride the same pass, for the same reason: a ball that finishes in one should
+         disappear into the foliage rather than sit on top of it. This pass ALREADY carries the pitch's
+         translate(OX,OY) — an explicit second one was added here and it double-applied, shifting the trees
+         21px right and 17px down. Proved by drawing a marker for the same peg from inside the peg loop and
+         again from this pass and measuring the gap: 28px before, 0 after. Board coordinates, nothing else. */
+      try{ if(boardKey==='minigolf'&&stadiumHazards()) drawMinigolfTrees(ctx,now); }catch(e){}
       // cacti stand over the ball (it disappears behind them); dust-devil towers over everything
       try{drawCacti(now);}catch(e){}
       try{drawDevil(now);}catch(e){}
@@ -1452,6 +2096,37 @@
 
       // aim — pull-back guide + predicted bounce path + power meter
       if(pen&&pen.active) drawPenaltyHUD();
+      // CPU AIM TELEGRAPH: the CPU has already locked in its shot (aiShot); the wind-up plays it out the
+      // way a human would — a beat of "thinking", then a DRAG where the aim line pulls back and grows while
+      // the angle wavers and settles onto target (a hand adjusting), then a brief locked hold before the
+      /* The "unsteady aim" sway, shared by the human guide and the CPU telegraph so the two can never drift
+         apart: a hand that cannot hold a line. It is on when the side to play is DRUNK, or RATTLED by a punch in
+         THE RING — in both cases the real deviation is a random kick at release, so the honest tell is an arrow
+         that will not sit still rather than a fixed line the shot cannot keep. */
+      function _aimSway(now){ var on=false;
+      try{ on=debuffActive(current,'drunk')||((typeof rgWobArmed==='function')&&rgWobArmed()); }catch(e){}
+      return on?Math.sin((now||0)*0.012)*0.4:0; }
+      // fast flick fires at release. Same aim guide the player gets — stamina-coloured line, ability
+      // trajectory (curve/serpent/wet/backspin) — so the shot drawn is the shot taken.
+      if(typeof CPU_AIM_TELEGRAPH!=='undefined'&&CPU_AIM_TELEGRAPH&&aiPending&&aiEnabled&&aiEnabled[current]&&aiShot&&!aiShot.pen&&!moving&&!scoring&&phase==='play'&&!winner&&!debuffActive(current,'fog')){
+      var _tp=1-Math.max(0,aiDelay)/Math.max(1,aiThink0);            // 0 -> 1 through the think time
+      var _acol=(current==='red')?'224,91,72':'91,143,232';
+      if(_tp<0.45){ ctx.save(); var _pr=Math.sin((now||0)/110)*1.7;   // "thinking" beat — a pulse ringing the ball, fades as the drag begins
+      ctx.strokeStyle='rgba('+_acol+','+(0.36*(1-_tp/0.45))+')'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(coin.x,coin.y,COIN_R+3+_pr,0,6.283); ctx.stroke(); ctx.restore(); }
+      if(_tp>=0.14){                                                  // after the beat, drag + point onto target
+      var _cang=Math.atan2(aiShot.vy,aiShot.vx), _cspd=Math.hypot(aiShot.vx,aiShot.vy);
+      // Invert the guide's v0 = power*staminaMul*(FLICK_MAX/FLICK_POWER)*TAC.power so the drawn line's
+      // launch speed equals the shot's real speed, then clamp into the guide's power range.
+      var _cpowFull=Math.min(TAC.frozen?35:70,_cspd/((staminaMul()||1)*(TAC.power||1))*(FLICK_POWER/FLICK_MAX));
+      var _drag=Math.max(0,Math.min(1,(_tp-0.16)/0.62)), _dragE=_drag*_drag*(3-2*_drag);   // smoothstep: pull back slowly, ease into the lock, then a longer hold
+      var _wob=(1-_dragE)*Math.sin((now||0)/85)*0.10;                 // aim waver that settles to 0 as it locks (true angle at release)
+      var _cpow=_cpowFull*(0.30+0.70*_dragE);                         // power builds as the drag extends
+      // ...plus the drunk/rattled sway, which does NOT settle — the CPU's arrow wobbles exactly as the player's
+      // does when its own shot is the unreliable one.
+      drawAimGuide(_cang+_wob+_aimSway(now),_cpow,_cpow,0.6+0.4*_dragE,false);
+      }
+      }
       if(aiming&&aimStart&&aimNow&&debuffActive(current,'fog')){ ctx.save();
       for(var _fp=0;_fp<7;_fp++){ var _fa=_fp*(Math.PI*2/7);
       ctx.globalAlpha=0.16; ctx.fillStyle='#c9d0d8';
@@ -1462,15 +2137,23 @@
       ctx.fill(); ctx.restore();
       } if(aiming&&aimStart&&aimNow&&!debuffActive(current,'fog')){
         const dx=aimStart.x-aimNow.x,dy=aimStart.y-aimNow.y,rawP=Math.hypot(dx,dy),power=Math.min(rawP,(pen&&pen.active)?32:(TAC.frozen?35:70)),ang=Math.atan2(dy,dx);
-        var _dw=(debuffActive(current,'drunk'))?Math.sin((now||0)*0.012)*0.4:0, angD=ang+_dw;
+        var _dw=_aimSway(now), angD=ang+_dw;   // drunk / rattled: the arrow will not sit still (see _aimSway)
+        drawAimGuide(angD,power,rawP,1,true);
+      }
+      // The aim guide: pull-back marker, stamina-coloured power line, the predicted bounce/curve path, and
+      // (player only) the power meter. Shared by the player's aim and the CPU telegraph so both read
+      // identically — same 3-colour stamina gradient, same ability trajectory (curve/serpent/wet/backspin).
+      // gAlpha fades it in for the CPU wind-up; showMeter draws the meter only for the player.
+      function drawAimGuide(angD,power,rawP,gAlpha,showMeter){ ctx.save(); if(gAlpha<1) ctx.globalAlpha=gAlpha;
         // pull-back dashed guide behind the ball + short aim line in the flick direction
         const pull=Math.min(rawP,TAC.frozen?21:42); var bx=coin.x-Math.cos(angD)*pull, by=coin.y-Math.sin(angD)*pull;
         ctx.strokeStyle='rgba(255,250,235,0.85)'; ctx.lineWidth=1.6; ctx.setLineDash([2,2]); ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(coin.x,coin.y); ctx.stroke(); ctx.setLineDash([]);
         var pEff=power*staminaMul();
         var _stamMode=(mode!=='penalty' && !(pen&&pen.active));
         var L=(13+pEff*0.6)*(TAC.laser?2.4:1);
+        var _stamIdx=Math.min(Math.max(0,flickCount-((typeof cgStamBase!=='undefined')?cgStamBase:0)),3);   // hole-out refreshes stamina from the hole (green again), then it decreases
         if(TAC.backspin) L=400; const pcol=TAC.frozen?'#7fdcff':(_stamMode?['#5dff5d',
-        '#ffd21a','#ff2a1a','#b31414'][Math.min(flickCount,3)]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
+        '#ffd21a','#ff2a1a','#b31414'][_stamIdx]:((power/70)<0.5?'#5dff5d':(power/70)<0.82?'#ffd21a':'#ff2a1a'));
         var v0=pEff*(FLICK_MAX/FLICK_POWER)*TAC.power, gvx=Math.cos(angD)*v0, gvy=Math.sin(angD)*v0, gx=coin.x, gy=coin.y;
         var _gh=-gvx, _ghd=(_gh>0.05)?1:((_gh<-0.05)?-1:((W/2-coin.x)>=0?1:-1));
         var gspin=(TAC.curve&&power>=12)?(_ghd*((gvy<0)?1:-1)*1.9):0;
@@ -1560,11 +2243,12 @@
         ctx.lineTo(-3,3.8); ctx.closePath();
         ctx.fill(); ctx.restore();
         }
-        // power meter bar
-        const meterW=44,meterH=4,mx=W/2-meterW/2,my=H/2+32,pf=power/70;
+        // power meter bar (player only — the CPU telegraph shows intent, not a pull the viewer controls)
+        if(showMeter){ const meterW=44,meterH=4,mx=W/2-meterW/2,my=H/2+32,pf=power/70;
         ctx.fillStyle='rgba(20,12,6,0.68)'; ctx.fillRect(mx,my,meterW,meterH);
         ctx.fillStyle=pf<0.5?'#a9c94b':pf<0.82?'#ffcf3a':'#ff5a3a'; ctx.fillRect(mx,my,meterW*pf,meterH);
-        ctx.strokeStyle='rgba(244,233,200,0.55)'; ctx.strokeRect(mx+0.5,my+0.5,meterW-1,meterH-1);
+        ctx.strokeStyle='rgba(244,233,200,0.55)'; ctx.strokeRect(mx+0.5,my+0.5,meterW-1,meterH-1); }
+        ctx.restore();
       }
       ctx.restore();
 
@@ -1582,6 +2266,7 @@
       ctx.restore(); }
       if(typeof turnFx!=='undefined'&&turnFx>0){ ctx.save(); ctx.globalAlpha=(turnFx/13)*0.55; ctx.strokeStyle=turnFxCol; ctx.lineWidth=5; ctx.strokeRect(2.5,2.5,W-5,H-5); ctx.restore(); }
       if(banner>0){ drawBanner(); drawGoalCrowd(); } if(winner){ try{ drawWinner(); }catch(e){} }
+      if(phase==='play'&&!winner&&banner<=0){ try{ drawTurnBanner(ctx,now); }catch(e){} }
       ctx.restore();
 
       // fireworks (canvas coords)
@@ -1604,9 +2289,14 @@
     try{ NS_WALL.src='assets/generated/icon-wall.png';
     }catch(e){} var NS_ROYMAP=new Image();
     var NS_ROYMAP2=new Image();
+    var NS_ROYMAP3=new Image();
     try{ NS_ROYMAP2.src='assets/generated/roymap2.png'; }catch(e){}
+    try{ NS_ROYMAP3.src='assets/generated/roymap3.png'; }catch(e){}
     try{ NS_ROYMAP.src='assets/generated/roymap.png';
-    }catch(e){} var NS_BUSH=[];
+    }catch(e){} var NS_TROPHIES={};
+    ['s1','s2','s3'].forEach(function(_s){ ['bronze','silver','gold'].forEach(function(_m){ var _im=new Image();
+    try{ _im.src='assets/generated/trophy-'+_s+'-'+_m+'.png'; }catch(e){} NS_TROPHIES[_s+'-'+_m]=_im;
+    }); }); var NS_BUSH=[];
     for(var _nbi=0;_nbi<4;_nbi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/sprite-bush-'+(_k+1)+'.png';
     }catch(e){} NS_BUSH[_k]=_im;
@@ -1614,6 +2304,10 @@
     try{ NS_MUD.src='assets/generated/sprite-mud.png';
     }catch(e){} var NS_CACTUS=new Image();
     try{ NS_CACTUS.src='assets/generated/sprite-cactus.png';
+    }catch(e){} var NS_BAT=new Image();
+    try{ NS_BAT.src='assets/generated/sprite-bat.png';
+    }catch(e){} var NS_GLOVE=new Image();
+    try{ NS_GLOVE.src='assets/generated/sprite-glove.png';
     }catch(e){} var NS_SERP=[];
     for(var _nsi=0;_nsi<4;_nsi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/serp-corner-'+(_k+1)+'.png';
@@ -1889,6 +2583,7 @@
     function updateFX(){
       frameTick++;
       if(turnFlash>0) turnFlash--;
+      if(_turnBanner){ _turnBanner.t++; if(_turnBanner.t>=_turnBanner.dur) _turnBanner=null; }
       if(_drillDisp&&_drillDisp.length&&!moving){ for(var _di=_drillDisp.length-1;_di>=0;_di--){ var _dn=_drillDisp[_di];
       if(!_dn||!_dn._drillHome){ _drillDisp.splice(_di,1);
       continue; } _dn.x+=(_dn._drillHome.x-_dn.x)*0.25;
