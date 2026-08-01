@@ -474,8 +474,9 @@
     // flick), and snatches the ball dead on contact. HARD adds falling crates that crash down on a
     // timer, knocking the ball off its line, then sit as solid boxes for a beat before fading. Both
     // ignore the player tokens; ghost phases through.
-    function royWebArena(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.cust==='traps')||_g1('web'); }
-    function roySpiderArena(){ return (royWebArena()&&typeof royaleLevel!=='undefined'&&(royaleLevel==='med'||royaleLevel==='hard')&&!_g1('web'))||_g1('spider'); }
+    function royWebArena(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.cust==='traps')||_g1('web')||(typeof mode!=='undefined'&&mode==='practice'&&typeof pracHazards!=='undefined'&&pracHazards&&typeof boardKey!=='undefined'&&boardKey==='wood');
+    }
+    function roySpiderArena(){ return (royWebArena()&&(typeof hzTier==='function'&&hzTier()>=1)&&!_g1('web'))||_g1('spider'); }
     function royCrateArena(){ return (royWebArena()&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'&&!_g1('web'))||_g1('crate'); }
     function _spiderRetarget(){ if(!roySpider) return; roySpider.tx=WALL+22+Math.random()*(W-2*WALL-44); roySpider.ty=NET_DEPTH+GOAL_AREA_D+18+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-36); }
     // a web spot is clear only if it doesn't overlap a player token or another web
@@ -489,9 +490,17 @@
     return {x:px,y:py}; } return null;
     }
     function _spiderCap(){ return (typeof royaleLevel!=='undefined'&&royaleLevel==='hard')?11:9; }
-    function rollSpider(){ if(roySpiderArena()){ if(!roySpider){ roySpider={x:Math.round(W*0.5),y:Math.round(H*0.28),tx:W*0.5,ty:H*0.4,ph:0,webT:50,legT:0,mode:'walk',wT:0,wx:0,wy:0,step:0};
+    function rollSpider(){ if(roySpiderArena()){ if(!roySpider){ roySpider={x:Math.round(W*0.5),y:Math.round(H*0.28),tx:W*0.5,ty:H*0.4,ph:0,webT:50,legT:0,mode:'walk',wT:0,wx:0,wy:0,step:0,hit:0,walkT:0};
     _spiderRetarget(); } } else if(roySpider){ roySpider=null;
     } }
+    // The spider is a solid body: keep it off the pegs and the ball (all objects), and inside the pitch.
+    function _spiderSeparate(){ if(!roySpider) return; var s=roySpider;
+    if(typeof nails!=='undefined'&&nails){ for(var _i=0;_i<nails.length;_i++){ var _n=nails[_i], _dx=s.x-_n.x, _dy=s.y-_n.y, _dd=Math.hypot(_dx,_dy), _mm=SPIDER_R+NAIL_R;
+    if(_dd>0.0001&&_dd<_mm){ s.x=_n.x+(_dx/_dd)*_mm; s.y=_n.y+(_dy/_dd)*_mm; } } }
+    if(typeof coin!=='undefined'&&coin){ var _cx=s.x-coin.x, _cy=s.y-coin.y, _cd=Math.hypot(_cx,_cy), _cm=SPIDER_R+COIN_R;
+    if(_cd>0.0001&&_cd<_cm){ s.x=coin.x+(_cx/_cd)*_cm; s.y=coin.y+(_cy/_cd)*_cm; } }
+    s.x=Math.max(WALL+SPIDER_R,Math.min(W-WALL-SPIDER_R,s.x));
+    s.y=Math.max(NET_DEPTH+SPIDER_R,Math.min(H-NET_DEPTH-SPIDER_R,s.y)); }
     // The spider roams the floor, and every so often it STOPS and spins a web up on the spot (a
     // visible build: strands radiate out, then the rings fill in) before walking on. It tops the
     // warehouse up toward a cap. Webs are consumed (disappear) when the ball hits one, so it keeps
@@ -499,18 +508,32 @@
     function roySpiderTick(dt){ if(!roySpider) return;
     var _st=dt/16.67; if(_st>3)_st=3;
     var s=roySpider; s.legT+=_st;
+    // SOLID: the ball bounces off the spider. It recoils and FLINCHES (s.hit) but survives, shakes it off
+    // and crawls on. A harder shot flinches it longer.
+    if(typeof coin!=='undefined'&&coin&&!scoring){ var _bx=coin.x-s.x, _by=coin.y-s.y, _bd=Math.hypot(_bx,_by)||0.001, _bhit=SPIDER_R+COIN_R;
+    if(_bd<_bhit){ var _nx=_bx/_bd, _ny=_by/_bd, _vn=coin.vx*_nx+coin.vy*_ny;
+    coin.x=s.x+_nx*_bhit; coin.y=s.y+_ny*_bhit;
+    if(_vn<0){ coin.vx-=2*_vn*_nx; coin.vy-=2*_vn*_ny;
+    coin.vx*=0.9; coin.vy*=0.9; var _kb=Math.min(5,1.4+Math.abs(_vn)*0.5);
+    s.hit=Math.min(22,10+Math.abs(_vn)*1.4); s.x-=_nx*_kb; s.y-=_ny*_kb;
+    try{ if(typeof struck!=='undefined') struck=true; }catch(e){}
+    try{ if(!muted&&typeof sfxTramp==='function') sfxTramp(); }catch(e){}
+    try{ spawnSparks(s.x,s.y,'#e8e4f0',6); }catch(e){} } } }
+    if(s.hit>0) s.hit-=_st;
     if(s.mode==='weave'){ s.wT+=_st;
     if(s.wT>=SPIDER_WEAVE_DUR){ if(rtraps.length<_spiderCap() && _webClear(s.wx,s.wy)) rtraps.push({x:s.wx,y:s.wy});
     try{ spawnSparks(s.wx,s.wy,'#e8e4f0',7);
     }catch(e){} s.mode='walk';
     s.webT=70+Math.random()*70;
-    _spiderRetarget(); } return;
-    } var dx=s.tx-s.x, dy=s.ty-s.y, d=Math.hypot(dx,dy)||1;
-    if(d<5){ _spiderRetarget();
+    _spiderRetarget(); } _spiderSeparate(); return;
+    } if(s.hit<=0){ var dx=s.tx-s.x, dy=s.ty-s.y, d=Math.hypot(dx,dy)||1;
+    s.walkT=(s.walkT||0)+_st;
+    if(d<5||s.walkT>200){ _spiderRetarget(); s.walkT=0;   // arrived, or a peg blocked the path — pick a new spot
     } else { var sp=1.05*_st;
     s.x+=(dx/d)*sp; s.y+=(dy/d)*sp;
     s.ph=Math.atan2(dy,dx); s.step=(s.step||0)+sp;
-    } if(roySpiderArena()&&!scoring){ s.webT-=_st;
+    } } _spiderSeparate();
+    if(roySpiderArena()&&!scoring){ s.webT-=_st;
     if(s.webT<=0){ if(rtraps.length<_spiderCap() && _webClear(s.x,s.y) && (typeof coin==='undefined'||!coin||Math.hypot(coin.x-s.x,coin.y-s.y)>TRAP_R+COIN_R+12)){ s.mode='weave';
     s.wT=0; s.wx=s.x; s.wy=s.y;
     } else { s.webT=20; } } } }
@@ -535,7 +558,14 @@
     ctx.fill(); ctx.globalAlpha=1;
     ctx.save(); ctx.translate(s.x,s.y);
     ctx.rotate(s.ph+Math.PI/2);
-    var _gait=(s.step||0)*0.75, _LG=[[1.55,
+    // Generated spider sprite (spider-0..8, top-down, head up) rotated to face travel; walk-cycle plays off
+    // the leg timer, slowed while it sits weaving. The web + shadow above stay procedural. Falls back to the
+    // hand-drawn spider below if the frames haven't loaded.
+    if(typeof NS_SPIDER!=='undefined' && typeof _spiderFrame==='function' && _spiderFrame()){ var _sfr=Math.floor((s.legT||0)*(_wv?0.14:0.4))%9;
+    if(_sfr<0) _sfr+=9; var _gsp=R*3.6*((s.hit>0)?(1+0.16*Math.min(1,s.hit/16)):1);   // ~matches the hitbox; pops when hit
+    ctx.drawImage(NS_SPIDER[_sfr],-_gsp/2,-_gsp/2,_gsp,_gsp);
+    ctx.restore(); ctx.restore(); return;
+    } var _gait=(s.step||0)*0.75, _LG=[[1.55,
     -1.05],[1.8,-0.4],[1.8,0.35],
     [1.55,1.0]]; ctx.strokeStyle='#8a8496';
     ctx.lineWidth=1.5; ctx.lineCap='round';
@@ -3251,7 +3281,7 @@
     }); return ov; } function portalPts(tm){ var lx=WALL+11, rx=W-WALL-11, ty=WALL+11, by=H-WALL-11;
     if(tm==='red') return {ex:lx,ey:by,xx:rx,xy:ty};
     return {ex:rx,ey:ty,xx:lx,xy:by};
-    } function rollTraps(){ if((typeof royaleArena!=='undefined' && royaleArena && royaleArena.cust==='traps')||_g1('web')){ if(!moving){ var _wbase=(typeof royaleLevel!=='undefined'&&royaleLevel==='easy')?6:5;
+    } function rollTraps(){ if(typeof royWebArena==='function' && royWebArena()){ if(!moving){ var _wbase=(typeof royaleLevel!=='undefined'&&royaleLevel==='easy')?6:5;
     var _wg=0; while(rtraps.length<_wbase && _wg<50){ _wg++;
     var _ws=_newWebSpot(); if(_ws) rtraps.push(_ws);
     else break; } } } else if(rtraps.length){ rtraps=[];
