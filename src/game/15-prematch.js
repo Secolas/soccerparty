@@ -541,6 +541,17 @@
     },function(v){penBest=v;
     },2); ptWrap.style.display=pracType==='penalty'?'block':'none';
     host.appendChild(ptWrap);
+    // HAZARDS: turn on the CURRENTLY SELECTED pitch's stadium hazards to practice against them, and pick the
+    // tier (easy/med/hard = fewer/more, exactly like the Royale ramp). Only affects a Normal practice.
+    var hzWrap=mk('div','');
+    segRow(host,'HAZARDS',[[false,'OFF'],[true,'ON']],function(){return pracHazards;
+    },function(v){ pracHazards=v; hzWrap.style.display=v?'block':'none';
+    },2); segRow(hzWrap,'HAZARD LEVEL',[['easy','EASY'],['med','MEDIUM'],
+    ['hard','HARD']],function(){return exhLevel;
+    },function(v){ exhLevel=v; },3);
+    hzWrap.appendChild(mk('div',FS(6,'#9a8fb0')+'text-align:center;line-height:1.7;margin:2px 4px 0;','Turns on this pitch’s hazards. Pick a stadium pitch above (Ballpark, Bowling, Boxing…) to test its traps.'));
+    hzWrap.style.display=pracHazards?'block':'none';
+    host.appendChild(hzWrap);
     var play=mk('button','margin-top:8px;width:100%;'+FS(11,'#0b1a0e')+'background:#a9c94b;border:2px solid #e6ff7a;padding:9px;cursor:pointer;','PLAY  ▸');
     play.onclick=function(){ teamKits.red=resolveSel('red');
     teamKits.blue=resolveSel('blue',teamKits.red);

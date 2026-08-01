@@ -29,7 +29,7 @@
     var CPU_AIM_TELEGRAPH=true, aiAim=null, aiThink0=1, aiShot=null;
     let mode='exhibition', winTarget=5, tour=null, cpuSel='cpu', exhLevel='easy';
     let exhWin=5, exhTimer=0;
-    let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null;
+    let pracCpu='off', practiceAb={red:[],blue:[]}, pendingAb=null, pracHazards=false;
     let pen=null, penBest=5, pracType='normal';
     var _lkOn=true,_lkActive=false,_lkStarted=false,_lkFlicks=0,_lkLeader=null,_lkTeam=null,_lkToPen=false,_lkFromTour=false,_lkTourSave=null;
     var _ecoOn=false;   // exhibition: goals to win, match length (s; 0=untimed)
