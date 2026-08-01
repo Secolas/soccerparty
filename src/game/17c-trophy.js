@@ -44,6 +44,29 @@
     grid.appendChild(col); }
     srow.appendChild(grid); pad.appendChild(srow); }
     }catch(e){} }
+    /* Champion-screen reward: the just-cleared season's three difficulty cups
+       (bronze/silver/gold = easy/med/hard), the one you earned this run lifted
+       bigger, ringed and tagged, the others lit if already earned or greyed if
+       still locked — so beating a season boss shows the trophy you won AND what
+       the season still has on offer. Returns a DOM node, or null. */
+    function spTrophyEarnedPanel(season, lvl){ try{
+    var si=season-1, nti=(lvl==='easy')?0:((lvl==='hard')?2:1);
+    var d=royDiffsFor(season)||[], LVN=['EASY','MED','HARD'];
+    var wrap=mk('div','width:100%;max-width:290px;margin:6px 0 2px;padding:12px 12px 10px;border-radius:12px;border:2px solid '+_TROPHY_RING[nti]+';background:rgba(255,255,255,0.03);display:flex;flex-direction:column;align-items:center;gap:7px;');
+    wrap.appendChild(mk('div',FS(9,_TROPHY_RING[nti])+'letter-spacing:1px;text-shadow:0 2px 0 #1c1330;','TROPHY EARNED'));
+    wrap.appendChild(mk('div',FS(7,'#c9bce0')+'letter-spacing:1px;',TROPHY_SEASONS[si]));
+    var grid=mk('div','display:flex;justify-content:space-around;align-items:flex-end;gap:10px;width:100%;');
+    for(var t=0;t<3;t++){ var lit=d.indexOf(TROPHY_DIFFS[t])>=0, isNew=(t===nti);
+    var col=mk('div','flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;');
+    var cell=spTrophyEl(si,t,lit,isNew?96:64);
+    if(isNew) cell.style.cssText+=';border-radius:12px;box-shadow:0 0 0 2px '+_TROPHY_RING[nti]+',0 0 14px '+_TROPHY_RING[nti]+';';
+    col.appendChild(cell);
+    col.appendChild(mk('div',FS(6,lit?'#e2b23a':'#5a5470')+'letter-spacing:0.5px;',LVN[t]+(isNew?' ✦':'')));
+    grid.appendChild(col); }
+    wrap.appendChild(grid);
+    wrap.appendChild(mk('div',FS(6,'#8a7fb0')+'letter-spacing:1px;margin-top:2px;','COLLECTION '+spTrophyCount()+'/9'));
+    return wrap;
+    }catch(e){ return null; } }
     /* Where the painted trophy sits in each season's map art (fractions of the
        map canvas: x of width, y+r of height). The dynamic cup is drawn as a
        medallion here to REPLACE the generic gold cup baked into the art, so the

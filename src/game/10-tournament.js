@@ -350,6 +350,8 @@
     }catch(e){} }; pad.appendChild(_im);
     })(); pad.appendChild(mk('div',FS(16,champ?'#ffd84a':'#e05a4a')+'letter-spacing:1px;text-shadow:0 3px 0 #1c1330;', champ?'ROYALE CHAMPION':'ELIMINATED'));
     pad.appendChild(mk('div',FS(8,'#f4e9c8')+'line-height:1.7;max-width:280px;', champ?('You conquered all '+ROYALE_ARENAS.length+' stadiums!'):('You fell at '+ROYALE_ARENAS[Math.min(reached,ROYALE_ARENAS.length-1)].name+' (stadium '+(Math.min(reached,ROYALE_ARENAS.length-1)+1)+' of '+ROYALE_ARENAS.length+').')));
+    try{ if(champ&&typeof spTrophyEarnedPanel==='function'){ var _sm=((ROYALE&&ROYALE.map)===3)?3:(((ROYALE&&ROYALE.map)===2)?2:1);
+    var _tep=spTrophyEarnedPanel(_sm, royaleLevel||'med'); if(_tep) pad.appendChild(_tep); } }catch(e){}
     (function(){ var _h=(ROYALE&&ROYALE.history)||[];
     if(!_h.length) return; var box=mk('div','width:100%;max-width:290px;margin:6px 0 2px;display:flex;flex-direction:column;gap:4px;');
     box.appendChild(mk('div',FS(7,'#8a7ea0')+'letter-spacing:1px;text-align:center;margin-bottom:3px;','THIS RUN'));
