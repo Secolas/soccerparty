@@ -2049,7 +2049,7 @@
     } else { l=(typeof aiLevel!=='undefined'&&aiLevel)?aiLevel:'med';
     } return l==='hard'?2:(l==='easy'?0:1);
     }
-    function stadiumHazards(){ return (typeof mode!=='undefined' && mode==='royale'); }
+    function stadiumHazards(){ return (typeof mode!=='undefined' && (mode==='royale' || (mode==='practice' && typeof pracHazards!=='undefined' && pracHazards))); }
     // STORM: puddles (drag pools) + lightning strikes (scatter near the ball)
     var stormStrikeT=120, stormStrike=null;
     var STORM_PUD=[[0.3,0.35],[0.65,0.6],[0.5,0.5],[0.35,0.72],[0.7,0.3],[0.52,0.82]];

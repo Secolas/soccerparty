@@ -434,6 +434,22 @@
     // catch / release animation: squeeze shut around a claimed ball (catchT), then spring back open
     // when the ball leaves (openT). Squash on the closing beat and a slight overshoot on the opening
     // one, so the "it has your ball" / "you are free" states are felt, not just colour-coded.
+    // 9-frame catch animation (frame_000..008: open -> shut). Frame 0 sits open at rest, the closing
+    // frames play as the glove claims a ball (catchT), it holds on frame 8 while it has the ball, and the
+    // opening frames play back as it releases (openT). Falls back to the single sprite + squash if the
+    // frames haven't loaded.
+    var _mf=-1;
+    if(gl.catchT>0){ _mf=Math.round((1-gl.catchT/14)*8);       // catching: open -> shut
+    } else if(gl.openT>0){ _mf=Math.round((gl.openT/12)*8);    // releasing: shut -> open
+    } else if(gl.caught){ _mf=8;                               // held shut
+    } else { _mf=0; } _mf=Math.max(0,Math.min(8,_mf));
+    if(typeof NS_MITT!=='undefined'&&_mittFrame()){ var _mi=NS_MITT[_mf], gsM=gl.r*2.2+(gl.flash>0?3:0);
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    ctx.translate(gl.x,gl.y);
+    if(gl.caught&&!gl.catchT&&!gl.openT) ctx.globalAlpha=0.72;   // spent: it has already claimed its one ball
+    if(gl.flash>0){ ctx.shadowColor='#ffd84a'; ctx.shadowBlur=6; }
+    ctx.drawImage(_mi,-gsM/2,-gsM/2,gsM,gsM);
+    ctx.restore(); continue; }
     var _sc=1, _sq=1;
     if(gl.catchT>0){ var _ct=1-gl.catchT/14;                  // 0 -> just caught, 1 -> settled shut
     _sc=0.80+0.34*Math.exp(-3.4*_ct)*Math.cos(7.0*_ct);       // damped pinch inward
@@ -2308,7 +2324,11 @@
     try{ NS_BAT.src='assets/generated/sprite-bat.png';
     }catch(e){} var NS_GLOVE=new Image();
     try{ NS_GLOVE.src='assets/generated/sprite-glove.png';
-    }catch(e){} var NS_SERP=[];
+    }catch(e){} var NS_MITT=[];
+    for(var _mfi=0;_mfi<9;_mfi++){ (function(_k){ var _im=new Image();
+    try{ _im.src='assets/generated/frame_00'+_k+'.png'; }catch(e){} NS_MITT[_k]=_im;
+    })(_mfi); } function _mittFrame(){ for(var _i=0;_i<9;_i++){ if(!(NS_MITT[_i]&&NS_MITT[_i].complete&&NS_MITT[_i].naturalWidth)) return false; } return true; }
+    var NS_SERP=[];
     for(var _nsi=0;_nsi<4;_nsi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/serp-corner-'+(_k+1)+'.png';
     }catch(e){} NS_SERP[_k]=_im;
