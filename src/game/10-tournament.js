@@ -1887,11 +1887,29 @@
     if(x>x0&&x<x1&&y>y0&&y<y1){ var dl=x-x0, dr=x1-x, dt=y-y0, db=y1-y, m=Math.min(dl,dr,dt,db);
     if(m===dl) x=x0; else if(m===dr) x=x1;
     else if(m===dt) y=y0; else y=y1;
-    } } return {x:x,y:y}; } function resolveSpot(px,py,self){ let x=px,y=py;
+    } } return {x:x,y:y}; }
+    // Setup-only no-go zones for a dragged outfield token: the kickoff centre circle (where the ball
+    // starts, so a piece can't sit on the spot) and the OPPONENT'S penalty box (only their keeper
+    // defends it — no parking an attacker on their goal line). Pushes the point to the nearest legal
+    // edge; the opponent box is never exited toward the goal line, only sideways or back to midfield.
+    function _setupNoGo(x,y,self){
+      if(typeof phase==='undefined'||phase!=='setup') return {x:x,y:y};
+      var ccR=22+NAIL_R+1, dx=x-W/2, dy=y-H/2, d=Math.hypot(dx,dy);
+      if(d<ccR){ if(d<0.01){ dx=1; dy=0; d=1; } x=W/2+dx/d*ccR; y=H/2+dy/d*ccR; }
+      try{ var opp=(self&&self.team==='red')?'blue':'red', ob=goalAreaRect(opp), pad=NAIL_R+1;
+        var x0=ob.x-pad, x1=ob.x+ob.w+pad, y0=ob.y-pad, y1=ob.y+ob.h+pad;
+        if(x>x0&&x<x1&&y>y0&&y<y1){ var innerY=(opp==='blue')?y1:y0;
+          var dl=x-x0, dr=x1-x, di=Math.abs(y-innerY), m=Math.min(dl,dr,di);
+          if(m===di) y=innerY; else if(m===dl) x=x0; else x=x1;
+        }
+      }catch(e){}
+      return {x:x,y:y};
+    }
+    function resolveSpot(px,py,self){ let x=px,y=py;
     // CRAZY GOLF: a dragged piece cannot be parked in the water or a bunker either
     try{ var _rcg=cgClearSpot(x,y,NAIL_R); if(_rcg){ x=_rcg.x; y=_rcg.y; } }catch(e){}
     for(let it=0;it<16;it++){ var _wp=wallPush(x,y);
-    x=_wp.x; y=_wp.y; const hit=overlapsAny(x,y,self);
+    x=_wp.x; y=_wp.y; var _ng=_setupNoGo(x,y,self); x=_ng.x; y=_ng.y; const hit=overlapsAny(x,y,self);
     if(!hit) break; let dx=x-hit.x,dy=y-hit.y,d=Math.hypot(dx,dy);
     if(d<0.01){ dx=Math.cos(it*1.7);
     dy=Math.sin(it*1.7); d=1;
@@ -1899,7 +1917,7 @@
     x+=(dx/d)*push; y+=(dy/d)*push;
     const c=clampToPitch(x,y);
     x=c.x; y=c.y; } var _wf=wallPush(x,y);
-    x=_wf.x; y=_wf.y; var _cf=clampToPitch(x,y);
+    x=_wf.x; y=_wf.y; var _ngf=_setupNoGo(x,y,self); x=_ngf.x; y=_ngf.y; var _cf=clampToPitch(x,y);
     return {x:_cf.x,y:_cf.y};
     }
     // goalies slide along their own goal line to track the ball (never stacking)

@@ -3309,7 +3309,7 @@
     trapUsed[tm]=true; try{sfxTrapSnap();
     }catch(e){} coin.vx=0; coin.vy=0;
     coin.x=p.x; coin.y=p.y; spawnSparks(p.x,p.y,tm,10);
-    return true; } } if(typeof rtraps!=='undefined' && rtraps.length && current!=='blue'){ for(var _ri=rtraps.length-1;_ri>=0;_ri--){ var rt=rtraps[_ri];
+    return true; } } if(typeof rtraps!=='undefined' && rtraps.length){ for(var _ri=rtraps.length-1;_ri>=0;_ri--){ var rt=rtraps[_ri];
     if(Math.hypot(coin.x-rt.x,coin.y-rt.y)<TRAP_R+COIN_R){ if(ghosting || (TAC.ghost && !ghostUsed)){ ghostUsed=true;
     ghosting=false; rtraps.splice(_ri,1);
     try{sfxTrapSnap();}catch(e){} trapFx={x:rt.x,y:rt.y,team:null,life:TRAP_FX_DUR};
