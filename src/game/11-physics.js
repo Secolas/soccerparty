@@ -474,8 +474,9 @@
     // flick), and snatches the ball dead on contact. HARD adds falling crates that crash down on a
     // timer, knocking the ball off its line, then sit as solid boxes for a beat before fading. Both
     // ignore the player tokens; ghost phases through.
-    function royWebArena(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.cust==='traps')||_g1('web'); }
-    function roySpiderArena(){ return (royWebArena()&&typeof royaleLevel!=='undefined'&&(royaleLevel==='med'||royaleLevel==='hard')&&!_g1('web'))||_g1('spider'); }
+    function royWebArena(){ return (typeof royaleArena!=='undefined'&&royaleArena&&royaleArena.cust==='traps')||_g1('web')||(typeof mode!=='undefined'&&mode==='practice'&&typeof pracHazards!=='undefined'&&pracHazards&&typeof boardKey!=='undefined'&&boardKey==='wood');
+    }
+    function roySpiderArena(){ return (royWebArena()&&(typeof hzTier==='function'&&hzTier()>=1)&&!_g1('web'))||_g1('spider'); }
     function royCrateArena(){ return (royWebArena()&&typeof royaleLevel!=='undefined'&&royaleLevel==='hard'&&!_g1('web'))||_g1('crate'); }
     function _spiderRetarget(){ if(!roySpider) return; roySpider.tx=WALL+22+Math.random()*(W-2*WALL-44); roySpider.ty=NET_DEPTH+GOAL_AREA_D+18+Math.random()*(H-2*(NET_DEPTH+GOAL_AREA_D)-36); }
     // a web spot is clear only if it doesn't overlap a player token or another web
@@ -535,7 +536,14 @@
     ctx.fill(); ctx.globalAlpha=1;
     ctx.save(); ctx.translate(s.x,s.y);
     ctx.rotate(s.ph+Math.PI/2);
-    var _gait=(s.step||0)*0.75, _LG=[[1.55,
+    // Generated spider sprite (spider-0..8, top-down, head up) rotated to face travel; walk-cycle plays off
+    // the leg timer, slowed while it sits weaving. The web + shadow above stay procedural. Falls back to the
+    // hand-drawn spider below if the frames haven't loaded.
+    if(typeof NS_SPIDER!=='undefined' && typeof _spiderFrame==='function' && _spiderFrame()){ var _sfr=Math.floor((s.legT||0)*(_wv?0.14:0.4))%9;
+    if(_sfr<0) _sfr+=9; var _gsp=R*4.4;
+    ctx.drawImage(NS_SPIDER[_sfr],-_gsp/2,-_gsp/2,_gsp,_gsp);
+    ctx.restore(); ctx.restore(); return;
+    } var _gait=(s.step||0)*0.75, _LG=[[1.55,
     -1.05],[1.8,-0.4],[1.8,0.35],
     [1.55,1.0]]; ctx.strokeStyle='#8a8496';
     ctx.lineWidth=1.5; ctx.lineCap='round';

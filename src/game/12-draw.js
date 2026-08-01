@@ -2328,6 +2328,10 @@
     for(var _mfi=0;_mfi<9;_mfi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/frame_00'+_k+'.png'; }catch(e){} NS_MITT[_k]=_im;
     })(_mfi); } function _mittFrame(){ for(var _i=0;_i<9;_i++){ if(!(NS_MITT[_i]&&NS_MITT[_i].complete&&NS_MITT[_i].naturalWidth)) return false; } return true; }
+    var NS_SPIDER=[];
+    for(var _spi=0;_spi<9;_spi++){ (function(_k){ var _im=new Image();
+    try{ _im.src='assets/generated/spider-'+_k+'.png'; }catch(e){} NS_SPIDER[_k]=_im;
+    })(_spi); } function _spiderFrame(){ for(var _i=0;_i<9;_i++){ if(!(NS_SPIDER[_i]&&NS_SPIDER[_i].complete&&NS_SPIDER[_i].naturalWidth)) return false; } return true; }
     var NS_SERP=[];
     for(var _nsi=0;_nsi<4;_nsi++){ (function(_k){ var _im=new Image();
     try{ _im.src='assets/generated/serp-corner-'+(_k+1)+'.png';
