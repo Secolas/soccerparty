@@ -34,7 +34,7 @@
         {id:'keep',  t:'KEEP YOUR TURN',    b:'Hit one of YOUR OWN players and you keep the turn — up to 3 flicks. Miss, and the turn passes over.', go:'keep', fx:'ball'},
         {id:'score', t:'NOW SCORE',         b:'Put it in the far goal. First to 3 goals wins the match.', go:'goal', fx:'goal'},
         {id:'ab',    t:'YOU EARNED AN ABILITY', b:'A drop of three — you keep ONE. Take SNIPER (badged PICK THIS): it draws a long aim line, so lining up a shot is far easier.', go:'abpick', rec:'sniper'},
-        {id:'abuse', t:'USE YOUR ABILITY',  b:'It now sits in a slot on YOUR board. Tap that slot to read it, or to switch it on and off.', go:'tap', hl:['ns_slot_red_0']},
+        {id:'abuse', t:'USE YOUR ABILITY',  b:'It now sits in the highlighted slot on YOUR board (bottom-left). Tap that slot to switch the ability ON or OFF — its name flips each time so you know it took.', go:'tap', hl:['ns_slot_red_0']},
         {id:'win',   t:'FINISH THE JOB',    b:'That is everything. Score 3 goals to take the win — good luck!', go:'tap'}
       ];
     }
