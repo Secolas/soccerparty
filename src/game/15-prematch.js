@@ -528,8 +528,8 @@
     },2300); }catch(e){} } };
     host.appendChild(play); } function buildPractice(host){ fmtRefreshers=[];
     pitchStepper(host); var cols=mk('div','display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;');
-    cols.appendChild(teamStepper('red','TEAM 1','#a9c94b'));
-    cols.appendChild(teamStepper('blue','TEAM 2','#a9c94b'));
+    cols.appendChild(teamStepper('red','YOUR TEAM','#a9c94b'));
+    cols.appendChild(teamStepper('blue','KEEPER','#a9c94b'));
     host.appendChild(cols); squadControls(host);
     var ptWrap=mk('div','');
     segRow(host,'MATCH TYPE',[['normal',
