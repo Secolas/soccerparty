@@ -3805,10 +3805,10 @@
     }catch(e){} flickCount=0;
     hitOwn=false; if(window.__nsTurn) window.__nsTurn(current);
     } else { try{ tutHook('lose');
-    }catch(e){} current=current==='red'?'blue':'red';
+    }catch(e){} var _prevCur=current; current=(mode==='practice')?'red':(current==='red'?'blue':'red');   /* practice: possession stays with you — the lone keeper never gets a turn */
     if(typeof cgBonus!=='undefined'){ cgBonus=false; cgFullFlick_=false; cgStamBase=0; }   /* CRAZY GOLF: hole-out bonus + stamina refresh last one possession */
-    turnFlash=24; sfxTurn();
-    try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){}
+    if(current!==_prevCur){ turnFlash=24; sfxTurn();
+    try{ _turnBanner={t:0,dur:42,team:current,cpu:!!(aiEnabled&&aiEnabled[current])}; }catch(_tb){} }
     try{ ecoSpawnTokens(); }catch(e){} try{ if(_matchTurns>=1){ _matchTurns++;
     try{stopAnthem();}catch(e){} } }catch(e){} if(window.__nsTurn) window.__nsTurn(current);
     stickyUsed=false; flickCount=0;

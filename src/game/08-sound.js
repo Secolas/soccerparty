@@ -565,7 +565,9 @@
       } }
       return out;
     }
-    function rebuildFormations(){ var raw=[].concat(formation('red'),formation('blue'));
+    function rebuildFormations(){ var _blueForm=formation('blue');
+    if(mode==='practice') _blueForm=_blueForm.filter(function(_bn){ return _bn.goalie; });   /* practice is a shooting drill: keep only the opponent keeper to beat, no field players */
+    var raw=[].concat(formation('red'),_blueForm);
     var GAP=NAIL_R*2+6; nails=[];
     for(var _i=0;_i<raw.length;_i++){ var _n=raw[_i];
     if(!_n.goalie){ for(var _it=0;_it<24;_it++){ var _hit=null;
@@ -825,6 +827,7 @@
     b.appendChild(wl); b.appendChild(slotStrip(side));
     return b; } var top=mkBar('ns_top','🇦🇷','ARG','blue','#5a8de0');
     var bot=mkBar('ns_bot','🇧🇷','BRA','red','#e05a4a');
+    if(mode==='practice') top.style.display='none';   /* practice is solo shooting — no opponent bar, just your goals */
     var st=el('ns_status'); wrap.insertBefore(top, st||stage);
     if(stage.nextSibling) wrap.insertBefore(bot, stage.nextSibling);
     else wrap.appendChild(bot);
@@ -1114,6 +1117,7 @@
     } }); } }catch(e){} (function(){ var _hs=(mode==='exhibition'||mode==='practice')&&typeof aiEnabled!=='undefined'&&aiEnabled&&!aiEnabled.red&&!aiEnabled.blue;
     var _top=el('ns_top'); if(_top){ _top.style.transformOrigin='center';
     _top.style.transform='';
+    _top.style.display=(mode==='practice')?'none':'';   /* solo shooting drill: no opponent bar (re-checked each update so it survives mode changes) */
     if(_hs) _top.classList.add('ns-flip');
     else _top.classList.remove('ns-flip');
     }  })(); (function(){ var g=el('ns_game'), t=el('ns_top'), bt=el('ns_bot');
