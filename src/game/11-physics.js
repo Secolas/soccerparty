@@ -3281,7 +3281,7 @@
     }); return ov; } function portalPts(tm){ var lx=WALL+11, rx=W-WALL-11, ty=WALL+11, by=H-WALL-11;
     if(tm==='red') return {ex:lx,ey:by,xx:rx,xy:ty};
     return {ex:rx,ey:ty,xx:lx,xy:by};
-    } function rollTraps(){ if((typeof royaleArena!=='undefined' && royaleArena && royaleArena.cust==='traps')||_g1('web')){ if(!moving){ var _wbase=(typeof royaleLevel!=='undefined'&&royaleLevel==='easy')?6:5;
+    } function rollTraps(){ if(typeof royWebArena==='function' && royWebArena()){ if(!moving){ var _wbase=(typeof royaleLevel!=='undefined'&&royaleLevel==='easy')?6:5;
     var _wg=0; while(rtraps.length<_wbase && _wg<50){ _wg++;
     var _ws=_newWebSpot(); if(_ws) rtraps.push(_ws);
     else break; } } } else if(rtraps.length){ rtraps=[];
