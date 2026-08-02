@@ -602,7 +602,7 @@
     pr[0].style.opacity=lk?'0.6':'1';
     }); } [['SEASON 1',1],['SEASON 2',
     2],['SEASON 3',3]].forEach(function(o){ var b=mk('button',SQBTN+'font-size:7px;padding:6px 10px;',o[0]);
-    b.onclick=function(){ if(_seasonLock(o[1])){ try{ _lockMsg('COMPLETE SEASON '+(o[1]-1)+' ON ALL DIFFICULTIES TO UNLOCK SEASON '+o[1]);
+    b.onclick=function(){ if(_seasonLock(o[1])){ try{ _lockMsg('CLEAR SEASON '+(o[1]-1)+' ON EASY TO UNLOCK SEASON '+o[1]);
     }catch(e){} return; } royMap=o[1];
     if(!royLvlUnlocked(royMap,royaleLevel)) royaleLevel=royTopUnlocked(royMap);
     restyleMap(); try{ _diffRestyle();
