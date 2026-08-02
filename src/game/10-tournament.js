@@ -147,7 +147,8 @@
     return true; } function roySeasonAllCleared(season){ var d=royDiffsFor(season)||[];
     return d.indexOf('easy')>=0&&d.indexOf('med')>=0&&d.indexOf('hard')>=0;
     } function roySeasonUnlocked(season){ if(season<=1) return true;
-    try{ return roySeasonAllCleared(season-1);  /* S2 needs S1 cleared on ALL difficulties; S3 needs S2 on all */
+    try{ return (royDiffsFor(season-1)||[]).indexOf('easy')>=0;
+    /* clearing the previous season on EASY opens the next — content is never walled behind Hard; med/hard + trophies are the optional mastery arc */
     }catch(e){ return false;
     } } function royTopUnlocked(season){ return royLvlUnlocked(season,'hard')?'hard':(royLvlUnlocked(season,'med')?'med':'easy');
     } function royKitClash(a,b){ try{ function _rgb(h){ h=(''+h).replace('#','');
