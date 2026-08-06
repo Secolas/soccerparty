@@ -343,8 +343,11 @@
     ctx.stroke(); ctx.fillStyle='rgba(255,90,220,'+(s*0.5).toFixed(3)+')';
     var g=12; for(var gx=Math.round((p.x-rr)/g)*g; gx<=p.x+rr; gx+=g){ for(var gy=Math.round((p.y-rr)/g)*g; gy<=p.y+rr; gy+=g){ if(Math.abs(Math.hypot(gx-p.x,gy-p.y)-rr)<7){ ctx.fillRect(gx-1,gy-1,3,3);
     } } } ctx.restore(); }
-    // sticky gum blobs on the candy pitch (hard) — reverse the ball when it passes over
-    function drawJelly(ctx,now){ if(typeof candyPatches==='undefined') return;
+    // candy jelly pads (all tiers) — bouncy trampolines that launch the ball airborne.
+    // NOT named drawJelly: 17-aquarium.js declares its own drawJelly (the jellyfish) in the same
+    // shared componentDidMount scope, and the later file's declaration wins — that collision made
+    // this call silently draw jellyfish-with-a-ctx-for-x (i.e. nothing) and the pads went invisible.
+    function drawJellyPads(ctx,now){ if(typeof candyPatches==='undefined') return;
     for(var i=0;i<candyPatches.length;i++){ var p=candyPatches[i], r=p.r, wob=1+0.08*Math.sin(now*0.006+i*2.1);
     ctx.save(); ctx.translate(p.x,p.y);
     ctx.strokeStyle='rgba(255,120,190,0.6)';
@@ -1591,7 +1594,7 @@
     } if(boardKey==='storm'&&stadiumHazards()){ try{ stormGustTick();
     stormStrikeTick(); drawStormPuddles(ctx,now);
     }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
-    drawGumballs(ctx,now); drawJelly(ctx,now);
+    drawGumballs(ctx,now); drawJellyPads(ctx,now);
     }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
     }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
     }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
