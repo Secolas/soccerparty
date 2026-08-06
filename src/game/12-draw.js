@@ -1593,7 +1593,11 @@
     drawDice(ctx,now); }catch(e){} return;
     } if(boardKey==='storm'&&stadiumHazards()){ try{ stormGustTick();
     stormStrikeTick(); drawStormPuddles(ctx,now);
-    }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{ drawCaramel(ctx,now);
+    }catch(e){} return; } if(boardKey==='candy'&&stadiumHazards()){ try{
+    /* spawn the pads as soon as the pieces exist — left to the physics loop's lazy init they only
+       appeared after the FIRST FLICK, so the player aimed the opening shot blind to the hazards */
+    if(candyPatches.length===0&&typeof nails!=='undefined'&&nails&&nails.length) initCandy();
+    drawCaramel(ctx,now);
     drawGumballs(ctx,now); drawJellyPads(ctx,now);
     }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
     }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
