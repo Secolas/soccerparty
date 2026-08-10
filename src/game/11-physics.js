@@ -2416,8 +2416,8 @@
     }catch(e){} } else { coin.vx=-(_vi2*0.9+0.3);
     } try{ spawnSparks(coin.x,coin.y,current,5);
     }catch(e){} } } } }
-    function jungleVines(){ var n=[1,
-    2,3][hzTier()]||1, P=[[0.26,
+    function jungleVines(){ var n=[2,
+    2,3][hzTier()]||2, P=[[0.26,
     0.32],[0.72,0.46],[0.44,
     0.66]], out=[]; for(var i=0;i<n&&i<P.length;i++) out.push({x:WALL+P[i][0]*(W-WALL*2), y:WALL+P[i][1]*(H-WALL*2), dir:(i%2?1:-1)});
     return out; }
