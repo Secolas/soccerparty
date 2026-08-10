@@ -1597,8 +1597,9 @@
     /* spawn the pads as soon as the pieces exist — left to the physics loop's lazy init they only
        appeared after the FIRST FLICK, so the player aimed the opening shot blind to the hazards */
     if(candyPatches.length===0&&typeof nails!=='undefined'&&nails&&nails.length) initCandy();
+    /* only the flat caramel bog is ground FX; the pads and gumballs are raised objects, drawn in
+       the late pass above the pitch markings so the box lines don't stripe across them */
     drawCaramel(ctx,now);
-    drawGumballs(ctx,now); drawJellyPads(ctx,now);
     }catch(e){} return; } if(boardKey==='baseball'&&stadiumHazards()){ try{ baseballTick();
     }catch(e){} return; } if(boardKey==='tennis'&&stadiumHazards()){ try{ tennisTick();
     }catch(e){} return;   /* the props are drawn later, ABOVE the pitch lines (see drawBaseball's call
@@ -1963,6 +1964,9 @@
       try{ if(_pd('diamond')) drawBaseball(ctx,now); }catch(e){}
       try{ if(boardKey==='bowling'&&stadiumHazards()) drawBowling(ctx,now); }catch(e){}
       try{ if(boardKey==='raceway'&&stadiumHazards()) drawRacewayTyres(ctx,now); }catch(e){}
+      // candy: the jelly pads and gumballs are raised objects, so they sit above the markings —
+      // drawn with the ground FX the white box lines striped across them (the caramel bog stays below)
+      try{ if(boardKey==='candy'&&stadiumHazards()){ drawGumballs(ctx,now); drawJellyPads(ctx,now); } }catch(e){}
       // possession flash over the active team's half
       if(turnFlash>0&&phase==='play'&&!winner){ const a=Math.min(0.24,turnFlash/28*0.24);
       ctx.fillStyle=current==='red'?'rgba(224,91,72,'+a+')':'rgba(91,143,232,'+a+')';
