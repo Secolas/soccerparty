@@ -71,8 +71,6 @@ const SCENES = {
     center: { x: CX, y: MID }, put: { x: CX + 5, y: MID + 42, vx: -0.5, vy: -3.8, turn: 'red' }, gap: 55 },
   // opponent's soft shot bends into the magnetic keeper and is caught (aim + camera from probe)
   magnet: { red: ['magnet'], blue: [], def: null, dyn: 'magnet', gap: 55 },
-  // ball fired into the corner portal by the goal warps out the opposite corner (whole-board view)
-  portal: { red: ['portal'], blue: [], def: null, dyn: 'portal', gap: 60 },
 };
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json' };
@@ -121,10 +119,6 @@ for (const name of names) {
     if (dyn === 'magnet') {                                   // blue shoots softly at red's magnetic keeper
       const k = p.nails.find(n => n.team === 'red' && n.goalie) || { x: p.W / 2, y: p.H - 30 };
       return { put: { x: k.x, y: k.y - 60, vx: 0.35, vy: 2.9, turn: 'blue' }, center: { x: k.x, y: k.y - 10 }, box: 100 };
-    }
-    if (dyn === 'portal') {                                   // fire into red's bottom-left corner portal (framed on the entry swirl)
-      const ex = p.WALL + 11, ey = p.H - p.WALL - 11;
-      return { put: { x: ex + 30, y: ey - 30, vx: -2.8, vy: 2.8, turn: 'red' }, center: { x: ex + 8, y: ey - 8 }, box: 92 };
     }
     return { put, center, box };
   }, { dyn: S.dyn || null, put: S.put || null, center: S.center || null, box: S.box || null });

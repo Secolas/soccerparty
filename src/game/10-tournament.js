@@ -1622,8 +1622,7 @@
     var _abImg=null; try{ var _abpool=['curve',
     'ghost','drill','aftershock',
     'wet','bumper','chip',
-    'serpent','anchor','magnet',
-    'portal'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
+    'serpent','anchor','magnet'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     if(_abn && typeof TACTIC_MAP!=='undefined' && TACTIC_MAP[_abn]){ if(typeof ICON_SRC!=='undefined' && ICON_SRC[_abn]){ var _abIc=document.createElement('img');
     _abIc.src=ICON_SRC[_abn]; _abIc.style.cssText='width:22px;height:22px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));';
@@ -1666,8 +1665,7 @@
     chip:'CHIP SHOT: tap after you flick to lob the ball up and over the players and keeper.',
     serpent:'SERPENT SHOT: your shot snakes down the pitch in a smooth S.',
     anchor:'ANCHOR: one heavy player kills the ball’s speed when it hits — even ghost shots.',
-    magnet:'MAGNET: soft or slow shots at your keeper bend in and are caught.',
-    portal:'PORTAL: fire into the corner portal by your goal — it warps out the opposite corner.'};
+    magnet:'MAGNET: soft or slow shots at your keeper bend in and are caught.'};
     var _tp=(_abn&&_ABTIP[_abn])?{i:_abn,t:_ABTIP[_abn]}:TIPS[Math.floor(Math.random()*TIPS.length)];
     var trow=mk('div','position:absolute;left:0;right:0;bottom:24px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 22px;box-sizing:border-box;');
     if(_tp.i&&ICON_SRC[_tp.i]){ var _ic=document.createElement('img');
