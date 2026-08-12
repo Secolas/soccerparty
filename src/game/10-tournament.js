@@ -1614,19 +1614,14 @@
     /* names the ability playing in the clip above, with its scoreboard icon. Filled once the
        clip is picked below; sits between the viewport and the progress bar. */
     var _abLabel=mk('div','display:flex;align-items:center;justify-content:center;gap:7px;min-height:20px;');
-    ov.appendChild(_abLabel); var seat=[];
-    for(var _s=0;_s<NS_FANS.length;_s++){ if(NS_FANS[_s]&&NS_FANS[_s].pose==='seated') seat.push(NS_FANS[_s]);
-    } if(!seat.length) seat=NS_FANS;
-    var _pk=(window._FAN_NAT?Object.keys(window._FAN_NAT):['Brazil']);
-    var _cn=_pk[Math.floor(Math.random()*_pk.length)];
-    var _col=(window._FAN_NAT&&window._FAN_NAT[_cn])||'#a9c94b';
-    var _fan=(seat&&seat.length)?seat[Math.floor(Math.random()*seat.length)]:null;
-    /* ability showreel: when assets/generated/load-<name>-sheet.png exists it replaces the seated
-       fan — a horizontal strip of SQUARE frames at any size (frame width = image height). One is
-       picked at random per boot; while it hasn't loaded (or the file is absent) the fan plays. */
-    var _abImg=null; try{ var _abpool=['ghost',
-    'drill','aftershock','wet',
-    'bumper','chip'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
+    ov.appendChild(_abLabel);
+    /* ability showreel: a real-engine gameplay clip (captured by tools/capture-abilities.mjs)
+       plays in the viewport — a horizontal strip of SQUARE frames at any size (frame width =
+       image height). One ability is picked at random per boot. No fan fallback: the viewport
+       just stays empty for the few hundred ms before the sheet loads, then the clip plays. */
+    var _abImg=null; try{ var _abpool=['curve',
+    'ghost','drill','aftershock',
+    'wet','bumper','chip'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     if(_abn && typeof TACTIC_MAP!=='undefined' && TACTIC_MAP[_abn]){ if(typeof ICON_SRC!=='undefined' && ICON_SRC[_abn]){ var _abIc=document.createElement('img');
     _abIc.src=ICON_SRC[_abn]; _abIc.style.cssText='width:22px;height:22px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));';
@@ -1680,7 +1675,7 @@
     } var real=loaded/total;
     var p=Math.min(real,Math.max(0.05,elapsed/MIN));
     var finish=((real>=1&&elapsed>=MIN)||elapsed>9000);
-    if(finish) p=1; var _drawn=false;
+    if(finish) p=1;
     if(_abImg&&_abImg.complete&&_abImg.naturalWidth>0&&_abImg.naturalHeight>0){ var _fh=_abImg.naturalHeight, _nf=Math.max(1,Math.floor(_abImg.naturalWidth/_fh)), _af=Math.floor(elapsed/120)%_nf;
     /* size the canvas to the sheet's own frame so big art draws 1:1 (nearest-neighbour
        downscales shred pixel art); the CSS size stays 130px either way */
@@ -1688,11 +1683,7 @@
     cv.height=_fh; g.imageSmoothingEnabled=false;
     } g.clearRect(0,0,cv.width,cv.height);
     g.drawImage(_abImg,_af*_fh,0,_fh,_fh,0,0,_fh,_fh);
-    _drawn=true; } if(!_drawn){ var fr=_fan?_fanFrame(_fan.img,Math.floor(elapsed/150),{c:_col,hairTop:13}):null;
-    if(fr){ if(cv.width!==48){ cv.width=48;
-    cv.height=48; g.imageSmoothingEnabled=false;
-    } g.clearRect(0,0,48,48);
-    g.drawImage(fr,0,0); } } fill.style.width=(p*100)+'%';
+    } fill.style.width=(p*100)+'%';
     coin.style.left=(p*barW)+'px';
     pct.textContent='LOADING  '+Math.round(p*100)+'%';
     if(finish){ done=true; ov.style.opacity='0';
