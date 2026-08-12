@@ -1663,13 +1663,16 @@
     if(NS_TROPHY) imgs.push(NS_TROPHY);
     if(typeof NS_ROYMAP!=='undefined'&&NS_ROYMAP) imgs.push(NS_ROYMAP);
     if(typeof NS_ROYMAP2!=='undefined'&&NS_ROYMAP2) imgs.push(NS_ROYMAP2);
-    }catch(e){} var total=Math.max(1,imgs.length), t0=performance.now(), MIN=1100, done=false;
+    /* MIN holds the loader on screen at least this long so the ability clip (a ~1.44s,
+       12-frame loop) plays through a couple of times before the game takes over — at 1100ms
+       it flashed by too fast to read. The bar is paced to MIN, so it fills over this window. */
+    }catch(e){} var total=Math.max(1,imgs.length), t0=performance.now(), MIN=3400, done=false;
     function step(){ if(done) return;
     var elapsed=performance.now()-t0, loaded=0;
     for(var i=0;i<imgs.length;i++){ if(imgs[i].complete&&imgs[i].naturalWidth) loaded++;
     } var real=loaded/total;
     var p=Math.min(real,Math.max(0.05,elapsed/MIN));
-    var finish=((real>=1&&elapsed>=MIN)||elapsed>6000);
+    var finish=((real>=1&&elapsed>=MIN)||elapsed>9000);
     if(finish) p=1; var _drawn=false;
     if(_abImg&&_abImg.complete&&_abImg.naturalWidth>0&&_abImg.naturalHeight>0){ var _fh=_abImg.naturalHeight, _nf=Math.max(1,Math.floor(_abImg.naturalWidth/_fh)), _af=Math.floor(elapsed/120)%_nf;
     /* size the canvas to the sheet's own frame so big art draws 1:1 (nearest-neighbour
