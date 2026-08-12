@@ -1604,7 +1604,10 @@
     logo.appendChild(mk('div',FS(26,'#a9c94b')+'letter-spacing:1px;'+ex,'PARTY'));
     ov.appendChild(logo); var cv=document.createElement('canvas');
     cv.width=48; cv.height=48;
-    cv.style.cssText='width:130px;height:130px;image-rendering:pixelated;filter:drop-shadow(0 5px 10px rgba(0,0,0,0.55));';
+    /* the ability clips are real pitch frames (opaque), so frame the canvas as a little
+       viewport — rounded + a soft kit-green border. The fan fallback is transparent and
+       just sits inside the same frame, which still reads fine. */
+    cv.style.cssText='width:130px;height:130px;image-rendering:pixelated;border-radius:12px;border:2px solid rgba(169,201,75,0.55);box-shadow:0 5px 12px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(0,0,0,0.35);';
     var g=cv.getContext('2d');
     g.imageSmoothingEnabled=false;
     ov.appendChild(cv); var seat=[];
@@ -1617,10 +1620,9 @@
     /* ability showreel: when assets/generated/load-<name>-sheet.png exists it replaces the seated
        fan — a horizontal strip of SQUARE frames at any size (frame width = image height). One is
        picked at random per boot; while it hasn't loaded (or the file is absent) the fan plays. */
-    var _abImg=null; try{ var _abpool=['banana',
-    'cannon','chip','ghost',
-    'freeze','wall','portal',
-    'aftershock','shield'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
+    var _abImg=null; try{ var _abpool=['ghost',
+    'drill','aftershock','wet',
+    'bumper','chip'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     }catch(e){}
     var barW=210; var track=mk('div','position:relative;width:'+barW+'px;height:14px;background:#221c33;border:2px solid #3a3050;border-radius:9px;box-shadow:inset 0 0 6px rgba(0,0,0,0.6);');
