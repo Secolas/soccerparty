@@ -40,9 +40,8 @@
       ambient.push({kind:'tram', x:Math.random()*CW, dir:1, vx:0.22});
       } else if(t==='fiesta'){ // dancers (people) removed — the birds stay
       for(var j=0;j<3;j++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.14+Math.random()*0.16, phase:Math.random()*6.28});
-      } else if(t==='coast'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.18, phase:Math.random()*6.28});
-      ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.05});
-      ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.045, small:true});
+      } else if(t==='coast'){ // ships removed (same as beach — the surround isn't open sea); birds/sun/cypress stay
+      for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.18, phase:Math.random()*6.28});
       } else if(t==='safari'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:OY*0.55, vx:0.16});
       ambient.push({kind:'antelope', x:Math.random()*CW, y:CH-OY*0.5, vx:-0.14});
