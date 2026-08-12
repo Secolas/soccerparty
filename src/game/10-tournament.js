@@ -1614,6 +1614,13 @@
     var _cn=_pk[Math.floor(Math.random()*_pk.length)];
     var _col=(window._FAN_NAT&&window._FAN_NAT[_cn])||'#a9c94b';
     var _fan=(seat&&seat.length)?seat[Math.floor(Math.random()*seat.length)]:null;
+    /* ability showreel: when assets/generated/load-<name>-sheet.png exists it replaces the seated
+       fan — a horizontal strip of SQUARE frames at any size (frame width = image height). One is
+       picked at random per boot; while it hasn't loaded (or the file is absent) the fan plays. */
+    var _abImg=null; try{ var _abn=['banana',
+    'cannon','chip'][Math.floor(Math.random()*3)];
+    _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
+    }catch(e){}
     var barW=210; var track=mk('div','position:relative;width:'+barW+'px;height:14px;background:#221c33;border:2px solid #3a3050;border-radius:9px;box-shadow:inset 0 0 6px rgba(0,0,0,0.6);');
     var fill=mk('div','position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(#a9c94b,#8fbf2a);border-radius:7px;');
     var coin=mk('div','position:absolute;top:50%;left:0;width:20px;height:20px;margin-top:-10px;margin-left:-10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7e0,#f4e9c8 55%,#b8a678);box-shadow:0 0 7px #f4e9c8,0 2px 3px rgba(0,0,0,0.5);border:1px solid #8a7a4a;');
@@ -1659,9 +1666,19 @@
     } var real=loaded/total;
     var p=Math.min(real,Math.max(0.05,elapsed/MIN));
     var finish=((real>=1&&elapsed>=MIN)||elapsed>6000);
-    if(finish) p=1; var fr=_fan?_fanFrame(_fan.img,Math.floor(elapsed/150),{c:_col,hairTop:13}):null;
-    if(fr){ g.clearRect(0,0,48,48);
-    g.drawImage(fr,0,0); } fill.style.width=(p*100)+'%';
+    if(finish) p=1; var _drawn=false;
+    if(_abImg&&_abImg.complete&&_abImg.naturalWidth>0&&_abImg.naturalHeight>0){ var _fh=_abImg.naturalHeight, _nf=Math.max(1,Math.floor(_abImg.naturalWidth/_fh)), _af=Math.floor(elapsed/120)%_nf;
+    /* size the canvas to the sheet's own frame so big art draws 1:1 (nearest-neighbour
+       downscales shred pixel art); the CSS size stays 130px either way */
+    if(cv.width!==_fh){ cv.width=_fh;
+    cv.height=_fh; g.imageSmoothingEnabled=false;
+    } g.clearRect(0,0,cv.width,cv.height);
+    g.drawImage(_abImg,_af*_fh,0,_fh,_fh,0,0,_fh,_fh);
+    _drawn=true; } if(!_drawn){ var fr=_fan?_fanFrame(_fan.img,Math.floor(elapsed/150),{c:_col,hairTop:13}):null;
+    if(fr){ if(cv.width!==48){ cv.width=48;
+    cv.height=48; g.imageSmoothingEnabled=false;
+    } g.clearRect(0,0,48,48);
+    g.drawImage(fr,0,0); } } fill.style.width=(p*100)+'%';
     coin.style.left=(p*barW)+'px';
     pct.textContent='LOADING  '+Math.round(p*100)+'%';
     if(finish){ done=true; ov.style.opacity='0';
