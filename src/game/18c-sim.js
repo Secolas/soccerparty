@@ -68,6 +68,9 @@
             return {
               board: (typeof boardKey !== 'undefined') ? boardKey : null,
               mode: mode, tier: (typeof hzTier === 'function') ? hzTier() : -1,
+              // board geometry, so a test can place a shot relative to the walls/corners
+              W: (typeof W !== 'undefined') ? W : 0, H: (typeof H !== 'undefined') ? H : 0,
+              WALL: (typeof WALL !== 'undefined') ? WALL : 0,
               x: coin.x, y: coin.y, vx: coin.vx, vy: coin.vy,
               air: coin.air || 0, moving: !!moving, phase: phase, turn: current,
               red: score.red, blue: score.blue,
