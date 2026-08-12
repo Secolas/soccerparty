@@ -51,7 +51,7 @@
       for(var i=0;i<n;i++){ (function(k){
         var c=mk('div','width:11px;height:11px;background:url('+coinCSS()+') center/contain no-repeat;image-rendering:pixelated;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));');
         var jx=sx+(Math.random()*2-1)*46, jy=sy+(Math.random()*2-1)*24;
-        try{ flyTo(c, jx, jy, wl, {hold:70+k*60, dur:520, endScale:0.66}, function(){ landed++;
+        try{ flyTo(c, jx, jy, wl, {hold:70+k*60, dur:520, endScale:0.66, pop:false}, function(){ landed++;
         ecoChing(k); var v=from+Math.round((landed/n)*total);
         if(landed>=n) v=to; ecoWalletShown[side]=v;
         if(wn) wn.textContent=v;
