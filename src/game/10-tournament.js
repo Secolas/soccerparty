@@ -1617,8 +1617,10 @@
     /* ability showreel: when assets/generated/load-<name>-sheet.png exists it replaces the seated
        fan — a horizontal strip of SQUARE frames at any size (frame width = image height). One is
        picked at random per boot; while it hasn't loaded (or the file is absent) the fan plays. */
-    var _abImg=null; try{ var _abn=['banana',
-    'cannon','chip'][Math.floor(Math.random()*3)];
+    var _abImg=null; try{ var _abpool=['banana',
+    'cannon','chip','ghost',
+    'freeze','wall','portal',
+    'aftershock','shield'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     }catch(e){}
     var barW=210; var track=mk('div','position:relative;width:'+barW+'px;height:14px;background:#221c33;border:2px solid #3a3050;border-radius:9px;box-shadow:inset 0 0 6px rgba(0,0,0,0.6);');
