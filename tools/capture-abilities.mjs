@@ -48,9 +48,15 @@ const SCENES = {
   // ball turns translucent and phases through an opponent defender token
   ghost: { red: ['ghost'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
     center: { x: CX, y: MID }, put: { x: CX, y: MID + 40, vx: 0, vy: -3.4, turn: 'red' }, gap: 55 },
-  // ball lobs high over an opponent token (airborne shots ignore players) and drops back down
-  chip: { red: ['chip'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
-    center: { x: CX, y: MID + 2 }, put: { x: CX, y: MID + 30, vx: 0, vy: -2.3, air: 30, turn: 'red' }, gap: 55 },
+  // ball JUMPS high over an opponent token (airborne shots ignore players) and drops beyond it
+  chip: { red: ['chip'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID + 8 },
+    center: { x: CX, y: MID }, box: 96, put: { x: CX, y: MID + 30, vx: 0, vy: -2.0, air: 36, turn: 'red' }, gap: 55 },
+  // ball snakes up the pitch in a smooth S (serpent self-corrects its axis from the heading)
+  serpent: { red: ['serpent'], blue: [], def: null, center: { x: CX, y: MID + 6 }, box: 108,
+    put: { x: CX, y: MID + 54, vx: 0, vy: -2.4, turn: 'red' }, gap: 55 },
+  // ball thuds to a dead stop against a heavy ANCHOR token (its speed collapses on contact)
+  anchor: { red: [], blue: ['anchor', 'defender'], def: 'blue', dampOnly: true, spot: { x: CX, y: MID },
+    center: { x: CX, y: MID }, put: { x: CX, y: MID + 40, vx: 0, vy: -4.2, turn: 'red' }, gap: 55 },
   // ball barges an opponent token aside and powers through
   drill: { red: ['drill'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
     center: { x: CX, y: MID }, put: { x: CX, y: MID + 40, vx: 0, vy: -3.6, turn: 'red' }, gap: 55 },
@@ -93,17 +99,17 @@ for (const name of names) {
   // hide overlays that would bleed into the crop (VS card, kickoff banner)
   await page.evaluate(() => { ['ns_vs', 'ns_status'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; }); });
   // relocate nails: put the chosen token at `spot`, park every other outfield token off-camera
-  await page.evaluate(({ def, spot }) => {
+  await page.evaluate(({ def, spot, dampOnly }) => {
     const nails = window.__spSim.probe().nails;
     let defIdx = -1;
-    if (def) defIdx = nails.findIndex(n => n.team === def && !n.goalie);
+    if (def) defIdx = nails.findIndex(n => n.team === def && !n.goalie && (!dampOnly || n.damp));
     let edge = 0;
     nails.forEach((n, i) => {
       if (n.goalie) return;                 // keepers stay off-camera
       if (i === defIdx) window.__spSim.nail({ i, x: spot.x, y: spot.y });
       else { window.__spSim.nail({ i, x: (edge % 2 ? 12 : 234 - 12), y: 300 + edge * 12 }); edge++; }
     });
-  }, { def: S.def, spot: S.spot || S.center });
+  }, { def: S.def, spot: S.spot || S.center, dampOnly: !!S.dampOnly });
   // launch, then capture full-canvas frames + ball positions
   const cap = await page.evaluate(async ({ put, frames, gap }) => {
     window.__spSim.put(put);
