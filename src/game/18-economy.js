@@ -49,7 +49,7 @@
       var sx=r?(r.left+r.width/2):(window.innerWidth/2), sy=r?(r.top+r.height*0.4):(window.innerHeight/2);
       var total=to-from, n=Math.max(3,Math.min(10,total)), landed=0;
       for(var i=0;i<n;i++){ (function(k){
-        var c=mk('div','width:16px;height:16px;background:url('+coinCSS()+') center/contain no-repeat;image-rendering:pixelated;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));');
+        var c=mk('div','width:11px;height:11px;background:url('+coinCSS()+') center/contain no-repeat;image-rendering:pixelated;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));');
         var jx=sx+(Math.random()*2-1)*46, jy=sy+(Math.random()*2-1)*24;
         try{ flyTo(c, jx, jy, wl, {hold:70+k*60, dur:520, endScale:0.66}, function(){ landed++;
         ecoChing(k); var v=from+Math.round((landed/n)*total);
