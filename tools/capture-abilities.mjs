@@ -69,6 +69,10 @@ const SCENES = {
   // ball ricochets off one of your OWN players with extra speed
   bumper: { red: ['bumper'], blue: [], def: 'red', spot: { x: CX, y: MID },
     center: { x: CX, y: MID }, put: { x: CX + 5, y: MID + 42, vx: -0.5, vy: -3.8, turn: 'red' }, gap: 55 },
+  // opponent's soft shot bends into the magnetic keeper and is caught (aim + camera from probe)
+  magnet: { red: ['magnet'], blue: [], def: null, dyn: 'magnet', gap: 55 },
+  // ball fired into the corner portal by the goal warps out the opposite corner (whole-board view)
+  portal: { red: ['portal'], blue: [], def: null, dyn: 'portal', gap: 60 },
 };
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.json': 'application/json' };
@@ -110,6 +114,20 @@ for (const name of names) {
       else { window.__spSim.nail({ i, x: (edge % 2 ? 12 : 234 - 12), y: 300 + edge * 12 }); edge++; }
     });
   }, { def: S.def, spot: S.spot || S.center, dampOnly: !!S.dampOnly });
+  // dynamic scenes (magnet/portal) derive their aim + camera from the live board geometry
+  const eff = await page.evaluate(({ dyn, put, center, box }) => {
+    if (!dyn) return { put, center, box };
+    const p = window.__spSim.probe();
+    if (dyn === 'magnet') {                                   // blue shoots softly at red's magnetic keeper
+      const k = p.nails.find(n => n.team === 'red' && n.goalie) || { x: p.W / 2, y: p.H - 30 };
+      return { put: { x: k.x, y: k.y - 60, vx: 0.35, vy: 2.9, turn: 'blue' }, center: { x: k.x, y: k.y - 10 }, box: 100 };
+    }
+    if (dyn === 'portal') {                                   // fire into red's bottom-left corner portal (framed on the entry swirl)
+      const ex = p.WALL + 11, ey = p.H - p.WALL - 11;
+      return { put: { x: ex + 30, y: ey - 30, vx: -2.8, vy: 2.8, turn: 'red' }, center: { x: ex + 8, y: ey - 8 }, box: 92 };
+    }
+    return { put, center, box };
+  }, { dyn: S.dyn || null, put: S.put || null, center: S.center || null, box: S.box || null });
   // launch, then capture full-canvas frames + ball positions
   const cap = await page.evaluate(async ({ put, frames, gap }) => {
     window.__spSim.put(put);
@@ -126,8 +144,8 @@ for (const name of names) {
       requestAnimationFrame(grab);
     });
     return { shots, pos, cw: c.width, ch: c.height };
-  }, { put: S.put, frames: FRAMES, gap: S.gap });
-  collected[name] = cap;
+  }, { put: eff.put, frames: FRAMES, gap: S.gap });
+  collected[name] = { ...cap, center: eff.center, box: eff.box };
   console.log(`captured ${name}: ${cap.shots.length} frames (${cap.cw}x${cap.ch})`);
 }
 await browser.close();
@@ -152,8 +170,8 @@ for (const name of names) {
   const frames = cap.shots.map(decode);
   const sheet = new PNG({ width: OUT * frames.length, height: OUT });
   frames.forEach((fr, i) => {
-    const c = S.center;
-    const cell = cropScaled(fr, c.x, c.y, S.box || BOX, OUT);
+    const c = cap.center || S.center;
+    const cell = cropScaled(fr, c.x, c.y, cap.box || S.box || BOX, OUT);
     for (let y = 0; y < OUT; y++) for (let x = 0; x < OUT; x++) {
       const si = (OUT * y + x) << 2, di = (sheet.width * y + (i * OUT + x)) << 2;
       sheet.data[di] = cell.data[si]; sheet.data[di + 1] = cell.data[si + 1]; sheet.data[di + 2] = cell.data[si + 2]; sheet.data[di + 3] = 255;

@@ -1622,7 +1622,8 @@
     var _abImg=null; try{ var _abpool=['curve',
     'ghost','drill','aftershock',
     'wet','bumper','chip',
-    'serpent','anchor'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
+    'serpent','anchor','magnet',
+    'portal'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     if(_abn && typeof TACTIC_MAP!=='undefined' && TACTIC_MAP[_abn]){ if(typeof ICON_SRC!=='undefined' && ICON_SRC[_abn]){ var _abIc=document.createElement('img');
     _abIc.src=ICON_SRC[_abn]; _abIc.style.cssText='width:22px;height:22px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));';
@@ -1653,7 +1654,21 @@
     {i:null,t:'Fall two goals behind and you are handed a free comeback ability.'},
     {i:null,t:'Your goalie auto-tracks the ball along its goal line.'},
     {i:null,t:'Try Stadium Royale for a run through themed arenas.'}];
-    var _tp=TIPS[Math.floor(Math.random()*TIPS.length)];
+    /* the bottom tip explains the SAME ability the clip is playing, so the icon, the animation and
+       the text always agree. One short line per pooled ability; falls back to a random tip only if
+       the clip somehow isn't a known ability. */
+    var _ABTIP={curve:'CURVEBALL: nudge left or right as you aim and the shot banana-curves that way.',
+    ghost:'GHOST: your shot phases through the players it hits — keepers still block.',
+    drill:'DRILL SHOT: your shot barges the first defender aside and powers through.',
+    aftershock:'AFTERSHOCK: your shot shocks the first piece it hits, frozen until your turn ends.',
+    wet:'WET SHOT: a slippery ball skids off walls and players toward the far goal.',
+    bumper:'BUMPER: your own players are bumpers — the ball ricochets off them faster.',
+    chip:'CHIP SHOT: tap after you flick to lob the ball up and over the players and keeper.',
+    serpent:'SERPENT SHOT: your shot snakes down the pitch in a smooth S.',
+    anchor:'ANCHOR: one heavy player kills the ball’s speed when it hits — even ghost shots.',
+    magnet:'MAGNET: soft or slow shots at your keeper bend in and are caught.',
+    portal:'PORTAL: fire into the corner portal by your goal — it warps out the opposite corner.'};
+    var _tp=(_abn&&_ABTIP[_abn])?{i:_abn,t:_ABTIP[_abn]}:TIPS[Math.floor(Math.random()*TIPS.length)];
     var trow=mk('div','position:absolute;left:0;right:0;bottom:24px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 22px;box-sizing:border-box;');
     if(_tp.i&&ICON_SRC[_tp.i]){ var _ic=document.createElement('img');
     _ic.src=ICON_SRC[_tp.i];
