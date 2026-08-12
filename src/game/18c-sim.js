@@ -105,7 +105,10 @@
             if (o.reset !== false) { try { trioReset(); } catch (e) {} }
             coin.x = o.x; coin.y = o.y;
             coin.vx = o.vx || 0; coin.vy = o.vy || 0;
-            coin.air = o.air || 0; coin.air0 = o.air || 0; coin.spin = 0;
+            coin.air = o.air || 0; coin.air0 = o.air || 0;
+            // spin drives the real Magnus curve in stepPhysics; CURVEBALL sets it at flick time,
+            // so a placed shot can reproduce the banana by passing o.spin (0 = straight, the default).
+            coin.spin = o.spin || 0;
             moving = !!(coin.vx || coin.vy);
             return true;
           } catch (e) { return String(e); }

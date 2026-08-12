@@ -42,12 +42,15 @@ const BOX = 84, OUT = 60, FRAMES = 12;          // tight window -> big readable 
 // then launches a SLOW ball so the effect stays in frame. Fixed camera at `center`
 // unless `follow` (a tracking shot). `gap` ms between captured frames.
 const SCENES = {
+  // ball banana-curves across the frame (real Magnus from coin.spin; a wider view fits the arc)
+  curve: { red: ['curve'], blue: [], def: null, center: { x: CX, y: MID + 4 }, box: 116,
+    put: { x: CX + 15, y: MID + 44, vx: 0.2, vy: -3.4, spin: 2.6, turn: 'red' }, gap: 55 },
   // ball turns translucent and phases through an opponent defender token
   ghost: { red: ['ghost'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
     center: { x: CX, y: MID }, put: { x: CX, y: MID + 40, vx: 0, vy: -3.4, turn: 'red' }, gap: 55 },
-  // ball lobs up over an opponent token and drops back down (real chip via the air param)
+  // ball lobs high over an opponent token (airborne shots ignore players) and drops back down
   chip: { red: ['chip'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
-    center: { x: CX, y: MID + 4 }, put: { x: CX, y: MID + 34, vx: 0, vy: -2.6, air: 26, turn: 'red' }, gap: 55 },
+    center: { x: CX, y: MID + 2 }, put: { x: CX, y: MID + 30, vx: 0, vy: -2.3, air: 30, turn: 'red' }, gap: 55 },
   // ball barges an opponent token aside and powers through
   drill: { red: ['drill'], blue: ['defender', 'striker'], def: 'blue', spot: { x: CX, y: MID },
     center: { x: CX, y: MID }, put: { x: CX, y: MID + 40, vx: 0, vy: -3.6, turn: 'red' }, gap: 55 },
@@ -144,7 +147,7 @@ for (const name of names) {
   const sheet = new PNG({ width: OUT * frames.length, height: OUT });
   frames.forEach((fr, i) => {
     const c = S.center;
-    const cell = cropScaled(fr, c.x, c.y, BOX, OUT);
+    const cell = cropScaled(fr, c.x, c.y, S.box || BOX, OUT);
     for (let y = 0; y < OUT; y++) for (let x = 0; x < OUT; x++) {
       const si = (OUT * y + x) << 2, di = (sheet.width * y + (i * OUT + x)) << 2;
       sheet.data[di] = cell.data[si]; sheet.data[di + 1] = cell.data[si + 1]; sheet.data[di + 2] = cell.data[si + 2]; sheet.data[di + 3] = 255;
