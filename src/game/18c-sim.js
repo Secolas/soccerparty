@@ -72,7 +72,7 @@
               air: coin.air || 0, moving: !!moving, phase: phase, turn: current,
               red: score.red, blue: score.blue,
               // the pegs, so a test can check nothing was placed standing in a hazard
-              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie, shock:!!n._aftShock}; }),
+              nails: nails.map(function(n){ return {x:n.x, y:n.y, team:n.team, goalie:!!n.goalie, shock:!!n._aftShock, damp:!!n.damp}; }),
               // CPU aim-telegraph state, so a test can catch a wind-up frame
               aiPending: (typeof aiPending!=='undefined') ? !!aiPending : false,
               aiAim: (typeof aiAim!=='undefined' && aiAim) ? {x:aiAim.x, y:aiAim.y} : null,

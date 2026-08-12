@@ -1605,15 +1605,15 @@
     ov.appendChild(logo); var cv=document.createElement('canvas');
     cv.width=48; cv.height=48;
     /* the ability clips are real pitch frames (opaque), so frame the canvas as a little
-       viewport — rounded + a soft kit-green border. The fan fallback is transparent and
-       just sits inside the same frame, which still reads fine. */
-    cv.style.cssText='width:130px;height:130px;image-rendering:pixelated;border-radius:12px;border:2px solid rgba(169,201,75,0.55);box-shadow:0 5px 12px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(0,0,0,0.35);';
+       viewport — rounded + a soft kit-green border. Hidden (space reserved) until the clip
+       sheet has loaded, so it reveals with the first real frame instead of flashing empty. */
+    cv.style.cssText='width:130px;height:130px;image-rendering:pixelated;border-radius:12px;border:2px solid rgba(169,201,75,0.55);box-shadow:0 5px 12px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(0,0,0,0.35);visibility:hidden;transition:opacity 0.25s;opacity:0;';
     var g=cv.getContext('2d');
     g.imageSmoothingEnabled=false;
     ov.appendChild(cv);
     /* names the ability playing in the clip above, with its scoreboard icon. Filled once the
-       clip is picked below; sits between the viewport and the progress bar. */
-    var _abLabel=mk('div','display:flex;align-items:center;justify-content:center;gap:7px;min-height:20px;');
+       clip is picked below; revealed together with the viewport when the clip loads. */
+    var _abLabel=mk('div','display:flex;align-items:center;justify-content:center;gap:7px;min-height:20px;visibility:hidden;transition:opacity 0.25s;opacity:0;');
     ov.appendChild(_abLabel);
     /* ability showreel: a real-engine gameplay clip (captured by tools/capture-abilities.mjs)
        plays in the viewport — a horizontal strip of SQUARE frames at any size (frame width =
@@ -1621,7 +1621,8 @@
        just stays empty for the few hundred ms before the sheet loads, then the clip plays. */
     var _abImg=null; try{ var _abpool=['curve',
     'ghost','drill','aftershock',
-    'wet','bumper','chip'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
+    'wet','bumper','chip',
+    'serpent','anchor'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
     if(_abn && typeof TACTIC_MAP!=='undefined' && TACTIC_MAP[_abn]){ if(typeof ICON_SRC!=='undefined' && ICON_SRC[_abn]){ var _abIc=document.createElement('img');
     _abIc.src=ICON_SRC[_abn]; _abIc.style.cssText='width:22px;height:22px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));';
@@ -1674,9 +1675,15 @@
     for(var i=0;i<imgs.length;i++){ if(imgs[i].complete&&imgs[i].naturalWidth) loaded++;
     } var real=loaded/total;
     var p=Math.min(real,Math.max(0.05,elapsed/MIN));
-    var finish=((real>=1&&elapsed>=MIN)||elapsed>9000);
+    var _clipReady=_abImg&&_abImg.complete&&_abImg.naturalWidth>0&&_abImg.naturalHeight>0;
+    /* don't finish until the clip has loaded and played its hold — so it is always seen — but
+       a 10s hard cap still releases boot if the sheet 404s or stalls. */
+    var finish=((real>=1&&elapsed>=MIN&&_clipReady)||elapsed>10000);
     if(finish) p=1;
-    if(_abImg&&_abImg.complete&&_abImg.naturalWidth>0&&_abImg.naturalHeight>0){ var _fh=_abImg.naturalHeight, _nf=Math.max(1,Math.floor(_abImg.naturalWidth/_fh)), _af=Math.floor(elapsed/120)%_nf;
+    if(_clipReady){ var _fh=_abImg.naturalHeight, _nf=Math.max(1,Math.floor(_abImg.naturalWidth/_fh)), _af=Math.floor(elapsed/120)%_nf;
+    if(cv.style.visibility==='hidden'){ cv.style.visibility='visible';   // reveal viewport + label with the first real frame
+    cv.style.opacity='1'; _abLabel.style.visibility='visible';
+    _abLabel.style.opacity='1'; }
     /* size the canvas to the sheet's own frame so big art draws 1:1 (nearest-neighbour
        downscales shred pixel art); the CSS size stays 130px either way */
     if(cv.width!==_fh){ cv.width=_fh;
