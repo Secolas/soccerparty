@@ -16,34 +16,14 @@
     function buildAmbient(){
       ambient=[];
       const t=ambType();
-      if(t==='stadium'||t==='arena'){ var _NC=window._FAN_NAT||{};
-      var _lt=(_NC[teamKits['blue']&&teamKits['blue'].name])||(teamKits['blue']&&teamKits['blue'].primary)||'#3b6fe0';
-      var _rt=(_NC[teamKits['red']&&teamKits['red'].name])||(teamKits['red']&&teamKits['red'].primary)||'#e0432b';
-      var _kl=(teamKits['blue']&&teamKits['blue'].kit&&teamKits['blue'].kit.colors)||[_lt];
-      var _kr=(teamKits['red']&&teamKits['red'].kit&&teamKits['red'].kit.colors)||[_rt];
-      var _pl=(window._FAN_PAL&&window._FAN_PAL[teamKits['blue']&&teamKits['blue'].name])||[_lt];
-      var _pr=(window._FAN_PAL&&window._FAN_PAL[teamKits['red']&&teamKits['red'].name])||[_rt];
-      var _rows=Math.max(7,Math.floor((H-16)/20));
-      for(var _sd=0;_sd<2;_sd++){ for(var _r=0;_r<_rows;_r++){ var _lft=(_sd===0);
-      var _e=NS_FANS[Math.floor(Math.random()*NS_FANS.length)];
-      var _fp=(_lft?_pl:_pr); var _cc=_fp[Math.floor(Math.random()*_fp.length)];
-      var _cnm=_lft?(teamKits['blue']&&teamKits['blue'].name):(teamKits['red']&&teamKits['red'].name);
-      var _tn=(_e&&_e.pose==='flag')?(window._flagTintFor?window._flagTintFor(_cnm,_cc):_cc):{c:_cc,hairTop:(_e&&(_e.pose==='standing'||_e.pose==='seated'))?15:0};
-      var _bx=(_lft?6:(OX+W+6))+(Math.random()-0.5)*1.5;
-      var _by=OY+9+(_r+0.5)*((H-18)/_rows)+(Math.random()-0.5)*2.5;
-      ambient.push({kind:'fan', img:(_e&&_e.img), x:_bx, y:_by, phase:Math.floor(Math.random()*9), spd:0.004+Math.random()*0.005, tint:_tn, flip:((_e&&_e.pose==='flag')?(_sd===0):(_sd===1))});
-      } } } if(t==='beach'){
+      // stadium/arena crowd fans removed — those stands are left empty (only the tiered fill remains)
+      if(t==='beach'){
         for(let i=0;i<5;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.18+Math.random()*0.22, phase:Math.random()*6.28});
         ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.06});
         ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.05, small:true});
       } else if(t==='winter'){
         for(let i=0;i<88;i++) ambient.push({kind:'snow', x:Math.random()*CW, y:Math.random()*CH, vy:0.12+Math.random()*0.28, drift:Math.random()*6.28, sz:Math.random()<0.3?2:1});
-        // skaters gliding around the rink border
-        const rinkSpots=[[0,OY*0.5,1],[0,CH-OY*0.5,1],[OX*0.5,0,0],[CW-OX*0.5,0,0]];
-        for(let i=0;i<7;i++){ const horiz=Math.random()<0.6;
-        ambient.push({kind:'skater', horiz, x:Math.random()*CW, y: horiz ? (Math.random()<0.5? OY*0.55 : CH-OY*0.55) : (OY+Math.random()*H), band: horiz?null:(Math.random()<0.5?'L':'R'), vx:(Math.random()<0.5?-1:1)*(0.22+Math.random()*0.26), phase:Math.random()*6.28, col:['#d94a5a',
-        '#4a7fd9','#e0a83a','#4cae74',
-        '#c86ad0'][i%5] }); }
+        // skaters (people) removed — the falling snow stays
       } else if(t==='cyber'){
         for(let i=0;i<3;i++) ambient.push({kind:'drone', x:Math.random()*CW, y:4+Math.random()*(OY-11), vx:(Math.random()<0.5?-1:1)*(0.14+Math.random()*0.18), phase:Math.random()*6.28});
         for(let i=0;i<4;i++) ambient.push({kind:'beam', x:Math.random()*CW, hue:['#2ff3ff','#ff5adc','#b06aff','#5aff9e'][i%4], sp:0.6+Math.random()*0.8, phase:Math.random()*6.28});
@@ -59,11 +39,8 @@
         ambient.push({kind:'deer', x:CW*0.5, y:CH-OY*0.42});
       } else if(t==='lisbon'){ for(var i=0;i<3;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.16, phase:Math.random()*6.28});
       ambient.push({kind:'tram', x:Math.random()*CW, dir:1, vx:0.22});
-      } else if(t==='fiesta'){ var fcol=['#e0433a',
-      '#f2c23a','#3aa050','#e0559a'];
-      for(var i=0;i<4;i++) ambient.push({kind:'dancer', x:(i<2? OX*0.5 : CW-OX*0.5), y:OY+18+ (i%2)*30, phase:Math.random()*6.28, col:fcol[i%4]});
+      } else if(t==='fiesta'){ // dancers (people) removed — the birds stay
       for(var j=0;j<3;j++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.14+Math.random()*0.16, phase:Math.random()*6.28});
-      } else if(t==='arena'){ for(var i=0;i<14;i++) ambient.push({kind:'flash', x:OX+Math.random()*W, y:(Math.random()<0.5? OY*0.5 : CH-OY*0.5), t0:Math.random()*6.28});
       } else if(t==='coast'){ for(var i=0;i<4;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.12+Math.random()*0.18, phase:Math.random()*6.28});
       ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.05});
       ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.045, small:true});
@@ -456,7 +433,7 @@
         drawPalm(6, OY-2); drawPalm(CW-6, CH-2);
         const uc=[['#e8544a','#f5f0e6'],['#3a8de0','#f5f0e6'],['#f5b83a','#f5f0e6'],['#3aa050','#f5f0e6'],['#e0559a','#f5f0e6']];
         for(let i=0;i<5;i++){ drawUmbrella(OX+14+i*36, 7, ...uc[i]); drawUmbrella(OX+30+i*36, OY+H+9, ...uc[(i+2)%5]); }
-        const wx=OX+10+((now*0.028)%(W-20)); drawDogWalker(Math.round(wx), OY+H+CROWD_TB-5, now);
+        // dog-walker (person) removed; umbrellas, palms, sun, birds and ships stay
       } else if(t==='urban'){
         drawLamp(4, OY-3); drawLamp(CW-9, OY-3); drawLamp(4, CH-3); drawLamp(CW-9, CH-3);
       } else if(t==='winter'){
@@ -470,8 +447,7 @@
       ['#3a8de0','#f5f0e6'],['#f5b83a',
       '#f5f0e6']]; for(var i=0;i<3;i++){ drawUmbrella(OX+22+i*40, OY+H+9, uc[i][0], uc[i][1]);
       } for(var k=0;k<3;k++){ drawMug(OX+34+k*40, OY+H+CROWD_TB-3);
-      } var wx=OX+10+((now*0.026)%(W-20));
-      drawDogWalker(Math.round(wx), OY+H+CROWD_TB-5, now);
+      } // dog-walker (person) removed; lamps, umbrellas, mugs, sun and birds stay
       } else if(t==='fiesta'){ drawSun(CW-7,6);
       drawBunting(3, OX, OX+W, ['#e0433a',
       '#f2c23a','#3aa050','#3a8de0',
