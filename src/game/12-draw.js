@@ -68,36 +68,9 @@
       } else {
         fillBands(board.stand);
       }
-      // people (fans / beachgoers / skaters-crowd / dancers) — nature & aquarium pitches stay creature-only
-      const showFans = at!=='desk' && at!=='aquarium';
-      const glow = at==='cyber';
-      if(showFans && at!=='stadium' && at!=='arena') for(const p of crowd){
-        if(p.hop>0||p.hv!==0){ p.hop+=p.hv; p.hv-=0.4; if(p.hop<=0){p.hop=0;p.hv=0;} }
-        if(banner>0&&p.hop===0&&Math.random()<0.05){ p.hv=(p.celebHi?3.6:2.2); }
-        const sway=Math.sin(now*0.004+p.phase)*(glow?1.1:0.6);
-        const y=p.y-p.hop+sway;
-        if(glow){ ctx.fillStyle='rgba(120,90,255,0.35)'; ctx.fillRect(Math.round(p.x-2),Math.round(y-2),5,6); }
-        ctx.fillStyle=p.shirt; ctx.fillRect(Math.round(p.x-1),Math.round(y-1),3,4);
-        ctx.fillStyle=p.skin; ctx.fillRect(Math.round(p.x-1),Math.round(y-4),2,2);
-        // handheld waving flag (stadium ultras only)
-        if(p.flag&&at==='stadium'){
-          const wv=Math.sin(now*0.012+p.phase)*1.2;
-          const fx=Math.round(p.x+1), fy=Math.round(y-7);
-          ctx.fillStyle='rgba(60,45,30,0.9)'; ctx.fillRect(fx,fy,1,5);              // pole
-          ctx.fillStyle=p.flagCol; ctx.fillRect(fx+1,Math.round(fy+wv),3,2);        // cloth
-        }
-      }
-      // per-pitch scenery (beach umbrellas/birds, snow, drones, etc.)
+      // Crowd removed: no fan dots, no tifo banners, no celebration camera-flashes. The surrounds
+      // are scenery-only now — nature and each pitch's own man-made props, drawn by drawAmbient.
       drawAmbient(now);
-      // giant tifo banners — official stadium only
-      if(ambType()==='stadium'){
-        drawTifo('blue', OX+W/2, OY*0.52, now);
-        drawTifo('red',  OX+W/2, OY+H+(CH-(OY+H))*0.48, now);
-      }
-      // camera flashes + roar during celebration
-      if(banner>0){
-        for(let i=0;i<7;i++){ const p=crowd[Math.floor(Math.random()*crowd.length)]; if(!p) continue; ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillRect(Math.round(p.x),Math.round(p.y-2),1,1); }
-      }
     }
 
     function drawFireworks(){
