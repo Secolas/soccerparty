@@ -1610,7 +1610,11 @@
     cv.style.cssText='width:130px;height:130px;image-rendering:pixelated;border-radius:12px;border:2px solid rgba(169,201,75,0.55);box-shadow:0 5px 12px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(0,0,0,0.35);';
     var g=cv.getContext('2d');
     g.imageSmoothingEnabled=false;
-    ov.appendChild(cv); var seat=[];
+    ov.appendChild(cv);
+    /* names the ability playing in the clip above, with its scoreboard icon. Filled once the
+       clip is picked below; sits between the viewport and the progress bar. */
+    var _abLabel=mk('div','display:flex;align-items:center;justify-content:center;gap:7px;min-height:20px;');
+    ov.appendChild(_abLabel); var seat=[];
     for(var _s=0;_s<NS_FANS.length;_s++){ if(NS_FANS[_s]&&NS_FANS[_s].pose==='seated') seat.push(NS_FANS[_s]);
     } if(!seat.length) seat=NS_FANS;
     var _pk=(window._FAN_NAT?Object.keys(window._FAN_NAT):['Brazil']);
@@ -1624,6 +1628,9 @@
     'drill','aftershock','wet',
     'bumper','chip'], _abn=_abpool[Math.floor(Math.random()*_abpool.length)];
     _abImg=new Image(); _abImg.src='assets/generated/load-'+_abn+'-sheet.png';
+    if(_abn && typeof TACTIC_MAP!=='undefined' && TACTIC_MAP[_abn]){ if(typeof ICON_SRC!=='undefined' && ICON_SRC[_abn]){ var _abIc=document.createElement('img');
+    _abIc.src=ICON_SRC[_abn]; _abIc.style.cssText='width:22px;height:22px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));';
+    _abLabel.appendChild(_abIc); } _abLabel.appendChild(mk('div',FS(9,'#c6e84a')+'letter-spacing:1px;',TACTIC_MAP[_abn].name)); }
     }catch(e){}
     var barW=210; var track=mk('div','position:relative;width:'+barW+'px;height:14px;background:#221c33;border:2px solid #3a3050;border-radius:9px;box-shadow:inset 0 0 6px rgba(0,0,0,0.6);');
     var fill=mk('div','position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(#a9c94b,#8fbf2a);border-radius:7px;');
