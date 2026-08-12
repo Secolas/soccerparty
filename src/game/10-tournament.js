@@ -1785,17 +1785,8 @@
     c.style.cssText='position:relative;width:134px;height:134px;image-rendering:pixelated;filter:drop-shadow(0 5px 10px rgba(0,0,0,0.55));';
     var g=c.getContext('2d');
     g.imageSmoothingEnabled=false;
-    try{ var _fl=(window._FLAGFANS||(window._FLAGFANS=NS_FANS.filter(function(x){return x.pose==='flag';
-    }))); var _hi=(_fl.length?_fl[(left?0:2)%_fl.length].img:null);
-    var _hkit=(p.kit&&p.kit.colors)||[p.primary];
-    if(_hi){ _vsHeroes.push({g:g,hi:_hi,nm:p.name,kit:_hkit,left:left});
-    } var _hf=_hi?_heroFrame(_hi,0,p.name,_hkit,left):null;
-    if(_hf){ if(left){ g.save();
-    g.translate(48,0); g.scale(-1,1);
-    g.drawImage(_hf,0,0); g.restore();
-    } else { g.drawImage(_hf,0,0);
-    } } else { paintPattern(g,0,8,48,32,p.kit);
-    } }catch(e){} fw.appendChild(c);
+    // clash-intro flag-fan hero removed — show the team's kit swatch instead
+    try{ paintPattern(g,0,8,48,32,p.kit); }catch(e){} fw.appendChild(c);
     box.appendChild(mk('div',FS(13,'#ffffff')+'text-align:center;letter-spacing:1px;max-width:96%;line-height:1.5;text-shadow:0 0 10px '+acc+',0 2px 0 rgba(0,0,0,0.7),0 4px 8px rgba(0,0,0,0.6);',p.name.toUpperCase()));
     box.appendChild(mk('div',FS(9,acc)+'letter-spacing:2px;text-shadow:0 0 8px '+acc+'88,0 2px 0 rgba(0,0,0,0.7);',((aiEnabled&&aiEnabled[sk])?'CPU':((!(aiEnabled&&aiEnabled[(sk==='red'?'blue':'red')]))?(sk==='red'?'P1':'P2'):'YOU'))));
     var row=mk('div','display:flex;gap:8px;margin-top:3px;align-items:flex-start;');

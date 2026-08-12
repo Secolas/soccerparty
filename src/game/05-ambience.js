@@ -18,9 +18,8 @@
       const t=ambType();
       // stadium/arena crowd fans removed — those stands are left empty (only the tiered fill remains)
       if(t==='beach'){
+        // ships removed — the sea is only a thin outer ring here, so a boat read as sailing on the sand
         for(let i=0;i<5;i++) ambient.push({kind:'bird', x:Math.random()*CW, y:3+Math.random()*(OY-14), vx:0.18+Math.random()*0.22, phase:Math.random()*6.28});
-        ambient.push({kind:'ship', x:Math.random()*CW, y:7, vx:0.06});
-        ambient.push({kind:'ship', x:Math.random()*CW, y:CH-9, vx:-0.05, small:true});
       } else if(t==='winter'){
         for(let i=0;i<88;i++) ambient.push({kind:'snow', x:Math.random()*CW, y:Math.random()*CH, vy:0.12+Math.random()*0.28, drift:Math.random()*6.28, sz:Math.random()<0.3?2:1});
         // skaters (people) removed — the falling snow stays

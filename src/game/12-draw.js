@@ -2265,7 +2265,7 @@
       ctx.fillStyle=_cg; ctx.fillRect(0,0,W,H);
       ctx.restore(); }
       if(typeof turnFx!=='undefined'&&turnFx>0){ ctx.save(); ctx.globalAlpha=(turnFx/13)*0.55; ctx.strokeStyle=turnFxCol; ctx.lineWidth=5; ctx.strokeRect(2.5,2.5,W-5,H-5); ctx.restore(); }
-      if(banner>0){ drawBanner(); drawGoalCrowd(); } if(winner){ try{ drawWinner(); }catch(e){} }
+      if(banner>0){ drawBanner(); } if(winner){ try{ drawWinner(); }catch(e){} }   /* goal-celebration fan crowd removed; the GOAL banner stays */
       if(phase==='play'&&!winner&&banner<=0){ try{ drawTurnBanner(ctx,now); }catch(e){} }
       ctx.restore();
 
