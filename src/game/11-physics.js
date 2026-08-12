@@ -3870,7 +3870,7 @@
     }); setTimeout(function(){ elm.style.transform="translate("+toX+"px,"+toY+"px) translate(-50%,-50%) scale("+endScale+")";
     }, hold); setTimeout(function(){ elm.style.opacity='0';
     }, hold+dur-140); setTimeout(function(){ if(elm.parentNode) elm.parentNode.removeChild(elm);
-    if(toEl){ try{ var _op=toEl.style.transform||'';
+    if(toEl && opts.pop!==false){ try{ var _op=toEl.style.transform||'';
     toEl.style.transition='transform .14s';
     toEl.style.transform=_op+' scale(1.25)';
     setTimeout(function(){ toEl.style.transform=_op;
