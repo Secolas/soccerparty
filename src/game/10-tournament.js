@@ -1785,12 +1785,8 @@
     c.style.cssText='position:relative;width:134px;height:134px;image-rendering:pixelated;filter:drop-shadow(0 5px 10px rgba(0,0,0,0.55));';
     var g=c.getContext('2d');
     g.imageSmoothingEnabled=false;
-    // clash-intro: a plain team-colour token — no flag (the kit swatch drew the country flag)
-    try{ var _tc=(p.kit&&p.kit.colors&&p.kit.colors[0])||p.primary||'#cccccc';
-    g.beginPath(); g.arc(24,24,18,0,6.283); g.fillStyle=_tc; g.fill();
-    g.lineWidth=2; g.strokeStyle='rgba(0,0,0,0.45)'; g.stroke();
-    g.beginPath(); g.arc(18,18,5.5,0,6.283); g.fillStyle='rgba(255,255,255,0.5)'; g.fill();
-    }catch(e){} fw.appendChild(c);
+    // clash-intro: the team's flag as a round coin TOKEN (not the old rectangular box swatch)
+    try{ flagCoin(g,24,24,18,p.kit); }catch(e){} fw.appendChild(c);
     box.appendChild(mk('div',FS(13,'#ffffff')+'text-align:center;letter-spacing:1px;max-width:96%;line-height:1.5;text-shadow:0 0 10px '+acc+',0 2px 0 rgba(0,0,0,0.7),0 4px 8px rgba(0,0,0,0.6);',p.name.toUpperCase()));
     box.appendChild(mk('div',FS(9,acc)+'letter-spacing:2px;text-shadow:0 0 8px '+acc+'88,0 2px 0 rgba(0,0,0,0.7);',((aiEnabled&&aiEnabled[sk])?'CPU':((!(aiEnabled&&aiEnabled[(sk==='red'?'blue':'red')]))?(sk==='red'?'P1':'P2'):'YOU'))));
     var row=mk('div','display:flex;gap:8px;margin-top:3px;align-items:flex-start;');
